@@ -1,0 +1,24 @@
+bin
+obj
+packages
+node_modules
+.config
+*.o
+*.pyc
+
+# emacs
+.dir-locals.el
+
+# emacs temp file suffixes
+*~
+.#*
+\#*#
+
+# eclipse setting
+.settings
+
+# MacOS directory files
+.DS_Store
+
+# cache dir
+.cache/

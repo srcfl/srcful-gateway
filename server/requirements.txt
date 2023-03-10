@@ -1,0 +1,4 @@
+flask
+cryptoauthlib >= 20210121
+cryptography >= 2.5
+pyModbusTCP
