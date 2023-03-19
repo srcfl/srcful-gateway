@@ -8,6 +8,9 @@ from tasks.srcfulapitask import SrcfulAPICallTask
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import time
 
+from inverters.inverter import Inverter
+from inverters.sunspectcp import SunspecTCP
+
 import crypto.crypto as crypto
 
 #hostName = "localhost"
@@ -70,16 +73,26 @@ def MyServerFactory(stats: dict):
 def time_ms():
   return time.time_ns() // 1_000_000
 
-class ReadFreq(Task):
-  def __init__(self, eventTime: int, stats: dict):
+class ReadFreq(Task): 
+  def __init__(self, eventTime: int, stats: dict, inverter: Inverter):
     super().__init__(eventTime, stats)
+    self.inverter = inverter
 
-  def execute(self, eventTime):
-
-    self.stats['freqReads'] += 1
-
-    self.time = eventTime + 100
+  def execute(self, eventTime) -> Task or list[Task]:
+    try:
+      freq = self.inverter.readFrequency()
+      print('freq: ' + str(freq))
+      self.stats['freqReads'] += 1
+    except:
+      print('error reading freq')
+      self.time = eventTime + 10000
+      return self
+    
+    print('error reading freq')
+    self.time = eventTime + 1000
     return self
+    
+    
 
 
 def gatewayNameQuery(id):
@@ -174,7 +187,7 @@ def main():
   # put some initial tasks in the queue
   tasks.put(HarvestEnergy(startTime, stats))
   tasks.put(CheckForWebRequest(startTime, stats, webServer))
-  tasks.put(ReadFreq(startTime, stats))
+  tasks.put(ReadFreq(startTime, stats, SunspecTCP("localhost")))
 
   try:
     mainLoop(tasks)
