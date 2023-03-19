@@ -60,7 +60,8 @@ def MyServerFactory(stats: dict):
       self.wfile.write(bytes(f"<p>Uptime (days, hours, minutes, seconds): {(days, hours, minutes, seconds)}</p>", "utf-8"))
 
       self.wfile.write(bytes(f"<p>freqReads: {freqReads} in {elapsedTime} ms<br/>", "utf-8"))
-      self.wfile.write(bytes(f"average freqReads: {freqReads / elapsedTime * 1000} per second</p>", "utf-8"))
+      self.wfile.write(bytes(f"average freqReads: {freqReads / elapsedTime * 1000} per second<br/>", "utf-8"))
+      self.wfile.write(bytes(f"last freq: {stats['lastFreq']} Hz</p>", "utf-8"))
 
       self.wfile.write(bytes(f"<p>energyHarvested: {energyHarvested} in {elapsedTime} ms</br>", "utf-8"))
       self.wfile.write(bytes(f"average energyHarvested: {energyHarvested / elapsedTime * 1000} per second</p>", "utf-8"))
@@ -77,18 +78,19 @@ class ReadFreq(Task):
   def __init__(self, eventTime: int, stats: dict, inverter: Inverter):
     super().__init__(eventTime, stats)
     self.inverter = inverter
+    self.stats['lastFreq'] = 'n/a'
 
   def execute(self, eventTime) -> Task or list[Task]:
     try:
       freq = self.inverter.readFrequency()
-      print('freq: ' + str(freq))
+      self.stats['lastFreq'] = freq
       self.stats['freqReads'] += 1
     except:
       print('error reading freq')
       self.time = eventTime + 10000
+      self.stats['lastFreq'] = 'error'
       return self
     
-    print('error reading freq')
     self.time = eventTime + 1000
     return self
     
@@ -187,7 +189,7 @@ def main():
   # put some initial tasks in the queue
   tasks.put(HarvestEnergy(startTime, stats))
   tasks.put(CheckForWebRequest(startTime, stats, webServer))
-  tasks.put(ReadFreq(startTime, stats, SunspecTCP("localhost")))
+  tasks.put(ReadFreq(startTime, stats, SunspecTCP("inverter")))
 
   try:
     mainLoop(tasks)

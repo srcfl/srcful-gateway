@@ -8,3 +8,7 @@ services:
       dockerfile: Dockerfile-no_crypt
     container_name: srcfull-gw
     restart: always
+  inverter:
+    build: ./modbus_slave
+    container_name: srcfull-inverter
+    restart: always

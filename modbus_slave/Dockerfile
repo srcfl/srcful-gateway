@@ -1,10 +1,8 @@
 FROM python:3.8-alpine
 COPY . /app
 WORKDIR /app
-ENV CRYPTOAUTHLIB_NOUSB=True
 RUN pip install pyModbusTCP
-RUN pip install requests
-EXPOSE 5000
+EXPOSE 502
 
 ENTRYPOINT ["python"]
-CMD ["app.py"]
+CMD ["solaredge.py"]
