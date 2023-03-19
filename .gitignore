@@ -22,3 +22,5 @@ node_modules
 
 # cache dir
 .cache/
+
+__pycache__
