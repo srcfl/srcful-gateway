@@ -3,7 +3,7 @@ from threading import Thread
 import time;
 
 from tasks.task import Task
-from tasks.srcfulapitask import SrcfulAPICallTask
+from tasks.harvest import Harvest
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import time
@@ -36,7 +36,10 @@ def MyServerFactory(stats: dict):
 
     def do_GET(self):
       freqReads = stats['freqReads']
-      energyHarvested = stats['energyHarvested']
+      energyHarvested = stats['harvests']
+      energyTransported = 0
+      if 'harvestTransports' in stats:
+        energyTransported = stats['harvestTransports']
       startTime = stats['startTime']
       self.send_response(200)
       self.send_header("Content-type", "text/html")
@@ -65,6 +68,9 @@ def MyServerFactory(stats: dict):
 
       self.wfile.write(bytes(f"<p>energyHarvested: {energyHarvested} in {elapsedTime} ms</br>", "utf-8"))
       self.wfile.write(bytes(f"average energyHarvested: {energyHarvested / elapsedTime * 1000} per second</p>", "utf-8"))
+
+      self.wfile.write(bytes(f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>", "utf-8"))
+      self.wfile.write(bytes(f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>", "utf-8"))
 
       self.wfile.write(bytes("</body></html>", "utf-8"))
 
@@ -108,11 +114,6 @@ def gatewayNameQuery(id):
   }
   """ % id
 
-
-
-
-
-    
 
 class CheckForWebRequest(Task):
   def __init__(self, eventTime: int, stats: dict, webServer: HTTPServer):
@@ -170,12 +171,14 @@ def main():
 
   
   tasks = queue.PriorityQueue()
+  inverter = SunspecTCP("inverter") # docker compose service name
+  #inverter = SunspecTCP("localhost")
   
   
   # put some initial tasks in the queue
-  tasks.put(HarvestEnergy(startTime, stats))
+  tasks.put(Harvest(startTime, stats, inverter))
   tasks.put(CheckForWebRequest(startTime, stats, webServer))
-  tasks.put(ReadFreq(startTime, stats, SunspecTCP("inverter"))) # docker compose service name
+  tasks.put(ReadFreq(startTime, stats, inverter)) # docker compose service name
   #tasks.put(ReadFreq(startTime, stats, SunspecTCP("localhost"))) # docker compose service name
 
   try:

@@ -6,6 +6,7 @@ class SrcfulAPICallTask(Task):
   def __init__(self, eventTime: int, stats: dict):
     super().__init__(eventTime, stats)
     self.t = None
+    self.reply = None
 
   def _query(self):
     # throw not implemented exception
@@ -14,7 +15,8 @@ class SrcfulAPICallTask(Task):
     # throw not implemented exception
     NotImplementedError
   
-  def onError(self, reply):
+  def _onError(self, reply) -> int:
+    '''return 0 to stop retrying, otherwise return the number of milliseconds to wait before retrying'''
     # throw not implemented exception
     NotImplementedError
   
@@ -33,9 +35,10 @@ class SrcfulAPICallTask(Task):
       if self.reply.status_code == 200:
         self._on200(self.reply)
       else:
-        self._onError(self.reply)
-      self.time = eventTime + 10000
-      return self
+        retryDelay = self._onError(self.reply)
+        if retryDelay > 0:
+          self.time = eventTime + retryDelay
+          return self
     else:
       # wait some more
       self.time = eventTime + 1000
