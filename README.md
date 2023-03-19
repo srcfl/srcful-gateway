@@ -12,10 +12,17 @@ The crypto stuff is partially mocked and does not require the libs to be install
 Not all functions in the crypto lib have been fixed so pay attention to possible errors you get.
 
 To start a local dev version of the gw you can simply do:  
-`docker-commpose -f docker-compose-no_crypt.yml`
+`docker-commpose -f docker-compose-no_crypt.yml up`
 
 or you can run the main script with python directly (this can be a good idea for debugging):  
 `python app.py`
+
+### /modbus_slave
+This is the directory that contains simulation servers of all inverters. This is started with docker-compose-no_crypt or you can start it locally using pythion (this seems painfully slow on windows for some reason). Alternativealy you run the docker container (create it with `docker-compose build` first):
+
+`docker run -p 502:502 sourcefulgateway_inverter`
+
+Don't forget to change the inverter host to `localhost` in `app.py`
 
 ## Deployment
 Deploy using `balena push` - this will use the normal `docker-compose.yml`

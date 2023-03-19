@@ -85,7 +85,7 @@ class ReadFreq(Task):
       freq = self.inverter.readFrequency()
       self.stats['lastFreq'] = freq
       self.stats['freqReads'] += 1
-    except:
+    except :
       print('error reading freq')
       self.time = eventTime + 10000
       self.stats['lastFreq'] = 'error'
@@ -111,21 +111,7 @@ def gatewayNameQuery(id):
 
 
 
-class HarvestEnergy(SrcfulAPICallTask):
-  def __init__(self, eventTime: int, stats: dict):
-    super().__init__(eventTime, stats)
-    self.t = None
 
-  def _query(self):
-    return gatewayNameQuery(self.stats['energyHarvested'])
-  
-  def _on200(self, reply):
-    self.stats['energyHarvested'] += 1
-    self.stats['name'] = reply.json()['data']['gatewayConfiguration']['gatewayName']['name']
-
-  def _onError(self, reply):
-    print('error harvesting energy')
-    print(self.reply)
     
 
 class CheckForWebRequest(Task):
@@ -189,7 +175,8 @@ def main():
   # put some initial tasks in the queue
   tasks.put(HarvestEnergy(startTime, stats))
   tasks.put(CheckForWebRequest(startTime, stats, webServer))
-  tasks.put(ReadFreq(startTime, stats, SunspecTCP("inverter")))
+  tasks.put(ReadFreq(startTime, stats, SunspecTCP("inverter"))) # docker compose service name
+  #tasks.put(ReadFreq(startTime, stats, SunspecTCP("localhost"))) # docker compose service name
 
   try:
     mainLoop(tasks)
