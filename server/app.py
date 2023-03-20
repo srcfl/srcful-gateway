@@ -1,6 +1,6 @@
 import queue
 from threading import Thread
-import time;
+import time
 
 from tasks.task import Task
 from tasks.harvest import Harvest
@@ -9,13 +9,14 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import time
 
 from inverters.inverter import Inverter
-from inverters.sunspectcp import SunspecTCP
+from inverters.sunspectcp import InverterTCP
 
 import crypto.crypto as crypto
 
-#hostName = "localhost"
+# hostName = "localhost"
 hostName = "0.0.0.0"
 serverPort = 5000
+
 
 def getChipInfo():
   crypto.initChip()
@@ -26,7 +27,8 @@ def getChipInfo():
   crypto.release()
 
   return 'device: ' + device_name + ' serial: ' + serial_number
-  #return 'device: dret' + ' serial: 0xdeadbeef'
+  # return 'device: dret' + ' serial: 0xdeadbeef'
+
 
 def MyServerFactory(stats: dict):
 
@@ -44,7 +46,8 @@ def MyServerFactory(stats: dict):
       self.send_response(200)
       self.send_header("Content-type", "text/html")
       self.end_headers()
-      self.wfile.write(bytes("<html><head><title>Srcful Energy Gateway</title></head>", "utf-8"))
+      self.wfile.write(
+          bytes("<html><head><title>Srcful Energy Gateway</title></head>", "utf-8"))
       self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
       self.wfile.write(bytes("<body>", "utf-8"))
       self.wfile.write(bytes(f"<h1>Srcful Energy Gateway</h1>", "utf-8"))
@@ -60,17 +63,25 @@ def MyServerFactory(stats: dict):
       minutes, seconds = divmod(remainder, 60)
 
       # output the gateway current uptime in days, hours, minutes, seconds
-      self.wfile.write(bytes(f"<p>Uptime (days, hours, minutes, seconds): {(days, hours, minutes, seconds)}</p>", "utf-8"))
+      self.wfile.write(bytes(
+          f"<p>Uptime (days, hours, minutes, seconds): {(days, hours, minutes, seconds)}</p>", "utf-8"))
 
-      self.wfile.write(bytes(f"<p>freqReads: {freqReads} in {elapsedTime} ms<br/>", "utf-8"))
-      self.wfile.write(bytes(f"average freqReads: {freqReads / elapsedTime * 1000} per second<br/>", "utf-8"))
-      self.wfile.write(bytes(f"last freq: {stats['lastFreq']} Hz</p>", "utf-8"))
+      self.wfile.write(
+          bytes(f"<p>freqReads: {freqReads} in {elapsedTime} ms<br/>", "utf-8"))
+      self.wfile.write(bytes(
+          f"average freqReads: {freqReads / elapsedTime * 1000} per second<br/>", "utf-8"))
+      self.wfile.write(
+          bytes(f"last freq: {stats['lastFreq']} Hz</p>", "utf-8"))
 
-      self.wfile.write(bytes(f"<p>energyHarvested: {energyHarvested} in {elapsedTime} ms</br>", "utf-8"))
-      self.wfile.write(bytes(f"average energyHarvested: {energyHarvested / elapsedTime * 1000} per second</p>", "utf-8"))
+      self.wfile.write(bytes(
+          f"<p>energyHarvested: {energyHarvested} in {elapsedTime} ms</br>", "utf-8"))
+      self.wfile.write(bytes(
+          f"average energyHarvested: {energyHarvested / elapsedTime * 1000} per second</p>", "utf-8"))
 
-      self.wfile.write(bytes(f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>", "utf-8"))
-      self.wfile.write(bytes(f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>", "utf-8"))
+      self.wfile.write(bytes(
+          f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>", "utf-8"))
+      self.wfile.write(bytes(
+          f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>", "utf-8"))
 
       self.wfile.write(bytes("</body></html>", "utf-8"))
 
@@ -80,7 +91,8 @@ def MyServerFactory(stats: dict):
 def time_ms():
   return time.time_ns() // 1_000_000
 
-class ReadFreq(Task): 
+
+class ReadFreq(Task):
   def __init__(self, eventTime: int, stats: dict, inverter: Inverter):
     super().__init__(eventTime, stats)
     self.inverter = inverter
@@ -91,16 +103,14 @@ class ReadFreq(Task):
       freq = self.inverter.readFrequency()
       self.stats['lastFreq'] = freq
       self.stats['freqReads'] += 1
-    except :
+    except:
       print('error reading freq')
       self.time = eventTime + 10000
       self.stats['lastFreq'] = 'error'
       return self
-    
+
     self.time = eventTime + 1000
     return self
-    
-    
 
 
 def gatewayNameQuery(id):
@@ -146,11 +156,11 @@ def mainLoop(tasks: queue.PriorityQueue):
     task = tasks.get()
     delay = (task.time - time_ms()) / 1000
     if delay > 0:
-        time.sleep(delay)
+      time.sleep(delay)
 
-    #if time_ms() % 2000 == 0:
-    #print(task.stats)
-      
+    # if time_ms() % 2000 == 0:
+    # print(task.stats)
+
     newTask = task.execute(time_ms())
 
     if newTask != None:
@@ -160,26 +170,26 @@ def mainLoop(tasks: queue.PriorityQueue):
       except TypeError:
         addTask(newTask)
 
+
 def main():
-  
+
   startTime = time_ms()
-  stats = {'startTime': startTime, 'freqReads': 0, 'energyHarvested': 0, 'webRequests': 0, 'name': 'deadbeef'}
+  stats = {'startTime': startTime, 'freqReads': 0,
+           'energyHarvested': 0, 'webRequests': 0, 'name': 'deadbeef'}
 
   webServer = HTTPServer((hostName, serverPort), MyServerFactory(stats))
   webServer.socket.setblocking(False)
   print("Server started http://%s:%s" % (hostName, serverPort))
 
-  
   tasks = queue.PriorityQueue()
-  inverter = SunspecTCP("inverter") # docker compose service name
-  #inverter = SunspecTCP("localhost")
-  
-  
+  # docker compose service name
+  inverter = InverterTCP("10.130.1.235", "solaredge")
+  # inverter = SunspecTCP("localhost")
+
   # put some initial tasks in the queue
   tasks.put(Harvest(startTime, stats, inverter))
   tasks.put(CheckForWebRequest(startTime, stats, webServer))
-  tasks.put(ReadFreq(startTime, stats, inverter)) # docker compose service name
-  #tasks.put(ReadFreq(startTime, stats, SunspecTCP("localhost"))) # docker compose service name
+  tasks.put(ReadFreq(startTime, stats, inverter))
 
   try:
     mainLoop(tasks)
@@ -188,6 +198,7 @@ def main():
 
   webServer.server_close()
   print("Server stopped.")
+
 
 if __name__ == "__main__":
   main()
