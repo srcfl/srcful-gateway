@@ -20,16 +20,16 @@ class InverterTCP(Inverter):
       raise Exception("read error")
 
   def readPower(self):
-    regs = self.client.read_holding_registers(40069, 20)
+    regs = self.client.read_holding_registers(40069, 1)
     if regs:
       return regs[0]
     else:
       raise Exception("read error")
 
   def readEnergy(self):
-    regs = self.client.read_holding_registers(40069, 20)
+    regs = self.client.read_holding_registers(40069, 1)
     if regs:
-      return regs[1]
+      return regs[0]
     else:
       raise Exception("read error")
 

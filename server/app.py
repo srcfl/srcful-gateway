@@ -9,14 +9,16 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import time
 
 from inverters.inverter import Inverter
-from inverters.sunspectcp import InverterTCP
+from inverters.InverterTCP import InverterTCP
 
 import crypto.crypto as crypto
 
-# hostName = "localhost"
-hostName = "0.0.0.0"
+#hostName = "localhost"
+hostName = "127.0.0.1"
 serverPort = 5000
 
+inverter_ip = "127.0.0.1"
+inverter_type = "solaredge"
 
 def getChipInfo():
   crypto.initChip()
@@ -82,6 +84,9 @@ def MyServerFactory(stats: dict):
           f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>", "utf-8"))
       self.wfile.write(bytes(
           f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>", "utf-8"))
+      
+      self.wfile.write(bytes(
+          f"ALL: {stats}</p>", "utf-8"))
 
       self.wfile.write(bytes("</body></html>", "utf-8"))
 
@@ -183,7 +188,7 @@ def main():
 
   tasks = queue.PriorityQueue()
   # docker compose service name
-  inverter = InverterTCP("10.130.1.235", "solaredge")
+  inverter = InverterTCP(inverter_ip, inverter_type)
   # inverter = SunspecTCP("localhost")
 
   # put some initial tasks in the queue

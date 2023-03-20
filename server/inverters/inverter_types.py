@@ -1,5 +1,10 @@
+SOLAREDGE = "solaredge"
+SUNGROW = "sungrow"
+HUAWEI = "huawei"
+
 INVERTERS = {
-    "sungrow": {
+
+    SUNGROW: {
         # https://github.com/bohdan-s/Sungrow-Inverter/raw/main/Modbus%20Information/Communication%20Protocol%20of%20PV%20Grid-Connected%20String%20Inverters_V1.1.37_EN.pdf
         "read": [
             {"scan_start": 4999, "scan_range": 110},
@@ -10,7 +15,7 @@ INVERTERS = {
         ],
     },
 
-    "solaredge": {
+    SOLAREDGE: {
         # https://knowledge-center.solaredge.com/sites/kc/files/sunspec-implementation-technical-note.pdf
         "holding": [
             # Common Model MODBUS Register Mappings
@@ -24,7 +29,7 @@ INVERTERS = {
         ],
     },
 
-    "huawei": {
+    HUAWEI: {
         # https://javierin.com/wp-content/uploads/sites/2/2021/09/Solar-Inverter-Modbus-Interface-Definitions.pdf
         "read": [
             # Model, SN, PN
