@@ -1,5 +1,5 @@
 flask
-cryptoauthlib >= 20210121
+cryptoauthlib >= 20221114
 cryptography >= 2.5
 pyModbusTCP
 requests

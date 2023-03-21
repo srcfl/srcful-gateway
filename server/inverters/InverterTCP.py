@@ -17,30 +17,48 @@ class InverterTCP(Inverter):
 
   def read(self):
     regs = []
+    vals = []
+
     for entry in self.registers["holding"]:
-      regs += self.client.read_holding_registers(
+
+      # Populate a list of registers that we want to read from
+      r = [x for x in range(
+          entry["scan_start"], entry["scan_start"] + entry["scan_range"], 1)]
+
+      # Read the registers
+      v = self.client.read_holding_registers(
           entry["scan_start"], entry["scan_range"])
-    if regs:
-      return regs
+
+      regs += r
+      vals += v
+
+    # Zip the registers and values together convert them into a dictionary
+    res = dict(zip(regs, vals))
+
+    if res:
+      return res
     else:
       raise Exception("read error")
 
   def readPower(self):
-    regs = self.client.read_holding_registers(40069, 1)
+    regs = self.client.read_holding_registers(
+        40069, 1)  # Hardcoded valye for now
     if regs:
       return regs[0]
     else:
       raise Exception("read error")
 
   def readEnergy(self):
-    regs = self.client.read_holding_registers(40069, 1)
+    regs = self.client.read_holding_registers(
+        40069, 1)  # Hardcoded valye for now
     if regs:
       return regs[0]
     else:
       raise Exception("read error")
 
   def readFrequency(self):
-    regs = self.client.read_holding_registers(40085, 1)
+    regs = self.client.read_holding_registers(
+        40085, 1)  # Hardcoded valye for now
     if regs:
       return regs[0] * 0.01
     else:
