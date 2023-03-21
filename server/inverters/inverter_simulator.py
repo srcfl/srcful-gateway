@@ -54,7 +54,7 @@ class MyDataBank(DataBank):
 if __name__ == '__main__':
     # parse args
     parser = argparse.ArgumentParser()
-    parser.add_argument('-H', '--host', type=str, default='localhost', help='Host (default: localhost)')
+    parser.add_argument('-H', '--host', type=str, default='192.168.1.38', help='Host (default: localhost)')
     parser.add_argument('-p', '--port', type=int, default=502, help='TCP port (default: 502)')
     parser.add_argument('-t', '--type', type=str, default="solaredge", help='Inverter type (default: solaredge)')
     args = parser.parse_args()

@@ -7,7 +7,13 @@ class InverterTCP(Inverter):
   def __init__(self, host, type):
     self.host = host
     self.registers = INVERTERS[type]
-    self.client = ModbusClient(host=self.host, auto_open=True, auto_close=True)
+
+  def open(self):
+    self.client = ModbusClient(host=self.host)
+    self.client.open()
+
+  def close(self):
+    self.client.close()
 
   def read(self):
     regs = []

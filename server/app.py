@@ -13,8 +13,12 @@ from inverters.InverterTCP import InverterTCP
 
 import crypto.crypto as crypto
 
-#hostName = "localhost"
-hostName = "127.0.0.1"
+# hostName = "localhost"
+# hostName = "127.0.0.1"
+
+# IP for solarEdge inverter in the lab at LNU
+hostName = "10.130.1.235"
+
 serverPort = 5000
 
 inverter_ip = "127.0.0.1"
@@ -189,6 +193,7 @@ def main():
   tasks = queue.PriorityQueue()
   # docker compose service name
   inverter = InverterTCP(inverter_ip, inverter_type)
+  inverter.open()
   # inverter = SunspecTCP("localhost")
 
   # put some initial tasks in the queue
@@ -200,9 +205,10 @@ def main():
     mainLoop(tasks)
   except KeyboardInterrupt:
     pass
-
-  webServer.server_close()
-  print("Server stopped.")
+  finally:
+    inverter.close()
+    webServer.server_close()
+    print("Server stopped.")
 
 
 if __name__ == "__main__":
