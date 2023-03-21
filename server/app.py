@@ -13,16 +13,13 @@ from inverters.InverterTCP import InverterTCP
 
 import crypto.crypto as crypto
 
-# hostName = "localhost"
-# hostName = "127.0.0.1"
-
-# IP for solarEdge inverter in the lab at LNU
-hostName = "10.130.1.235"
+#hostName = "127.0.0.1"  # for local
+hostName = "0.0.0.0"  # for docker deployment
 
 serverPort = 5000
 
-inverter_ip = "127.0.0.1"
-inverter_type = "solaredge"
+#inverter_ip = "127.0.0.1" #for local
+
 
 def getChipInfo():
   crypto.initChip()
@@ -114,11 +111,11 @@ class ReadFreq(Task):
       self.stats['freqReads'] += 1
     except:
       print('error reading freq')
-      self.time = eventTime + 10000
+      self.time = eventTime + 1000
       self.stats['lastFreq'] = 'error'
       return self
 
-    self.time = eventTime + 1000
+    self.time = eventTime + 100
     return self
 
 
@@ -190,11 +187,14 @@ def main():
   webServer.socket.setblocking(False)
   print("Server started http://%s:%s" % (hostName, serverPort))
 
+  inverter_ip = "10.130.1.235" # for solarEdge inverter in the lab at LNU
+  #inverter_ip = "srcfull-inverter" # for testing with docker container service
+  inverter_type = "solaredge"
+
   tasks = queue.PriorityQueue()
   # docker compose service name
   inverter = InverterTCP(inverter_ip, inverter_type)
   inverter.open()
-  # inverter = SunspecTCP("localhost")
 
   # put some initial tasks in the queue
   tasks.put(Harvest(startTime, stats, inverter))
