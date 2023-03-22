@@ -1,7 +1,6 @@
 from tasks.task import Task
 from threading import Thread
 import requests
-import crypto.crypto as atecc608b
 
 
 class SrcfulAPICallTask(Task):
@@ -10,9 +9,13 @@ class SrcfulAPICallTask(Task):
     self.t = None
     self.reply = None
 
-  def _query(self):
-    # throw not implemented exception
-    NotImplementedError
+  def _json(self):
+    '''override to the json to send to the server, json argument in post method'''
+    return None
+  
+  def _data(self):
+    '''override to the data to send to the server, data argument in post method'''
+    return None
 
   def _on200(self, reply):
     # throw not implemented exception
@@ -26,18 +29,8 @@ class SrcfulAPICallTask(Task):
   def execute(self, eventTime):
 
     def post():
-      atecc608b.initChip()
-
-      # Print pubKey to console
-      atecc608b.getPublicKey()
-
-      JWT = atecc608b.buildJWT(self.stats)
-      print(JWT)
-
-      atecc608b.release()
-
       self.reply = requests.post(
-          "https://api.srcful.dev/", data={"data": JWT})
+          "https://api.srcful.dev/", data=self._data(), json=self._json())
 
     if (self.t == None):
       self.t = Thread(target=post())
