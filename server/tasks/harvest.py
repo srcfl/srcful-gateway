@@ -1,5 +1,5 @@
 from .task import Task
-from .srcfulapitask import SrcfulAPICallTask
+from .srcfulAPICallTask import SrcfulAPICallTask
 from inverters.inverter import Inverter
 import crypto.crypto as atecc608b
 
@@ -54,17 +54,19 @@ class HarvestTransport(SrcfulAPICallTask):
     #atecc608b.getPublicKey()
 
     JWT = atecc608b.buildJWT(self.barn)
-    print(JWT)
+    # print(JWT)
 
     atecc608b.release()
-    return {'data': JWT}
+    return JWT
 
   def _on200(self, reply):
     #self.stats['lastHarvestTransport'] = reply.json()['data']['harvestTransport']['id']
     #print("transported harvest..." + str(len(self.barn)))
+    print("Response:", reply)
     self.stats['harvestTransports'] += 1
 
   def _onError(self, reply):
+    print("Response:", reply)
     self._on200(reply)
     return 0
     #print('error transporting harvest')

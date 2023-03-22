@@ -30,10 +30,11 @@ class SrcfulAPICallTask(Task):
 
     def post():
       self.reply = requests.post(
-          "https://api.srcful.dev/", data=self._data(), json=self._json())
+          "https://testnet.srcful.dev/gw/data/", data=self._data())
+      # print(self._data())
 
     if (self.t == None):
-      self.t = Thread(target=post())
+      self.t = Thread(target=post)
       self.t.start()
       self.time = eventTime + 1000
       return self
