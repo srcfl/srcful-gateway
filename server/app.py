@@ -25,7 +25,7 @@ def getChipInfo():
   crypto.initChip()
 
   device_name = crypto.getDeviceName()
-  serial_number = crypto.getSerialNumber()
+  serial_number = crypto.getSerialNumber().hex()
 
   crypto.release()
 
