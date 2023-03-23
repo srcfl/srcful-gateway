@@ -1,6 +1,6 @@
 try:
   # https://github.com/MicrochipTech/cryptoauthlib/blob/79013219556263bd4a3a43678a5e1d0faddba5ba/python/cryptoauthlib/atcab.py#L1
-  from cryptoauthlib import atcab_init, cfg_ateccx08a_i2c_default, atcab_info, get_device_name, atcab_release, atcab_sign, atcab_read_serial_number, atcab_get_pubkey
+  from cryptoauthlib import ATCA_SUCCESS, atcab_init, cfg_ateccx08a_i2c_default, atcab_info, get_device_name, atcab_release, atcab_sign, atcab_read_serial_number, atcab_get_pubkey
   from cryptography.hazmat.backends import default_backend
   from cryptography.hazmat.primitives import hashes
 
@@ -8,22 +8,23 @@ except:
   from .cryptoauthlib_mock import atcab_init, cfg_ateccx08a_i2c_default, atcab_info, get_device_name, atcab_release, atcab_sign, atcab_read_serial_number, atcab_get_pubkey
   from .hazmat_mock import default_backend
   from .hazmat_mock import hashes
+  ATCA_SUCCESS = 0x00
 
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 import json
 import base64
 
 
-def initChip():
+def initChip() -> bool:
   cfg = cfg_ateccx08a_i2c_default()
   cfg.cfg.atcai2c.bus = 1  # raspberry pi
   icfg = getattr(cfg.cfg, 'atcai2c')
   setattr(icfg, "address",  int('6a', 16))
-  atcab_init(cfg)
+  return atcab_init(cfg) == ATCA_SUCCESS
 
 
-def release():
-  atcab_release()
+def release() -> bool:
+  return atcab_release() == ATCA_SUCCESS
 
 
 def getDeviceName():
@@ -60,7 +61,7 @@ def getChipInfo():
   return {'deviceName': getDeviceName(), 'serialNumber': getSerialNumber().hex(), 'publicKey': getPublicKey().hex()}
 
 
-def buildHeader():
+def buildHeader() -> dict:
   return {
       "alg": "ES256",
       "typ": "JWT",

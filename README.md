@@ -7,7 +7,34 @@ This currently publishes a web-server at port 80 (if running through docker-comp
 * Checks for web-requests at 1Hz (goal) to be reasonably responsive
 
 ## Development
-The crypto stuff is partially mocked and does not require the libs to be installed as this does not seem to work well in a windows based container environment (even though the container itself runs linux). This should handle iteself gracefully in the code.
+
+In general strive for defining parameter types and return types.
+
+### Testing
+We use the pytest testing framework for automated testing (https://docs.pytest.org/en/7.2.x/getting-started.html#get-started).
+
+Test modules are placed under `/test` and mirror the structure of the main project. Tests are executed by running:  
+`pytest`
+
+Integration in VSCode can be achieved by installing *Python Test Explorer for Visual Studio Code* add the following to your `./vscode/launch.json` configuration to enable *debugging* of tests.
+
+```
+{
+  "name": "Debug test",
+  "type": "python",
+  "request": "attach",
+  "console": "externalTerminal",
+  "justMyCode": false,
+  "stopOnEntry": true,
+  "envFile": "${workspaceFolder}/.env.test",
+  "purpose": [
+    "debug-test"
+  ]
+}
+```
+
+### /server
+The crypto stuff is partially mocked and does not require the libs to be installed as this does not seem to work well in a windows based container environment (even though the container itself runs linux...). This should handle iteself gracefully in the code.
 
 Not all functions in the crypto lib have been fixed so pay attention to possible errors you get.
 

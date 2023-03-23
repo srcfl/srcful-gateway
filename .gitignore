@@ -6,6 +6,8 @@ node_modules
 *.o
 *.pyc
 
+.vscode
+
 # emacs
 .dir-locals.el
 

@@ -29,7 +29,12 @@ class SrcfulAPICallTask(Task):
   def execute(self, eventTime):
 
     def post():
-      self.reply = requests.post("https://testnet.srcful.dev/gw/data/", data=self._data())
+      try:
+        self.reply = requests.post("https://testnet.srcful.dev/gw/data/", data=self._data())
+      except requests.exceptions.RequestException as e:
+        print("error posting data: ")
+        print(e)
+        self.reply = requests.Response()
       # print(self._data())
 
     if (self.t == None):

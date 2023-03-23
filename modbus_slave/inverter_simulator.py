@@ -41,7 +41,7 @@ class MyDataBank(DataBank):
             for i in range(start, end):
                 v_regs_d[i] = random.randint(0, 250)
 
-        print(v_regs_d)
+        #print(v_regs_d)
 
         # build a list of virtual regs to return to server data handler
         # return None if any of virtual registers is missing
