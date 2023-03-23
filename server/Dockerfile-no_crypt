@@ -1,10 +1,12 @@
-FROM python:3.8-alpine
+FROM python:3.11-alpine
 COPY . /app
 WORKDIR /app
 ENV CRYPTOAUTHLIB_NOUSB=True
+RUN pip install --upgrade pip
 RUN pip install pyModbusTCP
 RUN pip install requests
+RUN pip install typing-extensions
 EXPOSE 5000
 
 ENTRYPOINT ["python"]
-CMD ["app.py"]
+CMD ["app.py", "-ih", "srcfull-inverter", "-it", "solaredge"]

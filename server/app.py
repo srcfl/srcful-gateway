@@ -211,13 +211,13 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Srcful Energy Gateway')
   
   # port and host for the web server
-  parser.add_argument('-web_host', '-wh', type=str, default='0.0.0.0', help='host for the web server.')
-  parser.add_argument('-web_port', '-wp', type=int, default=5000, help='port for the web server.')
+  parser.add_argument('-wh', '--web_host', type=str, default='0.0.0.0', help='host for the web server.')
+  parser.add_argument('-wp', '--web_port', type=int, default=5000, help='port for the web server.')
 
   # port, host and type for the inverter
-  parser.add_argument('-inverter_host', '-ih', type=str, default='localhost', help='host for the inverter.')
-  parser.add_argument('-inverter_port', '-ip', type=int, default=502, help='port for the inverter.')
-  parser.add_argument('-inverter_type', '-it', type=str, default='solaredge', help='type of inverter (solaredge).')
+  parser.add_argument('-ih', '--inverter_host', type=str, default='localhost', help='host for the inverter.')
+  parser.add_argument('-ip', '--inverter_port', type=int, default=502, help='port for the inverter.')
+  parser.add_argument('-it', '--inverter_type', type=str, default='solaredge', help='type of inverter (solaredge).')
 
   args = parser.parse_args()
 
