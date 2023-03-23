@@ -6,6 +6,8 @@ try:
 
 except:
   from .cryptoauthlib_mock import atcab_init, cfg_ateccx08a_i2c_default, atcab_info, get_device_name, atcab_release, atcab_sign, atcab_read_serial_number, atcab_get_pubkey
+  from .hazmat_mock import default_backend
+  from .hazmat_mock import hashes
 
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 import json
@@ -88,7 +90,6 @@ def buildJWT(dataToSign):
   header_json = json.dumps(header).encode('utf-8')
   header_base64 = base64UrlEncode(header_json).decode('utf-8')
 
-  # payload = {"name": "david", "age": "33"}
   payload_json = json.dumps(dataToSign).encode('utf-8')
   payload_base64 = base64UrlEncode(payload_json).decode('utf-8')
 

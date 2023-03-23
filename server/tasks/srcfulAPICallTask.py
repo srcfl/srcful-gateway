@@ -29,8 +29,7 @@ class SrcfulAPICallTask(Task):
   def execute(self, eventTime):
 
     def post():
-      self.reply = requests.post(
-          "https://testnet.srcful.dev/gw/data/", data=self._data())
+      self.reply = requests.post("https://testnet.srcful.dev/gw/data/", data=self._data())
       # print(self._data())
 
     if (self.t == None):

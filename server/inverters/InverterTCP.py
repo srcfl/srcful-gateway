@@ -1,15 +1,31 @@
 from .inverter import Inverter
 from pyModbusTCP.client import ModbusClient
 from .inverter_types import INVERTERS
+from typing_extensions import TypeAlias
+
+
+# create a host tuple alias
 
 
 class InverterTCP(Inverter):
-  def __init__(self, host, type):
-    self.host = host
-    self.registers = INVERTERS[type]
+
+  Setup: TypeAlias = tuple[str | bytes | bytearray, int, str] # address acceptable for an AF_INET socket with inverter type
+
+  def __init__(self, setup: Setup):
+    self.setup = setup
+    self.registers = INVERTERS[self.getType()]
+
+  def getHost(self):
+    return self.setup[0]
+  
+  def getPort(self):
+    return self.setup[1]
+  
+  def getType(self):
+    return self.setup[2]
 
   def open(self):
-    self.client = ModbusClient(host=self.host)
+    self.client = ModbusClient(host=self.getHost(), port=self.getPort())
     self.client.open()
 
   def close(self):

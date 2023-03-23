@@ -1873,18 +1873,21 @@ def atcab_sign_base(self, mode, key_id, signature):
 #--------------------------------------------------------------------#
 # atcab_sign(key_id, msg, signature):
 
-def atcab_sign(self, key_id, msg, signature):
+def atcab_sign(key_id, msg, signature):
 
     if not isinstance(key_id, int):
         raise TypeError
 
+    
     if not isinstance(msg, bytes):
         raise TypeError
 
-    if not isinstance(signature, c_ptr):
+    c_signature = create_string_buffer(64)
+    if not isinstance(byref(c_signature), c_ptr):
         raise TypeError
 
-    memmove(cast(signature, c_void_p).value, cast(byref(self.r_signature), c_void_p).value, len(self.r_signature))
+    memmove(cast(c_signature, c_void_p).value, cast(byref(r_signature), c_void_p).value, len(r_signature))
+    signature[0:] = bytes(c_signature.raw)
 
     return Status.ATCA_SUCCESS
 

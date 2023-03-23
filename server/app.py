@@ -1,9 +1,11 @@
+import argparse
 import queue
 from threading import Thread
 import time
 
 from tasks.task import Task
 from tasks.harvest import Harvest
+
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import time
@@ -12,13 +14,6 @@ from inverters.inverter import Inverter
 from inverters.InverterTCP import InverterTCP
 
 import crypto.crypto as crypto
-
-#hostName = "127.0.0.1"  # for local
-hostName = "0.0.0.0"  # for docker deployment
-
-serverPort = 5000
-
-#inverter_ip = "127.0.0.1" #for local
 
 
 def getChipInfo():
@@ -177,23 +172,23 @@ def mainLoop(tasks: queue.PriorityQueue):
         addTask(newTask)
 
 
-def main():
+def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
 
   startTime = time_ms()
   stats = {'startTime': startTime, 'freqReads': 0,
            'energyHarvested': 0, 'webRequests': 0, 'name': 'deadbeef'}
 
-  webServer = HTTPServer((hostName, serverPort), MyServerFactory(stats))
+  webServer = HTTPServer(webHost, MyServerFactory(stats))
   webServer.socket.setblocking(False)
-  print("Server started http://%s:%s" % (hostName, serverPort))
+  print("Server started http://%s:%s" % (webHost[0], webHost[1]))
 
-  inverter_ip = "10.130.1.235" # for solarEdge inverter in the lab at LNU
+  #inverter_ip = "10.130.1.235" # for solarEdge inverter in the lab at LNU
   #inverter_ip = "srcfull-inverter" # for testing with docker container service
-  inverter_type = "solaredge"
+  #inverter_type = "solaredge"
 
   tasks = queue.PriorityQueue()
   # docker compose service name
-  inverter = InverterTCP(inverter_ip, inverter_type)
+  inverter = InverterTCP(inverter)
   inverter.open()
 
   # put some initial tasks in the queue
@@ -212,4 +207,18 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+  # parse arguments from command line
+  parser = argparse.ArgumentParser(description='Srcful Energy Gateway')
+  
+  # port and host for the web server
+  parser.add_argument('-web_host', '-wh', type=str, default='0.0.0.0', help='host for the web server.')
+  parser.add_argument('-web_port', '-wp', type=int, default=5000, help='port for the web server.')
+
+  # port, host and type for the inverter
+  parser.add_argument('-inverter_host', '-ih', type=str, default='localhost', help='host for the inverter.')
+  parser.add_argument('-inverter_port', '-ip', type=int, default=502, help='port for the inverter.')
+  parser.add_argument('-inverter_type', '-it', type=str, default='solaredge', help='type of inverter (solaredge).')
+
+  args = parser.parse_args()
+
+  main((args.web_host, args.web_port), (args.inverter_host, args.inverter_port, args.inverter_type))
