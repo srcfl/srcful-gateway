@@ -1,13 +1,14 @@
 import argparse
 import queue
-from threading import Thread
 import time
+from tasks.checkForWebRequestTask import CheckForWebRequest
+import web.server
 
 from tasks.task import Task
 from tasks.harvest import Harvest
 
 
-from http.server import BaseHTTPRequestHandler, HTTPServer
+
 import time
 
 from inverters.inverter import Inverter
@@ -28,65 +29,7 @@ def getChipInfo():
   # return 'device: dret' + ' serial: 0xdeadbeef'
 
 
-def MyServerFactory(stats: dict):
 
-  class MyServer(BaseHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-      super(MyServer, self).__init__(*args, **kwargs)
-
-    def do_GET(self):
-      freqReads = stats['freqReads']
-      energyHarvested = stats['harvests']
-      energyTransported = 0
-      if 'harvestTransports' in stats:
-        energyTransported = stats['harvestTransports']
-      startTime = stats['startTime']
-      self.send_response(200)
-      self.send_header("Content-type", "text/html")
-      self.end_headers()
-      self.wfile.write(
-          bytes("<html><head><title>Srcful Energy Gateway</title></head>", "utf-8"))
-      self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
-      self.wfile.write(bytes("<body>", "utf-8"))
-      self.wfile.write(bytes(f"<h1>Srcful Energy Gateway</h1>", "utf-8"))
-      self.wfile.write(bytes(f"<h2>{stats['name']}</h2>", "utf-8"))
-
-      self.wfile.write(bytes(f"<p>chipInfo: {getChipInfo()}</p>", "utf-8"))
-
-      elapsedTime = time_ms() - startTime
-
-      # convert elapsedTime to days, hours, minutes, seconds in a tuple
-      days, remainder = divmod(elapsedTime // 1000, 60*60*24)
-      hours, remainder = divmod(remainder, 60*60)
-      minutes, seconds = divmod(remainder, 60)
-
-      # output the gateway current uptime in days, hours, minutes, seconds
-      self.wfile.write(bytes(
-          f"<p>Uptime (days, hours, minutes, seconds): {(days, hours, minutes, seconds)}</p>", "utf-8"))
-
-      self.wfile.write(
-          bytes(f"<p>freqReads: {freqReads} in {elapsedTime} ms<br/>", "utf-8"))
-      self.wfile.write(bytes(
-          f"average freqReads: {freqReads / elapsedTime * 1000} per second<br/>", "utf-8"))
-      self.wfile.write(
-          bytes(f"last freq: {stats['lastFreq']} Hz</p>", "utf-8"))
-
-      self.wfile.write(bytes(
-          f"<p>energyHarvested: {energyHarvested} in {elapsedTime} ms</br>", "utf-8"))
-      self.wfile.write(bytes(
-          f"average energyHarvested: {energyHarvested / elapsedTime * 1000} per second</p>", "utf-8"))
-
-      self.wfile.write(bytes(
-          f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>", "utf-8"))
-      self.wfile.write(bytes(
-          f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>", "utf-8"))
-      
-      self.wfile.write(bytes(
-          f"ALL: {stats}</p>", "utf-8"))
-
-      self.wfile.write(bytes("</body></html>", "utf-8"))
-
-  return MyServer
 
 
 def time_ms():
@@ -126,22 +69,6 @@ def gatewayNameQuery(id):
   """ % id
 
 
-class CheckForWebRequest(Task):
-  def __init__(self, eventTime: int, stats: dict, webServer: HTTPServer):
-    super().__init__(eventTime, stats)
-    self.webServer = webServer
-
-  def execute(self, eventTime):
-    self.stats['webRequests'] += 1
-    if self.webServer.request_queue_size > 0:
-      # launch a new thread to handle the request
-      t = Thread(target=self.webServer.handle_request)
-      t.start()
-
-    self.time = eventTime + 1000
-    return self
-
-
 def mainLoop(tasks: queue.PriorityQueue):
 
   # here we could keep track of statistics for different types of tasks
@@ -178,8 +105,7 @@ def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
   stats = {'startTime': startTime, 'freqReads': 0,
            'energyHarvested': 0, 'webRequests': 0, 'name': 'deadbeef'}
 
-  webServer = HTTPServer(webHost, MyServerFactory(stats))
-  webServer.socket.setblocking(False)
+  
   print("Server started http://%s:%s" % (webHost[0], webHost[1]))
 
   #inverter_ip = "10.130.1.235" # for solarEdge inverter in the lab at LNU
@@ -190,6 +116,8 @@ def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
   # docker compose service name
   inverter = InverterTCP(inverter)
   inverter.open()
+
+  webServer = web.server.Server(webHost, stats, time_ms, getChipInfo)
 
   # put some initial tasks in the queue
   tasks.put(Harvest(startTime, stats, inverter))
@@ -202,7 +130,7 @@ def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
     pass
   finally:
     inverter.close()
-    webServer.server_close()
+    webServer.close()
     print("Server stopped.")
 
 
