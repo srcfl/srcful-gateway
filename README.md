@@ -41,8 +41,10 @@ Not all functions in the crypto lib have been fixed so pay attention to possible
 To start a local dev version of the gw you can simply do:  
 `docker-commpose -f docker-compose-no_crypt.yml up`
 
-or you can run the main script with python directly (this can be a good idea for debugging):  
-`python app.py`
+or you can run the main module with python directly from the parent directory of `server` (this can be a good idea for debugging).:  
+`python -m server.app`  
+
+We need to run this as a module as there are dependencies between some packages/modules and they need a common root package (server).
 
 ### /modbus_slave
 This is the directory that contains simulation servers of all inverters. This is started with docker-compose-no_crypt or you can start it locally using pythion (this seems painfully slow on windows for some reason). Alternativealy you run the docker container (create it with `docker-compose build` first):
