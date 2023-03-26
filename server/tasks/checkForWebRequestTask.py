@@ -1,12 +1,12 @@
 from threading import Thread
 
-#from server.web.server import Server
+from server.web.server import Server
 
 from .task import Task
 
 
 class CheckForWebRequest(Task):
-  def __init__(self, eventTime: int, stats: dict, webServer):
+  def __init__(self, eventTime: int, stats: dict, webServer:Server):
     super().__init__(eventTime, stats)
     self.webServer = webServer
 

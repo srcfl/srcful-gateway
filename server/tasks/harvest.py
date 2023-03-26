@@ -1,7 +1,7 @@
 from .task import Task
 from .srcfulAPICallTask import SrcfulAPICallTask
-from inverters.inverter import Inverter
-import crypto.crypto as atecc608b
+from server.inverters.inverter import Inverter
+import server.crypto.crypto as atecc608b
 
 class Harvest(Task):
   def __init__(self, eventTime: int, stats: dict, inverter: Inverter):
@@ -11,7 +11,6 @@ class Harvest(Task):
     self.stats['harvests'] = 0
     self.barn = {}
     self.transport = None
-
 
   def execute(self, eventTime) -> Task or list[Task]:
     try:
@@ -37,7 +36,7 @@ class Harvest(Task):
     return self
   
 class HarvestTransport(SrcfulAPICallTask):
-  # this is just generated code for now
+  
   def __init__(self, eventTime: int, stats: dict, barn: dict):
     super().__init__(eventTime, stats)
     self.stats['lastHarvestTransport'] = 'n/a'
@@ -48,10 +47,6 @@ class HarvestTransport(SrcfulAPICallTask):
 
   def _data(self):
     atecc608b.initChip()
-
-    # Print pubKey to console
-    # this is for testing?
-    #atecc608b.getPublicKey()
 
     JWT = atecc608b.buildJWT(self.barn)
     # print(JWT)

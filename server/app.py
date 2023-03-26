@@ -1,20 +1,20 @@
 import argparse
 import queue
 import time
-from tasks.checkForWebRequestTask import CheckForWebRequest
-import web.server
+from server.tasks.checkForWebRequestTask import CheckForWebRequest
+import server.web.server
 
-from tasks.task import Task
-from tasks.harvest import Harvest
+from server.tasks.task import Task
+from server.tasks.harvest import Harvest
 
 
 
 import time
 
-from inverters.inverter import Inverter
-from inverters.InverterTCP import InverterTCP
+from server.inverters.inverter import Inverter
+from server.inverters.InverterTCP import InverterTCP
 
-import crypto.crypto as crypto
+import server.crypto.crypto as crypto
 
 
 def getChipInfo():
@@ -106,6 +106,7 @@ def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
            'energyHarvested': 0, 'webRequests': 0, 'name': 'deadbeef'}
 
   
+  webServer = server.web.server.Server(webHost, stats, time_ms, getChipInfo)
   print("Server started http://%s:%s" % (webHost[0], webHost[1]))
 
   #inverter_ip = "10.130.1.235" # for solarEdge inverter in the lab at LNU
@@ -117,7 +118,7 @@ def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
   inverter = InverterTCP(inverter)
   inverter.open()
 
-  webServer = web.server.Server(webHost, stats, time_ms, getChipInfo)
+  
 
   # put some initial tasks in the queue
   tasks.put(Harvest(startTime, stats, inverter))

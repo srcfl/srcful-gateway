@@ -8,4 +8,4 @@ RUN pip install typing-extensions
 EXPOSE 5000
 
 ENTRYPOINT ["python"]
-CMD ["server/app.py", "-ih", "srcfull-inverter", "-it", "solaredge"]
+CMD ["-m", "server.app", "-ih", "srcfull-inverter", "-it", "solaredge"]

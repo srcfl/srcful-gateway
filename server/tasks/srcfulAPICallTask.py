@@ -1,4 +1,4 @@
-from tasks.task import Task
+from .task import Task
 from threading import Thread
 import requests
 
