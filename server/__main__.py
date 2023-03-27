@@ -16,4 +16,6 @@ if __name__ == "__main__":
 
   args = parser.parse_args()
 
+  print("Running with the following configuration:", args)
+
   app.main((args.web_host, args.web_port), (args.inverter_host, args.inverter_port, args.inverter_type))
