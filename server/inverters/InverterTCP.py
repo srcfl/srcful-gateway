@@ -1,6 +1,6 @@
 from .inverter import Inverter
 from pyModbusTCP.client import ModbusClient
-from .inverter_types import INVERTERS
+from .inverter_types import INVERTERS, READ, HOLDING, SCAN_RANGE, SCAN_START
 from typing_extensions import TypeAlias
 
 
@@ -37,21 +37,23 @@ class InverterTCP(Inverter):
     regs = []
     vals = []
 
-    for entry in self.registers["read"]:
+    for entry in self.registers[READ]:
+      scan_start = entry[SCAN_START]
+      scan_range = entry[SCAN_RANGE]
       
-      print("reading register:", entry["scan_start"], "-", entry["scan_range"])
+      print("reading register:", scan_start, "-", scan_range)
 
       # Populate a list of registers that we want to read from
       r = [x for x in range(
-          entry["scan_start"], entry["scan_start"] + entry["scan_range"], 1)]
+          scan_start, scan_start + scan_range, 1)]
 
       # Read the registers
       try:
         v = self.client.read_holding_registers(
-          entry["scan_start"], entry["scan_range"])
-        print("Reading:", entry["scan_start"], "-", entry["scan_range"], ":", v)
+          scan_start, scan_range)
+        print("Reading:", scan_start, "-", scan_range, ":", v)
       except: 
-        print("error reading register:", entry["scan_start"], "-", entry["scan_range"])
+        print("error reading register:", scan_start, "-", scan_range)
 
       regs += r
       vals += v
