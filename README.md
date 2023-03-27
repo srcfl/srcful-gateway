@@ -42,7 +42,7 @@ To start a local dev version of the gw you can simply do:
 `docker-commpose -f docker-compose-no_crypt.yml up`
 
 or you can run the main module with python directly from the parent directory of `server` (this can be a good idea for debugging).:  
-`python -m server.app`  
+`python -m server.__main__`  
 
 We need to run this as a module as there are dependencies between some packages/modules and they need a common root package (server).
 
