@@ -32,7 +32,8 @@ class MyDataBank(DataBank):
         # populate virtual registers dict with current datetime values
         v_regs_d = {}
 
-        intervals = inverters.INVERTERS[self.inv_type]['holding']
+        intervals = inverters.INVERTERS[self.inv_type]['read']
+        print(self.inv_type)
 
         for interval in intervals:
             start = interval['scan_start']
