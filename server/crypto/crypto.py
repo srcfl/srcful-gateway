@@ -17,10 +17,14 @@ import base64
 ATCA_SUCCESS = 0x00
 
 def initChip() -> bool:
+
+  # this is for raspberry pi should probably be checked better
   cfg = cfg_ateccx08a_i2c_default()
   cfg.cfg.atcai2c.bus = 1  # raspberry pi
   icfg = getattr(cfg.cfg, 'atcai2c')
   setattr(icfg, "address",  int('6a', 16))
+
+    
   return atcab_init(cfg) == ATCA_SUCCESS
 
 
