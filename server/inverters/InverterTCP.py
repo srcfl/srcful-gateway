@@ -42,8 +42,11 @@ class InverterTCP(Inverter):
           entry["scan_start"], entry["scan_start"] + entry["scan_range"], 1)]
 
       # Read the registers
-      v = self.client.read_holding_registers(
+      try:
+        v = self.client.read_holding_registers(
           entry["scan_start"], entry["scan_range"])
+      except: 
+        print("error reading register:", entry["scan_start"], "-", entry["scan_range"])
 
       regs += r
       vals += v
