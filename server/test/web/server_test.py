@@ -16,7 +16,7 @@ def test_open_close():
   assert s._webServer is None
 
 def test_handler_postBytest2Dict():
-  h = requestHandlerFactory(None, None, None)
+  h = requestHandlerFactory(None, None, None, None)
   d = h.post2Dict('')
   assert  d == {}
   assert h.post2Dict('foo') == {}
@@ -26,7 +26,7 @@ def test_handler_postBytest2Dict():
   assert h.post2Dict('name=John%20Doe&age=30&location=New%20York') == {'name': 'John Doe', 'age': '30', 'location': 'New York'}
 
 def test_handler_getPostdata():
-  h = requestHandlerFactory(None, None, None)
+  h = requestHandlerFactory(None, None, None, None)
   assert h.getData({'Content-Length': '0'}, BytesIO(b'')) == {}
   
   data = b'name=John%20Doe&age=30&location=New%20York'

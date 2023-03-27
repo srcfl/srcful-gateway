@@ -25,8 +25,8 @@ class InverterTCP(Inverter):
     return self.setup[2]
 
   def open(self):
-    self.client = ModbusClient(host=self.getHost(), port=self.getPort())
-    self.client.open()
+    self.client = ModbusClient(host=self.getHost(), port=self.getPort(), auto_open=False, auto_close=False)
+    return self.client.open()
 
   def close(self):
     self.client.close()

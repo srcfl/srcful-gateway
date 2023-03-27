@@ -1,12 +1,12 @@
 import argparse
 import queue
+import select
+import sys
 import time
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
 
-from server.tasks.task import Task
-from server.tasks.harvest import Harvest
-
+from server.tasks.openInverterTask import OpenInverterTask
 
 
 import time
@@ -36,27 +36,6 @@ def time_ms():
   return time.time_ns() // 1_000_000
 
 
-class ReadFreq(Task):
-  def __init__(self, eventTime: int, stats: dict, inverter: Inverter):
-    super().__init__(eventTime, stats)
-    self.inverter = inverter
-    self.stats['lastFreq'] = 'n/a'
-
-  def execute(self, eventTime) -> Task or list[Task]:
-    try:
-      freq = self.inverter.readFrequency()
-      self.stats['lastFreq'] = freq
-      self.stats['freqReads'] += 1
-    except:
-      print('error reading freq')
-      self.time = eventTime + 1000
-      self.stats['lastFreq'] = 'error'
-      return self
-
-    self.time = eventTime + 100
-    return self
-
-
 def gatewayNameQuery(id):
   return """
   {
@@ -76,18 +55,16 @@ def mainLoop(tasks: queue.PriorityQueue):
 
   def addTask(task):
     if task.time < time_ms():
-      print('task is in the past')
+      print('task is in the past adjusting time')
       task.time = time_ms() + 100
     tasks.put(task)
 
   while True:
     task = tasks.get()
     delay = (task.time - time_ms()) / 1000
-    if delay > 0:
+    if delay > 0.01:
       time.sleep(delay)
 
-    # if time_ms() % 2000 == 0:
-    # print(task.stats)
 
     newTask = task.execute(time_ms())
 
@@ -114,23 +91,24 @@ def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
   #inverter_type = "solaredge"
 
   tasks = queue.PriorityQueue()
-  # docker compose service name
-  inverter = InverterTCP(inverter)
-  inverter.open()
 
-  
 
   # put some initial tasks in the queue
-  tasks.put(Harvest(startTime, stats, inverter))
+  tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter)))
   tasks.put(CheckForWebRequest(startTime, stats, webServer))
-  tasks.put(ReadFreq(startTime, stats, inverter))
 
   try:
     mainLoop(tasks)
+    #print("Sleeping for 10 seconds")
+    #time.sleep(10)
   except KeyboardInterrupt:
     pass
+  except Exception as e:
+    print("Unexpected error:", sys.exc_info()[0])
+    print(e)
   finally:
-    inverter.close()
+    if 'inverter' in stats and stats['inverter'] is not None:
+      stats['inverter'].close()
     webServer.close()
     print("Server stopped.")
 

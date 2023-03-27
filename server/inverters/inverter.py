@@ -3,7 +3,7 @@ class Inverter:
     def __init__(self):
         pass
     
-    def open(self):
+    def open(self) -> bool:
         '''Opens the Modbus connection to the inverter.'''
         raise NotImplementedError("Subclass must implement abstract method")
     

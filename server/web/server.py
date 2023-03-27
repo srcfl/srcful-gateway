@@ -1,18 +1,20 @@
 import json
+import queue
 from typing import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 from .get import root
+from .post import inverter
 
 
-def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callable):
+def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callable, tasks:queue.Queue):
 
   class Handler(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-      super(Handler, self).__init__(*args, **kwargs)
-
       self.api_get = {}
-      self.api_post = {}
+      self.api_post = {'inverter': inverter.Handler()}
+      self.tasks = tasks
+      super(Handler, self).__init__(*args, **kwargs)
 
     @staticmethod
     def post2Dict(post_data:str):
@@ -42,15 +44,15 @@ def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callabl
         post_data = Handler.post2Dict(content)
       except:
         post_data = {}
-        
+
       return post_data
 
     def do_POST(self):
-      handler = Handler.getAPIHandler(self.path, "/api", self.api_post)
+      handler = Handler.getAPIHandler(self.path, "/api/", self.api_post)
       if handler is not None:
         post_data = Handler.getData(self.headers, self.rfile)
         
-        code, response = handler.doPost(post_data)
+        code, response = handler.doPost(post_data, stats, tasks)
         self.send_response(code)
         self.send_header("Content-type", "application/json")
         response = bytes(response, "utf-8")
@@ -82,8 +84,10 @@ class Server:
   _webServer:HTTPServer = None
 
   def __init__(self, webHost:tuple[str, int], stats:dict, timeMSFunc:Callable, chipInfoFunc:Callable):
-    self._webServer = HTTPServer(webHost, requestHandlerFactory(stats, timeMSFunc, chipInfoFunc))
+    self.tasks = queue.Queue()
+    self._webServer = HTTPServer(webHost, requestHandlerFactory(stats, timeMSFunc, chipInfoFunc, self.tasks))
     self._webServer.socket.setblocking(False)
+    
 
   def close(self):
     if self._webServer:
