@@ -13,9 +13,10 @@ if __name__ == "__main__":
   parser.add_argument('-ih', '--inverter_host', type=str, default='localhost', help='host for the inverter.')
   parser.add_argument('-ip', '--inverter_port', type=int, default=502, help='port for the inverter (default=502).')
   parser.add_argument('-it', '--inverter_type', type=str, default='unknown', help='type of inverter, e.g. huawei (default=unknown).')
+  parser.add_argument('-ia', '--inverter_address', type=int, default=1, help='modbus address of the inverter (default=1).')
 
   args = parser.parse_args()
 
   print("Running with the following configuration:", args)
 
-  app.main((args.web_host, args.web_port), (args.inverter_host, args.inverter_port, args.inverter_type))
+  app.main((args.web_host, args.web_port), (args.inverter_host, args.inverter_port, args.inverter_type, args.inverter_address))

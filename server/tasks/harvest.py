@@ -19,8 +19,7 @@ class Harvest(Task):
       self.stats['harvests'] += 1
       self.barn[eventTime] = harvest
     except Exception as e:
-      print(e)
-      print('error reading harvest')
+      print('error reading harvest', e)
       return None
     
     self.time = eventTime + 1000

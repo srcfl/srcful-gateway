@@ -9,9 +9,10 @@ from typing_extensions import TypeAlias
 
 class InverterTCP(Inverter):
 
-  Setup: TypeAlias = tuple[str | bytes | bytearray, int, str] # address acceptable for an AF_INET socket with inverter type
+  Setup: TypeAlias = tuple[str | bytes | bytearray, int, str, int] # address acceptable for an AF_INET socket with inverter type
 
   def __init__(self, setup: Setup):
+    print("InverterTCP: ", setup)
     self.setup = setup
     self.registers = INVERTERS[self.getType()]
     print("InverterTCP: ", self.registers)
@@ -25,9 +26,12 @@ class InverterTCP(Inverter):
   
   def getType(self):
     return self.setup[2]
+  
+  def getAddress(self):
+    return self.setup[3]
 
   def open(self):
-    self.client = ModbusClient(host=self.getHost(), port=self.getPort(), auto_open=False, auto_close=False)
+    self.client = ModbusClient(host=self.getHost(), port=self.getPort(), unit_id=self.getAddress(), auto_open=False, auto_close=False)
     return self.client.open()
 
   def close(self):
