@@ -1,6 +1,7 @@
 SOLAREDGE = "solaredge"
 SUNGROW = "sungrow"
 HUAWEI = "huawei"
+UNKNOWN = "unknown"
 
 READ = "read"
 HOLDING = "holding"
@@ -8,6 +9,12 @@ SCAN_START = "scan_start"
 SCAN_RANGE = "scan_range"
 
 INVERTERS = {
+
+    UNKNOWN: {
+        READ: [
+            {SCAN_START: 30000, SCAN_RANGE: 1}
+        ],
+    },
 
     SUNGROW: {
         # https://github.com/bohdan-s/Sungrow-Inverter/raw/main/Modbus%20Information/Communication%20Protocol%20of%20PV%20Grid-Connected%20String%20Inverters_V1.1.37_EN.pdf

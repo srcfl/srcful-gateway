@@ -49,7 +49,7 @@ class InverterTCP(Inverter):
 
       # Read the registers
       try:
-        v = self.client.read_holding_registers(
+        v = self.client.read_input_registers(
           scan_start, scan_range)
         print("Reading:", scan_start, "-", scan_range, ":", v)
       except: 
