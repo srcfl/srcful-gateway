@@ -9,7 +9,7 @@ class Handler:
     if 'ip' in post_data and 'port' in post_data and 'type' in post_data:
       try:
         print(post_data)
-        inverter = InverterTCP((post_data['ip'], int(post_data['port']), post_data['type']))
+        inverter = InverterTCP((post_data['ip'], int(post_data['port']), post_data['type'], int(post_data['address'])))
         tasks.put(OpenInverterTask(100, stats, inverter))
         return 200, json.dumps({'status': 'ok'})
       except Exception as e:

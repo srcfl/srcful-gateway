@@ -15,7 +15,7 @@ class InverterTCP(Inverter):
     print("InverterTCP: ", setup)
     self.setup = setup
     self.registers = INVERTERS[self.getType()]
-    print("InverterTCP: ", self.registers)
+    # print("InverterTCP: ", self.registers)
     print(self.getType())
 
   def getHost(self):
@@ -41,23 +41,30 @@ class InverterTCP(Inverter):
     regs = []
     vals = []
 
-    for entry in self.registers[READ]:
-      scan_start = entry[SCAN_START]
-      scan_range = entry[SCAN_RANGE]
+    try:
+      for entry in self.registers[READ]:
+        scan_start = entry[SCAN_START]
+        scan_range = entry[SCAN_RANGE]
+        
+        r = self.populateRegisters(scan_start, scan_range)
+        v = self.readInputRegisters(scan_start, scan_range)
+        regs += r
+        vals += v
+    except:
+      print("error reading input registers")
       
-      r = self.populateRegisters(scan_start, scan_range)
-      v = self.readInputRegisters(scan_start, scan_range)
-      regs += r
-      vals += v
-    
-    for entry in self.registers[HOLDING]:
-      scan_start = entry[SCAN_START]
-      scan_range = entry[SCAN_RANGE]
-      
-      r = self.populateRegisters(scan_start, scan_range)
-      v = self.readHoldingRegisters(scan_start, scan_range)
-      regs += r
-      vals += v
+    try:
+      if self.registers[HOLDING]:
+        for entry in self.registers[HOLDING]:
+          scan_start = entry[SCAN_START]
+          scan_range = entry[SCAN_RANGE]
+          
+          r = self.populateRegisters(scan_start, scan_range)
+          v = self.readHoldingRegisters(scan_start, scan_range)
+          regs += r
+          vals += v
+    except:
+      print("error reading holding registers")
 
     # Zip the registers and values together convert them into a dictionary
     res = dict(zip(regs, vals))

@@ -32,7 +32,7 @@ class MyDataBank(DataBank):
         # populate virtual registers dict with current datetime values
         v_regs_d = {}
 
-        intervals = inverters.INVERTERS[self.inv_type]['read']
+        intervals = inverters.INVERTERS[self.inv_type]['holding']
         print(self.inv_type)
 
         for interval in intervals:
@@ -51,6 +51,29 @@ class MyDataBank(DataBank):
         except KeyError:
             return
 
+    def get_input_registers(self, address, number=1, srv_info=None):
+        """Get virtual input registers."""
+        # populate virtual registers dict with current datetime values
+        v_regs_d = {}
+
+        intervals = inverters.INVERTERS[self.inv_type]['read']
+        print(self.inv_type)
+
+        for interval in intervals:
+            start = interval['scan_start']
+            end = start + interval['scan_range']
+
+            for i in range(start, end):
+                v_regs_d[i] = random.randint(0, 250)
+
+        print(v_regs_d)
+
+        # build a list of virtual regs to return to server data handler
+        # return None if any of virtual registers is missing
+        try:
+            return [v_regs_d[a] for a in range(address, address + number)]
+        except KeyError:
+            return
 
 if __name__ == '__main__':
     # parse args

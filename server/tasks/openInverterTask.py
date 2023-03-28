@@ -29,6 +29,7 @@ class OpenInverterTask(Task):
   def execute(self, eventTime):
     try:
       if self.inverter.open():
+        print("HEEEEEEEEREEEEE")
         if 'inverter' in self.stats and self.stats['inverter'] != None:
           self.stats['inverter'].close()
         self.stats['inverter'] = self.inverter
@@ -38,7 +39,6 @@ class OpenInverterTask(Task):
         print("Could not open inverter")
         return None
     except Exception as e:
-      print('exception error opening inverter')
-      print(e)
+      print('exception error opening inverter:', e)
       self.time = eventTime + 3000
       return self

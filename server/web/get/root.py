@@ -31,7 +31,7 @@ def inverterForm():
                 ip: formData.get('ip'),
                 port: formData.get('port'),
                 type: formData.get('type'),
-                addresss: formData.get('addresss')
+                address: formData.get('address')
             };
 
             const response = await fetch('/api/inverter', {
