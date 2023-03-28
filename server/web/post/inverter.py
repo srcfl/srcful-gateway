@@ -8,6 +8,7 @@ class Handler:
   def doPost(self, post_data:dict, stats:dict, tasks:queue.Queue) -> tuple[int, str]:
     if 'ip' in post_data and 'port' in post_data and 'type' in post_data:
       try:
+        print(post_data)
         inverter = InverterTCP((post_data['ip'], int(post_data['port']), post_data['type']))
         tasks.put(OpenInverterTask(100, stats, inverter))
         return 200, json.dumps({'status': 'ok'})
