@@ -17,11 +17,11 @@ class SrcfulAPICallTask(Task):
     '''override to the data to send to the server, data argument in post method'''
     return None
 
-  def _on200(self, reply):
+  def _on200(self, reply:requests.Response):
     # throw not implemented exception
     NotImplementedError
 
-  def _onError(self, reply) -> int:
+  def _onError(self, reply:requests.Response) -> int:
     '''return 0 to stop retrying, otherwise return the number of milliseconds to wait before retrying'''
     # throw not implemented exception
     NotImplementedError
