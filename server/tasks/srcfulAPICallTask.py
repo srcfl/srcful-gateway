@@ -19,12 +19,12 @@ class SrcfulAPICallTask(Task):
 
   def _on200(self, reply:requests.Response):
     # throw not implemented exception
-    NotImplementedError
+    raise NotImplementedError
 
   def _onError(self, reply:requests.Response) -> int:
     '''return 0 to stop retrying, otherwise return the number of milliseconds to wait before retrying'''
     # throw not implemented exception
-    NotImplementedError
+    raise NotImplementedError
 
   def execute(self, eventTime):
 

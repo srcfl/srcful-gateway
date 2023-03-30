@@ -8,6 +8,8 @@ node_modules
 
 .vscode
 
+.coverage
+
 # emacs
 .dir-locals.el
 

@@ -23,6 +23,8 @@ def test_executeHarvest():
   assert len(t.barn) == 1
   assert t.time == 17 + 1000
 
+
+
 def test_executeHarvestx10():
   # in this test we check that we get the desired behavior when we execute a harvest task 10 times
   # the first 9 times we should get the same task back
@@ -46,6 +48,41 @@ def test_executeHarvestx10():
   assert ret[0] is t
   assert ret[1] is not t
   assert ret[1].barn == {0:registers[0], 1:registers[1], 2:registers[2], 3:registers[3], 4:registers[4], 5:registers[5], 6:registers[6], 7:registers[7], 8:registers[8], 17:registers[9]}
+
+def test_executeHarvestNoTransport():
+  mockInverter = Mock()
+  registers = [{'1':1717 + x} for x in range(10)]
+  t = harvest.Harvest(0, {}, mockInverter)
+  
+
+  for i in range(len(registers)):
+    mockInverter.read.return_value = registers[i]
+    t.execute(i)
+
+  # we should now have issued a transport and the barn should be empty
+  assert t.transport is not None
+  assert len(t.barn) == 0
+
+  # we now continue to harvest but these should not be transported as the transport task is not executed
+  for i in range(len(registers)):
+    mockInverter.read.return_value = registers[i]
+    t.execute(i + 100)
+
+  assert len(t.barn) == 10
+
+  # finally we fake that the barn has been transported and we should get a new transport task
+  # note that we only transport every 10th harvest
+  t.transport.reply = "all done"
+  for i in range(len(registers)):
+    mockInverter.read.return_value = registers[i]
+    ret = t.execute(i + 200)
+  assert len(t.barn) == 0
+  assert ret is not t
+  assert len(ret) == 2
+  assert ret[0] is t
+  assert ret[1] is not t
+
+
 
 def test_executeHarvest_failedRead():
   mockInverter = Mock()
