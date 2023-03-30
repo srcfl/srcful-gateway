@@ -1,18 +1,10 @@
 import queue
-import select
 import sys
 import time
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
-
 from server.tasks.openInverterTask import OpenInverterTask
-
-
-import time
-
-from server.inverters.inverter import Inverter
 from server.inverters.InverterTCP import InverterTCP
-
 import server.crypto.crypto as crypto
 
 
@@ -25,7 +17,6 @@ def getChipInfo():
   crypto.release()
 
   return 'device: ' + device_name + ' serial: ' + serial_number
-  # return 'device: dret' + ' serial: 0xdeadbeef'
 
 
 
@@ -81,16 +72,10 @@ def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
   stats = {'startTime': startTime, 'freqReads': 0,
            'energyHarvested': 0, 'webRequests': 0, 'name': 'deadbeef'}
 
-  
   webServer = server.web.server.Server(webHost, stats, time_ms, getChipInfo)
   print("Server started http://%s:%s" % (webHost[0], webHost[1]))
 
-  #inverter_ip = "10.130.1.235" # for solarEdge inverter in the lab at LNU
-  #inverter_ip = "srcfull-inverter" # for testing with docker container service
-  #inverter_type = "solaredge"
-
   tasks = queue.PriorityQueue()
-
 
   # put some initial tasks in the queue
   tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter)))
@@ -98,8 +83,6 @@ def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
 
   try:
     mainLoop(tasks)
-    #print("Sleeping for 10 seconds")
-    #time.sleep(10)
   except KeyboardInterrupt:
     pass
   except Exception as e:

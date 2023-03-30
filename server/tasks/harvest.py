@@ -26,7 +26,6 @@ class Harvest(Task):
 
     # check if it is time to transport the harvest  
     if ((len(self.barn) >= 10 and len(self.barn) % 10 == 0) and (self.transport == None or self.transport.reply != None)):
-      #print("transporting harvest..." + str(len(self.barn)))
       self.transport =  HarvestTransport(eventTime + 100, self.stats, self.barn)
       self.barn.clear()
       return [self, self.transport]
@@ -45,16 +44,11 @@ class HarvestTransport(SrcfulAPICallTask):
 
   def _data(self):
     atecc608b.initChip()
-
     JWT = atecc608b.buildJWT(self.barn)
-    # print(JWT)
-
     atecc608b.release()
     return JWT
 
   def _on200(self, reply):
-    #self.stats['lastHarvestTransport'] = reply.json()['data']['harvestTransport']['id']
-    #print("transported harvest..." + str(len(self.barn)))
     print("Response:", reply)
     self.stats['harvestTransports'] += 1
 
@@ -62,5 +56,3 @@ class HarvestTransport(SrcfulAPICallTask):
     print("Response:", reply)
     self._on200(reply)
     return 0
-    #print('error transporting harvest')
-    #self.stats['lastHarvestTransport'] = 'error'

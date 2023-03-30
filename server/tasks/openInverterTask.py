@@ -29,7 +29,6 @@ class OpenInverterTask(Task):
   def execute(self, eventTime):
     try:
       if self.inverter.open():
-        print("HEEEEEEEEREEEEE")
         if 'inverter' in self.stats and self.stats['inverter'] != None:
           self.stats['inverter'].close()
         self.stats['inverter'] = self.inverter
