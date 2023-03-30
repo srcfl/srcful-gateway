@@ -1,5 +1,35 @@
 from typing import Callable
 
+def cryptoStuff():
+  return """<h1>Crypto API</h1>
+  <p>Device Name: <span id="device-name"></span></p>
+  <p>Serial Number: <span id="serial-number"></span></p>
+  <p>Public Key: <span id="public-key"></span></p>
+  <p>Public Key PEM:</p>
+  <textarea id="public-key-pem" rows="10" cols="50"></textarea>
+  
+  <script>
+    async function fetchCryptoData() {
+      const response = await fetch('/api/crypto');
+      const data = await response.json();
+      document.getElementById('device-name').textContent = data.deviceName;
+      document.getElementById('serial-number').textContent = data.serialNumber;
+      document.getElementById('public-key').textContent = data.publicKey;
+      document.getElementById('public-key-pem').textContent = formatPEM(data.publicKey_pem);
+    }
+
+    function formatPEM(pem) {
+      let result = "-----BEGIN PUBLIC KEY-----";
+      for (let i = 0; i < pem.length; i += 64) {
+        result += pem.slice(i, i + 64) + \"\\n\";
+      }
+      result += "-----End PUBLIC KEY-----";
+      return result;
+    }
+
+    fetchCryptoData();
+  </script>"""
+
 def inverterForm():
   return """
   <h1>Inverter Form</h1>
@@ -75,6 +105,8 @@ class Handler:
     ret += f"<p>Uptime (days, hours, minutes, seconds): {(days, hours, minutes, seconds)}</p>"
 
     ret += inverterForm()
+
+    ret += cryptoStuff()
 
     ret += f"<p>freqReads: {freqReads} in {elapsedTime} ms<br/>"
     ret += f"average freqReads: {freqReads / elapsedTime * 1000} per second</p>"

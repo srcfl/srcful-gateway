@@ -1,5 +1,8 @@
 from io import BytesIO
+from unittest.mock import patch
 from server.web.server import Server, requestHandlerFactory
+from http.server import BaseHTTPRequestHandler
+import pytest
 
 from http.server import HTTPServer
 
@@ -8,6 +11,28 @@ def timeFunc():
   return 0
 def getChipInfoFunc():
   return "testymctestface"
+
+@pytest.fixture
+def mock_handle():
+  pass
+
+@pytest.fixture
+def mock_setup():
+  pass
+
+@pytest.fixture
+def mock_finish():
+  pass
+
+@patch.object(BaseHTTPRequestHandler, 'finish')
+@patch.object(BaseHTTPRequestHandler, 'handle')
+@patch.object(BaseHTTPRequestHandler, 'setup')
+def test_handler_apiGetEnpoints(mock_setup, mock_handle, mock_finish):
+  h = requestHandlerFactory(None, None, None, None)(None, None, None)
+  handler = h.getAPIHandler('/api/crypto', '/api/', h.api_get)
+  assert handler != None
+  assert hasattr(handler, 'doGet')
+
 
 def test_open_close():
   s = Server(('localhost', 8081), {}, timeFunc, getChipInfoFunc)

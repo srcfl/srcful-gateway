@@ -4,6 +4,7 @@ from typing import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 from .get import root
+from .get import crypto
 from .post import inverter
 
 
@@ -11,7 +12,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callabl
 
   class Handler(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-      self.api_get = {}
+      self.api_get = {'crypto': crypto.Handler()}
       self.api_post = {'inverter': inverter.Handler()}
       self.tasks = tasks
       super(Handler, self).__init__(*args, **kwargs)
@@ -47,18 +48,21 @@ def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callabl
 
       return post_data
 
+    def sendApiResponse(self, code:int, response:str):
+      self.send_response(code)
+      self.send_header("Content-type", "application/json")
+      response = bytes(response, "utf-8")
+      self.send_header("Content-Length", len(response))
+      self.end_headers()
+      self.wfile.write(response)
+
     def do_POST(self):
       handler = Handler.getAPIHandler(self.path, "/api/", self.api_post)
       if handler is not None:
         post_data = Handler.getData(self.headers, self.rfile)
         
         code, response = handler.doPost(post_data, stats, tasks)
-        self.send_response(code)
-        self.send_header("Content-type", "application/json")
-        response = bytes(response, "utf-8")
-        self.send_header("Content-Length", len(response))
-        self.end_headers()
-        self.wfile.write(response)
+        self.sendApiResponse(code, response)
         return
       else:
         self.send_response(404)
@@ -67,15 +71,20 @@ def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callabl
 
     def do_GET(self):
 
-      htlm = root.Handler().doGet(stats, timeMSFunc, chipInfoFunc)
-      html_bytes = bytes(htlm, "utf-8")
+      handler = Handler.getAPIHandler(self.path, "/api/", self.api_get)
+      if handler is not None:
+        code, response = handler.doGet(stats, timeMSFunc, chipInfoFunc)
+        self.sendApiResponse(code, response)
+      else:
+        htlm = root.Handler().doGet(stats, timeMSFunc, chipInfoFunc)
+        html_bytes = bytes(htlm, "utf-8")
 
-      self.send_response(200)
-      self.send_header("Content-type", "text/html")
-      self.send_header("Content-Length", len(html_bytes))
-      self.end_headers()
-      
-      self.wfile.write(html_bytes)
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.send_header("Content-Length", len(html_bytes))
+        self.end_headers()
+        
+        self.wfile.write(html_bytes)
       
 
   return Handler
