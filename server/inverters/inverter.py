@@ -15,6 +15,18 @@ class Inverter:
         '''Reads the inverter's data.'''
         raise NotImplementedError("Subclass must implement abstract method")
     
+    def populateRegisters(self):
+        '''Populates the inverter's registers.'''
+        raise NotImplementedError("Subclass must implement abstract method")
+    
+    def readInputRegisters(self):
+        '''Reads the inverter's input registers.'''
+        raise NotImplementedError("Subclass must implement abstract method")
+    
+    def readHoldingRegisters(self):
+        '''Reads the inverter's holding registers.'''
+        raise NotImplementedError("Subclass must implement abstract method")
+    
     def readPower(self):
         '''Reads the inverter's power data.'''
         raise NotImplementedError("Subclass must implement abstract method")

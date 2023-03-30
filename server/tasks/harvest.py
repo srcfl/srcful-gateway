@@ -20,15 +20,13 @@ class Harvest(Task):
       self.stats['harvests'] += 1
       self.barn[eventTime] = harvest
     except Exception as e:
-      print(e)
-      print('error reading harvest')
+      print('error reading harvest', e)
       return None
     
     self.time = eventTime + 1000
 
     # check if it is time to transport the harvest  
     if ((len(self.barn) >= 10 and len(self.barn) % 10 == 0) and (self.transport == None or self.transport.reply != None)):
-      #print("transporting harvest..." + str(len(self.barn)))
       self.transport =  HarvestTransport(eventTime + 100, self.stats, self.barn)
       self.barn.clear()
       return [self, self.transport]
@@ -47,16 +45,11 @@ class HarvestTransport(SrcfulAPICallTask):
 
   def _data(self):
     atecc608b.initChip()
-
     JWT = atecc608b.buildJWT(self.barn)
-    # print(JWT)
-
     atecc608b.release()
     return JWT
 
-  def _on200(self, reply:requests.Response):
-    #self.stats['lastHarvestTransport'] = reply.json()['data']['harvestTransport']['id']
-    #print("transported harvest..." + str(len(self.barn)))
+  def _on200(self, reply):
     print("Response:", reply)
     self.stats['harvestTransports'] += 1
 
@@ -64,5 +57,3 @@ class HarvestTransport(SrcfulAPICallTask):
     print("Response:", reply)
     self._on200(reply)
     return 0
-    #print('error transporting harvest')
-    #self.stats['lastHarvestTransport'] = 'error'

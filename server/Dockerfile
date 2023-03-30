@@ -8,5 +8,5 @@ RUN pip install -r server/requirements.txt
 EXPOSE 5000
 
 ENTRYPOINT ["python"]
-CMD ["-m", "server", "-ih", "192.168.40.145", "-it", "sungrow"]
+CMD ["-m", "server", "-ih", "192.168.40.145", "-it", "unknown"]
 # CMD ["-m", "server.app", "-ih", "10.130.1.235", "-it", "solaredge"]

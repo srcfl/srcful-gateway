@@ -38,7 +38,6 @@ class OpenInverterTask(Task):
         print("Could not open inverter")
         return None
     except Exception as e:
-      print('exception error opening inverter')
-      print(e)
+      print('exception error opening inverter:', e)
       self.time = eventTime + 3000
       return self
