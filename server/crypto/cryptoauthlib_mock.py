@@ -953,17 +953,20 @@ def atcab_genkey(self, key_id, public_key):
 #--------------------------------------------------------------------#
 # atcab_get_pubkey(key_id, public_key):
 
-def atcab_get_pubkey(self, key_id, public_key):
+def atcab_get_pubkey(key_id, public_key):
 
-    if not isinstance(key_id, int):
-        raise TypeError
+  if not isinstance(key_id, int):
+    raise TypeError
+    
+  c_public_key = create_string_buffer(64)
 
-    if not isinstance(public_key, c_ptr):
-        raise TypeError
+  if not isinstance(byref(c_public_key), c_ptr):
+    raise TypeError
 
-    memmove(cast(public_key, c_void_p).value, cast(byref(self.r_genkey_pubkey), c_void_p).value, len(self.r_genkey_pubkey))
+  memmove(cast(c_public_key, c_void_p).value, cast(byref(r_genkey_pubkey), c_void_p).value, len(r_genkey_pubkey))
+  public_key[0:] = bytes(c_public_key.raw)
 
-    return Status.ATCA_SUCCESS
+  return Status.ATCA_SUCCESS
 
 #--------------------------------------------------------------------#
 # atcab_hmac(mode, key_id, digest):
