@@ -43,7 +43,7 @@ INVERTERS = {
 
     HUAWEI: {
         # https://javierin.com/wp-content/uploads/sites/2/2021/09/Solar-Inverter-Modbus-Interface-Definitions.pdf
-        READ: [
+        HOLDING: [
             # Model, SN, PN
             {SCAN_START: 30000, SCAN_RANGE: 35},
             # num of strings, mppt trackers...
@@ -60,21 +60,19 @@ INVERTERS = {
             {SCAN_START: 35300, SCAN_RANGE: 8},
             {SCAN_START: 37113, SCAN_RANGE: 2},
             {SCAN_START: 37200, SCAN_RANGE: 3},
-        ],
-        HOLDING: [
-            {SCAN_START: 40000, SCAN_RANGE: 2},
-            {SCAN_START: 40037, SCAN_RANGE: 2},
-            {SCAN_START: 40120, SCAN_RANGE: 1},
-            {SCAN_START: 40122, SCAN_RANGE: 2},
-            {SCAN_START: 40125, SCAN_RANGE: 3},
-            {SCAN_START: 40129, SCAN_RANGE: 2},
-            {SCAN_START: 40134, SCAN_RANGE: 64},
-            {SCAN_START: 40198, SCAN_RANGE: 1},
-            {SCAN_START: 40198, SCAN_RANGE: 1},
-            # Startup
-            {SCAN_START: 40200, SCAN_RANGE: 1},
-            # Shutdown
-            {SCAN_START: 40201, SCAN_RANGE: 1},
+            # {SCAN_START: 40000, SCAN_RANGE: 2},
+            # {SCAN_START: 40037, SCAN_RANGE: 2},
+            # {SCAN_START: 40120, SCAN_RANGE: 1},
+            # {SCAN_START: 40122, SCAN_RANGE: 2},
+            # {SCAN_START: 40125, SCAN_RANGE: 3},
+            # {SCAN_START: 40129, SCAN_RANGE: 2},
+            # {SCAN_START: 40134, SCAN_RANGE: 64},
+            # {SCAN_START: 40198, SCAN_RANGE: 1},
+            # {SCAN_START: 40198, SCAN_RANGE: 1},
+            # # Startup
+            # {SCAN_START: 40200, SCAN_RANGE: 1},
+            # # Shutdown
+            # {SCAN_START: 40201, SCAN_RANGE: 1},
         ],
     }
 }

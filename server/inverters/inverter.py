@@ -11,7 +11,7 @@ class Inverter:
         '''Closes the Modbus connection to the inverter.'''
         raise NotImplementedError("Subclass must implement abstract method")
     
-    def read(self):
+    def readHarvestData(self):
         '''Reads the inverter's data.'''
         raise NotImplementedError("Subclass must implement abstract method")
     

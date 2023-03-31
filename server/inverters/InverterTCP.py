@@ -37,42 +37,41 @@ class InverterTCP(Inverter):
   def close(self):
     self.client.close()
 
-  def read(self):
+  def readHarvestData(self):
     regs = []
     vals = []
+    
+    registers = []
+    if self.getType() == "solaredge" or self.getType() == "huawei":
+      registers = self.registers[HOLDING]
+    else:
+      registers = self.registers[READ]
 
-    try:
-      for entry in self.registers[READ]:
-        scan_start = entry[SCAN_START]
-        scan_range = entry[SCAN_RANGE]
-        
-        r = self.populateRegisters(scan_start, scan_range)
-        v = self.readInputRegisters(scan_start, scan_range)
-        regs += r
-        vals += v
-    except:
-      print("error reading input registers")
-      
-    try:
-      if self.registers[HOLDING]:
-        for entry in self.registers[HOLDING]:
+    if len(registers) > 0:
+      try:
+        for entry in registers:
           scan_start = entry[SCAN_START]
           scan_range = entry[SCAN_RANGE]
           
           r = self.populateRegisters(scan_start, scan_range)
-          v = self.readHoldingRegisters(scan_start, scan_range)
+
+          if self.getType() == "solaredge" or self.getType() == "huawei":
+            v = self.readHoldingRegisters(scan_start, scan_range)
+          else:
+            v = self.readInputRegisters(scan_start, scan_range)
+
           regs += r
           vals += v
-    except:
-      print("error reading holding registers")
-
+      except:
+        print("error reading input registers")
+      
     # Zip the registers and values together convert them into a dictionary
     res = dict(zip(regs, vals))
-
+    
     if res:
       return res
     else:
-      raise Exception("read error")
+      raise Exception("Error reading input registers")
   
   def populateRegisters(self, scan_start, scan_range):
     """

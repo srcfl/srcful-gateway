@@ -15,7 +15,7 @@ class Harvest(Task):
 
   def execute(self, eventTime) -> Task | list[Task]:
     try:
-      harvest = self.inverter.read()
+      harvest = self.inverter.readHarvestData()
       self.stats['lastHarvest'] = harvest
       self.stats['harvests'] += 1
       self.barn[eventTime] = harvest
