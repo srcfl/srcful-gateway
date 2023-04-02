@@ -1,5 +1,5 @@
 from .inverter import Inverter
-from pyModbusTCP.client import ModbusClient
+from pymodbus.client import ModbusTcpClient as ModbusClient
 from .inverter_types import INVERTERS, OPERATION, SCAN_RANGE, SCAN_START
 from typing_extensions import TypeAlias
 
@@ -30,9 +30,11 @@ class InverterTCP(Inverter):
     return self.setup[3]
 
   def open(self):
-    self.client = ModbusClient(host=self.getHost(), port=self.getPort(
-    ), unit_id=self.getAddress(), auto_open=False, auto_close=False)
-    return self.client.open()
+    print(self.getHost(), self.getPort(), self.getAddress())
+    self.client = ModbusClient(host=self.getHost(),
+                               port=self.getPort(),
+                               unit_id=self.getAddress())
+    return self.client.connect()
 
   def close(self):
     self.client.close()
@@ -78,7 +80,7 @@ class InverterTCP(Inverter):
     """
     try:
       v = self.client.read_input_registers(
-          scan_start, scan_range)
+          scan_start, scan_range).registers
       print("Reading Input:", scan_start, "-", scan_range, ":", v)
     except:
       print("error reading input registers:",
@@ -91,7 +93,7 @@ class InverterTCP(Inverter):
     """
     try:
       v = self.client.read_holding_registers(
-          scan_start, scan_range)
+          scan_start, scan_range).registers
       print("Reading Holding:", scan_start, "-", scan_range, ":", v)
     except:
       print("error reading holding registers:",
