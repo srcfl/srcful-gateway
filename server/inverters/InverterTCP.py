@@ -2,7 +2,13 @@ from .inverter import Inverter
 from pymodbus.client import ModbusTcpClient as ModbusClient
 from .inverter_types import INVERTERS, OPERATION, SCAN_RANGE, SCAN_START
 from typing_extensions import TypeAlias
+import logging
+import time
 
+
+logging.basicConfig()
+log = logging.getLogger('pymodbus')
+log.setLevel(logging.WARNING)
 
 # create a host tuple alias
 
@@ -13,6 +19,11 @@ class InverterTCP(Inverter):
   Setup: TypeAlias = tuple[str | bytes | bytearray, int, str, int]
 
   def __init__(self, setup: Setup):
+    """
+    To-Dos:
+    1. Add a check for whether the inverter connection is TCP/IP or RS485 (RTU) and 
+    create the client object accordingly
+    """
     print("InverterTCP: ", setup)
     self.setup = setup
     self.registers = INVERTERS[self.getType()]
@@ -30,11 +41,10 @@ class InverterTCP(Inverter):
     return self.setup[3]
 
   def open(self):
-    print(self.getHost(), self.getPort(), self.getAddress())
     self.client = ModbusClient(host=self.getHost(),
                                port=self.getPort(),
                                unit_id=self.getAddress())
-    return self.client.connect()
+    return self.client.connected
 
   def close(self):
     self.client.close()
@@ -43,6 +53,7 @@ class InverterTCP(Inverter):
     regs = []
     vals = []
 
+    start_time = time.time_ns() // 1_000_000
     for entry in self.registers:
 
       operation = entry[OPERATION]
@@ -55,17 +66,23 @@ class InverterTCP(Inverter):
         v = self.readHoldingRegisters(scan_start, scan_range)
       elif operation == 0x04:
         v = self.readInputRegisters(scan_start, scan_range)
-
       regs += r
-      vals += v
+      vals += v.registers
+
+      time.sleep(0.005)  # sleep for 5ms
+
+    end_time = time.time_ns() // 1_000_000
+
+    elapsed_time = end_time - start_time
+    print("Elapsed time:", elapsed_time, "ms")
 
     # Zip the registers and values together convert them into a dictionary
     res = dict(zip(regs, vals))
-
+    print("Response:", res)
     if res:
       return res
     else:
-      raise Exception("Error reading input registers")
+      raise Exception("readHarvestData() - res is empty")
 
   def populateRegisters(self, scan_start, scan_range):
     """
@@ -80,8 +97,8 @@ class InverterTCP(Inverter):
     """
     try:
       v = self.client.read_input_registers(
-          scan_start, scan_range).registers
-      print("Reading Input:", scan_start, "-", scan_range, ":", v)
+          scan_start, scan_range, slave=self.getAddress())
+      print("OK - Reading Input:", scan_start, "-", scan_range)
     except:
       print("error reading input registers:",
             scan_start, "-", scan_range)
@@ -93,8 +110,8 @@ class InverterTCP(Inverter):
     """
     try:
       v = self.client.read_holding_registers(
-          scan_start, scan_range).registers
-      print("Reading Holding:", scan_start, "-", scan_range, ":", v)
+          scan_start, scan_range, slave=self.getAddress())
+      print("OK - Reading Holding:", scan_start, "-", scan_range)
     except:
       print("error reading holding registers:",
             scan_start, "-", scan_range)
