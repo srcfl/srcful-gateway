@@ -3,20 +3,21 @@ class Task:
      Tasks are executed synchronously, so they should not block.
      Blocking operations should be performed in a separate thread. Results should 
      then be collected and processed in the task's execute method.'''
-  
+
   def __init__(self, eventTime: int, stats: dict):
-        self.time = eventTime
-        self.stats = stats
+    self.time = eventTime
+    self.stats = stats
+
   def __eq__(self, other):
-      if not isinstance(other, Task):
-          return self.time == other
-      return self.time == other.prio
-        
+    if not isinstance(other, Task):
+      return self.time == other
+    return self.time == other.prio
+
   def __lt__(self, other):
     if not isinstance(other, Task):
-        return self.time < other
+      return self.time < other
     return self.time < other.time
-  
+
   def execute(self):
     # throw a not implemented exception
     raise NotImplementedError("Subclass must implement abstract method")

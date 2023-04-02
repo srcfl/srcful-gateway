@@ -1,5 +1,6 @@
 from typing import Callable
 
+
 def cryptoStuff():
   return """<h1>Crypto API</h1>
   <p>Device Name: <span id="device-name"></span></p>
@@ -29,6 +30,7 @@ def cryptoStuff():
 
     fetchCryptoData();
   </script>"""
+
 
 def inverterForm():
   return """
@@ -80,9 +82,10 @@ def inverterForm():
         });
     </script>"""
 
+
 class Handler:
 
-  def doGet(self, stats: dict, timeMSFunc:Callable, chipInfoFunc:Callable):
+  def doGet(self, stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable):
     freqReads = stats['freqReads'] if 'freqReads' in stats else 0
     energyHarvested = stats['harvest'] if 'harvest' in stats else 0
     energyTransported = 0
@@ -90,7 +93,6 @@ class Handler:
       energyTransported = stats['harvestTransports']
     startTime = stats['startTime']
 
- 
     ret = "<html><head><title>Srcful Energy Gateway</title></head>"
     ret += "<body>"
     ret += "<h1>Srcful Energy Gateway</h1>"
@@ -101,8 +103,8 @@ class Handler:
     elapsedTime = timeMSFunc() - startTime
 
     # convert elapsedTime to days, hours, minutes, seconds in a tuple
-    days, remainder = divmod(elapsedTime // 1000, 60*60*24)
-    hours, remainder = divmod(remainder, 60*60)
+    days, remainder = divmod(elapsedTime // 1000, 60 * 60 * 24)
+    hours, remainder = divmod(remainder, 60 * 60)
     minutes, seconds = divmod(remainder, 60)
 
     # output the gateway current uptime in days, hours, minutes, seconds
@@ -122,7 +124,7 @@ class Handler:
 
     ret += f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>"
     ret += f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>"
-    
+
     ret += f"ALL: {stats}</p>"
 
     ret += "</body></html>"

@@ -4,7 +4,7 @@ import server.crypto.crypto as crypto
 
 
 class Handler:
-  def doGet(self, stats: dict, timeMSFunc:Callable, chipInfoFunc:Callable):
+  def doGet(self, stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable):
     # return the json data {'serial:' crypto.serial, 'pubkey': crypto.publicKey}
     crypto.initChip()
     ret = crypto.getChipInfo()
@@ -12,5 +12,3 @@ class Handler:
     crypto.release()
 
     return 200, json.dumps(ret)
-
-    

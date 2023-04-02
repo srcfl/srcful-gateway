@@ -9,13 +9,16 @@ import json
 def mock_initChip():
   pass
 
+
 @pytest.fixture
 def mock_getChipInfo(data):
   pass
 
+
 @pytest.fixture
 def mock_release():
   pass
+
 
 @patch('server.crypto.crypto.initChip')
 @patch('server.crypto.crypto.getChipInfo')
@@ -24,8 +27,9 @@ def mock_release():
 def test_get(mock_release, mock_getPublicKey, mock_getChipInfo, mock_initChip):
   handler = get_crypto.Handler()
   public_key = bytearray(64)
-  chipInfo = {'deviceName': 'test_chip', 'serialNumber': b'deadbeef'.hex(), 'publicKey': public_key.hex()}
-  
+  chipInfo = {'deviceName': 'test_chip',
+              'serialNumber': b'deadbeef'.hex(), 'publicKey': public_key.hex()}
+
   mock_getChipInfo.return_value = chipInfo
   mock_getPublicKey.return_value = public_key
 

@@ -23,144 +23,145 @@ Cryptoauthlib Exceptions
 
 
 class CryptoError(Exception):
-    """Standard CryptoAuthLib Exceptions"""
+  """Standard CryptoAuthLib Exceptions"""
 
 
 class LibraryLoadError(CryptoError):
-    """CryptpAuthLib failed to Load"""
+  """CryptpAuthLib failed to Load"""
 
 
 class ConfigZoneLockedError(CryptoError):
-    """Config Zone Locked"""
+  """Config Zone Locked"""
 
 
 class DataZoneLockedError(CryptoError):
-    """Configuration Enabled"""
+  """Configuration Enabled"""
 
 
 class WakeFailedError(CryptoError):
-    """Device Wake failed"""
+  """Device Wake failed"""
 
 
 class CheckmacVerifyFailedError(CryptoError):
-    """response status byte indicates CheckMac failure (status byte = 0x01)"""
+  """response status byte indicates CheckMac failure (status byte = 0x01)"""
 
 
 class ParseError(CryptoError):
-    """response status byte indicates parsing error (status byte = 0x03)"""
+  """response status byte indicates parsing error (status byte = 0x03)"""
 
 
 class CrcError(CryptoError):
-    """response status byte indicates CRC error (status byte = 0xFF)"""
+  """response status byte indicates CRC error (status byte = 0xFF)"""
 
 
 class StatusUnknownError(CryptoError):
-    """Response status byte is unknown"""
+  """Response status byte is unknown"""
 
 
 class EccFaultError(CryptoError):
-    """response status byte is ECC fault (status byte = 0x05)"""
+  """response status byte is ECC fault (status byte = 0x05)"""
 
 
 class FunctionError(CryptoError):
-    """Function could not execute due to incorrect condition / state."""
+  """Function could not execute due to incorrect condition / state."""
 
 
 class GenericError(CryptoError):
-    """unspecified error"""
+  """unspecified error"""
 
 
 class BadArgumentError(CryptoError):
-    """bad argument (out of range, null pointer, etc.)"""
+  """bad argument (out of range, null pointer, etc.)"""
 
 
 class InvalidIdentifierError(CryptoError):
-    """invalid device id, id not set"""
+  """invalid device id, id not set"""
 
 
 class InvalidSizeError(CryptoError):
-    """Count value is out of range or greater than buffer size."""
+  """Count value is out of range or greater than buffer size."""
 
 
 class BadCrcError(CryptoError):
-    """incorrect CRC received"""
+  """incorrect CRC received"""
 
 
 class ReceiveError(CryptoError):
-    """Timed out while waiting for response. Number of bytes received is > 0."""
+  """Timed out while waiting for response. Number of bytes received is > 0."""
 
 
 class NoResponseError(CryptoError):
-    """error while the Command layer is polling for a command response."""
+  """error while the Command layer is polling for a command response."""
 
 
 class ResyncWithWakeupError(CryptoError):
-    """Re-synchronization succeeded, but only after generating a Wake-up"""
+  """Re-synchronization succeeded, but only after generating a Wake-up"""
 
 
 class ParityError(CryptoError):
-    """for protocols needing parity"""
+  """for protocols needing parity"""
 
 
 class TransmissionTimeoutError(CryptoError):
-    """for Microchip PHY protocol, timeout on transmission waiting for master"""
+  """for Microchip PHY protocol, timeout on transmission waiting for master"""
 
 
 class ReceiveTimeoutError(CryptoError):
-    """for Microchip PHY protocol, timeout on receipt waiting for master"""
+  """for Microchip PHY protocol, timeout on receipt waiting for master"""
 
 
 class CommunicationError(CryptoError):
-    """Communication with device failed. Same as in hardware dependent modules."""
+  """Communication with device failed. Same as in hardware dependent modules."""
 
 
 class TimeOutError(CryptoError):
-    """Timed out while waiting for response. Number of bytes received is 0."""
+  """Timed out while waiting for response. Number of bytes received is 0."""
 
 
 class BadOpcodeError(CryptoError):
-    """Opcode is not supported by the device"""
+  """Opcode is not supported by the device"""
 
 
 class ExecutionError(CryptoError):
-    """chip was in a state where it could not execute the command, response
-    status byte indicates command execution error (status byte = 0x0F)"""
+  """chip was in a state where it could not execute the command, response
+  status byte indicates command execution error (status byte = 0x0F)"""
 
 
 class UnimplementedError(CryptoError):
-    """Function or some element of it hasn't been implemented yet"""
+  """Function or some element of it hasn't been implemented yet"""
 
 
 class AssertionFailure(CryptoError):
-    """Code failed run-time consistency check"""
+  """Code failed run-time consistency check"""
 
 
 class TransmissionError(CryptoError):
-    """Failed to write"""
+  """Failed to write"""
 
 
 class ZoneNotLockedError(CryptoError):
-    """required zone was not locked"""
+  """required zone was not locked"""
 
 
 class NoDevicesFoundError(CryptoError):
-    """For protocols that support device discovery (kit protocol), no devices were found"""
+  """For protocols that support device discovery (kit protocol), no devices were found"""
 
 
 class HealthTestError(CryptoError):
-    """Random number generator health test error"""
+  """Random number generator health test error"""
 
 
 class LibraryMemoryError(CryptoError):
-    """CryptoAuthLib was unable to allocate memory"""
+  """CryptoAuthLib was unable to allocate memory"""
 
 
 class NoUseFlagError(CryptoError):
-    """Indication that no dk pk flag is available to perform"""
+  """Indication that no dk pk flag is available to perform"""
 
 
 class LibraryNotInitialized(CryptoError):
-    """Indication that library or context was not initialized prior to an API call"""
+  """Indication that library or context was not initialized prior to an API call"""
+
 
 class UnsupportedInterface(CryptoError):
-    """"The selected interface is not supported by the library"""
+  """"The selected interface is not supported by the library"""

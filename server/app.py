@@ -19,27 +19,11 @@ def getChipInfo():
   return 'device: ' + device_name + ' serial: ' + serial_number
 
 
-
-
-
 def time_ms():
   return time.time_ns() // 1_000_000
 
 
-def gatewayNameQuery(id):
-  return """
-  {
-    gatewayConfiguration {
-      gatewayName(id:"%s") {
-        name
-      }
-    }
-  }
-  """ % id
-
-
 def mainLoop(tasks: queue.PriorityQueue):
-
   # here we could keep track of statistics for different types of tasks
   # and adjust the delay to keep the within a certain range
 
@@ -55,7 +39,6 @@ def mainLoop(tasks: queue.PriorityQueue):
     if delay > 0.01:
       time.sleep(delay)
 
-
     newTask = task.execute(time_ms())
 
     if newTask != None:
@@ -66,7 +49,7 @@ def mainLoop(tasks: queue.PriorityQueue):
         addTask(newTask)
 
 
-def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
+def main(webHost: tuple[str, int], inverter: InverterTCP.Setup):
 
   startTime = time_ms()
   stats = {'startTime': startTime, 'freqReads': 0,
@@ -93,5 +76,3 @@ def main(webHost:tuple[str, int], inverter:InverterTCP.Setup):
       stats['inverter'].close()
     webServer.close()
     print("Server stopped.")
-
-

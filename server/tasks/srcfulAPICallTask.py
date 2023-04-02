@@ -12,16 +12,16 @@ class SrcfulAPICallTask(Task):
   def _json(self):
     '''override to the json to send to the server, json argument in post method'''
     return None
-  
+
   def _data(self):
     '''override to the data to send to the server, data argument in post method'''
     return None
 
-  def _on200(self, reply:requests.Response):
+  def _on200(self, reply: requests.Response):
     # throw not implemented exception
     raise NotImplementedError
 
-  def _onError(self, reply:requests.Response) -> int:
+  def _onError(self, reply: requests.Response) -> int:
     '''return 0 to stop retrying, otherwise return the number of milliseconds to wait before retrying'''
     # throw not implemented exception
     raise NotImplementedError
@@ -30,7 +30,8 @@ class SrcfulAPICallTask(Task):
 
     def post():
       try:
-        self.reply = requests.post("https://testnet.srcful.dev/gw/data/", data=self._data())
+        self.reply = requests.post(
+          "https://testnet.srcful.dev/gw/data/", data=self._data())
       except requests.exceptions.RequestException as e:
         print("error posting data: ")
         print(e)

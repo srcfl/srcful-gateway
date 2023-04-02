@@ -8,7 +8,7 @@ from .get import crypto
 from .post import inverter
 
 
-def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callable, tasks:queue.Queue):
+def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable, tasks: queue.Queue):
 
   class Handler(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -18,21 +18,21 @@ def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callabl
       super(Handler, self).__init__(*args, **kwargs)
 
     @staticmethod
-    def post2Dict(post_data:str):
+    def post2Dict(post_data: str):
       if "=" not in post_data:
         return {}
       return {unquote_plus(k): unquote_plus(v) for k, v in (x.split('=') for x in post_data.split('&'))}
-    
+
     @staticmethod
-    def getAPIHandler(path:str, api_root:str, api_handler:dict):
+    def getAPIHandler(path: str, api_root: str, api_handler: dict):
       if path.startswith(api_root):
         handler = api_handler.get(path[len(api_root):])
         if handler:
           return handler
       return None
-    
+
     @staticmethod
-    def getData(headers:dict, rfile):
+    def getData(headers: dict, rfile):
       content_length = int(headers['Content-Length'])
       content = rfile.read(content_length).decode("utf-8")
 
@@ -48,7 +48,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callabl
 
       return post_data
 
-    def sendApiResponse(self, code:int, response:str):
+    def sendApiResponse(self, code: int, response: str):
       self.send_response(code)
       self.send_header("Content-type", "application/json")
       response = bytes(response, "utf-8")
@@ -60,7 +60,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callabl
       handler = Handler.getAPIHandler(self.path, "/api/", self.api_post)
       if handler is not None:
         post_data = Handler.getData(self.headers, self.rfile)
-        
+
         code, response = handler.doPost(post_data, stats, tasks)
         self.sendApiResponse(code, response)
         return
@@ -83,29 +83,29 @@ def requestHandlerFactory(stats: dict, timeMSFunc:Callable, chipInfoFunc:Callabl
         self.send_header("Content-type", "text/html")
         self.send_header("Content-Length", len(html_bytes))
         self.end_headers()
-        
+
         self.wfile.write(html_bytes)
-      
 
   return Handler
 
-class Server:
-  _webServer:HTTPServer = None
 
-  def __init__(self, webHost:tuple[str, int], stats:dict, timeMSFunc:Callable, chipInfoFunc:Callable):
+class Server:
+  _webServer: HTTPServer = None
+
+  def __init__(self, webHost: tuple[str, int], stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable):
     self.tasks = queue.Queue()
-    self._webServer = HTTPServer(webHost, requestHandlerFactory(stats, timeMSFunc, chipInfoFunc, self.tasks))
+    self._webServer = HTTPServer(webHost, requestHandlerFactory(
+        stats, timeMSFunc, chipInfoFunc, self.tasks))
     self._webServer.socket.setblocking(False)
-    
 
   def close(self):
     if self._webServer:
       self._webServer.server_close()
       self._webServer = None
 
-  def request_queue_size(self)->int:
+  def request_queue_size(self) -> int:
     return self._webServer.request_queue_size
-  
+
   def handle_request(self):
     self._webServer.handle_request()
 

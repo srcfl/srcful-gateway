@@ -8,7 +8,7 @@ except:
   from .cryptoauthlib_mock import atcab_init, cfg_ateccx08a_i2c_default, atcab_info, get_device_name, atcab_release, atcab_sign, atcab_read_serial_number, atcab_get_pubkey
   from .hazmat_mock import default_backend
   from .hazmat_mock import hashes
-  
+
 
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 import json
@@ -16,15 +16,15 @@ import base64
 
 ATCA_SUCCESS = 0x00
 
+
 def initChip() -> bool:
 
   # this is for raspberry pi should probably be checked better
   cfg = cfg_ateccx08a_i2c_default()
   cfg.cfg.atcai2c.bus = 1  # raspberry pi
   icfg = getattr(cfg.cfg, 'atcai2c')
-  setattr(icfg, "address",  int('6a', 16))
+  setattr(icfg, "address", int('6a', 16))
 
-    
   return atcab_init(cfg) == ATCA_SUCCESS
 
 
@@ -43,16 +43,17 @@ def getSerialNumber():
   atcab_read_serial_number(serial_number)
   return serial_number
 
-def publicKeyToPEM(public_key: bytearray)->str:
-  der = bytearray.fromhex('3059301306072A8648CE3D020106082A8648CE3D03010703420004')
+
+def publicKeyToPEM(public_key: bytearray) -> str:
+  der = bytearray.fromhex(
+    '3059301306072A8648CE3D020106082A8648CE3D03010703420004')
   public_key_b64 = base64.b64encode(der + public_key).decode('ascii')
   return public_key_b64
+
 
 def getPublicKey():
   public_key = bytearray(64)
   atcab_get_pubkey(0, public_key)
-
- 
 
   return public_key
 

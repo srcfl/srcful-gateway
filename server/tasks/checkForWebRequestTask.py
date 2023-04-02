@@ -6,7 +6,7 @@ from .task import Task
 
 
 class CheckForWebRequest(Task):
-  def __init__(self, eventTime: int, stats: dict, webServer:Server):
+  def __init__(self, eventTime: int, stats: dict, webServer: Server):
     super().__init__(eventTime, stats)
     self.webServer = webServer
 
@@ -23,7 +23,7 @@ class CheckForWebRequest(Task):
     while not self.webServer.tasks.empty():
       tasks.append(self.webServer.tasks.get())
 
-    ## ajust the time for all tasks
+    # ajust the time for all tasks
     for task in tasks:
       task.time += eventTime
 
