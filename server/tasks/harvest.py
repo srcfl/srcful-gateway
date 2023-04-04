@@ -11,7 +11,6 @@ class Harvest(Task):
     self.inverter = inverter
     self.stats['lastHarvest'] = 'n/a'
     self.stats['harvests'] = 0
-    self.stats['inverter_type'] = self.inverter.getType()
     self.barn = {}
     self.transport = None
 
@@ -30,7 +29,7 @@ class Harvest(Task):
     # check if it is time to transport the harvest
     if ((len(self.barn) >= 10 and len(self.barn) % 10 == 0) and (self.transport == None or self.transport.reply != None)):
       self.transport = HarvestTransport(
-          eventTime + 100, self.stats, self.barn)
+          eventTime + 100, self.stats, self.barn, self.inverter.getType())
       self.barn.clear()
       return [self, self.transport]
 
@@ -39,17 +38,18 @@ class Harvest(Task):
 
 class HarvestTransport(SrcfulAPICallTask):
 
-  def __init__(self, eventTime: int, stats: dict, barn: dict):
+  def __init__(self, eventTime: int, stats: dict, barn: dict, inverter_type: str):
     super().__init__(eventTime, stats)
     self.stats['lastHarvestTransport'] = 'n/a'
     if 'harvestTransports' not in self.stats:
       self.stats['harvestTransports'] = 0
     self.barn_ref = barn
     self.barn = dict(barn)
+    self.inverter_type = inverter_type
 
   def _data(self):
     atecc608b.initChip()
-    JWT = atecc608b.buildJWT(self.barn, self.stats['inverter_type'])
+    JWT = atecc608b.buildJWT(self.barn, self.inverter_type)
     atecc608b.release()
     return JWT
 

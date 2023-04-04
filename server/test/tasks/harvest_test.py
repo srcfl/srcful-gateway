@@ -5,19 +5,20 @@ import pytest
 
 
 def test_createHarvest():
+
   t = harvest.Harvest(0, {}, None)
   assert t is not None
 
 
 def test_createHarvestTransport():
-  t = harvest.HarvestTransport(0, {}, {})
+  t = harvest.HarvestTransport(0, {}, {}, 'huawei')
   assert t is not None
 
 
 def test_executeHarvest():
   mockInverter = Mock()
   registers = {'1': '1717'}
-  mockInverter.read.return_value = registers
+  mockInverter.readHarvestData.return_value = registers
 
   t = harvest.Harvest(0, {}, mockInverter)
   ret = t.execute(17)
@@ -36,13 +37,13 @@ def test_executeHarvestx10():
   t = harvest.Harvest(0, {}, mockInverter)
 
   for i in range(9):
-    mockInverter.read.return_value = registers[i]
+    mockInverter.readHarvestData.return_value = registers[i]
     ret = t.execute(i)
     assert ret is t
     assert t.barn[i] == registers[i]
     assert len(t.barn) == i + 1
 
-  mockInverter.read.return_value = registers[9]
+  mockInverter.readHarvestData.return_value = registers[9]
   ret = t.execute(17)
   assert len(t.barn) == 0
   assert ret is not t
@@ -59,7 +60,7 @@ def test_executeHarvestNoTransport():
   t = harvest.Harvest(0, {}, mockInverter)
 
   for i in range(len(registers)):
-    mockInverter.read.return_value = registers[i]
+    mockInverter.readHarvestData.return_value = registers[i]
     t.execute(i)
 
   # we should now have issued a transport and the barn should be empty
@@ -68,7 +69,7 @@ def test_executeHarvestNoTransport():
 
   # we now continue to harvest but these should not be transported as the transport task is not executed
   for i in range(len(registers)):
-    mockInverter.read.return_value = registers[i]
+    mockInverter.readHarvestData.return_value = registers[i]
     t.execute(i + 100)
 
   assert len(t.barn) == 10
@@ -77,7 +78,7 @@ def test_executeHarvestNoTransport():
   # note that we only transport every 10th harvest
   t.transport.reply = "all done"
   for i in range(len(registers)):
-    mockInverter.read.return_value = registers[i]
+    mockInverter.readHarvestData.return_value = registers[i]
     ret = t.execute(i + 200)
   assert len(t.barn) == 0
   assert ret is not t
@@ -88,7 +89,7 @@ def test_executeHarvestNoTransport():
 
 def test_executeHarvest_failedRead():
   mockInverter = Mock()
-  mockInverter.read.side_effect = Exception('mocked exception')
+  mockInverter.readHarvestData.side_effect = Exception('mocked exception')
 
   t = harvest.Harvest(0, {}, mockInverter)
   ret = t.execute(17)
@@ -101,7 +102,7 @@ def mock_initChip():
 
 
 @pytest.fixture
-def mock_buildJWT(data):
+def mock_buildJWT(data, inverter_type):
   pass
 
 
@@ -115,13 +116,14 @@ def mock_release():
 @patch('server.crypto.crypto.release')
 def test_dataHarvestTransport(mock_release, mock_buildJWT, mock_initChip):
   barn = {'test': 'test'}
-  mock_buildJWT.return_value = str(barn)
+  inverter_type = 'test'
+  mock_buildJWT.return_value = {str(barn), inverter_type}
 
-  instance = harvest.HarvestTransport(0, {}, barn)
+  instance = harvest.HarvestTransport(0, {}, barn, inverter_type)
   result = instance._data()
 
   mock_initChip.assert_called_once()
-  mock_buildJWT.assert_called_once_with(instance.barn)
+  mock_buildJWT.assert_called_once_with(instance.barn, instance.inverter_type)
   mock_release.assert_called_once()
   result == str(barn)
 
@@ -130,12 +132,12 @@ def test_on200():
   # just make the call for now
   response = Mock()
 
-  instance = harvest.HarvestTransport(0, {}, {})
+  instance = harvest.HarvestTransport(0, {}, {}, 'huawei')
   instance._on200(response)
 
 
 def test_onError():
   # just make the call for now
   response = Mock()
-  instance = harvest.HarvestTransport(0, {}, {})
+  instance = harvest.HarvestTransport(0, {}, {}, 'huawei')
   instance._onError(response)

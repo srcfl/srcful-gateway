@@ -66,8 +66,8 @@ def buildHeader(inverterModel) -> dict:
   return {
       "alg": "ES256",
       "typ": "JWT",
-      "opr": "production",
       "device": getSerialNumber().hex(),
+      "opr": "production",
       "model": inverterModel
   }
 

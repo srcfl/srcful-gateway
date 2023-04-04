@@ -8,7 +8,7 @@ def test_initChip_release():
 
 def test_getHeaderFormat():
   crypto.initChip()
-  header = crypto.buildHeader()
+  header = crypto.buildHeader('huawei')
   crypto.release()
   assert 'alg' in header
   assert 'typ' in header
@@ -18,7 +18,7 @@ def test_getHeaderFormat():
 
 def test_getHeaderContents():
   crypto.initChip()
-  header = crypto.buildHeader()
+  header = crypto.buildHeader('huawei')
   crypto.release()
   assert header['alg'] == 'ES256'
   assert header['typ'] == 'JWT'
