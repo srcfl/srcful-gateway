@@ -12,6 +12,22 @@ class Inverter:
     '''Closes the Modbus connection to the inverter.'''
     raise NotImplementedError("Subclass must implement abstract method")
 
+  def getHost(self):
+    '''Returns the inverter's host IP-address'''
+    raise NotImplementedError("Subclass must implement abstract method")
+
+  def getPort(self):
+    '''Returns the inverter's port number'''
+    raise NotImplementedError("Subclass must implement abstract method")
+
+  def getType(self):
+    '''Returns the inverter's type'''
+    raise NotImplementedError("Subclass must implement abstract method")
+
+  def getAddress(self):
+    '''Returns the inverter's address'''
+    raise NotImplementedError("Subclass must implement abstract method")
+
   def readHarvestData(self):
     '''Reads the inverter's data.'''
     raise NotImplementedError("Subclass must implement abstract method")

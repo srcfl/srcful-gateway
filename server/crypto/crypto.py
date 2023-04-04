@@ -62,12 +62,13 @@ def getChipInfo():
   return {'deviceName': getDeviceName(), 'serialNumber': getSerialNumber().hex(), 'publicKey': getPublicKey().hex()}
 
 
-def buildHeader() -> dict:
+def buildHeader(inverterModel) -> dict:
   return {
       "alg": "ES256",
       "typ": "JWT",
       "opr": "production",
-      "device": getSerialNumber().hex()
+      "device": getSerialNumber().hex(),
+      "model": inverterModel
   }
 
 
@@ -86,8 +87,8 @@ def base64UrlEncode(data):
   return urlsafe_b64encode(data).rstrip(b'=')
 
 
-def buildJWT(dataToSign):
-  header = buildHeader()
+def buildJWT(dataToSign, inverterModel):
+  header = buildHeader(inverterModel)
 
   header_json = json.dumps(header).encode('utf-8')
   header_base64 = base64UrlEncode(header_json).decode('utf-8')

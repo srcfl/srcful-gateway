@@ -11,6 +11,7 @@ class Harvest(Task):
     self.inverter = inverter
     self.stats['lastHarvest'] = 'n/a'
     self.stats['harvests'] = 0
+    self.stats['inverter_type'] = self.inverter.getType()
     self.barn = {}
     self.transport = None
 
@@ -48,7 +49,7 @@ class HarvestTransport(SrcfulAPICallTask):
 
   def _data(self):
     atecc608b.initChip()
-    JWT = atecc608b.buildJWT(self.barn)
+    JWT = atecc608b.buildJWT(self.barn, self.stats['inverter_type'])
     atecc608b.release()
     return JWT
 
