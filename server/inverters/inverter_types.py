@@ -1,6 +1,7 @@
 SOLAREDGE = "solaredge"
 SUNGROW = "sungrow"
 HUAWEI = "huawei"
+GROWATT = "growatt"
 UNKNOWN = "unknown"
 
 OPERATION = "operation"
@@ -15,6 +16,11 @@ INVERTERS = {
 
     UNKNOWN: [
         {OPERATION: READ_INPUT, SCAN_START: 30000, SCAN_RANGE: 1}
+    ],
+
+    GROWATT: [
+        # https://www.photovoltaicsolar.in/Growatt_Manual/MAX%20Series%20Modbus%20RTU%20Protocol.pdf
+        {OPERATION: READ_INPUT, SCAN_START: 0, SCAN_RANGE: 92},
     ],
 
     SUNGROW: [
