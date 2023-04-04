@@ -1,6 +1,6 @@
 flask
 cryptoauthlib >= 20221114
 cryptography >= 2.5
-pyModbusTCP
+pymodbus
 requests
 typing-extensions
