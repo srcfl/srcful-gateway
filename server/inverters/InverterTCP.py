@@ -41,19 +41,23 @@ class InverterTCP(Inverter):
     return self.setup[3]
 
   def open(self):
-    self.client = ModbusClient(host=self.getHost(),
-                               port=self.getPort(),
-                               unit_id=self.getAddress())
-    return self.client.connected
+    if not self.isTerminated():
+      self.client = ModbusClient(host=self.getHost(), port=self.getPort(), unit_id=self.getAddress())
+      if self.client.connect():
+        return True
+      else:
+        self.terminate()
+        return False
 
   def close(self):
     self.client.close()
 
   def readHarvestData(self):
+    if self.isTerminated():
+      raise Exception("readHarvestData() - inverter is terminated")
     regs = []
     vals = []
 
-    start_time = time.time_ns() // 1_000_000
     for entry in self.registers:
 
       operation = entry[OPERATION]
@@ -69,16 +73,8 @@ class InverterTCP(Inverter):
       regs += r
       vals += v.registers
 
-      time.sleep(0.005)  # sleep for 5ms
-
-    end_time = time.time_ns() // 1_000_000
-
-    elapsed_time = end_time - start_time
-    print("Elapsed time:", elapsed_time, "ms")
-
     # Zip the registers and values together convert them into a dictionary
     res = dict(zip(regs, vals))
-    print("Response:", res)
     if res:
       return res
     else:

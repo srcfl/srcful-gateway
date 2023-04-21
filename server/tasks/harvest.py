@@ -4,6 +4,9 @@ from server.inverters.inverter import Inverter
 import server.crypto.crypto as atecc608b
 import requests
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class Harvest(Task):
   def __init__(self, eventTime: int, stats: dict, inverter: Inverter):
@@ -14,22 +17,31 @@ class Harvest(Task):
     self.barn = {}
     self.transport = None
 
+    # incremental backoff stuff
+    self.minbackoff_time = 1000
+    self.backoff_time = self.minbackoff_time  # start with a 1-second backoff
+    self.max_backoff_time = 300000  # max 5-minute backoff
+
+
   def execute(self, eventTime) -> Task | list[Task]:
+    if self.inverter.isTerminated():
+      return None
     try:
       harvest = self.inverter.readHarvestData()
       self.stats['lastHarvest'] = harvest
       self.stats['harvests'] += 1
       self.barn[eventTime] = harvest
+      self.backoff_time = self.minbackoff_time
     except Exception as e:
-      print('error reading harvest', e)
-      return None
+      log.exception('Exception reading harvest: ')
+      self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
+      log.info('Incrementing backoff time to: %s', self.backoff_time)
 
-    self.time = eventTime + 1000
+    self.time = eventTime + self.backoff_time
 
     # check if it is time to transport the harvest
     if ((len(self.barn) >= 10 and len(self.barn) % 10 == 0) and (self.transport == None or self.transport.reply != None)):
-      self.transport = HarvestTransport(
-          eventTime + 100, self.stats, self.barn, self.inverter.getType())
+      self.transport = HarvestTransport(eventTime + 100, self.stats, self.barn, self.inverter.getType())
       self.barn.clear()
       return [self, self.transport]
 
@@ -58,6 +70,5 @@ class HarvestTransport(SrcfulAPICallTask):
     self.stats['harvestTransports'] += 1
 
   def _onError(self, reply: requests.Response):
-    print("Response:", reply)
-    self._on200(reply)
+    log.exception('Error in harvest transport: ')
     return 0

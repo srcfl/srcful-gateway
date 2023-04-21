@@ -2,6 +2,9 @@ from .task import Task
 from server.inverters.inverter import Inverter
 from .harvest import Harvest
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class ReadFreq(Task):
   def __init__(self, eventTime: int, stats: dict, inverter: Inverter):
@@ -31,14 +34,13 @@ class OpenInverterTask(Task):
     try:
       if self.inverter.open():
         if 'inverter' in self.stats and self.stats['inverter'] != None:
-          self.stats['inverter'].close()
+          self.stats['inverter'].terminate()
         self.stats['inverter'] = self.inverter
-        print("Inverter opened")
-        return [ReadFreq(eventTime + 1300, self.stats, self.inverter), Harvest(eventTime + 10000, self.stats, self.inverter)]
+        return [Harvest(eventTime + 10000, self.stats, self.inverter)]
       else:
-        print("Could not open inverter")
+        log.info('Failed to open inverter: %s', self.inverter.getType())
         return None
     except Exception as e:
-      print('exception error opening inverter:', e)
-      self.time = eventTime + 3000
+      log.exception('Exception opening inverter: ')
+      self.time = eventTime + 10000
       return self

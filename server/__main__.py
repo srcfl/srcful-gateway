@@ -1,7 +1,33 @@
 import argparse
 import server.app as app
 
+import logging
+import os
+import sys
+
+log = logging.getLogger(__name__)
+
 if __name__ == "__main__":
+
+  class OneLineExceptionFormatter(logging.Formatter):
+    def formatException(self, exc_info):
+        result = super().formatException(exc_info)
+        return repr(result)
+ 
+    def format(self, record):
+        result = super().format(record)
+        if record.exc_text:
+            result = result.replace("\n", "")
+        return result
+ 
+  #handler = logging.StreamHandler(sys.stdout)
+  handler = logging.StreamHandler()
+  formatter = OneLineExceptionFormatter(logging.BASIC_FORMAT)
+  handler.setFormatter(formatter)
+  logging.root.addHandler(handler)
+
+  logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+
   # parse arguments from command line
   parser = argparse.ArgumentParser(description='Srcful Energy Gateway')
 
@@ -23,7 +49,7 @@ if __name__ == "__main__":
 
   args = parser.parse_args()
 
-  print("Running with the following configuration:", args)
+  log.info("Running with the following configuration: %s", args)
 
   app.main((args.web_host, args.web_port), (args.inverter_host,
            args.inverter_port, args.inverter_type, args.inverter_address))

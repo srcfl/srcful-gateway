@@ -76,3 +76,11 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup):
       stats['inverter'].close()
     webServer.close()
     print("Server stopped.")
+
+# this is for debugging purposes only
+if __name__ == "__main__":
+  import logging
+  #handler = logging.StreamHandler(sys.stdout)
+  #logging.root.addHandler(handler)
+  logging.root.setLevel(logging.DEBUG)
+  main(('localhost', 5000), ("localhost", 502, "huawei", 1))

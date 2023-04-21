@@ -19,6 +19,7 @@ def test_executeHarvest():
   mockInverter = Mock()
   registers = {'1': '1717'}
   mockInverter.readHarvestData.return_value = registers
+  mockInverter.isTerminated.return_value = False
 
   t = harvest.Harvest(0, {}, mockInverter)
   ret = t.execute(17)
@@ -35,6 +36,7 @@ def test_executeHarvestx10():
   mockInverter = Mock()
   registers = [{'1': 1717 + x} for x in range(10)]
   t = harvest.Harvest(0, {}, mockInverter)
+  mockInverter.isTerminated.return_value = False
 
   for i in range(9):
     mockInverter.readHarvestData.return_value = registers[i]
@@ -56,6 +58,7 @@ def test_executeHarvestx10():
 
 def test_executeHarvestNoTransport():
   mockInverter = Mock()
+  mockInverter.isTerminated.return_value = False
   registers = [{'1': 1717 + x} for x in range(10)]
   t = harvest.Harvest(0, {}, mockInverter)
 
@@ -87,13 +90,37 @@ def test_executeHarvestNoTransport():
   assert ret[1] is not t
 
 
-def test_executeHarvest_failedRead():
+
+def test_executeHarvest_incrementalBackoff_increasing():
   mockInverter = Mock()
   mockInverter.readHarvestData.side_effect = Exception('mocked exception')
-
+  mockInverter.isTerminated.return_value = False
   t = harvest.Harvest(0, {}, mockInverter)
+ 
+  while t.backoff_time < t.max_backoff_time:
+    oldTime = t.backoff_time 
+    ret = t.execute(17)
+    assert ret is t
+    assert ret.backoff_time > oldTime
+    assert ret.time == 17 + ret.backoff_time
+
+  assert ret.backoff_time == t.max_backoff_time
+
+def test_executeHarvest_incrementalBackoff_reset():
+  mockInverter = Mock()
+  mockInverter.readHarvestData.side_effect = Exception('mocked exception')
+  mockInverter.isTerminated.return_value = False
+  t = harvest.Harvest(0, {}, mockInverter)
+ 
+  while t.backoff_time < t.max_backoff_time:
+    ret = t.execute(17)
+
+  mockInverter.readHarvestData.side_effect = None
+  mockInverter.readHarvestData.return_value = {'1': 1717}
   ret = t.execute(17)
-  assert ret is None
+  assert ret is t
+  assert ret.backoff_time == ret.minbackoff_time
+  assert ret.time == 17 + ret.backoff_time
 
 
 @pytest.fixture
