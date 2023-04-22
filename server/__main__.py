@@ -5,7 +5,7 @@ import logging
 import os
 import sys
 
-log = logging.getLogger(__name__)
+
 
 if __name__ == "__main__":
 
@@ -24,9 +24,13 @@ if __name__ == "__main__":
   handler = logging.StreamHandler()
   formatter = OneLineExceptionFormatter(logging.BASIC_FORMAT)
   handler.setFormatter(formatter)
+  logging.root.setLevel(os.environ.get("LOGLEVEL", "INFO"))
+  logging.root.handlers = []
   logging.root.addHandler(handler)
 
-  logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+  log = logging.getLogger(__name__)
+
+  #logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
   # parse arguments from command line
   parser = argparse.ArgumentParser(description='Srcful Energy Gateway')
