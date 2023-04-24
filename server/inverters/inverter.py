@@ -3,16 +3,16 @@ class Inverter:
   '''Base class for all inverters.'''
 
   def __init__(self):
-    self.isTerminated = False
+    self._isTerminated = False
     pass
 
   def terminate(self):
     '''Terminates the inverter.'''
     self.close()
-    self.isTerminated = True
+    self._isTerminated = True
 
   def isTerminated(self) -> bool:
-    return self.isTerminated
+    return self._isTerminated
   
 
   def open(self) -> bool:

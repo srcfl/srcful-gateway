@@ -1,14 +1,12 @@
 from .inverter import Inverter
 from pymodbus.client import ModbusTcpClient as ModbusClient
+from pymodbus.pdu import ExceptionResponse
 from .inverter_types import INVERTERS, OPERATION, SCAN_RANGE, SCAN_START
 from typing_extensions import TypeAlias
 import logging
 import time
 
-
-logging.basicConfig()
-log = logging.getLogger('pymodbus')
-log.setLevel(logging.WARNING)
+log = logging.getLogger(__name__)
 
 # create a host tuple alias
 
@@ -19,12 +17,8 @@ class InverterTCP(Inverter):
   Setup: TypeAlias = tuple[str | bytes | bytearray, int, str, int]
 
   def __init__(self, setup: Setup):
-    """
-    To-Dos:
-    1. Add a check for whether the inverter connection is TCP/IP or RS485 (RTU) and 
-    create the client object accordingly
-    """
-    print("InverterTCP: ", setup)
+    super().__init__()
+    log.info("Creating with: %s" % str(setup))
     self.setup = setup
     self.registers = INVERTERS[self.getType()]
 
@@ -48,6 +42,8 @@ class InverterTCP(Inverter):
       else:
         self.terminate()
         return False
+    else:
+      return False
 
   def close(self):
     self.client.close()
@@ -91,26 +87,24 @@ class InverterTCP(Inverter):
     """
     Read a range of input registers from a start address
     """
-    try:
-      v = self.client.read_input_registers(
-          scan_start, scan_range, slave=self.getAddress())
-      print("OK - Reading Input:", scan_start, "-", scan_range)
-    except:
-      print("error reading input registers:",
-            scan_start, "-", scan_range)
+    v = self.client.read_input_registers(scan_start, scan_range, slave=self.getAddress())
+    log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
+    if isinstance(v, ExceptionResponse):
+      raise Exception("readInputRegisters() - ExceptionResponse: " + str(v))
     return v
 
   def readHoldingRegisters(self, scan_start, scan_range):
     """
     Read a range of holding registers from a start address
     """
-    try:
-      v = self.client.read_holding_registers(
-          scan_start, scan_range, slave=self.getAddress())
-      print("OK - Reading Holding:", scan_start, "-", scan_range)
-    except:
-      print("error reading holding registers:",
-            scan_start, "-", scan_range)
+    #try:
+    v = self.client.read_holding_registers(
+        scan_start, scan_range, slave=self.getAddress())
+    log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
+    # check if v is a ModbusResponse object
+    if isinstance(v, ExceptionResponse):
+      raise Exception("readHoldingRegisters() - ExceptionResponse: " + str(v))
+
     return v
 
   def readPower(self):

@@ -33,7 +33,7 @@ class Harvest(Task):
       self.barn[eventTime] = harvest
       self.backoff_time = self.minbackoff_time
     except Exception as e:
-      log.exception('Exception reading harvest: ')
+      log.debug('Handling exeption reading harvest: %s', str(e))
       self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
       log.info('Incrementing backoff time to: %s', self.backoff_time)
 
@@ -70,5 +70,5 @@ class HarvestTransport(SrcfulAPICallTask):
     self.stats['harvestTransports'] += 1
 
   def _onError(self, reply: requests.Response):
-    log.exception('Error in harvest transport: ')
+    log.warning('Error in harvest transport: %s', str(reply))
     return 0
