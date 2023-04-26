@@ -19,5 +19,6 @@ class Task:
     return self.time < other.time
 
   def execute(self):
+    '''execute the task, return None a single Task or a list of tasks to be added to the scheduler'''
     # throw a not implemented exception
     raise NotImplementedError("Subclass must implement abstract method")

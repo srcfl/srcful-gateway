@@ -2,6 +2,7 @@ import queue
 import sys
 import time
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
+from server.tasks.checkForBluetoothRequestTask import CheckForBluetoothRequest
 import server.web.server
 from server.tasks.openInverterTask import OpenInverterTask
 from server.inverters.InverterTCP import InverterTCP
@@ -62,7 +63,8 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup):
 
   # put some initial tasks in the queue
   tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter)))
-  tasks.put(CheckForWebRequest(startTime, stats, webServer))
+  tasks.put(CheckForWebRequest(startTime + 1000, stats, webServer))
+  tasks.put(CheckForBluetoothRequest(startTime + 1500, stats))
 
   try:
     mainLoop(tasks)
@@ -80,7 +82,8 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup):
 # this is for debugging purposes only
 if __name__ == "__main__":
   import logging
+  logging.basicConfig()
   #handler = logging.StreamHandler(sys.stdout)
   #logging.root.addHandler(handler)
-  logging.root.setLevel(logging.DEBUG)
+  logging.root.setLevel(logging.INFO)
   main(('localhost', 5000), ("localhost", 502, "huawei", 1))
