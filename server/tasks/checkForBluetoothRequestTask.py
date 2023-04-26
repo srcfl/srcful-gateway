@@ -13,6 +13,20 @@ log = logging.getLogger(__name__)
 # inspo from: https://github.com/gitdefllo/lighthouse-weather-station/blob/feature_classic_bluetooth/station/main_lighthouse.py
 # pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez - on windows at least
 
+def construct_egwtp_response(data: str) -> bytes:
+  # we construct a response similar to http
+  # eg. EGWTP/1.1 200 OK
+  #     Content-Type: text/json
+  #     Content-Length: 123
+
+  header = "EGWTP/1.1 200 OK\r\n"
+  header += "Content-Type: text/json\r\n"
+  header += "Content-Length: {}\r\n\r\n".format(len(data.encode('utf-8')))
+  content = header + data
+
+  return content.encode('utf-8')
+
+
 class CheckForBluetoothRequest(Task):
   def __init__(self, eventTime: int, stats: dict, ):
     super().__init__(eventTime, stats)
@@ -41,8 +55,7 @@ class CheckForBluetoothRequest(Task):
 
   def _close_client(self, client_sock: socket):
     assert (client_sock in self.clients)
-    log.info("Closing bluetooth connection from {}".format(
-        self.clients[client_sock]))
+    log.info("Closing bluetooth connection from {}".format(self.clients[client_sock]))
     client_sock.close()
     self.sockets.remove(client_sock)
     del self.clients[client_sock]
@@ -64,7 +77,7 @@ class CheckForBluetoothRequest(Task):
           # TODO: continue reading more data if needed and then finally send response
           # Maybe we need a separate class to handle this for each socket.
           # eg. this will be our application level protocol and maybe we can use http
-          sock.send(data)
+          sock.send(construct_egwtp_response('{"data": "' + str(data) +'"}'))
         else:
           log.info("Closing bluetooth connection from {}".format(self.clients[sock]))
           sock.close()
