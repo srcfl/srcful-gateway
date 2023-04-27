@@ -60,3 +60,11 @@ Deploy using `balena push` - this will use the normal `docker-compose.yml`
 The current design is task bases with a priority queue. The idea is that a task is scheduled to happen at a certain time. This allows for fine grained control and adjustment of task times/delays etc. The downside is that tasks cannot be blocking so IO operations typically need threading. Though this is rater easy to do and there are also some helper classes for common tasks that require threading.
 
 On top of the task-engine we can put a state machine so that it becomes easier to know what tasks are high prio in different contexts.
+
+## Windows
+The pysetupdi is needed on windows for the BLE bless library to work. This needs a separate installation:
+
+* crate some nice folder i.e. not in the gatway project folders
+* git clone https://github.com/gwangyi/pysetupdi.git
+* cd pysetupdi
+* python setup.py install --user

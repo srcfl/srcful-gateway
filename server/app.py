@@ -2,7 +2,7 @@ import queue
 import sys
 import time
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
-from server.tasks.checkForBluetoothRequestTask import CheckForBluetoothRequest
+from server.tasks.checkForBluetoothRequestTask import CheckForBLERequest
 import server.web.server
 from server.tasks.openInverterTask import OpenInverterTask
 from server.inverters.InverterTCP import InverterTCP
@@ -64,7 +64,7 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup):
   # put some initial tasks in the queue
   tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter)))
   tasks.put(CheckForWebRequest(startTime + 1000, stats, webServer))
-  tasks.put(CheckForBluetoothRequest(startTime + 1500, stats))
+  tasks.put(CheckForBLERequest(startTime + 1500, stats))
 
   try:
     mainLoop(tasks)

@@ -5,3 +5,4 @@ pymodbus
 requests
 typing-extensions
 pybluez
+bless
