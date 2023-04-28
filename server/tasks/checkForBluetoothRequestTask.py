@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import Tuple
 
 #from threading import Thread
 
@@ -34,7 +35,7 @@ def is_egwtp_request(data: str):
 def is_egwtp_response(data: str):
   return data.startswith("EGWTP/1.1 ")
 
-def parse_egwtp_request(data: str) -> Tuple(dict, str):
+def parse_egwtp_request(data: str) -> Tuple[dict, str]:
   # we parse a request similar to http
   # eg. GET /api/endpoint EGWTP/1.1
   #     Content-Type: text/json

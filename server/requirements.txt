@@ -1,8 +1,7 @@
-flask
 cryptoauthlib >= 20221114
 cryptography >= 2.5
 pymodbus
 requests
 typing-extensions
-pybluez
+dbus-next
 bless
