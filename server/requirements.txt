@@ -3,5 +3,3 @@ cryptography >= 2.5
 pymodbus
 requests
 typing-extensions
-dbus-next
-bless

@@ -1,6 +1,6 @@
 from typing import Any, List, Tuple
-from bleak import BleakClient, BleakScanner
-import asyncio
+# from bleak import BleakClient, BleakScanner
+# import asyncio
 import logging
 from typing import Tuple
 
@@ -9,8 +9,8 @@ from typing import Tuple
 from .task import Task
 
 
-from bless import (BlessServer, BlessGATTCharacteristic,
-                   GATTCharacteristicProperties, GATTAttributePermissions)
+# from bless import (BlessServer, BlessGATTCharacteristic,
+#                   GATTCharacteristicProperties, GATTAttributePermissions)
 
 
 log = logging.getLogger(__name__)
@@ -63,50 +63,50 @@ def parse_egwtp_request(data: str) -> Tuple[dict, str]:
   return header_dict, content
 
 
-def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
-  log.debug(f"Reading {characteristic.value}")
-  return characteristic.value
+# def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
+#   log.debug(f"Reading {characteristic.value}")
+#   return characteristic.value
 
 
-def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
-  characteristic.value = "Hello World: ".encode() + value
-  log.debug(f"Char value set to {characteristic.value}")
+# def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
+#   characteristic.value = "Hello World: ".encode() + value
+#   log.debug(f"Char value set to {characteristic.value}")
 
 
 class CheckForBLERequest(Task):
 
-  async def _create_ble_service(self):
-    log.debug("Creating Bless server")
-    my_service_name = "SrcFul EGW"
-    server = BlessServer(name=my_service_name)
-    server.read_request_func = read_request
-    server.write_request_func = write_request
+  # async def _create_ble_service(self):
+  #   log.debug("Creating Bless server")
+  #   my_service_name = "SrcFul EGW"
+  #   server = BlessServer(name=my_service_name)
+  #   server.read_request_func = read_request
+  #   server.write_request_func = write_request
 
-    # Add Service
-    log.debug("Adding service")
+  #   # Add Service
+  #   log.debug("Adding service")
 
-    await server.add_new_service(self.service_uuid)
+  #   await server.add_new_service(self.service_uuid)
 
-    # Add a Characteristic to the service
-    my_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
-    char_flags = (GATTCharacteristicProperties.read |
-                  GATTCharacteristicProperties.write |
-                  GATTCharacteristicProperties.indicate)
-    permissions = (GATTAttributePermissions.readable |
-                   GATTAttributePermissions.writeable)
+  #   # Add a Characteristic to the service
+  #   my_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
+  #   char_flags = (GATTCharacteristicProperties.read |
+  #                 GATTCharacteristicProperties.write |
+  #                 GATTCharacteristicProperties.indicate)
+  #   permissions = (GATTAttributePermissions.readable |
+  #                  GATTAttributePermissions.writeable)
 
-    log.debug("Adding characteristic")
-    await server.add_new_characteristic(
-        self.service_uuid,
-        my_char_uuid,
-        char_flags,
-        None,
-        permissions)
+  #   log.debug("Adding characteristic")
+  #   await server.add_new_characteristic(
+  #       self.service_uuid,
+  #       my_char_uuid,
+  #       char_flags,
+  #       None,
+  #       permissions)
 
-    log.debug(server.get_characteristic(self.char_uuid))
-    await server.start()
-    log.debug("Advertising")
-    return server
+  #   log.debug(server.get_characteristic(self.char_uuid))
+  #   await server.start()
+  #   log.debug("Advertising")
+  #   return server
 
   def __init__(self, eventTime: int, stats: dict):
     super().__init__(eventTime, stats)
@@ -119,19 +119,19 @@ class CheckForBLERequest(Task):
     # check if there is a nother event loop
     # if so, use that one
     # if not, create a new one
-    try:
-      loop = asyncio.get_running_loop()
-      log.info("Event loop found, using it")
-      self.server = loop.run_until_complete(self._create_ble_service())
-    except RuntimeError:
-      log.info("No event loop found, creating a new one")
-      self.server = asyncio.run(self._create_ble_service())
+    # try:
+    #   loop = asyncio.get_running_loop()
+    #   log.info("Event loop found, using it")
+    #   self.server = loop.run_until_complete(self._create_ble_service())
+    # except RuntimeError:
+    #   log.info("No event loop found, creating a new one")
+    #   self.server = asyncio.run(self._create_ble_service())
 
     log.info("BLE Service created Waiting for BLE connection")
 
-  def __del__(self):
-    asyncio.run(self.server.stop())
-    log.info("BLE Service destroyed")
+  # def __del__(self):
+  #   asyncio.run(self.server.stop())
+  #   log.info("BLE Service destroyed")
 
   def execute(self, eventTime: int) -> None | Task | List[Task]:
     self.stats['btRequests'] += 1
@@ -140,18 +140,18 @@ class CheckForBLERequest(Task):
     # as these need to be synchronous and not interfere with harvesting etc.
     # there could also be other tasks that should be created and then returned
 
-    request_response = self.server.get_characteristic(self.char_uuid)
-    if request_response and request_response.value:
-      val = request_response.value.decode('utf-8')
-      if is_egwtp_request(val):
-        header, content = parse_egwtp_request(val)
+    # request_response = self.server.get_characteristic(self.char_uuid)
+    # if request_response and request_response.value:
+    #   val = request_response.value.decode('utf-8')
+    #   if is_egwtp_request(val):
+    #     header, content = parse_egwtp_request(val)
 
-      elif is_egwtp_response(val):
-        # nothing to do as response is already set
-        pass
-      else:
-        # not a valid request or response
-        pass
+    #   elif is_egwtp_response(val):
+    #     # nothing to do as response is already set
+    #     pass
+    #   else:
+    #     # not a valid request or response
+    #     pass
 
     self.time += 1000
     return self

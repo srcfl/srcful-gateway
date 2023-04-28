@@ -13,3 +13,14 @@ services:
     container_name: srcfull-inverter
     restart: always
 
+  bluetooth:
+    build: ./bluetooth
+    container_name: ble
+    privileged: true
+    network_mode: host
+    restart: always
+    labels:
+      io.balena.features.dbus: 1
+
+    depends_on:
+      - "web"
