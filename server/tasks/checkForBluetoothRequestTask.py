@@ -1,20 +1,23 @@
+from typing import Any, List, Tuple
+from bleak import BleakClient, BleakScanner
 import asyncio
 import logging
 from typing import Tuple
 
-#from threading import Thread
+# from threading import Thread
 
 from .task import Task
 
 
-from bless import ( BlessServer, BlessGATTCharacteristic,
-                    GATTCharacteristicProperties,GATTAttributePermissions)
+from bless import (BlessServer, BlessGATTCharacteristic,
+                   GATTCharacteristicProperties, GATTAttributePermissions)
 
 
 log = logging.getLogger(__name__)
 
 # inspo from: https://github.com/gitdefllo/lighthouse-weather-station/blob/feature_classic_bluetooth/station/main_lighthouse.py
 # pip install git+https://github.com/pybluez/pybluez.git#egg=pybluez - on windows at least
+
 
 def construct_egwtp_response(data: str) -> bytes:
   # we construct a response similar to http
@@ -29,11 +32,14 @@ def construct_egwtp_response(data: str) -> bytes:
 
   return content.encode('utf-8')
 
+
 def is_egwtp_request(data: str):
   return data.startswith("GET ") and data.endswith("EGWTP/1.1")
 
+
 def is_egwtp_response(data: str):
   return data.startswith("EGWTP/1.1 ")
+
 
 def parse_egwtp_request(data: str) -> Tuple[dict, str]:
   # we parse a request similar to http
@@ -57,18 +63,15 @@ def parse_egwtp_request(data: str) -> Tuple[dict, str]:
   return header_dict, content
 
 
-import asyncio
-from bleak import BleakClient, BleakScanner
-from typing import Any, List, Tuple
-
-
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
   log.debug(f"Reading {characteristic.value}")
   return characteristic.value
 
+
 def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
   characteristic.value = "Hello World: ".encode() + value
   log.debug(f"Char value set to {characteristic.value}")
+
 
 class CheckForBLERequest(Task):
 
@@ -81,7 +84,7 @@ class CheckForBLERequest(Task):
 
     # Add Service
     log.debug("Adding service")
-    
+
     await server.add_new_service(self.service_uuid)
 
     # Add a Characteristic to the service
@@ -89,22 +92,21 @@ class CheckForBLERequest(Task):
     char_flags = (GATTCharacteristicProperties.read |
                   GATTCharacteristicProperties.write |
                   GATTCharacteristicProperties.indicate)
-    permissions = ( GATTAttributePermissions.readable |
-                    GATTAttributePermissions.writeable)
-    
+    permissions = (GATTAttributePermissions.readable |
+                   GATTAttributePermissions.writeable)
+
     log.debug("Adding characteristic")
     await server.add_new_characteristic(
-            self.service_uuid,
-            my_char_uuid,
-            char_flags,
-            None,
-            permissions)
+        self.service_uuid,
+        my_char_uuid,
+        char_flags,
+        None,
+        permissions)
 
     log.debug(server.get_characteristic(self.char_uuid))
     await server.start()
     log.debug("Advertising")
     return server
-
 
   def __init__(self, eventTime: int, stats: dict):
     super().__init__(eventTime, stats)
@@ -113,7 +115,6 @@ class CheckForBLERequest(Task):
 
     self.service_uuid = "A07498CA-AD5B-474E-940D-16F1FBE7E8CD"
     self.char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
-
 
     # check if there is a nother event loop
     # if so, use that one
@@ -127,34 +128,30 @@ class CheckForBLERequest(Task):
       self.server = asyncio.run(self._create_ble_service())
 
     log.info("BLE Service created Waiting for BLE connection")
-  
+
   def __del__(self):
     asyncio.run(self.server.stop())
     log.info("BLE Service destroyed")
 
-
   def execute(self, eventTime: int) -> None | Task | List[Task]:
-      self.stats['btRequests'] += 1
-      
-      # we likely need to collect some(?) of the requests and prepare responses
-      # as these need to be synchronous and not interfere with harvesting etc.
-      # there could also be other tasks that should be created and then returned
+    self.stats['btRequests'] += 1
 
-      request_response = self.server.get_characteristic(self.char_uuid)
-      if request_response:
-        if is_egwtp_request(request_response):
-          header, content = parse_egwtp_request(request_response.value.decode('utf-8'))
-          
-        elif is_egwtp_response(request_response):
-          # nothing to do as response is already set
-          pass
-        else:
-          # not a valid request or response
-          pass
-        
+    # we likely need to collect some(?) of the requests and prepare responses
+    # as these need to be synchronous and not interfere with harvesting etc.
+    # there could also be other tasks that should be created and then returned
 
-      self.time += 1000
-      return self
-  
+    request_response = self.server.get_characteristic(self.char_uuid)
+    if request_response and request_response.value:
+      val = request_response.value.decode('utf-8')
+      if is_egwtp_request(val):
+        header, content = parse_egwtp_request(val)
 
+      elif is_egwtp_response(val):
+        # nothing to do as response is already set
+        pass
+      else:
+        # not a valid request or response
+        pass
 
+    self.time += 1000
+    return self
