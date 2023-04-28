@@ -12,3 +12,4 @@ services:
     build: ./modbus_slave
     container_name: srcfull-inverter
     restart: always
+
