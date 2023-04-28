@@ -28,7 +28,13 @@ def construct_egwtp_response(data: str) -> bytes:
 
   return content.encode('utf-8')
 
-def parse_egwtp_request(data: str) -> dict:
+def is_egwtp_request(data: str):
+  return data.startswith("GET ") and data.endswith("EGWTP/1.1")
+
+def is_egwtp_response(data: str):
+  return data.startswith("EGWTP/1.1 ")
+
+def parse_egwtp_request(data: str) -> Tuple(dict, str):
   # we parse a request similar to http
   # eg. GET /api/endpoint EGWTP/1.1
   #     Content-Type: text/json
@@ -52,7 +58,7 @@ def parse_egwtp_request(data: str) -> dict:
 
 import asyncio
 from bleak import BleakClient, BleakScanner
-from typing import Any, List
+from typing import Any, List, Tuple
 
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
@@ -74,8 +80,8 @@ class CheckForBLERequest(Task):
 
     # Add Service
     log.debug("Adding service")
-    my_service_uuid = "A07498CA-AD5B-474E-940D-16F1FBE7E8CD"
-    await server.add_new_service(my_service_uuid)
+    
+    await server.add_new_service(self.service_uuid)
 
     # Add a Characteristic to the service
     my_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
@@ -87,16 +93,15 @@ class CheckForBLERequest(Task):
     
     log.debug("Adding characteristic")
     await server.add_new_characteristic(
-            my_service_uuid,
+            self.service_uuid,
             my_char_uuid,
             char_flags,
             None,
             permissions)
 
-    log.debug(server.get_characteristic(my_char_uuid))
+    log.debug(server.get_characteristic(self.char_uuid))
     await server.start()
     log.debug("Advertising")
-    log.info(f"Write '0xF' to the advertised characteristic: {my_char_uuid}")
     return server
 
 
@@ -104,6 +109,10 @@ class CheckForBLERequest(Task):
     super().__init__(eventTime, stats)
     if not 'btRequests' in self.stats:
       self.stats['btRequests'] = 0
+
+    self.service_uuid = "A07498CA-AD5B-474E-940D-16F1FBE7E8CD"
+    self.char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
+
 
     # check if there is a nother event loop
     # if so, use that one
@@ -124,12 +133,26 @@ class CheckForBLERequest(Task):
 
 
   def execute(self, eventTime: int) -> None | Task | List[Task]:
+      self.stats['btRequests'] += 1
       
       # we likely need to collect some(?) of the requests and prepare responses
       # as these need to be synchronous and not interfere with harvesting etc.
       # there could also be other tasks that should be created and then returned
 
-      self.time += eventTime
+      request_response = self.server.get_characteristic(self.char_uuid)
+      if request_response:
+        if is_egwtp_request(request_response):
+          header, content = parse_egwtp_request(request_response.value.decode('utf-8'))
+          
+        elif is_egwtp_response(request_response):
+          # nothing to do as response is already set
+          pass
+        else:
+          # not a valid request or response
+          pass
+        
+
+      self.time += 1000
       return self
   
 
