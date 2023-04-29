@@ -17,7 +17,7 @@ from bless import (  # type: ignore
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(name=__name__)
-trigger: threading.Event = threading.Event()
+trigger: asyncio.Event = asyncio.Event()
 
 
 def read_request(
@@ -43,7 +43,7 @@ def write_request(
 async def run(loop):
   trigger.clear()
   # Instantiate the server
-  my_service_name = "Test Service 2"
+  my_service_name = "SrcFul Energy Gateway"
   server = BlessServer(name=my_service_name, loop=loop)
   server.read_request_func = read_request
   server.write_request_func = write_request
@@ -78,7 +78,7 @@ async def run(loop):
   await server.start()
   logger.debug("Advertising")
   logger.info(f"Write '0xF' to the advertised characteristic: {my_char_uuid}")
-  trigger.wait()
+  await trigger.wait()
   await asyncio.sleep(2)
   logger.debug("Updating")
   server.get_characteristic(my_char_uuid)

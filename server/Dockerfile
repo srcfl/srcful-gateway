@@ -1,8 +1,10 @@
 FROM python:3.11-alpine
 COPY . /server
 ENV CRYPTOAUTHLIB_NOUSB=True
+RUN apk update
 RUN apk add --no-cache make
 RUN apk add --no-cache gcc musl-dev linux-headers cmake libffi-dev
+
 RUN pip install --upgrade pip
 RUN pip install -r server/requirements.txt
 EXPOSE 5000

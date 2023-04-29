@@ -39,10 +39,10 @@ The crypto stuff is partially mocked and does not require the libs to be install
 Not all functions in the crypto lib have been fixed so pay attention to possible errors you get.
 
 To start a local dev version of the gw you can simply do:  
-`docker-commpose -f docker-compose-no_crypt.yml up`
+`docker-compose -f docker-compose-no_crypt.yml up`
 
 or you can run the main module with python directly from the parent directory of `server` (this can be a good idea for debugging).:  
-`python -m server.__main__`  
+`python -m server`  
 
 We need to run this as a module as there are dependencies between some packages/modules and they need a common root package (server).
 
