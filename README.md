@@ -46,6 +46,19 @@ or you can run the main module with python directly from the parent directory of
 
 We need to run this as a module as there are dependencies between some packages/modules and they need a common root package (server).
 
+### /bluetooth
+This is the bluethooth service and a test client. The service is simply started with:
+
+`python ble_service.py`
+
+#### /client
+This is a simple test client that you can run locally. You would need to start a web-server (e.g. twisted) to service the page and this needs to run on https for things to work (or the ble stuff will not work in a browser on android). A generated certificate is included.
+
+`twistd --nodaemon web --listen "ssl:8000:privateKey=key.pem:certKey=certificate.pem" --path .`
+
+The client is not to be deployed to the gateway and is just a test for now. The real client should be on the `srcful` domain.
+
+
 ### /modbus_slave
 This is the directory that contains simulation servers of all inverters. This is started with docker-compose-no_crypt or you can start it locally using pythion (this seems painfully slow on windows for some reason). Alternativealy you run the docker container (create it with `docker-compose build` first):
 

@@ -64,7 +64,7 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup):
   # put some initial tasks in the queue
   tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter)))
   tasks.put(CheckForWebRequest(startTime + 1000, stats, webServer))
-  tasks.put(CheckForBLERequest(startTime + 1500, stats))
+  #tasks.put(CheckForBLERequest(startTime + 1500, stats))
 
   try:
     mainLoop(tasks)

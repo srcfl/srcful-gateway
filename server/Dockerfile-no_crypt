@@ -6,7 +6,14 @@ ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 ENV UDEV=1
 
 RUN apk update
+RUN apk add eudev
+RUN apk add alpine-conf
+RUN setup-devd udev
+
+RUN apk add openrc # needed?
+
 RUN apk add --no-cache bluez
+RUN apk add bluez-deprecated
 #RUN apk add bluetooth libdbus-1-dev libgirepository1.0-dev libudev-dev libical-dev
 
 
