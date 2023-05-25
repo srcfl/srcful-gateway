@@ -38,7 +38,12 @@ def write_request(
   characteristic.value = "Hello World: ".encode() + value
   logger.debug(f"Char value set to {characteristic.value}")
 
-  logger.debug("POG")
+  logger.debug("Begin POG")
+  wifiprov.remove_connections()
+  wifiprov.set_ssid_psk("iotlab3", "modermodemet")
+
+  logger.debug("End POG")
+
   if value == b'\x0f':
     logger.debug("NICE - trigger set")
     trigger.set()
