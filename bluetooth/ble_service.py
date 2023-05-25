@@ -10,7 +10,7 @@ import egwttp
 from typing import Tuple
 from typing import Any
 
-
+import wifiprov
 
 from bless import (  # type: ignore
     BlessServer,
@@ -49,9 +49,10 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
     # if request_response and request_response.value:
     val = value.decode('utf-8')
 
-    logger.debug(f"Char value set to {val}")
+    logger.debug(f"Chars value set to {val}")
 
     if egwttp.is_request(val):
+      logger.debug(f"Request received...")
       header, content = egwttp.parse_request(val)
       logger.debug(f"Header: {header}")
       logger.debug(f"Content: {content}")

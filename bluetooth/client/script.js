@@ -84,7 +84,6 @@ async function sendMessage(endpoint, method, content) {
   if (!characteristic) {
     return;
   }
-
   // Construct the custom message format
   const messageType = "EGWTTP/1.1";
   const contentType = "text/json";
@@ -119,6 +118,8 @@ function disconnect() {
 inverterForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
+  const ssid = document.getElementById("ssid").value;
+  const psk = document.getElementById("psk").value;
   const ipAddress = document.getElementById("ip-address").value;
   const port = document.getElementById("port").value;
   const typeSelected = document.getElementById("inverter-type").value;
@@ -126,6 +127,8 @@ inverterForm.addEventListener("submit", (event) => {
 
   const endpoint = "/api/inverter";
   const content = JSON.stringify({
+    ssid: ssid,
+    psk: psk,
     ip: ipAddress,
     port: port,
     type: typeSelected,

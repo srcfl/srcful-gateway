@@ -8,6 +8,8 @@ import threading
 
 from typing import Any
 
+import wifiprov
+
 from bless import (  # type: ignore
     BlessServer,
     BlessGATTCharacteristic,
@@ -35,6 +37,8 @@ def write_request(
 ):
   characteristic.value = "Hello World: ".encode() + value
   logger.debug(f"Char value set to {characteristic.value}")
+
+  logger.debug("POG")
   if value == b'\x0f':
     logger.debug("NICE - trigger set")
     trigger.set()
