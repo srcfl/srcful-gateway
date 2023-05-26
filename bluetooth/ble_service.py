@@ -76,11 +76,11 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
     
 
 
-async def run(loop):
+async def run():
   global g_server, g_service_uuid, g_char_uuid, g_api_url, g_service_name
   trigger.clear()
   # Instantiate the server
-  g_server = BlessServer(name=g_service_name, loop=loop, name_overwrite=True)
+  g_server = BlessServer(name=g_service_name, name_overwrite=True)
   g_server.read_request_func = read_request
   g_server.write_request_func = write_request
 
@@ -135,7 +135,4 @@ if __name__ == "__main__":
   else:
     logger.setLevel(logging.getLevelName(args.log_level))
   
-
-  loop = asyncio.new_event_loop()
-  asyncio.set_event_loop(loop)
-  asyncio.run(run(loop))
+  asyncio.run(run())
