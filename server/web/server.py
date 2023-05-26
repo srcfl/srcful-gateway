@@ -7,6 +7,7 @@ from .get import root
 from .get import crypto
 from .get import hello
 from .post import inverter
+from .post import wifi
 
 
 def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable, tasks: queue.Queue):
@@ -16,6 +17,8 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       self.api_get = {'crypto': crypto.Handler()}
       self.api_get = {'hello': hello.Handler()}
       self.api_post = {'inverter': inverter.Handler()}
+      self.api_post = {'wifi': wifi.Handler()}
+
       self.tasks = tasks
       super(Handler, self).__init__(*args, **kwargs)
 

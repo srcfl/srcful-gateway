@@ -1,5 +1,6 @@
 version: "2"
 services:
+  
   web:
     ports:
       - "80:5000"
@@ -8,6 +9,9 @@ services:
     restart: always
     devices:
       - /dev/i2c-1:/dev/i2c-1
+    labels:
+      io.balena.features.dbus: 1
+  
   inverter:
     build: ./modbus_slave
     container_name: srcfull-inverter
