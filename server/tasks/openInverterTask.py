@@ -31,6 +31,7 @@ class OpenInverterTask(Task):
     self.inverter = inverter
 
   def execute(self, eventTime):
+    # Do this n times? 
     try:
       if self.inverter.open():
         if 'inverter' in self.stats and self.stats['inverter'] != None:

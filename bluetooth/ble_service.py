@@ -8,7 +8,7 @@ import requests
 import egwttp
 from typing import Any
 
-
+# import wifiprov
 
 from bless import (  # type: ignore
     BlessServer,
@@ -39,20 +39,21 @@ def handle_response(path:str, reply: requests.Response):
   logger.debug(f"Reply: {egwttp_response}")
   return egwttp_response
 
-def request_get(path: str) -> str:
-  return handle_response(path, requests.get(g_api_url + path))
+def request_get(path: str) -> bytearray:
+  return bytearray(handle_response(path, requests.get(g_api_url + path)))
 
-def request_post(path: str, content: str) -> str:
-  return handle_response(requests.post(path, g_api_url + path, data=content))
+def request_post(path: str, content: str) -> bytearray:
+  return bytearray(handle_response(path, requests.post(g_api_url + path, data=content)))
 
 def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
 
     # if request_response and request_response.value:
     val = value.decode('utf-8')
 
-    logger.debug(f"Char value set to {val}")
+    logger.debug(f"Chars value set to {val}")
 
     if egwttp.is_request(val):
+      logger.debug(f"Request received...")
       header, content = egwttp.parse_request(val)
       logger.debug(f"Header: {header}")
       logger.debug(f"Content: {content}")
@@ -75,11 +76,11 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
     
 
 
-async def run(loop):
+async def run():
   global g_server, g_service_uuid, g_char_uuid, g_api_url, g_service_name
   trigger.clear()
   # Instantiate the server
-  g_server = BlessServer(name=g_service_name, loop=loop, name_overwrite=True)
+  g_server = BlessServer(name=g_service_name, name_overwrite=True)
   g_server.read_request_func = read_request
   g_server.write_request_func = write_request
 
@@ -134,7 +135,4 @@ if __name__ == "__main__":
   else:
     logger.setLevel(logging.getLevelName(args.log_level))
   
-
-  loop = asyncio.new_event_loop()
-  asyncio.set_event_loop(loop)
-  asyncio.run(run(loop))
+  asyncio.run(run())
