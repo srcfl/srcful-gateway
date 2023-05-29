@@ -1,15 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html data-bs-theme="dark">
 
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Simple BLE Client</title>
-  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-pzjw8f+ua7Kw1TIq0v8FqFjcJ6pajs/rfdfs3SO+kD4Ck5BdPtF+to8xM6vfkdaD" crossorigin="anonymous" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe"
+    crossorigin="anonymous"></script>
   <style>
     #inverter-form {
-      display: none;
+      display: block;
     }
 
     body {
@@ -19,49 +22,102 @@
 </head>
 
 <body>
-  <div class="container">
-    <h1 class="text-center">Simple BLE Client</h1>
-    <div class="text-center mb-3">
-      <button id="connect-button" class="btn btn-primary">Connect</button>
-      <button id="send-message" class="btn btn-secondary" disabled>Send Message</button>
+  <h1 class="text-center">Simple BLE Client</h1>
+  <div class="text-center mb-3">
+    <button id="connect-button" class="btn btn-primary">Connect</button>
+    <button id="send-message" class="btn btn-secondary" disabled>Send Hello Message</button>
+  </div>
+  <pre id="output" class="border p-3 bg-light"></pre>
+
+
+
+  <div class="container min-vh-100 d-flex justify-content-center">
+    <div class="row">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-6 mx-auto">
+        <form id="inverter-form" class="mb-3">
+          <h2 class="text-left">Inverter Config</h2>
+          <div class="row">
+            <div class="col-12 col-md-6">
+              <div class="form-group">
+                <label for="ip-address" class="form-label">IP Address:</label>
+                <input type="text" id="ip-address" name="ip-address" class="form-control" value="192.168.10.10"
+                  required />
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="form-group mb-3">
+                <label for="port" class="form-label">Port:</label>
+                <input type="number" id="port" name="port" class="form-control" value="502" required />
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="form-group mb-3">
+                <label for="inverter-address" class="form-label">Address:</label>
+                <input type="number" id="inverter-address" name="inverter-address" class="form-control" value="1"
+                  required />
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="form-group mb-3">
+                <label for="inverter-type" class="form-label">Type:</label>
+                <select id="inverter-type" name="inverter-type" class="form-control" required>
+                  <option value="solaredge">Solaredge</option>
+                  <option value="sungrow">Sungrow</option>
+                  <option value="huawei">Huawei</option>
+                  <option value="growatt">Growatt</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="form-group">
+                <button type="submit" class="btn btn-primary">Set Inverter Config</button>
+              </div>
+            </div>
+          </div>
+        </form>
+
+
+
+        <form id="wifi-form">
+          <h2 class="text-left">Wifi Config</h2>
+          <div class="form-group col-12 mb-3">
+            <label for="ssid" class="form-label">Network SSID:</label>
+            <input type="text" id="ssid" name="ssid" class="form-control" value="" required />
+          </div>
+
+          <div class="form-group col-12 mb-3">
+            <label for="password" class="form-label">Password:</label>
+            <input type="text" id="password" name="password" class="form-control" value="" required />
+          </div>
+
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary">Set WiFi Config</button>
+          </div>
+        </form>
+
+
+      </div>
     </div>
-    <pre id="output" class="border p-3 bg-light"></pre>
-    <form id="inverter-form" class="mt-4">
-      <div class="form-row">
-        <div class="form-group col-md-4">
-          <label for="ssid">WiFi SSID:</label>
-          <input type="text" id="ssid" name="ssid" class="form-control" value="asd" required />
-        </div>
-        <div class="form-group col-md-4">
-          <label for="psk">WiFi PSK:</label>
-          <input type="text" id="psk" name="psk" class="form-control" value="asd" required />
-        </div>
-        <div class="form-group col-md-4">
-          <label for="ip-address">IP Address:</label>
-          <input type="text" id="ip-address" name="ip-address" class="form-control" value="192.168.10.10" required />
-        </div>
-        <div class="form-group col-md-4">
-          <label for="port">Port:</label>
-          <input type="number" id="port" name="port" class="form-control" value="502" required />
-        </div>
-        <div class="form-group col-md-4">
-          <label for="inverter-address">Address:</label>
-          <input type="number" id="inverter-address" name="inverter-address" class="form-control" value="1" required />
-        </div>
-        <div class="form-group col-md-4">
-          <label for="inverter-type">Type:</label>
-          <select id="inverter-type" name="inverter-type" class="form-control" required>
-            <option value="solaredge">Solaredge</option>
-            <option value="sungrow">Sungrow</option>
-            <option value="huawei">Huawei</option>
-            <option value="growatt">Growatt</option>
-          </select>
-        </div>
+  </div>
+
+
+
+
+
+  <form id="wifi-form" class="mt-4">
+    <h2 class="text-center">Wifi Config</h2>
+    <div class="form-row">
+      <div class="form-group col-md-4">
+        <label for="ssid" class="form-label">Network SSID:</label>
+        <input type="text" id="ssid" name="ssid" class="form-control" value="" required />
       </div>
-      <div class="text-center">
-        <button type="submit" class="btn btn-primary">Post Message</button>
-      </div>
-    </form>
+    </div>
+    <div class="col-md-4">
+      <button type="submit" class="btn btn-primary">Set Inverter Config</button>
+    </div>
+  </form>
+
+
   </div>
   <script src="script.js"></script>
 </body>
