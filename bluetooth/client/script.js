@@ -1,6 +1,7 @@
 const connectButton = document.getElementById("connect-button");
 const sendMessageButton = document.getElementById("send-message");
 const inverterForm = document.getElementById("inverter-form");
+const wifiForm = document.getElementById("wifi-form");
 
 let device;
 let server;
@@ -115,11 +116,27 @@ function disconnect() {
   device.gatt.disconnect();
 }
 
-inverterForm.addEventListener("submit", (event) => {
+wifiForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
   const ssid = document.getElementById("ssid").value;
-  const psk = document.getElementById("psk").value;
+  const psk = document.getElementById("password").value;
+
+  const endpoint = "/api/wifi";
+  const content = JSON.stringify({
+    ssid: ssid,
+    psk: psk
+  });
+
+  sendMessage(endpoint, "POST", content).catch((error) => {
+    log(error);
+  });
+});
+
+
+inverterForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
   const ipAddress = document.getElementById("ip-address").value;
   const port = document.getElementById("port").value;
   const typeSelected = document.getElementById("inverter-type").value;

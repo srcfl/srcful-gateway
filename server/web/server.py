@@ -14,10 +14,10 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
 
   class Handler(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-      self.api_get = {'crypto': crypto.Handler()}
-      self.api_get = {'hello': hello.Handler()}
-      self.api_post = {'inverter': inverter.Handler()}
-      self.api_post = {'wifi': wifi.Handler()}
+      self.api_get = {'crypto': crypto.Handler(),
+                      'hello': hello.Handler()}
+      self.api_post = {'inverter': inverter.Handler(),
+                       'wifi': wifi.Handler()}
 
       self.tasks = tasks
       super(Handler, self).__init__(*args, **kwargs)
