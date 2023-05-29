@@ -4,6 +4,6 @@ service dbus start
 bluetoothd &
 
 
-python ble_service.py
+python ble_test.py
 
 /bin/bash
