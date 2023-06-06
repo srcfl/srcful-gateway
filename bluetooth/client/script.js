@@ -144,8 +144,6 @@ inverterForm.addEventListener("submit", (event) => {
 
   const endpoint = "/api/inverter";
   const content = JSON.stringify({
-    ssid: ssid,
-    psk: psk,
     ip: ipAddress,
     port: port,
     type: typeSelected,
