@@ -8,6 +8,8 @@ let server;
 let service;
 let characteristic;
 
+let gatewayName = null;
+
 const output = document.getElementById("output");
 
 const serviceUuid = 'a07498ca-ad5b-474e-940d-16f1fbe7e8cd';
@@ -76,6 +78,15 @@ function handleCharacteristicValueChanged(event) {
   const receivedText = decoder.decode(value);
 
   log(`Received data (decoded): ${receivedText}`);
+
+  // convert to json object
+  const receivedJson = JSON.parse(receivedText);
+
+  // if the message is a gateway name, update the gateway name
+  if (receivedJson.name) {
+    gatewayName = receivedJson.name;
+    log(`Gateway name: ${gatewayName}`);
+  }
 }
 
 
@@ -100,6 +111,17 @@ async function sendMessage(endpoint, method, content) {
     log("Failed to send message");
     throw error;
   }
+}
+
+function getGatewayName() {
+  if (gatewayName == null) {
+    const endpoint = "/api/name";
+    const content = "";
+    sendMessage(endpoint, "GET", content).catch((error) => {
+      log(error);
+    });
+  }
+
 }
 
 
