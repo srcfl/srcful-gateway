@@ -6,6 +6,7 @@ from urllib.parse import unquote_plus
 from .get import root
 from .get import crypto
 from .get import hello
+from .get import name
 from .post import inverter
 from .post import wifi
 
@@ -15,7 +16,8 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
   class Handler(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
       self.api_get = {'crypto': crypto.Handler(),
-                      'hello': hello.Handler()}
+                      'hello': hello.Handler(),
+                      'name': name.Handler()}
       self.api_post = {'inverter': inverter.Handler(),
                        'wifi': wifi.Handler()}
 

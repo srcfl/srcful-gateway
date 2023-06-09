@@ -33,6 +33,35 @@ def test_execute_calls_post_and_handles_200_response():
     task.execute(0)
     mock_on200.assert_called_once_with(mock_response)
 
+def test_execute_calls_post_and_handles_post_request_exception():
+  # should answer with an empty response
+  mock_data = {'foo': 'bar'}
+  mock_response = requests.Response()
+  mock_onError = Mock(return_value=0)
+  task = apiCall.SrcfulAPICallTask(0, {})
+
+  # Mock the requests module so we can intercept the post() call
+  with patch('requests.post', side_effect=requests.exceptions.RequestException) as mock_post:
+    mock_post.return_value = mock_response
+    task._data = Mock(return_value=mock_data)
+    task._onError = mock_onError
+
+    task.execute(0)
+
+    # wait for the thread to finish
+    task.t.join()
+    mock_post.assert_called_once_with(
+      "https://testnet.srcful.dev/gw/data/", data=mock_data)
+
+    # execute again as replies are handled in the next call
+    
+    task.execute(0)
+
+    # check that onError was called with a requests.Response object
+    assert(mock_onError.call_args[0][0].status_code == None)
+
+    mock_onError.assert_called_once()
+
 
 def test_execute_calls_post_and_handles_non_200_response():
   mock_data = {'foo': 'bar'}
