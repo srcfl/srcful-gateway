@@ -2,19 +2,22 @@ from .task import Task
 from threading import Thread
 import requests
 
+import logging
+log = logging.getLogger(__name__)
 
 class SrcfulAPICallTask(Task):
   def __init__(self, eventTime: int, stats: dict):
     super().__init__(eventTime, stats)
     self.t = None
     self.reply = None
+    self.post_url = "https://testnet.srcful.dev/gw/data/"
 
   def _json(self):
-    '''override to the json to send to the server, json argument in post method'''
+    '''override to return the json to send to the server, json argument in post method'''
     return None
 
   def _data(self):
-    '''override to the data to send to the server, data argument in post method'''
+    '''override to return the data to send to the server, data argument in post method'''
     return None
 
   def _on200(self, reply: requests.Response):
@@ -30,13 +33,18 @@ class SrcfulAPICallTask(Task):
 
     def post():
       try:
-        self.reply = requests.post(
-          "https://testnet.srcful.dev/gw/data/", data=self._data())
+        data = self._data()
+        if data != None:
+            self.reply = requests.post(self.post_url, data=data)
+        else:
+          json = self._json()
+          if json != None:
+            self.reply = requests.post(self.post_url, json=json)
+          else:
+            self.reply = requests.post(self.post_url)
       except requests.exceptions.RequestException as e:
-        print("error posting data: ")
-        print(e)
+        log.exception(e)
         self.reply = requests.Response()
-      # print(self._data())
 
     if (self.t == None):
       self.t = Thread(target=post)
