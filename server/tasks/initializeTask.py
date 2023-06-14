@@ -34,7 +34,7 @@ class InitializeTask(SrcfulAPICallTask):
 
     return {'query': m}
   
-  def on200(self, reply: requests.Response):
+  def _on200(self, reply: requests.Response):
     if  reply.json()['data']['gatewayInception'] != None and \
         reply.json()['data']['gatewayInception']['initialize'] != None and \
         reply.json()['data']['gatewayInception']['initialize']['initialized'] != None:

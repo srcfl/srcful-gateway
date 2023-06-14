@@ -2,6 +2,7 @@ const connectButton = document.getElementById("connect-button");
 const sendMessageButton = document.getElementById("send-message");
 const inverterForm = document.getElementById("inverter-form");
 const wifiForm = document.getElementById("wifi-form");
+const walletForm = document.getElementById("wallet-form");
 
 let device;
 let server;
@@ -28,6 +29,8 @@ connectButton.addEventListener("click", () => {
         sendMessageButton.disabled = false;
         connectButton.textContent = "Disconnect";
         inverterForm.style.display = "block";
+        walletForm.style.display = "block";
+        wifiForm.style.display = "block";
       })
       .catch((error) => {
         log(error);
@@ -38,6 +41,8 @@ connectButton.addEventListener("click", () => {
     sendMessageButton.disabled = true;
     connectButton.textContent = "Connect";
     inverterForm.style.display = "none";
+    walletForm.style.display = "none";
+    wifiForm.style.display = "none";
   }
 
 });
@@ -148,6 +153,20 @@ wifiForm.addEventListener("submit", (event) => {
   const content = JSON.stringify({
     ssid: ssid,
     psk: psk
+  });
+
+  sendMessage(endpoint, "POST", content).catch((error) => {
+    log(error);
+  });
+});
+
+walletForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const publicKey = document.getElementById("public-key").value;
+
+  const endpoint = "/api/initialize";
+  const content = JSON.stringify({
+    wallet: publicKey
   });
 
   sendMessage(endpoint, "POST", content).catch((error) => {

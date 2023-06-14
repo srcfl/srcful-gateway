@@ -9,6 +9,7 @@ from .get import hello
 from .get import name
 from .post import inverter
 from .post import wifi
+from .post import initialize
 
 
 def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable, tasks: queue.Queue):
@@ -19,7 +20,8 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
                       'hello': hello.Handler(),
                       'name': name.Handler()}
       self.api_post = {'inverter': inverter.Handler(),
-                       'wifi': wifi.Handler()}
+                       'wifi': wifi.Handler(),
+                       'initialize': initialize.Handler()}
 
       self.tasks = tasks
       super(Handler, self).__init__(*args, **kwargs)
@@ -83,15 +85,21 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
         code, response = handler.doGet(stats, timeMSFunc, chipInfoFunc)
         self.sendApiResponse(code, response)
       else:
-        htlm = root.Handler().doGet(stats, timeMSFunc, chipInfoFunc)
-        html_bytes = bytes(htlm, "utf-8")
+        # check if we have a post handler
+        handler = Handler.getAPIHandler(self.path, "/api/", self.api_post)
+        if handler is not None:
+          self.sendApiResponse(200, handler.jsonSchema())
+          return
+        else:
+          htlm = root.Handler().doGet(stats, timeMSFunc, chipInfoFunc)
+          html_bytes = bytes(htlm, "utf-8")
 
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.send_header("Content-Length", len(html_bytes))
-        self.end_headers()
+          self.send_response(200)
+          self.send_header("Content-type", "text/html")
+          self.send_header("Content-Length", len(html_bytes))
+          self.end_headers()
 
-        self.wfile.write(html_bytes)
+          self.wfile.write(html_bytes)
 
   return Handler
 

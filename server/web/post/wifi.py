@@ -5,6 +5,15 @@ from server.tasks.openWiFiConTask import OpenWiFiConTask
 
 class Handler:
 
+  def jsonSchema(self):
+    return json.dumps({ 'type': 'post',
+                        'description': 'open a wifi connection',
+                        'required': {'ssid': 'string, ssid of the wifi',
+                                     'psk': 'string, password of the wifi'},
+                        'returns': {'status': 'string, ok or error',
+                                    'message': 'string, error message'}
+                      })
+
   def doPost(self, post_data: dict, stats: dict, tasks: queue.Queue) -> tuple[int, str]:
     if 'ssid' in post_data and 'psk' in post_data:
       try:
