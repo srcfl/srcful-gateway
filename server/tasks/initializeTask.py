@@ -30,7 +30,7 @@ class InitializeTask(SrcfulAPICallTask):
     """
 
     m = m.replace('$var_idAndWallet', idAndWallet)
-    m = m.replace('$var_sign', sign)
+    m = m.replace('$var_sign', sign.decode('utf-8'))
 
     return {'query': m}
   
