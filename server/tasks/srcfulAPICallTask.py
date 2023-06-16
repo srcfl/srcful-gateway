@@ -35,10 +35,12 @@ class SrcfulAPICallTask(Task):
       try:
         data = self._data()
         if data != None:
+            log.debug(self.post_url, data)
             self.reply = requests.post(self.post_url, data=data)
         else:
           json = self._json()
           if json != None:
+            log.debug(self.post_url, json)
             self.reply = requests.post(self.post_url, json=json)
           else:
             self.reply = requests.post(self.post_url)
