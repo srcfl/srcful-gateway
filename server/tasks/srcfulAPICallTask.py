@@ -5,6 +5,12 @@ import requests
 import logging
 log = logging.getLogger(__name__)
 
+def argToStr(arg):
+  try:
+    return str(arg)
+  except:
+    return "argument of type " + str(type(arg)) + " cannot be converted to string"
+
 class SrcfulAPICallTask(Task):
   def __init__(self, eventTime: int, stats: dict):
     super().__init__(eventTime, stats)
@@ -32,17 +38,19 @@ class SrcfulAPICallTask(Task):
   def execute(self, eventTime):
 
     def post():
+      log.debug("post")
       try:
-        data = self._data()
+        data = self._data()    
         if data != None:
-            log.debug(self.post_url, data)
+            log.debug("{} {}".format(self.post_url, argToStr(data)))
             self.reply = requests.post(self.post_url, data=data)
         else:
           json = self._json()
           if json != None:
-            log.debug(self.post_url, json)
+            log.debug("{} {}".format(self.post_url, argToStr(json)))
             self.reply = requests.post(self.post_url, json=json)
           else:
+            log.debug("{} {}".format(self.post_url, "no data or json"))
             self.reply = requests.post(self.post_url)
       except requests.exceptions.RequestException as e:
         log.exception(e)
@@ -52,17 +60,21 @@ class SrcfulAPICallTask(Task):
       self.t = Thread(target=post)
       self.t.start()
       self.time = eventTime + 1000
+      log.debug("Started post thread")
       return self
     elif self.t.is_alive() == False:
       self.t = None
       if self.reply.status_code == 200:
+        log.debug("Thead is finished: calling _on200")
         self._on200(self.reply)
       else:
+        log.debug("Thead is finished: calling _onError")
         retryDelay = self._onError(self.reply)
         if retryDelay > 0:
           self.time = eventTime + retryDelay
           return self
     else:
       # wait some more
+      log.debug("Waiting for reply")
       self.time = eventTime + 1000
       return self
