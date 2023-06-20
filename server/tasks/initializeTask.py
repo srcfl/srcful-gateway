@@ -16,7 +16,7 @@ class InitializeTask(SrcfulAPICallTask):
     serial = atecc608b.getSerialNumber().hex()
 
     idAndWallet = serial + ':' + self.wallet
-    sign = atecc608b.base64UrlEncode(atecc608b.getSignature(idAndWallet))
+    sign = atecc608b.getSignature(idAndWallet).hex()
     atecc608b.release()
 
     m = """
@@ -30,7 +30,7 @@ class InitializeTask(SrcfulAPICallTask):
     """
 
     m = m.replace('$var_idAndWallet', idAndWallet)
-    m = m.replace('$var_sign', sign.decode('utf-8'))
+    m = m.replace('$var_sign', sign)
 
     return {'query': m}
   
