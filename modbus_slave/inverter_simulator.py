@@ -93,5 +93,5 @@ if __name__ == '__main__':
 
   # init modbus server and start it
   server = ModbusServer(host=args.host, port=args.port, data_bank=MyDataBank(args.type))
-  print("Modbus server is starting at " + args.host + ":" + str(args.port) + " with type " + args.type + " ...
+  print("Modbus server is starting at " + args.host + ":" + str(args.port) + " with type " + args.type + "...")
   server.start()
