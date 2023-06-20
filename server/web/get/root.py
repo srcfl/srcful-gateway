@@ -95,7 +95,7 @@ class Handler:
 
     ret = "<html><head><title>Srcful Energy Gateway</title></head>"
     ret += "<body>"
-    ret += "<h1>Srcful Energy Gateway</h1>"
+    ret += "<h1>Srcful Energy Gateway 0.0.4</h1>"
     ret += f"<h2>{stats['name']}</h2>"
 
     ret += f"<p>chipInfo: {chipInfoFunc()}</p>"

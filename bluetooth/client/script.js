@@ -2,13 +2,24 @@ const connectButton = document.getElementById("connect-button");
 const sendMessageButton = document.getElementById("send-message");
 const inverterForm = document.getElementById("inverter-form");
 const wifiForm = document.getElementById("wifi-form");
+const walletForm = document.getElementById("wallet-form");
+const internetConnectionStatus = document.getElementById(
+  "internet-connection-status"
+);
 
 let device;
 let server;
 let service;
 let characteristic;
 
+
+
+let messageQueue = [];
+let sendingMessage = false;
+
 let gatewayName = null;
+let gatewayNameCheckInterval;
+let gatewayNameCheckCount = 0;
 
 const output = document.getElementById("output");
 
@@ -17,7 +28,7 @@ const characteristicUuid = '51ff12bb-3ed8-46e5-b4f9-d64e2fec021b';
 
 function log(message) {
   console.log(message);
-  output.innerHTML += message + '<br>';
+  output.innerHTML += message + '\n';
 }
 
 connectButton.addEventListener("click", () => {
@@ -28,6 +39,8 @@ connectButton.addEventListener("click", () => {
         sendMessageButton.disabled = false;
         connectButton.textContent = "Disconnect";
         inverterForm.style.display = "block";
+        walletForm.style.display = "block";
+        wifiForm.style.display = "block";
       })
       .catch((error) => {
         log(error);
@@ -38,6 +51,8 @@ connectButton.addEventListener("click", () => {
     sendMessageButton.disabled = true;
     connectButton.textContent = "Connect";
     inverterForm.style.display = "none";
+    walletForm.style.display = "none";
+    wifiForm.style.display = "none";
   }
 
 });
@@ -66,9 +81,61 @@ async function connect() {
     await characteristic.startNotifications();
     characteristic.addEventListener('characteristicvaluechanged', handleCharacteristicValueChanged);
 
+    startGatewayNameCheck();
+
   } catch (error) {
     log("Failed to connect");
     throw error;
+  }
+}
+
+
+async function processMessageQueue() {
+  if (sendingMessage || messageQueue.length === 0) {
+    return;
+  }
+  sendingMessage = true;
+
+  const dataToSend = messageQueue.shift();
+  try {
+    const sendDataBuffer = new TextEncoder().encode(dataToSend);
+    await characteristic.writeValue(sendDataBuffer);
+    log("Message sent");
+  } catch (error) {
+    log("Failed to send message");
+    throw error;
+  } finally {
+    sendingMessage = false;
+  }
+
+  if (messageQueue.length > 0) {
+    await processMessageQueue();
+  }
+}
+
+function startGatewayNameCheck() {
+  if (gatewayNameCheckInterval === undefined) {
+    getGatewayName();
+    gatewayNameCheckCount = 1
+    gatewayNameCheckInterval = setInterval(() => {
+      if (device && device.gatt.connected && gatewayNameCheckCount < 5) {
+        getGatewayName();
+        gatewayNameCheckCount++;
+        updateInternetConnectionStatus();
+      } else {
+        stopGatewayNameCheck();
+      }
+    }, 20000);
+    updateInternetConnectionStatus();
+  }
+}
+
+function stopGatewayNameCheck() {
+  if (gatewayNameCheckInterval !== undefined) {
+    clearInterval(gatewayNameCheckInterval);
+    gatewayNameCheckInterval = undefined;
+    gatewayNameCheckCount = 0;
+    updateInternetConnectionStatus();
   }
 }
 
@@ -79,16 +146,58 @@ function handleCharacteristicValueChanged(event) {
 
   log(`Received data (decoded): ${receivedText}`);
 
-  // convert to json object
-  const receivedJson = JSON.parse(receivedText);
+  const parts = receivedText.split("\r\n\r\n");
+  const header = parts[0];
+  const content = parts[1];
 
-  // if the message is a gateway name, update the gateway name
-  if (receivedJson.name) {
-    gatewayName = receivedJson.name;
-    log(`Gateway name: ${gatewayName}`);
+  // get the Location header key value
+  const locationHeader = header.split("\r\n").find((line) => line.startsWith("Location:")); // Location: /api/name
+
+  if (locationHeader != null) {
+    const locationValue = locationHeader.split(": ")[1]; // /api/name
+
+    if (locationValue === "/api/name") {
+      const receivedJson = JSON.parse(content);
+
+      // if the message is a gateway name, update the gateway name
+      if (receivedJson.name) {
+        gatewayName = receivedJson.name;
+        log(`Gateway name: ${gatewayName}`);
+        stopGatewayNameCheck();
+        updateInternetConnectionStatus();
+      }
+    } else if (locationValue === "/api/wifi") {
+      const receivedJson = JSON.parse(content);
+
+      if (receivedJson.status) {
+        log(`Wifi status recieved: ${receivedJson.status}`);
+        if (receivedJson.status === "ok") {
+          setTimeout(() => startGatewayNameCheck(), 10000);
+        }
+      }
+    }
   }
 }
 
+function updateInternetConnectionStatus() {
+  if (gatewayName) {
+    internetConnectionStatus.textContent = "Connected";
+    internetConnectionStatus.classList.remove("text-warning");
+    internetConnectionStatus.classList.remove("text-danger");
+    internetConnectionStatus.classList.add("text-success");
+  } else if (gatewayNameCheckInterval != undefined) {
+    dots = ".".repeat(gatewayNameCheckCount);
+    internetConnectionStatus.textContent = "Checking" + dots;
+    internetConnectionStatus.classList.remove("text-success");
+    internetConnectionStatus.classList.remove("text-danger");
+    internetConnectionStatus.classList.add("text-warning");
+  } else {
+    internetConnectionStatus.textContent = "Not connected";
+    internetConnectionStatus.classList.remove("text-success");
+    internetConnectionStatus.classList.remove("text-warning");
+    internetConnectionStatus.classList.add("text-danger");
+  }
+}
 
 
 async function sendMessage(endpoint, method, content) {
@@ -96,21 +205,19 @@ async function sendMessage(endpoint, method, content) {
   if (!characteristic) {
     return;
   }
+
   // Construct the custom message format
   const messageType = "EGWTTP/1.1";
   const contentType = "text/json";
   const contentLength = new TextEncoder().encode(content).byteLength;
 
   const sendMessageData = `${method} ${endpoint} ${messageType}\r\nContent-Type: ${contentType}\r\nContent-Length: ${contentLength}\r\n\r\n${content}`;
-  const sendDataBuffer = new TextEncoder().encode(sendMessageData);
 
-  try {
-    await characteristic.writeValue(sendDataBuffer);
-    log("Message sent");
-  } catch (error) {
-    log("Failed to send message");
-    throw error;
-  }
+  // Add the message data to the queue
+  messageQueue.push(sendMessageData);
+
+  // Process the queue
+  await processMessageQueue();
 }
 
 function getGatewayName() {
@@ -121,7 +228,6 @@ function getGatewayName() {
       log(error);
     });
   }
-
 }
 
 
@@ -136,10 +242,16 @@ function disconnect() {
   }
 
   device.gatt.disconnect();
+
+  stopGatewayNameCheck();
 }
 
 wifiForm.addEventListener("submit", (event) => {
   event.preventDefault();
+
+  stopGatewayNameCheck();
+  gatewayName = null;
+  updateInternetConnectionStatus()
 
   const ssid = document.getElementById("ssid").value;
   const psk = document.getElementById("password").value;
@@ -148,6 +260,20 @@ wifiForm.addEventListener("submit", (event) => {
   const content = JSON.stringify({
     ssid: ssid,
     psk: psk
+  });
+
+  sendMessage(endpoint, "POST", content).catch((error) => {
+    log(error);
+  });
+});
+
+walletForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const publicKey = document.getElementById("wallet-public-key").value;
+
+  const endpoint = "/api/initialize";
+  const content = JSON.stringify({
+    wallet: publicKey
   });
 
   sendMessage(endpoint, "POST", content).catch((error) => {

@@ -25,6 +25,7 @@ if __name__ == "__main__":
   formatter = OneLineExceptionFormatter(logging.BASIC_FORMAT)
   handler.setFormatter(formatter)
   logging.root.setLevel(os.environ.get("LOGLEVEL", "DEBUG"))
+  #logging.root.setLevel("DEBUG")
   logging.root.handlers = []
   logging.root.addHandler(handler)
 

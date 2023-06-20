@@ -6,6 +6,17 @@ from server.tasks.openInverterTask import OpenInverterTask
 
 class Handler:
 
+  def jsonSchema(self):
+    return json.dumps({ 'type': 'post',
+                        'description': 'open an inverter',
+                        'required': {'ip': 'string, ip address of the inverter',
+                                     'port': 'int, port of the inverter',
+                                     'type': 'string, type of inverter',
+                                     'address': 'int, address of the inverter'},
+                        'returns': {'status': 'string, ok or error',
+                                    'message': 'string, error message'}
+                      })
+
   def doPost(self, post_data: dict, stats: dict, tasks: queue.Queue) -> tuple[int, str]:
     if 'ip' in post_data and 'port' in post_data and 'type' in post_data:
       try:
