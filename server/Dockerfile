@@ -19,5 +19,5 @@ EXPOSE 5000
 
 
 ENTRYPOINT ["python"]
-CMD ["-m", "server", "-ih", "192.168.40.145", "-it", "unknown"]
-# CMD ["-m", "server.app", "-b", "/var/srcful/bootstrap.txt"]
+#CMD ["-m", "server", "-ih", "192.168.40.145", "-it", "unknown"]
+CMD ["-m", "server", "-b", "/var/srcful/bootstrap.txt"]

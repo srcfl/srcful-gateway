@@ -62,16 +62,18 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup|None = None, boot
 
   tasks = queue.PriorityQueue()
 
+  bootstrap = Bootstrap(bootstrapFile)
+
   # put some initial tasks in the queue
   if inverter is not None:
-    tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter)))
-  if bootstrapFile is not None:
-    bootstrap = Bootstrap(bootstrapFile)
-    # this is a hack to pass the bootstrap object to the post API that also creates open inverter tasks
-    # this should really be handled better i.e. blackboard pattern with some observer pattern
-    stats['bootstrap'] = bootstrap
-    for task in bootstrap.getTasks(startTime + 500, stats):
-      tasks.put(task)
+    tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter), bootstrap))
+
+  # this is a hack to pass the bootstrap object to the post API that also creates open inverter tasks
+  # this should really be handled better i.e. blackboard pattern with some observer pattern
+  stats['bootstrap'] = bootstrap
+  for task in bootstrap.getTasks(startTime + 500, stats):
+    tasks.put(task)
+
   tasks.put(CheckForWebRequest(startTime + 1000, stats, webServer))
 
   try:
