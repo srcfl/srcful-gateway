@@ -11,6 +11,8 @@ services:
       - /dev/i2c-1:/dev/i2c-1
     labels:
       io.balena.features.dbus: 1
+    volumes:
+      - srcful-data:/var/srcful
 
   #  inverter:
   #    build: ./modbus_slave
@@ -28,3 +30,5 @@ services:
 
     depends_on:
       - "web"
+volumes:
+  srcful-data:

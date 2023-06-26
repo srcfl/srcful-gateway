@@ -7,7 +7,7 @@ services:
     container_name: srcfull-gw
     restart: always
     privileged: true
-    network_mode: host
+    #network_mode: host
     volumes:
       - srcful-data:/var/srcful
     ports:

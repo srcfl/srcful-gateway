@@ -35,18 +35,20 @@ class Bootstrap(BootstrapSaver):
       logger.error(e)
 
 
-  def appendInverter(self, args:InverterTCP.Setup):
+  def appendInverter(self, inverterArgs:InverterTCP.Setup):
     self._createFileIfNotExists()
 
     # check if the setup already exists
     for task in self.tasks:
       
-      if isinstance(task, OpenInverterTask) and task.inverter.getSetup() == args:
+      if isinstance(task, OpenInverterTask) and task.inverter.getConfig() == inverterArgs:
         return
     
     # append the setup to the file
     with open(self.filename, "a") as f:
-      f.write('OpenInverter {} {} {} {}\n'.format(args[0], args[1], args[2], args[3]))
+      logger.info('Appending inverter to bootstrap file: {} {} {} {}'.format(inverterArgs[0], inverterArgs[1], inverterArgs[2], inverterArgs[3]))
+      f.write('OpenInverter {} {} {} {}\n'.format(inverterArgs[0], inverterArgs[1], inverterArgs[2], inverterArgs[3]))
+      self.tasks.append(OpenInverterTask(0, {}, InverterTCP(inverterArgs), self))
 
   def getTasks(self, eventTime, stats):
     self.tasks = []

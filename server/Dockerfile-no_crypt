@@ -1,32 +1,11 @@
 FROM python:3.11-alpine
 COPY . /server
 ENV CRYPTOAUTHLIB_NOUSB=True
-
-ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
-ENV UDEV=1
-
-RUN apk update
-RUN apk add eudev
-RUN apk add alpine-conf
-RUN setup-devd udev
-
-RUN apk add openrc # needed?
-
-RUN apk add --no-cache bluez
-RUN apk add bluez-deprecated
-#RUN apk add bluetooth libdbus-1-dev libgirepository1.0-dev libudev-dev libical-dev
-
-
 RUN pip install --upgrade pip
 RUN pip install pymodbus
 RUN pip install requests
 RUN pip install typing-extensions
-RUN pip install dbus-next
-RUN pip install bless
-
 EXPOSE 5000
 
-ENTRYPOINT ["/bin/sh"]
-
-#ENTRYPOINT ["python"]
-#CMD ["-m", "server", "-ih", "srcfull-inverter", "-it", "solaredge"]
+ENTRYPOINT ["python"]
+CMD ["-m", "server", "-b", "/var/srcful/bootstrap.txt"]
