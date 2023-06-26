@@ -1,8 +1,6 @@
 version: "2"
 services:
   web_nc:
-    ports:
-      - "8080:5000"
     build:
       context: ./server
       dockerfile: Dockerfile-no_crypt
@@ -10,9 +8,17 @@ services:
     restart: always
     privileged: true
     network_mode: host
+    volumes:
+      - srcful-data:/var/srcful
+    ports:
+      - "8080:5000"
     #devices:
     #  - /dev/ttyACM0:/dev/ttyACM0 # bluethooth
+
   inverter:
     build: ./modbus_slave
     container_name: srcfull-inverter
     restart: always
+
+volumes:
+  srcful-data:

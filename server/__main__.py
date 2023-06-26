@@ -43,18 +43,23 @@ if __name__ == "__main__":
                       default=5000, help='port for the web server.')
 
   # port, host and type for the inverter
+  default_inverter_type = 'unknown'
   parser.add_argument('-ih', '--inverter_host', type=str,
                       default='localhost', help='host for the inverter.')
   parser.add_argument('-ip', '--inverter_port', type=int,
                       default=502, help='port for the inverter (default=502).')
-  parser.add_argument('-it', '--inverter_type', type=str, default='unknown',
+  parser.add_argument('-it', '--inverter_type', type=str, default=default_inverter_type,
                       help='type of inverter, e.g. huawei (default=unknown).')
   parser.add_argument('-ia', '--inverter_address', type=int,
                       default=1, help='modbus address of the inverter (default=1).')
+  parser.add_argument('-b', '--bootstrap', type=str, help='bootstrap file if it does not exist it will be created.', default='bootstrap.txt')
 
   args = parser.parse_args()
 
   log.info("Running with the following configuration: %s", args)
-
-  app.main((args.web_host, args.web_port), (args.inverter_host,
-           args.inverter_port, args.inverter_type, args.inverter_address))
+    
+  inverter = None
+  # check if the invertertype is the default value
+  if args.inverter_type is not default_inverter_type:
+     inverter = (args.inverter_host, args.inverter_port, args.inverter_type, args.inverter_address)
+  app.main((args.web_host, args.web_port), inverter, args.bootstrap)

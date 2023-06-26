@@ -7,6 +7,7 @@ import server.web.server
 from server.tasks.openInverterTask import OpenInverterTask
 from server.inverters.InverterTCP import InverterTCP
 import server.crypto.crypto as crypto
+from server.bootstrap import Bootstrap
 
 
 def getChipInfo():
@@ -50,7 +51,7 @@ def mainLoop(tasks: queue.PriorityQueue):
         addTask(newTask)
 
 
-def main(webHost: tuple[str, int], inverter: InverterTCP.Setup):
+def main(webHost: tuple[str, int], inverter: InverterTCP.Setup|None = None, bootstrapFile: str|None = None):
 
   startTime = time_ms()
   stats = {'startTime': startTime, 'freqReads': 0,
@@ -62,9 +63,13 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup):
   tasks = queue.PriorityQueue()
 
   # put some initial tasks in the queue
-  tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter)))
+  if inverter is not None:
+    tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter)))
+  if bootstrapFile is not None:
+    bootstrap = Bootstrap(bootstrapFile)
+    for task in bootstrap.getTasks(startTime + 500, stats):
+      tasks.put(task)
   tasks.put(CheckForWebRequest(startTime + 1000, stats, webServer))
-  #tasks.put(CheckForBLERequest(startTime + 1500, stats))
 
   try:
     mainLoop(tasks)

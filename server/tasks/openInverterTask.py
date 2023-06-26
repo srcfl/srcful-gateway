@@ -26,9 +26,10 @@ class ReadFreq(Task):
 
 
 class OpenInverterTask(Task):
-  def __init__(self, eventTime: int, stats: dict, inverter: Inverter):
+  def __init__(self, eventTime: int, stats: dict, inverter: Inverter, bootstrap):
     super().__init__(eventTime, stats)
     self.inverter = inverter
+    self.bootstrap = bootstrap
 
   def execute(self, eventTime):
     # Do this n times? 
@@ -37,6 +38,8 @@ class OpenInverterTask(Task):
         if 'inverter' in self.stats and self.stats['inverter'] != None:
           self.stats['inverter'].terminate()
         self.stats['inverter'] = self.inverter
+        if(self.bootstrap != None):
+          self.bootstrap.setInverter(self.inverter)
         return [Harvest(eventTime + 10000, self.stats, self.inverter)]
       else:
         log.info('Failed to open inverter: %s', self.inverter.getType())

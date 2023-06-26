@@ -14,6 +14,9 @@ class Inverter:
   def isTerminated(self) -> bool:
     return self._isTerminated
   
+  def getConfig(self):
+    '''Returns the inverter's setup as a tuple.'''
+    return (self.getHost(), self.getPort(), self.getType(), self.getAddress())
 
   def open(self) -> bool:
     '''Opens the Modbus connection to the inverter.'''
