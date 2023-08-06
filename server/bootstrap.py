@@ -19,6 +19,7 @@ class Bootstrap(BootstrapSaver):
   def __init__(self, filename: str):
     self.filename = filename
     self.tasks = []
+    self._createFileIfNotExists()
 
 
   def _createFileIfNotExists(self):
@@ -55,6 +56,7 @@ class Bootstrap(BootstrapSaver):
     # read the file handle errors
     try:
       with open(self.filename, "r") as f:
+        logger.info('Reading bootstrap file: {}'.format(self.filename))
         lines = f.readlines()
     except Exception as e:
       logger.error('Failed to read file: {}'.format(self.filename))
