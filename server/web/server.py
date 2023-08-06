@@ -3,25 +3,25 @@ import queue
 from typing import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
-from .get import root
-from .get import crypto
-from .get import hello
-from .get import name
-from .post import inverter
-from .post import wifi
-from .post import initialize
+
+from . import get
+from . import post
 
 
 def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable, tasks: queue.Queue):
 
   class Handler(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-      self.api_get = {'crypto': crypto.Handler(),
-                      'hello': hello.Handler(),
-                      'name': name.Handler()}
-      self.api_post = {'inverter': inverter.Handler(),
-                       'wifi': wifi.Handler(),
-                       'initialize': initialize.Handler()}
+
+
+      self.api_get = {'crypto': get.crypto.Handler(),
+                      'hello': get.hello.Handler(),
+                      'name': get.name.Handler(),
+                      'logger': get.logger.Handler()}
+      self.api_post = {'inverter': post.inverter.Handler(),
+                       'wifi': post.wifi.Handler(),
+                       'initialize': post.initialize.Handler(),
+                       'logger': post.logger.Handler()}
 
       self.tasks = tasks
       super(Handler, self).__init__(*args, **kwargs)
@@ -91,7 +91,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
           self.sendApiResponse(200, handler.jsonSchema())
           return
         else:
-          htlm = root.Handler().doGet(stats, timeMSFunc, chipInfoFunc)
+          htlm = get.root.Handler().doGet(stats, timeMSFunc, chipInfoFunc)
           html_bytes = bytes(htlm, "utf-8")
 
           self.send_response(200)

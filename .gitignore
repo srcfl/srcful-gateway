@@ -5,6 +5,7 @@ node_modules
 .config
 *.o
 *.pyc
+*.http
 
 .vscode
 
