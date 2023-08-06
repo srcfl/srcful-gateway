@@ -8,6 +8,10 @@ import time
 
 log = logging.getLogger(__name__)
 
+# set logging info for pymodbus to INFO to avoid spamming
+from pymodbus import pymodbus_apply_logging_config
+pymodbus_apply_logging_config('INFO')
+
 # create a host tuple alias
 
 
