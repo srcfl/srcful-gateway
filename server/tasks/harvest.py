@@ -33,6 +33,12 @@ class Harvest(Task):
       self.barn[eventTime] = harvest
       self.backoff_time = self.minbackoff_time
     except Exception as e:
+
+      if self.backoff_time == self.max_backoff_time:
+        log.info('Max backoff time reached, trying to close and reopen inverter at: %s:%s', self.inverter.getAddress(), self.inverter.getPort())
+        self.inverter.close()
+        self.inverter.open()
+
       log.debug('Handling exeption reading harvest: %s', str(e))
       self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
       log.info('Incrementing backoff time to: %s', self.backoff_time)

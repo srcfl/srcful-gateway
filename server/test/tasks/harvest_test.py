@@ -122,6 +122,26 @@ def test_executeHarvest_incrementalBackoff_reset():
   assert ret.backoff_time == ret.minbackoff_time
   assert ret.time == 17 + ret.backoff_time
 
+def test_executeHarvest_incrementalBackoff_reconnectOnMax():
+  mockInverter = Mock()
+  mockInverter.readHarvestData.side_effect = Exception('mocked exception')
+  mockInverter.isTerminated.return_value = False
+  t = harvest.Harvest(0, {}, mockInverter)
+ 
+  while t.backoff_time < t.max_backoff_time:
+    ret = t.execute(17)
+
+  # assert that the inverter has not been closed and opened again
+    assert mockInverter.close.call_count == 0
+  assert mockInverter.open.call_count == 0
+
+  ret = t.execute(17)
+  assert ret is t
+
+  # assert that inverter has been closed and opened again
+  assert mockInverter.close.call_count == 1
+  assert mockInverter.open.call_count == 1
+
 
 @pytest.fixture
 def mock_initChip():
