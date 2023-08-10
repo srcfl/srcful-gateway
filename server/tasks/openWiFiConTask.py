@@ -11,10 +11,11 @@ class OpenWiFiConTask(Task):
     self.wificon = wificon
 
   def execute(self, eventTime):
-
+    log.info('Opening WiFi connection to {}'.format(self.wificon.SSID))
     try:
       self.wificon.connect()
     except Exception as e:
-      log.exception('Failed to connect to WiFi. Invalid SSID or PSK: ')
+      log.Error('Failed to connect to WiFi. Invalid SSID or PSK: ')
+      log.exception(e)
       self.time = eventTime + 10000
       return self

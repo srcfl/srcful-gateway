@@ -1,8 +1,7 @@
 import logging
 import uuid, sys
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(name=__name__)
+logger = logging.getLogger(__name__)
 
 try:
   import dbus
@@ -21,14 +20,27 @@ except ImportError:
       pass
 
 else:
+
   class WiFiHandler:
 
     def __init__(self, SSID, PSK):
+      logger.info("WiFiHandler init with SSID: %s", SSID)
       self.bus = dbus.SystemBus() # Is this needed as a field? 
       proxy = self.bus.get_object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings")
       self.settings = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Settings")
       self.SSID = SSID
       self.PSK = PSK
+
+      connection_paths = self.settings.ListConnections()
+      logger.debug("Num of connection profiles: %i", len(connection_paths))
+
+      # lets just log all connections
+      for conn in self.settings.ListConnections():
+        con_proxy = self.bus.get_object("org.freedesktop.NetworkManager", conn)
+        settings_connection = dbus.Interface(con_proxy, "org.freedesktop.NetworkManager.Settings.Connection")
+        config = settings_connection.GetSettings()
+        logger.info("Connection: %s - %s", conn, config["connection"]["type"])
+
 
 
     def _AddConnection(self):
@@ -64,16 +76,21 @@ else:
 
     def _DeleteConnections(self):
       connection_paths = self.settings.ListConnections()
-      logger.debug("Num of connection profiles:", len(connection_paths))
+      logger.debug("Num of connection profiles: %i", len(connection_paths))
       for path in connection_paths:
         con_proxy = self.bus.get_object("org.freedesktop.NetworkManager", path)
         settings_connection = dbus.Interface(con_proxy, "org.freedesktop.NetworkManager.Settings.Connection")
         config = settings_connection.GetSettings()
-        settings_connection.Delete()
+        # only delete wifi connections
+        if config['connection']['type'] == '802-11-wireless':
+          settings_connection.Delete()
+          logger.debug("Deleted connection profile:", config['connection']['id'])
       
-      logger.debug("Deleted all connection profiles...")
+      logger.debug("Deleted all wifi connection profiles...")
 
 
     def connect(self):
+      logger.info("Deleting connections...")
       self._DeleteConnections()
+      logger.info("Adding connection...")
       self._AddConnection()

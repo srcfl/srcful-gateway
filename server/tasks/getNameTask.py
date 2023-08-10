@@ -29,6 +29,8 @@ class GetNameTask(SrcfulAPICallTask):
 
     return {'query': q}
 
+  def _onError(self, reply: requests.Response) -> int:
+    return 0
   
   def _on200(self, reply: requests.Response):
     self.name = reply.json()['data']['gatewayConfiguration']['gatewayName']['name']
