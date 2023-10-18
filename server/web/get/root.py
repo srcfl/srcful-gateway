@@ -34,53 +34,68 @@ def cryptoStuff():
 
 def inverterForm():
   return """
-  <h1>Inverter Form</h1>
+<h1>Inverter Form</h1>
 
-    <form id="inverter-form">
-        <label for="ip">Inverter IP:</label>
-        <input type="text" id="ip" name="ip"><br><br>
+<form id="inverter-form">
+  <label>
+    <input type="radio" name="preferred_color" value="tcp" onclick="methodSelected('tcp')" />
+  </label> TCP/IP<br />
+  <label>
+    <input type="radio" name="preferred_color" value="rtu" onclick="methodSelected('rtu')" />
+  </label> RTU<br />
 
-        <label for="port">Inverter Port:</label>
-        <input type="text" id="port" name="port"><br><br>
+  <label for="ip">Inverter IP:</label>
+  <input type="text" id="ip" name="ip"><br><br>
 
-        <label for="type">Inverter Type:</label>
-        <input type="text" id="type" name="type"><br><br>
+  <label for="port">Inverter Port:</label>
+  <input type="text" id="port" name="port"><br><br>
 
-        <label for="address">Inverter Address:</label>
-        <input type="text" id="address" name="address"><br><br>
+  <label for="type">Inverter Type:</label>
+  <input type="text" id="type" name="type"><br><br>
 
-        <button type="submit">Submit</button>
-    </form>
+  <label for="address">Inverter Address:</label>
+  <input type="text" id="address" name="address"><br><br>
 
-    <script>
-        const form = document.querySelector('#inverter-form');
+  <button type="submit">Submit</button>
+</form>
 
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+<script>
+  const form = document.querySelector('#inverter-form');
+  const methodSelected = (method) => {
+    const ip = document.querySelector('#ip');
+    const port = document.querySelector('#port');
 
-            const formData = new FormData(form);
-            const data = {
-                ip: formData.get('ip'),
-                port: formData.get('port'),
-                type: formData.get('type'),
-                address: formData.get('address')
-            };
+    method === 'rtu' ? ip.placeholder = '/dev/serial0' : ip.placeholder = '192.168.10.22'
+    port.disabled = method === 'rtu';
+  }
 
-            const response = await fetch('/api/inverter', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
 
-            if (response.ok) {
-                console.log('Inverter data submitted successfully!');
-            } else {
-                console.error('Failed to submit inverter data:', response.status);
-            }
-        });
-    </script>"""
+    const formData = new FormData(form);
+    const data = {
+      ip: formData.get('ip'),
+      port: formData.get('port'),
+      type: formData.get('type'),
+      address: formData.get('address')
+    };
+
+    const response = await fetch('/api/inverter', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (response.ok) {
+      console.log('Inverter data submitted successfully!');
+    } else {
+      console.error('Failed to submit inverter data:', response.status);
+    }
+  });
+</script>
+  """
 
 
 class Handler:
