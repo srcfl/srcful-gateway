@@ -25,15 +25,17 @@ class Bootstrap(BootstrapSaver):
   def _createFileIfNotExists(self):
     # create the directories and the file if it does not exist
     # log any errors
-    try:
-      os.makedirs(os.path.dirname(self.filename), exist_ok=True)
-      with open(self.filename, "a") as f:
-        f.write('# This file contains the tasks that are executed on startup\n')
-        f.write('# Each line contains a task name and its arguments\n')
+    if not os.path.exists(self.filename):
 
-    except Exception as e:
-      logger.error('Failed to create file: {}'.format(self.filename))
-      logger.error(e)
+      try:
+        os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+        with open(self.filename) as f:
+          f.write('# This file contains the tasks that are executed on startup\n')
+          f.write('# Each line contains a task name and its arguments\n')
+
+      except Exception as e:
+        logger.error('Failed to create file: {}'.format(self.filename))
+        logger.error(e)
 
 
   def appendInverter(self, inverterArgs:InverterTCP.Setup):
@@ -73,6 +75,9 @@ class Bootstrap(BootstrapSaver):
       line = line.replace('\n', '')
       tokens = line.split(' ')
 
+      # print(f"%%%{line}%%%")
+
+
       # ignore empty lines, comments and lines without tokens
       if len(line) == 0 or line[0] == '#' or len(tokens) == 0:
         continue
@@ -85,7 +90,8 @@ class Bootstrap(BootstrapSaver):
 
       # create the task
       task = self._createTask(taskName, taskArgs, eventTime, stats)
-
+      if task is None:
+        continue
       self.tasks.append(task)
 
     return self.tasks
@@ -95,7 +101,7 @@ class Bootstrap(BootstrapSaver):
     if taskName == 'OpenInverter':
       return self._createOpenInverterTask(taskArgs, eventTime, stats)
     else:
-      logger.error('Unknown task: {} in file []'.format(taskName, self.filename))
+      logger.error('Unknown task: {} in file {}'.format(taskName, self.filename))
       return None
   
   def _createOpenInverterTask(self, taskArgs: list, eventTime, stats):

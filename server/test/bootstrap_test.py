@@ -16,6 +16,7 @@ def test_bootstrap_processLines():
   assert b._processLines([], 10, []) == []
   assert b._processLines([""], 10, []) == []
   assert b._processLines(["#"], 10, []) == []
+  assert b._processLines([" #"], 10, []) == []
   assert b._processLines(["   # comment"], 10, []) == []
   assert b._processLines(["   # comment", ""], 10, []) == []
 

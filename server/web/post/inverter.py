@@ -31,3 +31,5 @@ class Handler:
         return 500, json.dumps({'status': 'error', 'message': str(e)})
     else:
       return 400, json.dumps({'status': 'bad request'})
+    
+

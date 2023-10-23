@@ -25,6 +25,7 @@ class InverterTCP(Inverter):
     log.info("Creating with: %s" % str(setup))
     self.setup = setup
     self.registers = INVERTERS[self.getType()]
+    self.inverterIsOpen = False
 
   def getHost(self):
     return self.setup[0]
@@ -38,14 +39,19 @@ class InverterTCP(Inverter):
   def getAddress(self):
     return self.setup[3]
 
+  def isOpen(self):
+    return self.inverterIsOpen
+
   def open(self):
     if not self.isTerminated():
       self.client = ModbusClient(host=self.getHost(), port=self.getPort(), unit_id=self.getAddress())
       if self.client.connect():
-        return True
+        self.inverterIsOpen = True
+        return self.inverterIsOpen
       else:
         self.terminate()
-        return False
+        self.inverterIsOpen = False
+        return self.inverterIsOpen
     else:
       return False
 
