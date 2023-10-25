@@ -25,7 +25,16 @@ def test_inverterTerminated():
   t.inverter.readHarvestData.side_effect = Exception('mocked exception')
   t.execute(17)
 
+  assert mockInverter.close.call_count == 1 
+  assert mockInverter.open.call_count == 0
+
+  t.inverter.is_socket_open.return_value = False
+
+  t.execute(17)
+
   assert mockInverter.close.call_count == 1
+  assert mockInverter.open.call_count == 1
+
   
 
 def test_executeHarvest():
@@ -151,6 +160,10 @@ def test_executeHarvest_incrementalBackoff_reconnectOnMax():
 
   ret = t.execute(17)
   assert ret is t
+
+  t.inverter.is_socket_open.return_value = False
+
+  t.execute(17)
 
   # assert that inverter has been closed and opened again
   assert mockInverter.close.call_count == 1
