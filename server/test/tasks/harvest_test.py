@@ -14,6 +14,19 @@ def test_createHarvestTransport():
   t = harvest.HarvestTransport(0, {}, {}, 'huawei')
   assert t is not None
 
+def test_inverterTerminated():
+  mockInverter = Mock()
+  mockInverter.isTerminated.return_value = False
+  
+  t = harvest.Harvest(0, {}, mockInverter)
+  t.execute(17)
+  
+  t.backoff_time = t.max_backoff_time
+  t.inverter.readHarvestData.side_effect = Exception('mocked exception')
+  t.execute(17)
+
+  assert mockInverter.close.call_count == 1
+  
 
 def test_executeHarvest():
   mockInverter = Mock()
@@ -27,6 +40,7 @@ def test_executeHarvest():
   assert t.barn[17] == registers
   assert len(t.barn) == 1
   assert t.time == 17 + 1000
+
 
 
 def test_executeHarvestx10():
@@ -188,3 +202,5 @@ def test_onError():
   response = Mock()
   instance = harvest.HarvestTransport(0, {}, {}, 'huawei')
   instance._onError(response)
+
+

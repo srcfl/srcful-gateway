@@ -55,6 +55,7 @@ class InverterTCP(Inverter):
   def readHarvestData(self):
     if self.isTerminated():
       raise Exception("readHarvestData() - inverter is terminated")
+    
     regs = []
     vals = []
 
