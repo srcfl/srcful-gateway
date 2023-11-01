@@ -104,11 +104,11 @@ def test_adaptiveBackoff():
     t.execute(17)
     backoff_time *=2
 
-    if backoff_time > 300000:
-      backoff_time = 300000
+    if backoff_time > 256000:
+      backoff_time = 256000
     
     assert t.backoff_time == backoff_time 
-    assert t.backoff_time <= 300000
+    assert t.backoff_time <= 256000
 
 
 def test_adaptivePoll():
@@ -125,12 +125,12 @@ def test_adaptivePoll():
   t.backoff_time = t.max_backoff_time
   t.execute(17)
 
-  assert t.backoff_time == 300000
+  assert t.backoff_time == 256000
 
   t.inverter.readHarvestData.side_effect = None 
   t.execute(17)
 
-  assert t.backoff_time == 270000.0
+  assert t.backoff_time == 230400.0
 
 
   

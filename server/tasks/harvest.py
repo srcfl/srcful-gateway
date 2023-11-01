@@ -18,9 +18,8 @@ class Harvest(Task):
     self.transport = None
 
     # incremental backoff stuff
-    self.minbackoff_time = 1000
-    self.backoff_time = self.minbackoff_time  # start with a 1-second backoff
-    self.max_backoff_time = 300000  # max 5-minute backoff
+    self.backoff_time = 1000  # start with a 1-second backoff
+    self.max_backoff_time = 256000  # max ~4.3-minute backoff
 
 
   def execute(self, eventTime) -> Task | list[Task]:
@@ -33,8 +32,7 @@ class Harvest(Task):
       self.stats['harvests'] += 1
       self.barn[eventTime] = harvest
 
-      self.minbackoff_time = max(self.minbackoff_time - self.minbackoff_time * 0.1, 1000)
-      self.backoff_time = self.minbackoff_time
+      self.backoff_time = max(self.backoff_time - self.backoff_time * 0.1, 1000)
 
     except Exception as e:
 
@@ -44,9 +42,6 @@ class Harvest(Task):
           self.inverter.close()
         else:
           self.inverter.open()
-          # self.backoff_time = 0
-          self.minbackoff_time *= 2
-          self.minbackoff_time = min(self.minbackoff_time, self.max_backoff_time)
       else:
         log.debug('Handling exeption reading harvest: %s', str(e))
         self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
