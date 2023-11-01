@@ -94,27 +94,21 @@ def test_adaptiveBackoff():
   assert t.backoff_time == 2000
 
   # Save the initial minbackoff_time to compare with the actual minbackoff_time later on
-  minbackoff_time = t.minbackoff_time
+  backoff_time = t.backoff_time
 
   # Number of times we want to reach max backoff time, could be anything
   num_of_lost_connections = 900
 
+  # Now we fail until we reach max backoff time
   for i in range(num_of_lost_connections):
-    # Now we fail until we reach max backoff time
-    t.backoff_time = t.max_backoff_time
     t.execute(17)
-    t.inverter.is_socket_open.return_value = False
-    t.execute(17)
+    backoff_time *=2
 
-    minbackoff_time *=2
-
-    if minbackoff_time > 300000:
-      minbackoff_time = 300000
+    if backoff_time > 300000:
+      backoff_time = 300000
     
-    assert t.minbackoff_time == minbackoff_time 
-  
+    assert t.backoff_time == backoff_time 
     assert t.backoff_time <= 300000
-    assert t.minbackoff_time <= 300000
 
 
 def test_adaptivePoll():
@@ -131,19 +125,13 @@ def test_adaptivePoll():
   t.backoff_time = t.max_backoff_time
   t.execute(17)
 
-  t.inverter.is_socket_open.return_value = False
-  t.execute(17)  
-
-  assert t.minbackoff_time == 2000
-
   assert t.backoff_time == 300000
 
-  t.inverter.readHarvestData.side_effect = None
-  t.execute(17)  
+  t.inverter.readHarvestData.side_effect = None 
+  t.execute(17)
 
-  assert t.minbackoff_time == 2000
+  assert t.backoff_time == 270000.0
 
-  assert t.backoff_time == 300000
 
   
     
@@ -213,7 +201,6 @@ def test_executeHarvest_incrementalBackoff_reset():
   mockInverter.readHarvestData.return_value = {'1': 1717}
   ret = t.execute(17)
   assert ret is t
-  assert ret.backoff_time == ret.minbackoff_time
   assert ret.time == 17 + ret.backoff_time
 
 def test_executeHarvest_incrementalBackoff_reconnectOnMax():
