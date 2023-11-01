@@ -78,6 +78,77 @@ def test_executeHarvestx10():
   assert ret[1].barn == {0: registers[0], 1: registers[1], 2: registers[2], 3: registers[3],
                          4: registers[4], 5: registers[5], 6: registers[6], 7: registers[7], 8: registers[8], 17: registers[9]}
 
+def test_adaptiveBackoff():
+  mockInverter = Mock()
+  mockInverter.isTerminated.return_value = False
+  
+  t = harvest.Harvest(0, {}, mockInverter)
+  t.execute(17)
+
+  assert t.backoff_time == 1000
+
+  # Mock one failed poll -> We back off by 2 seconds instead of 1
+  t.inverter.readHarvestData.side_effect = Exception('mocked exception')
+  t.execute(17)
+
+  assert t.backoff_time == 2000
+
+  # Save the initial minbackoff_time to compare with the actual minbackoff_time later on
+  minbackoff_time = t.minbackoff_time
+
+  # Number of times we want to reach max backoff time, could be anything
+  num_of_lost_connections = 900
+
+  for i in range(num_of_lost_connections):
+    # Now we fail until we reach max backoff time
+    t.backoff_time = t.max_backoff_time
+    t.execute(17)
+    t.inverter.is_socket_open.return_value = False
+    t.execute(17)
+
+    minbackoff_time *=2
+
+    if minbackoff_time > 300000:
+      minbackoff_time = 300000
+    
+    assert t.minbackoff_time == minbackoff_time 
+  
+    assert t.backoff_time <= 300000
+    assert t.minbackoff_time <= 300000
+
+
+def test_adaptivePoll():
+  mockInverter = Mock()
+  mockInverter.isTerminated.return_value = False
+  
+  t = harvest.Harvest(0, {}, mockInverter)
+  t.execute(17)
+
+  assert t.backoff_time == 1000
+
+
+  t.inverter.readHarvestData.side_effect = Exception('mocked exception')
+  t.backoff_time = t.max_backoff_time
+  t.execute(17)
+
+  t.inverter.is_socket_open.return_value = False
+  t.execute(17)  
+
+  assert t.minbackoff_time == 2000
+
+  assert t.backoff_time == 300000
+
+  t.inverter.readHarvestData.side_effect = None
+  t.execute(17)  
+
+  assert t.minbackoff_time == 2000
+
+  assert t.backoff_time == 300000
+
+  
+    
+
+
 
 def test_executeHarvestNoTransport():
   mockInverter = Mock()

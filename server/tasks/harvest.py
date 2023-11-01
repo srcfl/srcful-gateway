@@ -26,12 +26,16 @@ class Harvest(Task):
   def execute(self, eventTime) -> Task | list[Task]:
     if self.inverter.isTerminated():
       return None
+    
     try:
       harvest = self.inverter.readHarvestData()
       self.stats['lastHarvest'] = harvest
       self.stats['harvests'] += 1
       self.barn[eventTime] = harvest
+
+      self.minbackoff_time = max(self.minbackoff_time - self.minbackoff_time * 0.1, 1000)
       self.backoff_time = self.minbackoff_time
+
     except Exception as e:
 
       if self.backoff_time == self.max_backoff_time:
@@ -40,10 +44,13 @@ class Harvest(Task):
           self.inverter.close()
         else:
           self.inverter.open()
-
-      log.debug('Handling exeption reading harvest: %s', str(e))
-      self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
-      log.info('Incrementing backoff time to: %s', self.backoff_time)
+          # self.backoff_time = 0
+          self.minbackoff_time *= 2
+          self.minbackoff_time = min(self.minbackoff_time, self.max_backoff_time)
+      else:
+        log.debug('Handling exeption reading harvest: %s', str(e))
+        self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
+        log.info('Incrementing backoff time to: %s', self.backoff_time)
 
     self.time = eventTime + self.backoff_time
 
