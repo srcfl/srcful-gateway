@@ -2,7 +2,6 @@ import queue
 import sys
 import time
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
-from server.tasks.checkForBluetoothRequestTask import CheckForBLERequest
 import server.web.server
 from server.tasks.openInverterTask import OpenInverterTask
 from server.inverters.InverterTCP import InverterTCP
