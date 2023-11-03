@@ -1,6 +1,7 @@
 # Srcful eGW
 Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps also add an image here. 
 * [Srcful eGW](#srcful-egw)
+* [Getting started](#getting-started)
 * [Open-Balena](#open-balena)
    * [Services](#services)
       * [server](#server)
@@ -13,9 +14,10 @@ Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps al
       * [SSH](#ssh)
       * [Build](#build)
       * [Deploy](#deploy)
+      * [Other](#other)
 * [Testing](#testing)
 * [Design](#design)
-* [Other](#other)
+* [Other](#other-1)
    * [Windows](#windows)
 
 # Getting started
