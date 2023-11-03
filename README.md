@@ -6,6 +6,7 @@ Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps al
    * [Services](#services)
       * [server](#server)
       * [bluetooth](#bluetooth)
+        * [Windows](#windows)
       * [client](#client)
       * [modbus_slave](#modbus_slave)
    * [Commnads](#commnads)
@@ -18,7 +19,7 @@ Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps al
 * [Testing](#testing)
 * [Design](#design)
 * [Other](#other-1)
-   * [Windows](#windows)
+   
 
 # Getting started
 To get started you need to install `balena-cli` and setup the development environment as described in [this guide](https://open-balena.pages.dev/getting-started/#install-the-balena-cli-on-the-local-machine). This tool is used to deploy the firmware to the open-balena server. Then you need to login to the server to be able to deploy. This is done with the following command:  
@@ -51,6 +52,21 @@ We need to run this as a module as there are dependencies between some packages/
 This is the bluethooth service and a test client. The service is simply started with:
 
 `python ble_service.py`
+
+#### Windows
+The pysetupdi is needed on windows for the BLE bless library to work. This needs a separate installation:
+
+* crate some nice folder i.e. not in the gatway project folders
+```
+git clone https://github.com/gwangyi/pysetupdi.git
+cd pysetupdi
+python setup.py install --user
+```
+or if using a venv
+```
+python setup.py install
+``` 
+
 
 ### client
 This is a simple test client that you can run locally. You would need to start a web-server (e.g. twisted) to service the page and this needs to run on https for things to work (or the ble stuff will not work in a browser on android). A generated certificate is included.
@@ -220,10 +236,3 @@ The current design is task bases with a priority queue. The idea is that a task 
 On top of the task-engine we can put a state machine so that it becomes easier to know what tasks are high prio in different contexts.
 
 # Other
-## Windows
-The pysetupdi is needed on windows for the BLE bless library to work. This needs a separate installation:
-
-* crate some nice folder i.e. not in the gatway project folders
-* git clone https://github.com/gwangyi/pysetupdi.git
-* cd pysetupdi
-* python setup.py install --user
