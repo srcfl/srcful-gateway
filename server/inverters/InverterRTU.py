@@ -32,6 +32,9 @@ class InverterRTU(Inverter):
 
   def getAddress(self):
     return self.setup[2]
+  
+  def getConfig(self):
+    return ("RTU", self.getHost(), self.getType(), self.getAddress())
 
   def open(self):
     if not self.isTerminated():

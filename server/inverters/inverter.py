@@ -16,7 +16,8 @@ class Inverter:
   
   def getConfig(self):
     '''Returns the inverter's setup as a tuple.'''
-    return (self.getHost(), self.getPort(), self.getType(), self.getAddress())
+    raise NotImplementedError("Subclass must implement abstract method")
+    # return (self.getHost(), self.getPort(), self.getType(), self.getAddress())
 
   def open(self) -> bool:
     '''Opens the Modbus connection to the inverter.'''

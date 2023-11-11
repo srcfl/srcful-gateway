@@ -37,6 +37,9 @@ class InverterTCP(Inverter):
 
   def getAddress(self):
     return self.setup[3]
+  
+  def getConfig(self):
+    return ("TCP", self.getHost(), self.getPort(), self.getType(), self.getAddress())
 
   def open(self):
     if not self.isTerminated():
