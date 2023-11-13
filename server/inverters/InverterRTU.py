@@ -16,7 +16,17 @@ pymodbus_apply_logging_config('INFO')
 
 class InverterRTU(Inverter):
 
-  Setup: TypeAlias = tuple[str, int, str, int]
+  """
+'port': 'string, Serial port used for communication',
+'baudrate': 'int, Bits per second',
+'bytesize': 'int, Number of bits per byte 7-8',
+'parity': 'string, \'E\'ven, \'O\'dd or \'N\'one',
+'stopbits': 'float, Number of stop bits 1, 1.5, 2',
+'type': 'string, solaredge, huawei or fronius etc...',
+'address': 'int, Modbus address of the inverter',
+  """
+
+  Setup: TypeAlias = tuple[str, int, int, str, float, str, int]
 
   def __init__(self, setup: Setup):
     super().__init__()
@@ -29,19 +39,34 @@ class InverterRTU(Inverter):
   
   def getBaudrate(self):
     return int(self.setup[1])
-
-  def getType(self):
+  
+  def getBytesize(self):
     return self.setup[2]
-
-  def getAddress(self):
+  
+  def getParity(self):
     return self.setup[3]
   
+  def getStopbits(self):
+    return self.setup[4]
+  
+  def getType(self):
+    return self.setup[5]
+  
+  def getAddress(self):
+    return self.setup[6]
+  
   def getConfig(self):
-    return ("RTU", self.getHost(), self.getBaudrate(), self.getType(), self.getAddress())
+    return ("RTU", self.getHost(), self.getBaudrate(), self.getBytesize(), self.getParity(), self.getStopbits(), self.getType(), self.getAddress())
 
   def open(self):
     if not self.isTerminated():
-      self.client = ModbusClient(method='rtu', port=self.getHost(), baudrate=self.getBaudrate(), timeout=.1)
+      self.client = ModbusClient(method='rtu', 
+                                 port=self.getHost(), 
+                                 baudrate=self.getBaudrate(), 
+                                 bytesize=self.getBytesize(), 
+                                 parity=self.getParity(), 
+                                 stopbits=self.getStopbits(), 
+                                 timeout=.1)
       if self.client.connect():
         return True
       else:
@@ -110,12 +135,3 @@ class InverterRTU(Inverter):
       raise Exception("readHoldingRegisters() - ExceptionResponse: " + str(v))
 
     return v
-
-  def readPower(self):
-    return -1
-
-  def readEnergy(self):
-    return -1
-
-  def readFrequency(self):
-    return -1

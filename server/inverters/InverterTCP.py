@@ -111,12 +111,3 @@ class InverterTCP(Inverter):
       raise Exception("readHoldingRegisters() - ExceptionResponse: " + str(v))
 
     return v
-
-  def readPower(self):
-    return -1
-
-  def readEnergy(self):
-    return -1
-
-  def readFrequency(self):
-    return -1

@@ -112,9 +112,12 @@ class Bootstrap(BootstrapSaver):
       address = int(taskArgs[4])
       return OpenInverterTask(eventTime + 1000, stats, InverterTCP((ip, port, type, address)), self)
     elif taskArgs[0] == 'RTU':
-      serial_port = taskArgs[1]
-      baudrate = taskArgs[2]
-      type = taskArgs[3]
-      address = int(taskArgs[4])
-      return OpenInverterTask(eventTime + 1000, stats, InverterRTU((serial_port, baudrate, type, address)), self)
+      port = taskArgs[1]
+      baudrate = int(taskArgs[2])
+      bytesize = int(taskArgs[3])
+      parity = taskArgs[4]
+      stopbits = float(taskArgs[5])
+      type = taskArgs[6]
+      address = int(taskArgs[7])
+      return OpenInverterTask(eventTime + 1000, stats, InverterRTU((port, baudrate, bytesize, parity, stopbits, type, address)), self)
   
