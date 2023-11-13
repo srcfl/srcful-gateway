@@ -87,15 +87,14 @@ class InverterTCP(Inverter):
     """
     Populate a list of registers from a start address and a range
     """
-    return [x for x in range(
-        scan_start, scan_start + scan_range, 1)]
+    return [x for x in range(scan_start, scan_start + scan_range, 1)]
 
   def readInputRegisters(self, scan_start, scan_range):
     """
     Read a range of input registers from a start address
     """
     v = self.client.read_input_registers(scan_start, scan_range, slave=self.getAddress())
-    log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
+    log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
     if isinstance(v, ExceptionResponse):
       raise Exception("readInputRegisters() - ExceptionResponse: " + str(v))
     return v
@@ -105,8 +104,7 @@ class InverterTCP(Inverter):
     Read a range of holding registers from a start address
     """
     #try:
-    v = self.client.read_holding_registers(
-        scan_start, scan_range, slave=self.getAddress())
+    v = self.client.read_holding_registers(scan_start, scan_range, slave=self.getAddress())
     log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
     # check if v is a ModbusResponse object
     if isinstance(v, ExceptionResponse):

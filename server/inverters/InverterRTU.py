@@ -16,7 +16,7 @@ pymodbus_apply_logging_config('INFO')
 
 class InverterRTU(Inverter):
 
-  Setup: TypeAlias = tuple[str, str, int]
+  Setup: TypeAlias = tuple[str, int, str, int]
 
   def __init__(self, setup: Setup):
     super().__init__()
@@ -26,19 +26,22 @@ class InverterRTU(Inverter):
 
   def getHost(self):
     return self.setup[0]
+  
+  def getBaudrate(self):
+    return int(self.setup[1])
 
   def getType(self):
-    return self.setup[1]
+    return self.setup[2]
 
   def getAddress(self):
-    return self.setup[2]
+    return self.setup[3]
   
   def getConfig(self):
-    return ("RTU", self.getHost(), self.getType(), self.getAddress())
+    return ("RTU", self.getHost(), self.getBaudrate(), self.getType(), self.getAddress())
 
   def open(self):
     if not self.isTerminated():
-      self.client = ModbusClient(method='rtu', port=self.getHost(), unit_id=self.getAddress())
+      self.client = ModbusClient(method='rtu', port=self.getHost(), baudrate=self.getBaudrate(), timeout=.1)
       if self.client.connect():
         return True
       else:
@@ -90,7 +93,7 @@ class InverterRTU(Inverter):
     Read a range of input registers from a start address
     """
     v = self.client.read_input_registers(scan_start, scan_range, slave=self.getAddress())
-    log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
+    log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
     if isinstance(v, ExceptionResponse):
       raise Exception("readInputRegisters() - ExceptionResponse: " + str(v))
     return v
@@ -100,8 +103,7 @@ class InverterRTU(Inverter):
     Read a range of holding registers from a start address
     """
     #try:
-    v = self.client.read_holding_registers(
-        scan_start, scan_range, slave=self.getAddress())
+    v = self.client.read_holding_registers(scan_start, scan_range, slave=self.getAddress())
     log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
     # check if v is a ModbusResponse object
     if isinstance(v, ExceptionResponse):

@@ -44,10 +44,10 @@ def inverterForm():
     <input type="radio" name="preferred_color" value="rtu" onclick="methodSelected('rtu')" />
   </label> RTU<br />
 
-  <label for="ip">Inverter IP:</label>
+  <label id="ip-label" for="ip">Inverter IP:</label>
   <input type="text" id="ip" name="ip"><br><br>
 
-  <label for="port">Inverter Port:</label>
+  <label id="port-label" for="port">Inverter Port:</label>
   <input type="text" id="port" name="port"><br><br>
 
   <label for="type">Inverter Type:</label>
@@ -63,10 +63,27 @@ def inverterForm():
   const form = document.querySelector('#inverter-form');
   const methodSelected = (method) => {
     const ip = document.querySelector('#ip');
+    const ipLabel = document.querySelector('#ip-label');
     const port = document.querySelector('#port');
+    const type = document.querySelector('#type');
+    const portLabel = document.querySelector('#port-label');
+    const address = document.querySelector('#address');
 
-    method === 'rtu' ? ip.placeholder = '/dev/serial0' : ip.placeholder = '192.168.10.22'
-    port.disabled = method === 'rtu';
+    if (method === 'rtu') {
+      ipLabel.textContent = 'Serial Port:';
+      ip.placeholder = '/dev/serial0';
+      portLabel.textContent = 'Inverter Baud:';
+      port.placeholder = '9600';
+      type.placeholder = 'solaredge';
+      address.placeholder = '1';
+    } else {
+      ipLabel.textContent = 'Inverter IP:';
+      ip.placeholder = '192.168.10.22';
+      portLabel.textContent = 'Inverter Port:';
+      port.placeholder = '502';
+      type.placeholder = 'solaredge';
+      address.placeholder = '1';
+    }
   }
 
   form.addEventListener('submit', async (event) => {

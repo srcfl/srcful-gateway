@@ -24,7 +24,7 @@ class Handler:
     if 'ip' in post_data and 'port' in post_data and 'type' in post_data:
       try:
         if 'S0' in post_data['ip']:
-          inverter = InverterRTU((post_data['ip'], post_data['type'], int(post_data['address'])))
+          inverter = InverterRTU((post_data['ip'], int(post_data['port']), post_data['type'], int(post_data['address'])))
           logger.info("Created an RTU inverter")
         else:
           inverter = InverterTCP((post_data['ip'], int(post_data['port']), post_data['type'], int(post_data['address'])))
