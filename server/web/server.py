@@ -18,7 +18,8 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
                       'hello': get.hello.Handler(),
                       'name': get.name.Handler(),
                       'logger': get.logger.Handler()}
-      self.api_post = {'inverter': post.inverter.Handler(),
+      self.api_post = {'invertertcp': post.inverterTCP.Handler(),
+                       'inverterrtu': post.inverterRTU.Handler(),
                        'wifi': post.wifi.Handler(),
                        'initialize': post.initialize.Handler(),
                        'logger': post.logger.Handler()}

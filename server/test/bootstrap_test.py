@@ -2,7 +2,7 @@ import os
 from pyfakefs.fake_filesystem_unittest import Patcher
 from .. import bootstrap
 from ..tasks.openInverterTask import OpenInverterTask
-from ..inverters.InverterTCP import InverterTCP
+from ..inverters.inverter_types import INVERTERS, OPERATION, SCAN_RANGE, SCAN_START
 
 def test_bootstrap_constructor():
   b = bootstrap.Bootstrap("test.txt")
@@ -11,15 +11,19 @@ def test_bootstrap_constructor():
 
 def test_bootstrap_processLines():
   b = bootstrap.Bootstrap("test.txt")
-  exp = ("localhost", 502, "solaredge", 1)
-
+  exp = ("TCP", "localhost", 502, "solaredge", 4)
+  # exp = ("RTU", "/dev/ttyS0", 9600, 8, 'N', 1, "lqt40s", 1)
   assert b._processLines([], 10, []) == []
   assert b._processLines([""], 10, []) == []
   assert b._processLines(["#"], 10, []) == []
   assert b._processLines(["   # comment"], 10, []) == []
   assert b._processLines(["   # comment", ""], 10, []) == []
 
-  tasks =  b._processLines([f"OpenInverter {exp[0]} {exp[1]} {exp[2]} {exp[3]}"], 10, [])
+  if exp[0] == "TCP":
+    tasks =  b._processLines([f"OpenInverter {exp[0]} {exp[1]} {exp[2]} {exp[3]} {exp[4]}\n"], 10, [])
+  elif exp[0] == "RTU":
+    tasks =  b._processLines([f"OpenInverter {exp[0]} {exp[1]} {exp[2]} {exp[3]} {exp[4]} {exp[5]} {exp[6]} {exp[7]}\n"], 10, [])
+
   assert len(tasks) == 1
   assert tasks[0].inverter.getConfig() == exp
 
@@ -37,9 +41,15 @@ def test_bootstrap_appendInverter():
     fileName = "/var/srcfulgw/bootstrap_test.txt"
     assert not patcher.fs.exists(fileName)
     b = bootstrap.Bootstrap(fileName)
-    exp = ("localhost", 502, "solaredge", 1)
+    exp = ("TCP", "localhost", 502, "solaredge", 4)
+    # exp = ("RTU", "/dev/ttyS0", 9600, 8, 'N', 1, "lqt40s", 1)
 
     b.appendInverter(exp)
+
+    with open(fileName, "r") as f:
+      lines = f.readlines()
+      print("######", lines)
+
     assert os.path.exists(fileName)
     assert patcher.fs.exists(fileName)
 

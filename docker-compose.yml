@@ -5,19 +5,15 @@ services:
     ports:
       - "80:5000"
     build: ./server
-    container_name: srcfull-gw
+    container_name: srcful-gw
     restart: always
     devices:
-      - /dev/i2c-1:/dev/i2c-1
+      - /dev/i2c-1
+      - /dev/serial0
     labels:
       io.balena.features.dbus: 1
     volumes:
       - srcful-data:/data/srcful
-
-  #  inverter:
-  #    build: ./modbus_slave
-  #    container_name: srcfull-inverter
-  #    restart: always
 
   bluetooth:
     build: ./bluetooth

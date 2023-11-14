@@ -6,7 +6,7 @@ Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps al
    * [Services](#services)
       * [server](#server)
       * [bluetooth](#bluetooth)
-        * [Windows](#windows)
+         * [Windows](#windows)
       * [client](#client)
       * [modbus_slave](#modbus_slave)
    * [Commnads](#commnads)
@@ -19,7 +19,6 @@ Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps al
 * [Testing](#testing)
 * [Design](#design)
 * [Other](#other-1)
-   
 
 # Getting started
 To get started you need to install `balena-cli` and setup the development environment as described in [this guide](https://open-balena.pages.dev/getting-started/#install-the-balena-cli-on-the-local-machine). This tool is used to deploy the firmware to the open-balena server. Then you need to login to the server to be able to deploy. This is done with the following command:  

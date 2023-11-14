@@ -16,7 +16,8 @@ class Inverter:
   
   def getConfig(self):
     '''Returns the inverter's setup as a tuple.'''
-    return (self.getHost(), self.getPort(), self.getType(), self.getAddress())
+    raise NotImplementedError("Subclass must implement abstract method")
+    # return (self.getHost(), self.getPort(), self.getType(), self.getAddress())
 
   def open(self) -> bool:
     '''Opens the Modbus connection to the inverter.'''
@@ -49,23 +50,11 @@ class Inverter:
   def populateRegisters(self):
     '''Populates the inverter's registers.'''
     raise NotImplementedError("Subclass must implement abstract method")
-
+ 
   def readInputRegisters(self):
     '''Reads the inverter's input registers.'''
     raise NotImplementedError("Subclass must implement abstract method")
 
   def readHoldingRegisters(self):
     '''Reads the inverter's holding registers.'''
-    raise NotImplementedError("Subclass must implement abstract method")
-
-  def readPower(self):
-    '''Reads the inverter's power data.'''
-    raise NotImplementedError("Subclass must implement abstract method")
-
-  def readEnergy(self):
-    '''Reads the inverter's energy data.'''
-    raise NotImplementedError("Subclass must implement abstract method")
-
-  def readFrequency(self):
-    '''Reads the inverter's frequency data.'''
     raise NotImplementedError("Subclass must implement abstract method")

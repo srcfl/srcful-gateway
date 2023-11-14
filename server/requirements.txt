@@ -3,3 +3,4 @@ cryptography >= 2.5
 pymodbus
 requests
 typing-extensions
+pyserial

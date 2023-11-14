@@ -36,51 +36,113 @@ def inverterForm():
   return """
   <h1>Inverter Form</h1>
 
-    <form id="inverter-form">
-        <label for="ip">Inverter IP:</label>
-        <input type="text" id="ip" name="ip"><br><br>
+<form id="inverter-form">
+  <label>
+    <input type="radio" name="preferred_protocol" value="tcp" onclick="methodSelected('tcp')" checked="checked" /> TCP/IP
+  </label>
 
-        <label for="port">Inverter Port:</label>
-        <input type="text" id="port" name="port"><br><br>
+  <br />
+  <label>
+    <input type="radio" name="preferred_protocol" value="rtu" onclick="methodSelected('rtu')" /> RTU
+  </label>
 
-        <label for="type">Inverter Type:</label>
-        <input type="text" id="type" name="type"><br><br>
+  <br /><br />
+  <div id="tcp-div">
+    <label id="ip-label" for="ip">Inverter IP:</label>
+    <input type="text" id="ip" name="ip" value="192.168.50.162"><br><br>
 
-        <label for="address">Inverter Address:</label>
-        <input type="text" id="address" name="address"><br><br>
+    <label id="port-label" for="port">Inverter Port:</label>
+    <input type="text" id="port" name="port" value="502"><br><br>
+  </div>
 
-        <button type="submit">Submit</button>
-    </form>
+  <div id="rtu-div" style="display:none;">
+    <label id="serial-label" for="serial">Serial Port:</label>
+    <input type="text" id="serial" name="serial" value="/dev/serial0"><br><br>
 
-    <script>
-        const form = document.querySelector('#inverter-form');
+    <label id="baudrate-label" for="baudrate">Baudrate:</label>
+    <input type="text" id="baudrate" name="baudrate" value="9600"><br><br>
 
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+    <label id="bytesize-label" for="bytesize">Byte Size:</label>
+    <input type="text" id="bytesize" name="bytesize" value="8"><br><br>
 
-            const formData = new FormData(form);
-            const data = {
-                ip: formData.get('ip'),
-                port: formData.get('port'),
-                type: formData.get('type'),
-                address: formData.get('address')
-            };
+    <label id="stopbits-label" for="stopbits">Stop Bits:</label>
+    <input type="text" id="stopbits" name="stopbits" value="1"><br><br>
 
-            const response = await fetch('/api/inverter', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
+    <label id="parity-label" for="parity">Parity:</label>
+    <input type="text" id="parity" name="parity" value="N"><br><br>
+  </div>
 
-            if (response.ok) {
-                console.log('Inverter data submitted successfully!');
-            } else {
-                console.error('Failed to submit inverter data:', response.status);
-            }
-        });
-    </script>"""
+  <label for="type">Inverter Type:</label>
+  <input type="text" id="type" name="type" value="lqt40s"><br><br>
+
+  <label for="address">Inverter Address:</label>
+  <input type="text" id="address" name="address" value="1"><br><br>
+
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+  const form = document.querySelector('#inverter-form');
+  const tcpDiv = document.querySelector('#tcp-div');
+  const rtuDiv = document.querySelector('#rtu-div');
+
+  const methodSelected = (method) => {
+    if (method === 'rtu') {
+      tcpDiv.style.display = "none";
+      rtuDiv.style.display = "block";
+    } else {
+      rtuDiv.style.display = "none";
+      tcpDiv.style.display = "block";
+    }
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const selectedRadio = document.querySelector('input[name="preferred_protocol"]:checked').value;
+    console.log(selectedRadio)
+
+    const formData = new FormData(form);
+    let data = {}
+    let endPoint = '/api/inverter'
+    if (selectedRadio === 'tcp') {
+      data = {
+        ip: formData.get('ip'),
+        port: formData.get('port'),
+        type: formData.get('type'),
+        address: formData.get('address')
+      };
+      endPoint += 'tcp';
+    } else {
+      data = {
+        port: formData.get('serial'),
+        baudrate: formData.get('baudrate'),
+        bytesize: formData.get('bytesize'),
+        stopbits: formData.get('stopbits'),
+        parity: formData.get('parity'),
+        type: formData.get('type'),
+        address: formData.get('address')
+      };
+      endPoint += 'rtu';
+    }
+
+    const response = await fetch(endPoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    console.log(endPoint);
+    console.log(data);
+
+    if (response.ok) {
+      console.log('Inverter data submitted successfully!');
+    } else {
+      console.error('Failed to submit inverter data:', response.status);
+    }
+  });
+</script>
+  """
 
 
 class Handler:

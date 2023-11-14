@@ -17,7 +17,12 @@ pymodbus_apply_logging_config('INFO')
 
 class InverterTCP(Inverter):
 
-  # address acceptable for an AF_INET socket with inverter type
+  """
+    ip: string, IP address of the inverter,
+    port: int, Port of the inverter,
+    type: string, solaredge, huawei or fronius etc...,
+    address: int, Modbus address of the inverter,
+  """
   Setup: TypeAlias = tuple[str | bytes | bytearray, int, str, int]
 
   def __init__(self, setup: Setup):
@@ -37,6 +42,9 @@ class InverterTCP(Inverter):
 
   def getAddress(self):
     return self.setup[3]
+  
+  def getConfig(self):
+    return ("TCP", self.getHost(), self.getPort(), self.getType(), self.getAddress())
 
   def open(self):
     if not self.isTerminated():
@@ -85,15 +93,14 @@ class InverterTCP(Inverter):
     """
     Populate a list of registers from a start address and a range
     """
-    return [x for x in range(
-        scan_start, scan_start + scan_range, 1)]
+    return [x for x in range(scan_start, scan_start + scan_range, 1)]
 
   def readInputRegisters(self, scan_start, scan_range):
     """
     Read a range of input registers from a start address
     """
     v = self.client.read_input_registers(scan_start, scan_range, slave=self.getAddress())
-    log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
+    log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
     if isinstance(v, ExceptionResponse):
       raise Exception("readInputRegisters() - ExceptionResponse: " + str(v))
     return v
@@ -102,21 +109,9 @@ class InverterTCP(Inverter):
     """
     Read a range of holding registers from a start address
     """
-    #try:
-    v = self.client.read_holding_registers(
-        scan_start, scan_range, slave=self.getAddress())
+    v = self.client.read_holding_registers(scan_start, scan_range, slave=self.getAddress())
     log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
-    # check if v is a ModbusResponse object
     if isinstance(v, ExceptionResponse):
       raise Exception("readHoldingRegisters() - ExceptionResponse: " + str(v))
 
     return v
-
-  def readPower(self):
-    return -1
-
-  def readEnergy(self):
-    return -1
-
-  def readFrequency(self):
-    return -1
