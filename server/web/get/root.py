@@ -34,76 +34,106 @@ def cryptoStuff():
 
 def inverterForm():
   return """
-<h1>Inverter Form</h1>
+  <h1>Inverter Form</h1>
 
 <form id="inverter-form">
   <label>
-    <input type="radio" name="preferred_color" value="tcp" onclick="methodSelected('tcp')" />
-  </label> TCP/IP<br />
+    <input type="radio" name="preferred_protocol" value="tcp" onclick="methodSelected('tcp')" checked="checked" /> TCP/IP
+  </label>
+
+  <br />
   <label>
-    <input type="radio" name="preferred_color" value="rtu" onclick="methodSelected('rtu')" />
-  </label> RTU<br />
+    <input type="radio" name="preferred_protocol" value="rtu" onclick="methodSelected('rtu')" /> RTU
+  </label>
 
-  <label id="ip-label" for="ip">Inverter IP:</label>
-  <input type="text" id="ip" name="ip"><br><br>
+  <br /><br />
+  <div id="tcp-div">
+    <label id="ip-label" for="ip">Inverter IP:</label>
+    <input type="text" id="ip" name="ip" value="192.168.50.162"><br><br>
 
-  <label id="port-label" for="port">Inverter Port:</label>
-  <input type="text" id="port" name="port"><br><br>
+    <label id="port-label" for="port">Inverter Port:</label>
+    <input type="text" id="port" name="port" value="502"><br><br>
+  </div>
+
+  <div id="rtu-div" style="display:none;">
+    <label id="serial-label" for="serial">Serial Port:</label>
+    <input type="text" id="serial" name="serial" value="/dev/serial0"><br><br>
+
+    <label id="baudrate-label" for="baudrate">Baudrate:</label>
+    <input type="text" id="baudrate" name="baudrate" value="9600"><br><br>
+
+    <label id="bytesize-label" for="bytesize">Byte Size:</label>
+    <input type="text" id="bytesize" name="bytesize" value="8"><br><br>
+
+    <label id="stopbits-label" for="stopbits">Stop Bits:</label>
+    <input type="text" id="stopbits" name="stopbits" value="1"><br><br>
+
+    <label id="parity-label" for="parity">Parity:</label>
+    <input type="text" id="parity" name="parity" value="N"><br><br>
+  </div>
 
   <label for="type">Inverter Type:</label>
-  <input type="text" id="type" name="type"><br><br>
+  <input type="text" id="type" name="type" value="lqt40s"><br><br>
 
   <label for="address">Inverter Address:</label>
-  <input type="text" id="address" name="address"><br><br>
+  <input type="text" id="address" name="address" value="1"><br><br>
 
   <button type="submit">Submit</button>
 </form>
 
 <script>
   const form = document.querySelector('#inverter-form');
-  const methodSelected = (method) => {
-    const ip = document.querySelector('#ip');
-    const ipLabel = document.querySelector('#ip-label');
-    const port = document.querySelector('#port');
-    const type = document.querySelector('#type');
-    const portLabel = document.querySelector('#port-label');
-    const address = document.querySelector('#address');
+  const tcpDiv = document.querySelector('#tcp-div');
+  const rtuDiv = document.querySelector('#rtu-div');
 
+  const methodSelected = (method) => {
     if (method === 'rtu') {
-      ipLabel.textContent = 'Serial Port:';
-      ip.placeholder = '/dev/serial0';
-      portLabel.textContent = 'Inverter Baud:';
-      port.placeholder = '9600';
-      type.placeholder = 'solaredge';
-      address.placeholder = '1';
+      tcpDiv.style.display = "none";
+      rtuDiv.style.display = "block";
     } else {
-      ipLabel.textContent = 'Inverter IP:';
-      ip.placeholder = '192.168.10.22';
-      portLabel.textContent = 'Inverter Port:';
-      port.placeholder = '502';
-      type.placeholder = 'solaredge';
-      address.placeholder = '1';
+      rtuDiv.style.display = "none";
+      tcpDiv.style.display = "block";
     }
   }
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const selectedRadio = document.querySelector('input[name="preferred_protocol"]:checked').value;
+    console.log(selectedRadio)
 
     const formData = new FormData(form);
-    const data = {
-      ip: formData.get('ip'),
-      port: formData.get('port'),
-      type: formData.get('type'),
-      address: formData.get('address')
-    };
+    let data = {}
+    let endPoint = '/api/inverter'
+    if (selectedRadio === 'tcp') {
+      data = {
+        ip: formData.get('ip'),
+        port: formData.get('port'),
+        type: formData.get('type'),
+        address: formData.get('address')
+      };
+      endPoint += 'tcp';
+    } else {
+      data = {
+        port: formData.get('serial'),
+        baudrate: formData.get('baudrate'),
+        bytesize: formData.get('bytesize'),
+        stopbits: formData.get('stopbits'),
+        parity: formData.get('parity'),
+        type: formData.get('type'),
+        address: formData.get('address')
+      };
+      endPoint += 'rtu';
+    }
 
-    const response = await fetch('/api/inverter', {
+    const response = await fetch(endPoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(data)
     });
+    console.log(endPoint);
+    console.log(data);
 
     if (response.ok) {
       console.log('Inverter data submitted successfully!');
