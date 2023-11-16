@@ -18,30 +18,34 @@ class Harvest(Task):
     self.transport = None
 
     # incremental backoff stuff
-    self.minbackoff_time = 1000
-    self.backoff_time = self.minbackoff_time  # start with a 1-second backoff
-    self.max_backoff_time = 300000  # max 5-minute backoff
+    self.backoff_time = 1000  # start with a 1-second backoff
+    self.max_backoff_time = 256000  # max ~4.3-minute backoff
 
 
   def execute(self, eventTime) -> Task | list[Task]:
     if self.inverter.isTerminated():
       return None
+    
     try:
       harvest = self.inverter.readHarvestData()
       self.stats['lastHarvest'] = harvest
       self.stats['harvests'] += 1
       self.barn[eventTime] = harvest
-      self.backoff_time = self.minbackoff_time
+
+      self.backoff_time = max(self.backoff_time - self.backoff_time * 0.1, 1000)
+
     except Exception as e:
 
       if self.backoff_time == self.max_backoff_time:
         log.info('Max backoff time reached, trying to close and reopen inverter at: %s:%s', self.inverter.getAddress(), self.inverter.getPort())
-        self.inverter.close()
-        self.inverter.open()
-
-      log.debug('Handling exeption reading harvest: %s', str(e))
-      self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
-      log.info('Incrementing backoff time to: %s', self.backoff_time)
+        if self.inverter.is_socket_open():
+          self.inverter.close()
+        else:
+          self.inverter.open()
+      else:
+        log.debug('Handling exeption reading harvest: %s', str(e))
+        self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
+        log.info('Incrementing backoff time to: %s', self.backoff_time)
 
     self.time = eventTime + self.backoff_time
 

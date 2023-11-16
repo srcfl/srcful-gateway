@@ -1,6 +1,7 @@
 from .tasks.task import Task
 
 from .inverters.InverterTCP import InverterTCP
+from .inverters.InverterRTU import InverterRTU
 from .tasks.openInverterTask import OpenInverterTask
 
 import os
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class BootstrapSaver():
   '''Abstract class for saving bootstrap tasks to a file'''
-  def appendInverter(self, args:InverterTCP.Setup):
+  def appendInverter(self, setup):
     '''Appends an inverter to the bootstrap file'''
     raise NotImplementedError("Subclass must implement abstract method")
 
@@ -38,7 +39,7 @@ class Bootstrap(BootstrapSaver):
         logger.error(e)
 
 
-  def appendInverter(self, inverterArgs:InverterTCP.Setup):
+  def appendInverter(self, inverterArgs):
     self._createFileIfNotExists()
 
     # check if the setup already exists
@@ -49,9 +50,13 @@ class Bootstrap(BootstrapSaver):
     
     # append the setup to the file
     with open(self.filename, "a") as f:
-      logger.info('Appending inverter to bootstrap file: {} {} {} {}'.format(inverterArgs[0], inverterArgs[1], inverterArgs[2], inverterArgs[3]))
-      f.write('OpenInverter {} {} {} {}\n'.format(inverterArgs[0], inverterArgs[1], inverterArgs[2], inverterArgs[3]))
-      self.tasks.append(OpenInverterTask(0, {}, InverterTCP(inverterArgs), self))
+      logger.info('Appending inverter to bootstrap file: {}'.format(inverterArgs))
+
+      f.write('OpenInverter {}\n'.format(" ".join(str(i) for i in inverterArgs)))
+      if inverterArgs[0] == 'TCP':
+        self.tasks.append(OpenInverterTask(0, {}, InverterTCP(inverterArgs[1:]), self))
+      elif inverterArgs[0] == 'RTU':
+        self.tasks.append(OpenInverterTask(0, {}, InverterRTU(inverterArgs[1:]), self))
 
   def getTasks(self, eventTime, stats):
     self.tasks = []
@@ -106,15 +111,19 @@ class Bootstrap(BootstrapSaver):
   
   def _createOpenInverterTask(self, taskArgs: list, eventTime, stats):
     # check the number of arguments
-    if len(taskArgs) != 4:
-      logger.error('OpenInverter task requires 4 arguments: ip, port, type, address')
-      return None
-
-    # get the arguments
-    ip = taskArgs[0]
-    port = int(taskArgs[1])
-    type = taskArgs[2]
-    address = int(taskArgs[3])
-
-    return OpenInverterTask(eventTime + 1000, stats, InverterTCP((ip, port, type, address)), self)
+    if taskArgs[0] == 'TCP':
+      ip = taskArgs[1]
+      port = int(taskArgs[2])
+      type = taskArgs[3]
+      address = int(taskArgs[4])
+      return OpenInverterTask(eventTime + 1000, stats, InverterTCP((ip, port, type, address)), self)
+    elif taskArgs[0] == 'RTU':
+      port = taskArgs[1]
+      baudrate = int(taskArgs[2])
+      bytesize = int(taskArgs[3])
+      parity = taskArgs[4]
+      stopbits = float(taskArgs[5])
+      type = taskArgs[6]
+      address = int(taskArgs[7])
+      return OpenInverterTask(eventTime + 1000, stats, InverterRTU((port, baudrate, bytesize, parity, stopbits, type, address)), self)
   

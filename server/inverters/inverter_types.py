@@ -2,6 +2,7 @@ SOLAREDGE = "solaredge"
 SUNGROW = "sungrow"
 HUAWEI = "huawei"
 GROWATT = "growatt"
+LQT40S = "lqt40s"
 UNKNOWN = "unknown"
 
 OPERATION = "operation"
@@ -10,6 +11,8 @@ READ_HOLDING = 0x03
 
 SCAN_START = "scan_start"
 SCAN_RANGE = "scan_range"
+
+
 
 
 INVERTERS = {
@@ -71,5 +74,10 @@ INVERTERS = {
         # {OPERATION: READ_HOLDING, SCAN_START: 40200, SCAN_RANGE: 1},
         # # Shutdown
         # {OPERATION: READ_HOLDING, SCAN_START: 40201, SCAN_RANGE: 1},
-    ]
+    ],
+
+    LQT40S: [
+        # https://www.tillquist.com/en/power-automation/cos-phi-phase-angle/lqt400-configurable-multi-transducer-with-2-analogue-outputs-1-1-1-1-1
+        {OPERATION: READ_INPUT, SCAN_START: 0, SCAN_RANGE: 2},
+    ],
 }

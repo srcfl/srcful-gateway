@@ -14,6 +14,28 @@ def test_createHarvestTransport():
   t = harvest.HarvestTransport(0, {}, {}, 'huawei')
   assert t is not None
 
+def test_inverterTerminated():
+  mockInverter = Mock()
+  mockInverter.isTerminated.return_value = False
+  
+  t = harvest.Harvest(0, {}, mockInverter)
+  t.execute(17)
+  
+  t.backoff_time = t.max_backoff_time
+  t.inverter.readHarvestData.side_effect = Exception('mocked exception')
+  t.execute(17)
+
+  assert mockInverter.close.call_count == 1 
+  assert mockInverter.open.call_count == 0
+
+  t.inverter.is_socket_open.return_value = False
+
+  t.execute(17)
+
+  assert mockInverter.close.call_count == 1
+  assert mockInverter.open.call_count == 1
+
+  
 
 def test_executeHarvest():
   mockInverter = Mock()
@@ -27,6 +49,7 @@ def test_executeHarvest():
   assert t.barn[17] == registers
   assert len(t.barn) == 1
   assert t.time == 17 + 1000
+
 
 
 def test_executeHarvestx10():
@@ -54,6 +77,65 @@ def test_executeHarvestx10():
   assert ret[1] is not t
   assert ret[1].barn == {0: registers[0], 1: registers[1], 2: registers[2], 3: registers[3],
                          4: registers[4], 5: registers[5], 6: registers[6], 7: registers[7], 8: registers[8], 17: registers[9]}
+
+def test_adaptiveBackoff():
+  mockInverter = Mock()
+  mockInverter.isTerminated.return_value = False
+  
+  t = harvest.Harvest(0, {}, mockInverter)
+  t.execute(17)
+
+  assert t.backoff_time == 1000
+
+  # Mock one failed poll -> We back off by 2 seconds instead of 1
+  t.inverter.readHarvestData.side_effect = Exception('mocked exception')
+  t.execute(17)
+
+  assert t.backoff_time == 2000
+
+  # Save the initial minbackoff_time to compare with the actual minbackoff_time later on
+  backoff_time = t.backoff_time
+
+  # Number of times we want to reach max backoff time, could be anything
+  num_of_lost_connections = 900
+
+  # Now we fail until we reach max backoff time
+  for i in range(num_of_lost_connections):
+    t.execute(17)
+    backoff_time *=2
+
+    if backoff_time > 256000:
+      backoff_time = 256000
+    
+    assert t.backoff_time == backoff_time 
+    assert t.backoff_time <= 256000
+
+
+def test_adaptivePoll():
+  mockInverter = Mock()
+  mockInverter.isTerminated.return_value = False
+  
+  t = harvest.Harvest(0, {}, mockInverter)
+  t.execute(17)
+
+  assert t.backoff_time == 1000
+
+
+  t.inverter.readHarvestData.side_effect = Exception('mocked exception')
+  t.backoff_time = t.max_backoff_time
+  t.execute(17)
+
+  assert t.backoff_time == 256000
+
+  t.inverter.readHarvestData.side_effect = None 
+  t.execute(17)
+
+  assert t.backoff_time == 230400.0
+
+
+  
+    
+
 
 
 def test_executeHarvestNoTransport():
@@ -119,7 +201,6 @@ def test_executeHarvest_incrementalBackoff_reset():
   mockInverter.readHarvestData.return_value = {'1': 1717}
   ret = t.execute(17)
   assert ret is t
-  assert ret.backoff_time == ret.minbackoff_time
   assert ret.time == 17 + ret.backoff_time
 
 def test_executeHarvest_incrementalBackoff_reconnectOnMax():
@@ -137,6 +218,10 @@ def test_executeHarvest_incrementalBackoff_reconnectOnMax():
 
   ret = t.execute(17)
   assert ret is t
+
+  t.inverter.is_socket_open.return_value = False
+
+  t.execute(17)
 
   # assert that inverter has been closed and opened again
   assert mockInverter.close.call_count == 1
@@ -188,3 +273,5 @@ def test_onError():
   response = Mock()
   instance = harvest.HarvestTransport(0, {}, {}, 'huawei')
   instance._onError(response)
+
+
