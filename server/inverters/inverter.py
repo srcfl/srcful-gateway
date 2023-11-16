@@ -58,3 +58,7 @@ class Inverter:
   def readHoldingRegisters(self):
     '''Reads the inverter's holding registers.'''
     raise NotImplementedError("Subclass must implement abstract method")
+
+  def writeRegister(self, starting_register, values):
+    '''Writes the inverter's registers.'''
+    raise NotImplementedError("Subclass must implement abstract method")
