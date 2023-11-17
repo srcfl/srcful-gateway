@@ -49,14 +49,20 @@ class Bootstrap(BootstrapSaver):
         return
     
     # append the setup to the file
-    with open(self.filename, "a") as f:
+    with open(self.filename, "w") as f:
       logger.info('Appending inverter to bootstrap file: {}'.format(inverterArgs))
-
       f.write('OpenInverter {}\n'.format(" ".join(str(i) for i in inverterArgs)))
+
       if inverterArgs[0] == 'TCP':
         self.tasks.append(OpenInverterTask(0, {}, InverterTCP(inverterArgs[1:]), self))
       elif inverterArgs[0] == 'RTU':
         self.tasks.append(OpenInverterTask(0, {}, InverterRTU(inverterArgs[1:]), self))
+
+    with open(self.filename, "r") as f:
+      logger.info('Reading bootstrap file: {}'.format(self.filename))
+      lines = f.readlines()
+      logger.info(f"f.name: {f.name}")
+      logger.info(lines)
 
   def getTasks(self, eventTime, stats):
     self.tasks = []
