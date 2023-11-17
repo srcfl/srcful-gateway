@@ -86,6 +86,7 @@ async def run():
 
   # Add Service
   await g_server.add_new_service(g_service_uuid)
+  logger.debug("Service added")
 
   # Add a Characteristic to the service
   char_flags = (
@@ -109,8 +110,8 @@ async def run():
           g_char_uuid
       )
   )
+
   await g_server.start()
-  logger.debug("Advertising")
   await trigger.wait()
 
   await g_server.stop()

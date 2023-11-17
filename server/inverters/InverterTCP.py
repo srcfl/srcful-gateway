@@ -115,3 +115,13 @@ class InverterTCP(Inverter):
       raise Exception("readHoldingRegisters() - ExceptionResponse: " + str(v))
 
     return v
+  
+  def writeRegisters(self, starting_register, values):
+    """
+    Write a range of holding registers from a start address
+    """
+    v = self.client.write_registers(starting_register, values, slave=self.getAddress())
+    log.debug("OK - Writing Holding: " + str(starting_register) + "-" + str(values))
+    if isinstance(v, ExceptionResponse):
+      raise Exception("writeRegister() - ExceptionResponse: " + str(v))
+    return v

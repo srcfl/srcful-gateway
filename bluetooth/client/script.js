@@ -290,7 +290,7 @@ inverterForm.addEventListener("submit", (event) => {
   const typeSelected = document.getElementById("inverter-type").value;
   const address = document.getElementById("inverter-address").value;
 
-  const endpoint = "/api/inverter";
+  const endpoint = "/api/invertertcp";
   const content = JSON.stringify({
     ip: ipAddress,
     port: port,

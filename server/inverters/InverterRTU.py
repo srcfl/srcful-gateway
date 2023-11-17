@@ -118,7 +118,7 @@ class InverterRTU(Inverter):
     """
     Read a range of input registers from a start address
     """
-    v = self.client.read_input_registers(address=scan_start, count=scan_range, slave=self.getAddress())
+    v = self.client.read_input_registers(scan_start, scan_range, slave=self.getAddress())
     log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
     if isinstance(v, ExceptionResponse):
       raise Exception("readInputRegisters() - ExceptionResponse: " + str(v))
@@ -128,9 +128,19 @@ class InverterRTU(Inverter):
     """
     Read a range of holding registers from a start address
     """
-    v = self.client.read_holding_registers(address=scan_start, count=scan_range, slave=self.getAddress())
+    v = self.client.read_holding_registers(scan_start, scan_range, slave=self.getAddress())
     log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
     if isinstance(v, ExceptionResponse):
       raise Exception("readHoldingRegisters() - ExceptionResponse: " + str(v))
 
+    return v
+  
+  def writeRegisters(self, starting_register, values):
+    """
+    Write a range of holding registers from a start address
+    """
+    v = self.client.write_registers(starting_register, values, slave=self.getAddress())
+    log.debug("OK - Writing Holding: " + str(starting_register) + "-" + str(values))
+    if isinstance(v, ExceptionResponse):
+      raise Exception("writeRegister() - ExceptionResponse: " + str(v))
     return v
