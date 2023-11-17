@@ -23,7 +23,8 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
                        'wifi': post.wifi.Handler(),
                        'initialize': post.initialize.Handler(),
                        'logger': post.logger.Handler(),
-                       'inverter/modbus': post.modbus.Handler()}
+                       'inverter/modbus': post.modbus.Handler(),
+                       'logger': post.logger.Handler()}
 
       self.tasks = tasks
       super(Handler, self).__init__(*args, **kwargs)
