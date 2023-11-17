@@ -127,7 +127,7 @@ class InverterTCP(Inverter):
     Write a range of holding registers from a start address
     """
     v = self.client.write_registers(starting_register, values, slave=self.getAddress())
-    log.debug("OK - Writing Holding: " + str(starting_register) + "-" + str(values))
+    log.debug("OK - Writing Holdings: " + str(starting_register) + "-" + str(values))
     if isinstance(v, ExceptionResponse):
-      raise Exception("writeRegister() - ExceptionResponse: " + str(v))
+      raise Exception("writeRegisters() - ExceptionResponse: " + str(v))
     return v
