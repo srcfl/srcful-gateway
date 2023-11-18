@@ -1,7 +1,9 @@
 SOLAREDGE = "solaredge"
 SUNGROW = "sungrow"
+SUNGROW_HYBRID = "sungrow_hybrid"
 HUAWEI = "huawei"
 GROWATT = "growatt"
+LQT40S = "lqt40s"
 UNKNOWN = "unknown"
 
 OPERATION = "operation"
@@ -10,6 +12,8 @@ READ_HOLDING = 0x03
 
 SCAN_START = "scan_start"
 SCAN_RANGE = "scan_range"
+
+
 
 
 INVERTERS = {
@@ -24,11 +28,17 @@ INVERTERS = {
     ],
 
     SUNGROW: [
-        # https://github.com/bohdan-s/Sungrow-Inverter/raw/main/Modbus%20Information/Communication%20Protocol%20of%20PV%20Grid-Connected%20String%20Inverters_V1.1.37_EN.pdf
-
+        # https://drive.google.com/file/d/1R5o1pF0ZegdE0IDHUzrvMZVvdOITWMYr/view?usp=drive_link
         {OPERATION: READ_INPUT, SCAN_START: 4999, SCAN_RANGE: 110},
         {OPERATION: READ_INPUT, SCAN_START: 5112, SCAN_RANGE: 50},
-        # {OPERATION: READ_HOLDING, SCAN_START: 4999, SCAN_RANGE: 6}
+    ],
+
+    SUNGROW_HYBRID: [
+        # https://drive.google.com/file/d/1O-wIc7Avb3Kb4yOXhKSANcS2w58dSo9J/view?usp=drive_link
+        {OPERATION: READ_INPUT, SCAN_START: 4999, SCAN_RANGE: 110},
+        {OPERATION: READ_INPUT, SCAN_START: 5112, SCAN_RANGE: 50},
+        {OPERATION: READ_INPUT, SCAN_START: 13000, SCAN_RANGE: 6},
+        {OPERATION: READ_INPUT, SCAN_START: 13028, SCAN_RANGE: 6},
     ],
 
     SOLAREDGE: [
@@ -71,5 +81,10 @@ INVERTERS = {
         # {OPERATION: READ_HOLDING, SCAN_START: 40200, SCAN_RANGE: 1},
         # # Shutdown
         # {OPERATION: READ_HOLDING, SCAN_START: 40201, SCAN_RANGE: 1},
-    ]
+    ],
+
+    LQT40S: [
+        # https://www.tillquist.com/en/power-automation/cos-phi-phase-angle/lqt400-configurable-multi-transducer-with-2-analogue-outputs-1-1-1-1-1
+        {OPERATION: READ_INPUT, SCAN_START: 0, SCAN_RANGE: 2},
+    ],
 }
