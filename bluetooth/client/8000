@@ -1,4 +1,0 @@
-"192.168.0.6" - - [14/May/2023:16:12:15 +0000] "GET / HTTP/1.1" 200 199 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
-"192.168.0.6" - - [14/May/2023:16:12:15 +0000] "GET /favicon.ico HTTP/1.1" 200 199 "http://192.168.0.6:8080/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
-"192.168.0.6" - - [14/May/2023:16:12:22 +0000] "GET /index.html HTTP/1.1" 200 199 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
-"192.168.0.6" - - [14/May/2023:16:12:22 +0000] "GET /favicon.ico HTTP/1.1" 200 199 "http://192.168.0.6:8080/index.html" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36"
