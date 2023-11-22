@@ -35,9 +35,20 @@ def mock_finish():
 @patch.object(BaseHTTPRequestHandler, 'setup')
 def test_handler_apiGetEnpoints(mock_setup, mock_handle, mock_finish):
   h = requestHandlerFactory(None, None, None, None)(None, None, None)
-  handler = h.getAPIHandler('/api/crypto', '/api/', h.api_get)
+  handler, params = h.getAPIHandler('/api/crypto', '/api/', h.api_get)
   assert handler != None
   assert hasattr(handler, 'doGet')
+
+@patch.object(BaseHTTPRequestHandler, 'finish')
+@patch.object(BaseHTTPRequestHandler, 'handle')
+@patch.object(BaseHTTPRequestHandler, 'setup')
+def test_handler_apiGetEnpointsParams(mock_setup, mock_handle, mock_finish):
+  h = requestHandlerFactory(None, None, None, None)(None, None, None)
+  handler, params = h.getAPIHandler('/api/inverter/modbus/holding/1234', '/api/', h.api_get)
+  assert handler != None
+  assert params != None
+  assert hasattr(handler, 'doGet')
+  assert params['address'] == '1234'
 
 
 def test_open_close():

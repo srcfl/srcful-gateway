@@ -16,7 +16,7 @@ class Handler:
   def jsonSchema(self):
     return json.dumps(self.jsonDict())
 
-  def doPost(self, post_data: dict, stats: dict, tasks: queue.Queue):
+  def doPost(self, post_data: dict, post_params:dict, stats: dict, tasks: queue.Queue):
     if 'logger' in post_data and 'level' in post_data:
       # check that the logger and level are valid
         try:

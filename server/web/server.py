@@ -1,3 +1,4 @@
+import re
 import json
 import queue
 from typing import Callable
@@ -17,7 +18,8 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       self.api_get = {'crypto': get.crypto.Handler(),
                       'hello': get.hello.Handler(),
                       'name': get.name.Handler(),
-                      'logger': get.logger.Handler()}
+                      'logger': get.logger.Handler(),
+                      'inverter/modbus/holding/{address}': get.logger.Handler()}
       self.api_post = {'invertertcp': post.inverterTCP.Handler(),
                        'inverterrtu': post.inverterRTU.Handler(),
                        'wifi': post.wifi.Handler(),
@@ -25,6 +27,8 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
                        'logger': post.logger.Handler(),
                        'inverter/modbus': post.modbus.Handler()}
 
+      self.api_get = Handler.convert_keys_to_regex(self.api_get)
+      self.api_post = Handler.convert_keys_to_regex(self.api_post)
       self.tasks = tasks
       super(Handler, self).__init__(*args, **kwargs)
 
@@ -35,12 +39,21 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       return {unquote_plus(k): unquote_plus(v) for k, v in (x.split('=') for x in post_data.split('&'))}
 
     @staticmethod
-    def getAPIHandler(path: str, api_root: str, api_handler: dict):
+    def convert_keys_to_regex(api_dict):
+        regex_dict = {}
+        for key, value in api_dict.items():
+            key = re.sub(r'\{(.+?)\}', r'(?P<\1>.+)', key)
+            regex_dict[re.compile('^' + key + '$')] = value
+        return regex_dict
+
+    @staticmethod
+    def getAPIHandler(path: str, api_root: str, api_handler_regex: dict):
       if path.startswith(api_root):
-        handler = api_handler.get(path[len(api_root):])
-        if handler:
-          return handler
-      return None
+        for pattern, handler in api_handler_regex.items():
+            match = pattern.match(path[len(api_root):])
+            if match:
+                return handler, match.groupdict()
+      return None, None
 
     @staticmethod
     def getData(headers: dict, rfile):
@@ -68,11 +81,11 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       self.wfile.write(response)
 
     def do_POST(self):
-      handler = Handler.getAPIHandler(self.path, "/api/", self.api_post)
+      handler, params = Handler.getAPIHandler(self.path, "/api/", self.api_post)
       if handler is not None:
         post_data = Handler.getData(self.headers, self.rfile)
 
-        code, response = handler.doPost(post_data, stats, tasks)
+        code, response = handler.doPost(post_data, params, stats, tasks)
         self.sendApiResponse(code, response)
         return
       else:
@@ -82,13 +95,13 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
 
     def do_GET(self):
 
-      handler = Handler.getAPIHandler(self.path, "/api/", self.api_get)
+      handler, params = Handler.getAPIHandler(self.path, "/api/", self.api_get)
       if handler is not None:
-        code, response = handler.doGet(stats, timeMSFunc, chipInfoFunc)
+        code, response = handler.doGet(stats, params, timeMSFunc, chipInfoFunc)
         self.sendApiResponse(code, response)
       else:
         # check if we have a post handler
-        handler = Handler.getAPIHandler(self.path, "/api/", self.api_post)
+        handler, params = Handler.getAPIHandler(self.path, "/api/", self.api_post)
         if handler is not None:
           self.sendApiResponse(200, handler.jsonSchema())
           return

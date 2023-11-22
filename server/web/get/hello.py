@@ -2,7 +2,7 @@ import json
 from typing import Callable
 
 class Handler:
-  def doGet(self, stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable):
+  def doGet(self, stats: dict, post_params:dict, timeMSFunc: Callable, chipInfoFunc: Callable):
     # return the json data {'serial:' crypto.serial, 'pubkey': crypto.publicKey}
     ret = {'message': 'hello world from srcful!'}
 

@@ -17,7 +17,7 @@ class Handler:
                                     'message': 'string, error message'}
                       })
 
-  def doPost(self, post_data: dict, stats: dict, tasks: queue.Queue) -> tuple[int, str]:
+  def doPost(self, post_data: dict, post_params:dict, stats: dict, tasks: queue.Queue) -> tuple[int, str]:
     if 'ssid' in post_data and 'psk' in post_data:
       try:
         log.info('Opening WiFi connection to {}'.format(post_data['ssid']))

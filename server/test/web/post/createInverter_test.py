@@ -14,7 +14,7 @@ def test_post_create_InverterTCP():
     
     handler = TCPHandler()
 
-    handler.doPost(conf, None, queue.Queue())
+    handler.doPost(conf, None, {}, queue.Queue())
 
     assert handler.inverter.getConfig()[1:] == (conf['ip'], conf['port'], conf['type'], conf['address'])
 
@@ -30,6 +30,6 @@ def test_post_create_InverterRTU():
     
     handler = RTUHandler()
 
-    handler.doPost(conf, None, queue.Queue())
+    handler.doPost(conf, None, {}, queue.Queue())
 
     assert handler.inverter.getConfig()[1:] == (conf['port'], conf['baudrate'], conf['bytesize'], conf['parity'], conf['stopbits'], conf['type'], conf['address'])

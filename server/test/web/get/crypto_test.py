@@ -33,7 +33,7 @@ def test_get(mock_release, mock_getPublicKey, mock_getChipInfo, mock_initChip):
   mock_getChipInfo.return_value = chipInfo
   mock_getPublicKey.return_value = public_key
 
-  result = handler.doGet({}, None, None)
+  result = handler.doGet({}, {}, None, None)
   mock_initChip.assert_called_once()
   mock_getChipInfo.assert_called_once_with()
   mock_release.assert_called_once()

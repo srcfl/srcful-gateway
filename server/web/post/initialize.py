@@ -12,7 +12,7 @@ class Handler:
                         'returns': {'initialized': 'boolean, true if the wallet is initialized'}
                       })
 
-  def doPost(self, post_data: dict, stats: dict, tasks: queue.Queue):
+  def doPost(self, post_data: dict, post_params:dict, stats: dict, tasks: queue.Queue):
     if 'wallet' in post_data:
       t = InitializeTask(0, {}, post_data['wallet'])
       t.execute(0)

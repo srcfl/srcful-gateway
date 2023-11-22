@@ -22,7 +22,7 @@ class Handler:
                                     'message': 'string, error message'}
                       })
 
-  def doPost(self, post_data: dict, stats: dict, tasks: queue.Queue) -> tuple[int, str]:
+  def doPost(self, post_data: dict, post_params:dict, stats: dict, tasks: queue.Queue) -> tuple[int, str]:
     if 'port' in post_data and 'type' in post_data:
       try:
         conf = (post_data['port'], 

@@ -35,7 +35,7 @@ class Handler:
                 mapped_values.append(int(value))
         return mapped_values
 
-    def doPost(self, post_data: dict, stats: dict, tasks: queue.Queue) -> tuple[int, str]:
+    def doPost(self, post_data: dict, post_params:dict, stats: dict, tasks: queue.Queue) -> tuple[int, str]:
 
         if 'commands' not in post_data:
             return 400, json.dumps({'status': 'bad request', 'message': 'Missing commands in request'})

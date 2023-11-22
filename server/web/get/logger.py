@@ -3,7 +3,7 @@ import logging
 from typing import Callable
 
 class Handler:
-  def doGet(self, stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable):
+  def doGet(self, stats: dict, post_params:dict, timeMSFunc: Callable, chipInfoFunc: Callable):
     
     loggers = [logging.getLogger()]  # get the root logger
     loggers = loggers + [logging.getLogger(name) for name in logging.root.manager.loggerDict]
