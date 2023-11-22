@@ -25,7 +25,8 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
                        'wifi': post.wifi.Handler(),
                        'initialize': post.initialize.Handler(),
                        'logger': post.logger.Handler(),
-                       'inverter/modbus': post.modbus.Handler()}
+                       'inverter/modbus': post.modbus.Handler(),
+                       'logger': post.logger.Handler()}
 
       self.api_get = Handler.convert_keys_to_regex(self.api_get)
       self.api_post = Handler.convert_keys_to_regex(self.api_post)

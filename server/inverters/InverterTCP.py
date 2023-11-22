@@ -30,6 +30,7 @@ class InverterTCP(Inverter):
     log.info("Creating with: %s" % str(setup))
     self.setup = setup
     self.registers = INVERTERS[self.getType()]
+    self.inverterIsOpen = False
 
   def getHost(self):
     return self.setup[0]
@@ -46,14 +47,19 @@ class InverterTCP(Inverter):
   def getConfig(self):
     return ("TCP", self.getHost(), self.getPort(), self.getType(), self.getAddress())
 
+  def isOpen(self):
+    return self.inverterIsOpen
+
   def open(self):
     if not self.isTerminated():
       self.client = ModbusClient(host=self.getHost(), port=self.getPort(), unit_id=self.getAddress())
       if self.client.connect():
-        return True
+        self.inverterIsOpen = True
+        return self.inverterIsOpen
       else:
         self.terminate()
-        return False
+        self.inverterIsOpen = False
+        return self.inverterIsOpen
     else:
       return False
 
@@ -121,7 +127,7 @@ class InverterTCP(Inverter):
     Write a range of holding registers from a start address
     """
     v = self.client.write_registers(starting_register, values, slave=self.getAddress())
-    log.debug("OK - Writing Holding: " + str(starting_register) + "-" + str(values))
+    log.debug("OK - Writing Holdings: " + str(starting_register) + "-" + str(values))
     if isinstance(v, ExceptionResponse):
-      raise Exception("writeRegister() - ExceptionResponse: " + str(v))
+      raise Exception("writeRegisters() - ExceptionResponse: " + str(v))
     return v

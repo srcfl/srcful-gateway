@@ -13,6 +13,7 @@ Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps al
       * [Monitor](#monitor)
       * [Tunnel](#tunnel)
       * [SSH](#ssh)
+        * [SSH into a docker container](#ssh-into-a-docker-container)
       * [Build](#build)
       * [Deploy](#deploy)
       * [Other](#other)
@@ -174,6 +175,25 @@ ssh root@localhost -p 22222
 ```
 
 `balena ssh UUID` is still not supported on open-balena.
+
+#### SSH into a docker container
+
+Once you've successfully accessed the host OS through SSH, you can then access the individual service (container) within the device. Balena uses Docker to run services, so you can use Docker commands for this.
+
+To get a list of all running containers, you can use:
+
+```
+balena-engine ps
+```
+
+And to access a specific container, use the following command:
+
+```
+balena-engine exec -it <containerID> /bin/sh
+```
+
+Change to `/bin/bash` if needed.
+
 
 ### Build 
 To build the gateway we use the `balena build` command. This command is used to build a single application or a fleet of devices. The command is used as follows:
