@@ -36,9 +36,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
 
     @staticmethod
     def query2Dict(query_string: str):
-      if "=" not in query_string:
-        return {}
-      return {unquote_plus(k): unquote_plus(v) for k, v in (x.split('=') for x in query_string.split('&'))}
+      return Handler.post2Dict(query_string)
 
     @staticmethod
     def post2Dict(post_data: str):
