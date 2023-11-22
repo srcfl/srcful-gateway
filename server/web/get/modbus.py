@@ -11,47 +11,47 @@ class HoldingHandler:
 
         holdings = stats['inverter'].readHoldingRegisters()
 
-        if post_params['address'] not in holdings:
-            return 400, json.dumps({'error': 'invalid address'})
+        # Combine bytes from all addresses in the range post_params['address'] to post_params['address'] + size
+        raw_value = bytearray()
+        address = int(post_params['address'])  # convert address to integer
+        size = int(query_params.get('size', 1))
+        for i in range(size):
+            if address + i not in holdings:
+                return 400, json.dumps({'error': 'invalid or incomplete address range'})
+            raw_value += holdings[address + i]
 
         ret = {
-            'register': post_params['address'],
-            'raw_value': holdings[post_params['address']]
+            'register': address,
+            'raw_value': raw_value.hex(),  # Showcase raw_value as a hexadecimal string in the response
         }
-
+ 
         if len(query_params) > 0:
-            status_code, value = self.parse_params(holdings, post_params, query_params)
+            status_code, value = self.parse_params(raw_value, query_params)
             if status_code != 200:
                 return status_code, value
-            ret['value'] = value
+            ret['value'] = value    
 
         return 200, json.dumps(ret)
 
     @staticmethod
-    def parse_params(holdings, post_params, query_params):
-        data_type = query_params.get('type')
-        size = int(query_params.get('size', 0))
+    def parse_params(raw_value, query_params):
+        data_type = query_params.get('type', 'uint')
         endianess = query_params.get('endianess', 'big')
 
         if data_type not in ['uint', 'int', 'float', 'ascii', 'utf16']:
             return 400, json.dumps({'error': 'Unknown datatype'})
 
-        if size not in [1, 2, 4, 8]:
-            return 400, json.dumps({'error': 'Invalid size. Size must be 1, 2, 4, or 8 bytes'})
-
         if endianess not in ['big', 'little']:
             return 400, json.dumps({'error': 'Invalid endianess. endianess must be big or little'})
-
-        raw_value = holdings[post_params['address']]
 
         if data_type == 'uint':
             value = int.from_bytes(raw_value, byteorder=endianess, signed=False)
         elif data_type == 'int':
             value = int.from_bytes(raw_value, byteorder=endianess, signed=True)
         elif data_type == 'float':
-            if size == 4:
+            if len(raw_value) == 4:
                 value = struct.unpack(f'{endianess[0]}f', raw_value)[0]
-            elif size == 8:
+            elif len(raw_value) == 8:
                 value = struct.unpack(f'{endianess[0]}d', raw_value)[0]
         elif data_type == 'ascii':
             value = raw_value.decode('ascii')
