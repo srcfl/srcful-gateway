@@ -19,7 +19,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
                       'hello': get.hello.Handler(),
                       'name': get.name.Handler(),
                       'logger': get.logger.Handler(),
-                      'inverter/modbus/holding/{address}': get.logger.Handler()}
+                      'inverter/modbus/holding/{address}': get.modbus.HoldingHandler()}
       self.api_post = {'invertertcp': post.inverterTCP.Handler(),
                        'inverterrtu': post.inverterRTU.Handler(),
                        'wifi': post.wifi.Handler(),
@@ -31,6 +31,14 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       self.api_post = Handler.convert_keys_to_regex(self.api_post)
       self.tasks = tasks
       super(Handler, self).__init__(*args, **kwargs)
+
+      
+
+    @staticmethod
+    def query2Dict(query_string: str):
+      if "=" not in query_string:
+        return {}
+      return {unquote_plus(k): unquote_plus(v) for k, v in (x.split('=') for x in query_string.split('&'))}
 
     @staticmethod
     def post2Dict(post_data: str):
@@ -80,8 +88,16 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       self.end_headers()
       self.wfile.write(response)
 
+    def pre_do(self, path:str):
+      parts = path.split('?')
+      query_string = parts[1] if len(parts) > 1 else ""
+      return parts[0], Handler.query2Dict(query_string)
+
+
     def do_POST(self):
-      handler, params = Handler.getAPIHandler(self.path, "/api/", self.api_post)
+      path, query = self.pre_do(self.path)
+
+      handler, params = Handler.getAPIHandler(path, "/api/", self.api_post)
       if handler is not None:
         post_data = Handler.getData(self.headers, self.rfile)
 
@@ -95,13 +111,15 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
 
     def do_GET(self):
 
-      handler, params = Handler.getAPIHandler(self.path, "/api/", self.api_get)
+      path, query = self.pre_do(self.path)
+
+      handler, params = Handler.getAPIHandler(path, "/api/", self.api_get)
       if handler is not None:
         code, response = handler.doGet(stats, params, timeMSFunc, chipInfoFunc)
         self.sendApiResponse(code, response)
       else:
         # check if we have a post handler
-        handler, params = Handler.getAPIHandler(self.path, "/api/", self.api_post)
+        handler, params = Handler.getAPIHandler(path, "/api/", self.api_post)
         if handler is not None:
           self.sendApiResponse(200, handler.jsonSchema())
           return
