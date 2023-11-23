@@ -42,22 +42,31 @@ class RegisterHandler(GetHandler):
     def parse_params(raw_value, query_params):
         data_type = query_params.get('type', 'uint')
         endianess = query_params.get('endianess', 'big')
+        
+        if endianess not in ['big', 'little']:
+            return 400, json.dumps({'error': 'Invalid endianess. endianess must be big or little'})
+        
+        
 
         if data_type not in ['uint', 'int', 'float', 'ascii', 'utf16']:
             return 400, json.dumps({'error': 'Unknown datatype'})
 
-        if endianess not in ['big', 'little']:
-            return 400, json.dumps({'error': 'Invalid endianess. endianess must be big or little'})
-
+        
         if data_type == 'uint':
             value = int.from_bytes(raw_value, byteorder=endianess, signed=False)
         elif data_type == 'int':
             value = int.from_bytes(raw_value, byteorder=endianess, signed=True)
         elif data_type == 'float':
+
+            if endianess == 'big':
+                endianess = '>'
+            if endianess != '>':
+                endianess = '<'
+
             if len(raw_value) == 4:
-                value = struct.unpack(f'{endianess[0]}f', raw_value)[0]
+                value = struct.unpack(f'{endianess}f', raw_value)[0]
             elif len(raw_value) == 8:
-                value = struct.unpack(f'{endianess[0]}d', raw_value)[0]
+                value = struct.unpack(f'{endianess}d', raw_value)[0]
         elif data_type == 'ascii':
             value = raw_value.decode('ascii')
         elif data_type == 'utf16':

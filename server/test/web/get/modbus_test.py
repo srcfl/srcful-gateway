@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.modbus import RegisterHandler, HoldingHandler, InputHandler  # adapt to your actual module import
 import json
+import struct
 
 @pytest.fixture
 def inverter_fixture():
@@ -80,3 +81,66 @@ def test_invalid_size(request_data):
     status_code, response = handler.doGet(request_data)
     assert status_code == 400
     assert json.loads(response).get('error') == 'invalid or incomplete address range'
+
+def test_uint_value(request_data):
+    handler = HoldingHandler()
+    request_data.query_params['type'] = 'uint'
+    status_code, response = handler.doGet(request_data)
+    assert status_code == 200
+    response = json.loads(response)
+    assert response.get('value') == 16909060  # = 0x01020304 as unsigned int
+
+def test_int_value(request_data):
+    handler = HoldingHandler()
+    request_data.query_params['type'] = 'int'
+    request_data.query_params['size'] = '2'
+    request_data.post_params['address'] = '2'
+    status_code, response = handler.doGet(request_data)
+    assert status_code == 200
+    response = json.loads(response)
+    assert response.get('value') == 772  # = 0x0304 as signed int
+
+def test_float_value(request_data):
+    handler = HoldingHandler()
+    request_data.query_params['type'] = 'float'
+    request_data.query_params['size'] = '4'
+    request_data.query_params['endianess'] = 'little'
+    status_code, response = handler.doGet(request_data)
+    assert status_code == 200
+    response = json.loads(response)
+    # Can't use assert equals on floating point numbers due to precision issues
+    assert abs(response.get('value')) < 1e-5  # value = 0x04030201 as float 
+
+def test_ascii_value(request_data):
+    handler = HoldingHandler()
+    request_data.query_params['type'] = 'ascii'
+    request_data.query_params['size'] = '2'
+    status_code, response = handler.doGet(request_data)
+    assert status_code == 200
+    response = json.loads(response)
+    assert response.get('value') == '\x01\x02'  # = 0x0102 as ASCII
+
+def test_utf16_value(request_data):
+    handler = HoldingHandler()
+    request_data.query_params['type'] = 'utf16'
+    request_data.query_params['size'] = '2'
+    status_code, response = handler.doGet(request_data)
+    assert status_code == 200
+    response = json.loads(response)
+    # = 0x0102 as utf16. Could not compare with direct value due to difference in utf16 encoding in python string depending on sys.byte_order
+    assert ord(response.get('value')) == 0x0102
+    
+def test_double_value(request_data):
+    request_data.stats['inverter'].readHoldingRegisters.return_value = {i: bytes([i]) for i in range(8)} 
+    # This creates a dictionary where each key is an address and each value is one byte, with values from 0 to 7.
+    handler = HoldingHandler()
+    request_data.query_params['type'] = 'float'
+    request_data.query_params['size'] = '8'
+    status_code, response = handler.doGet(request_data)
+    assert status_code == 200
+    response = json.loads(response)
+    result = response.get('value')
+
+    # round to ensure accurate comparison of floating points
+    expected = struct.unpack('>d', bytes(range(8)))[0]
+    assert round(result, 9) == round(expected, 9)   # or whatever level of precision is appropriate  
