@@ -9,7 +9,7 @@ class RegisterHandler(GetHandler):
     def doGet(self, request_data: RequestData):
         if 'address' not in request_data.post_params:
             return 400, json.dumps({'error': 'missing address'})
-        if request_data.stats['inverter'] is None:
+        if 'inverter' not in request_data.stats or request_data.stats['inverter'] is None:
             return 400, json.dumps({'error': 'inverter not initialized'})
 
         registers = self.get_registers(request_data.stats['inverter'])
