@@ -1,37 +1,42 @@
 import struct
 import json
 from typing import Callable
+from ..handler import GetHandler
 
-class HoldingHandler:
-    def doGet(self, stats: dict, post_params:dict, query_params:dict, timeMSFunc: Callable, chipInfoFunc: Callable):
-        if 'address' not in post_params:
+from ..requestData import RequestData
+
+class RegisterHandler(GetHandler):
+    def doGet(self, request_data: RequestData):
+        if 'address' not in request_data.post_params:
             return 400, json.dumps({'error': 'missing address'})
-        if stats['inverter'] is None:
+        if request_data.stats['inverter'] is None:
             return 400, json.dumps({'error': 'inverter not initialized'})
 
-        holdings = stats['inverter'].readHoldingRegisters()
+        registers = self.get_registers(request_data.stats['inverter'])
 
-        # Combine bytes from all addresses in the range post_params['address'] to post_params['address'] + size
         raw_value = bytearray()
-        address = int(post_params['address'])  # convert address to integer
-        size = int(query_params.get('size', 1))
+        address = int(request_data.post_params['address'])
+        size = int(request_data.query_params.get('size', 1))
         for i in range(size):
-            if address + i not in holdings:
+            if address + i not in registers:
                 return 400, json.dumps({'error': 'invalid or incomplete address range'})
-            raw_value += holdings[address + i]
+            raw_value += registers[address + i]
 
         ret = {
             'register': address,
-            'raw_value': raw_value.hex(),  # Showcase raw_value as a hexadecimal string in the response
+            'raw_value': raw_value.hex(),
         }
  
-        if len(query_params) > 0:
-            status_code, value = self.parse_params(raw_value, query_params)
+        if len(request_data.query_params) > 0:
+            status_code, value = self.parse_params(raw_value, request_data.query_params)
             if status_code != 200:
                 return status_code, value
             ret['value'] = value    
 
         return 200, json.dumps(ret)
+
+    def get_registers(self, inverter):
+        raise NotImplementedError()
 
     @staticmethod
     def parse_params(raw_value, query_params):
@@ -59,3 +64,11 @@ class HoldingHandler:
             value = raw_value.decode('utf-16' + ('be' if endianess == 'big' else 'le'))
 
         return 200, value
+
+class HoldingHandler(RegisterHandler):
+    def get_registers(self, inverter):
+        return inverter.readHoldingRegisters()
+
+class InputHandler(RegisterHandler):
+    def get_registers(self, inverter):
+        return inverter.readInputRegisters()

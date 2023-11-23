@@ -1,10 +1,12 @@
 import json
 import logging
 from typing import Callable
+from ..handler import GetHandler
 
-class Handler:
-  def doGet(self, stats: dict, post_params:dict, timeMSFunc: Callable, chipInfoFunc: Callable):
-    
+from ..requestData import RequestData
+
+class Handler(GetHandler):
+  def doGet(self, request_data: RequestData):    
     loggers = [logging.getLogger()]  # get the root logger
     loggers = loggers + [logging.getLogger(name) for name in logging.root.manager.loggerDict]
 

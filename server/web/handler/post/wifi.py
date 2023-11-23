@@ -6,7 +6,11 @@ from server.tasks.openWiFiConTask import OpenWiFiConTask
 import logging
 log = logging.getLogger(__name__)
 
-class Handler:
+
+from ..handler import PostHandler
+from ..requestData import RequestData
+
+class Handler(PostHandler):
 
   def jsonSchema(self):
     return json.dumps({ 'type': 'post',
@@ -17,12 +21,12 @@ class Handler:
                                     'message': 'string, error message'}
                       })
 
-  def doPost(self, post_data: dict, post_params:dict, stats: dict, tasks: queue.Queue) -> tuple[int, str]:
-    if 'ssid' in post_data and 'psk' in post_data:
+  def doPost(self, request_data:RequestData) -> tuple[int, str]:
+    if 'ssid' in request_data.data and 'psk' in request_data.data:
       try:
-        log.info('Opening WiFi connection to {}'.format(post_data['ssid']))
-        wificon = WiFiHandler(post_data['ssid'], post_data['psk'])
-        tasks.put(OpenWiFiConTask(1000, stats, wificon))
+        log.info('Opening WiFi connection to {}'.format(request_data.data['ssid']))
+        wificon = WiFiHandler(request_data.data['ssid'], request_data.data['psk'])
+        request_data.tasks.put(OpenWiFiConTask(1000, request_data.stats, wificon))
         return 200, json.dumps({'status': 'ok'})
       except Exception as e:
         return 500, json.dumps({'status': 'error', 'message': str(e)})

@@ -6,7 +6,10 @@ from server.tasks.modbusWriteTask import ModbusWriteTask
 import logging
 logger = logging.getLogger(__name__)
 
-class Handler:
+from ..handler import PostHandler
+from ..requestData import RequestData
+
+class Handler(PostHandler):
 
     def jsonSchema(self):
         return json.dumps({ 
@@ -35,21 +38,21 @@ class Handler:
                 mapped_values.append(int(value))
         return mapped_values
 
-    def doPost(self, post_data: dict, post_params:dict, stats: dict, tasks: queue.Queue) -> tuple[int, str]:
+    def doPost(self, request_data:RequestData) -> tuple[int, str]:
 
-        if 'commands' not in post_data:
+        if 'commands' not in request_data.data:
             return 400, json.dumps({'status': 'bad request', 'message': 'Missing commands in request'})
 
         # Check if 'inverter' field exists in the stats
-        if 'inverter' not in stats:
+        if 'inverter' not in request_data.stats:
             return 400, json.dumps({'status': 'error', 'message': 'No Modbus device initialized'})
 
         
         try:
-            commands = post_data['commands']
+            commands = request_data.data['commands']
             
             # Map values in commands for Modbus device
-            raw_commands = post_data['commands']
+            raw_commands = request_data.data['commands']
             command_objects = []
 
             # Check command type and construct appropriate command objects
@@ -67,10 +70,10 @@ class Handler:
                     return 500, json.dumps({'status': 'error', 'message': str(e)})
             
             # Add ModbusTask to task queue
-            tasks.put(ModbusWriteTask(100, stats, stats['inverter'], command_objects))
+            request_data.tasks.put(ModbusWriteTask(100, request_data.stats, request_data.stats['inverter'], command_objects))
             
             return 200, json.dumps({'status': 'ok'})
         except Exception as e:
-            logger.error('Failed to handle Modbus commands: %s', post_data)
+            logger.error('Failed to handle Modbus commands: %s', request_data.data)
             logger.error(e)
             return 500, json.dumps({'status': 'error', 'message': str(e)})

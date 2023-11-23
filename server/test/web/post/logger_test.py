@@ -1,4 +1,4 @@
-import server.web.post.logger as post_logger
+import server.web.handler.post.logger as post_logger
 import json
 import logging
 

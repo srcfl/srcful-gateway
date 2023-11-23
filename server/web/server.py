@@ -5,8 +5,7 @@ from typing import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 
-from . import get
-from . import post
+from . import handler
 
 
 def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable, tasks: queue.Queue):
@@ -15,18 +14,22 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
     def __init__(self, *args, **kwargs):
 
 
-      self.api_get = {'crypto': get.crypto.Handler(),
-                      'hello': get.hello.Handler(),
-                      'name': get.name.Handler(),
-                      'logger': get.logger.Handler(),
-                      'inverter/modbus/holding/{address}': get.modbus.HoldingHandler()}
-      self.api_post = {'invertertcp': post.inverterTCP.Handler(),
-                       'inverterrtu': post.inverterRTU.Handler(),
-                       'wifi': post.wifi.Handler(),
-                       'initialize': post.initialize.Handler(),
-                       'logger': post.logger.Handler(),
-                       'inverter/modbus': post.modbus.Handler(),
-                       'logger': post.logger.Handler()}
+      self.api_get = {
+        'crypto': handler.get.crypto.Handler(),
+        'hello': handler.get.hello.Handler(),
+        'name': handler.get.name.Handler(),
+        'logger': handler.get.logger.Handler(),
+        'inverter/modbus/holding/{address}': handler.get.modbus.HoldingHandler(),
+        'inverter/modbus/input/{address}': handler.get.modbus.InputHandler()  # new endpoint
+      }
+      self.api_post = {
+        'invertertcp': handler.post.inverterTCP.Handler(),
+        'inverterrtu': handler.post.inverterRTU.Handler(),
+        'wifi': handler.post.wifi.Handler(),
+        'initialize': handler.post.initialize.Handler(),
+        'logger': handler.post.logger.Handler(),
+        'inverter/modbus': handler.post.modbus.Handler(),
+        'logger': handler.post.logger.Handler()}
 
       self.api_get = Handler.convert_keys_to_regex(self.api_get)
       self.api_post = Handler.convert_keys_to_regex(self.api_post)
@@ -100,7 +103,9 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       if handler is not None:
         post_data = Handler.getData(self.headers, self.rfile)
 
-        code, response = handler.doPost(post_data, params, stats, tasks)
+        rdata = handler.RequestData(stats, params, query, post_data, timeMSFunc, chipInfoFunc, tasks)
+
+        code, response = handler.doPost(rdata)
         self.sendApiResponse(code, response)
         return
       else:
@@ -113,8 +118,12 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       path, query = self.pre_do(self.path)
 
       handler, params = Handler.getAPIHandler(path, "/api/", self.api_get)
+      
+      rdata = handler.RequestData(stats, params, query, {}, timeMSFunc, chipInfoFunc, tasks)
+
+      
       if handler is not None:
-        code, response = handler.doGet(stats, params, timeMSFunc, chipInfoFunc)
+        code, response = handler.doGet(rdata)
         self.sendApiResponse(code, response)
       else:
         # check if we have a post handler
