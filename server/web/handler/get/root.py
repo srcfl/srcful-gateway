@@ -149,13 +149,14 @@ from ..handler import GetHandler
 from ..requestData import RequestData
 
 class Handler(GetHandler):
-  def doGet(self, request_data: RequestData):  
-    freqReads = request_data.stats['freqReads'] if 'freqReads' in request_data.stats else 0
-    energyHarvested = request_data.stats['harvest'] if 'harvest' in request_data.stats else 0
+  def doGet(self, request_data: RequestData):
+    stats = request_data.stats
+    freqReads = stats['freqReads'] if 'freqReads' in stats else 0
+    energyHarvested = stats['harvest'] if 'harvest' in stats else 0
     energyTransported = 0
-    if 'harvestTransports' in request_data.stats:
-      energyTransported = request_data.stats['harvestTransports']
-    startTime = request_data.stats['startTime']
+    if 'harvestTransports' in stats:
+      energyTransported = stats['harvestTransports']
+    startTime = stats['startTime']
 
     ret = "<html><head><title>Srcful Energy Gateway</title></head>"
     ret += "<body>"
@@ -181,7 +182,7 @@ class Handler(GetHandler):
     ret += f"<p>freqReads: {freqReads} in {elapsedTime} ms<br/>"
     ret += f"average freqReads: {freqReads / elapsedTime * 1000} per second</p>"
 
-    ret += f"last freq: {request_data.stats['lastFreq'] if 'lastFreq' in request_data.stats else 0} Hz</p>"
+    ret += f"last freq: {stats['lastFreq'] if 'lastFreq' in stats else 0} Hz</p>"
 
     ret += f"<p>energyHarvested: {energyHarvested} in {elapsedTime} ms</br>"
     ret += f"average energyHarvested: {energyHarvested / elapsedTime * 1000} per second</p>"
@@ -189,7 +190,7 @@ class Handler(GetHandler):
     ret += f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>"
     ret += f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>"
 
-    ret += f"ALL: {request_data.stats}</p>"
+    ret += f"ALL: {stats}</p>"
 
     ret += "</body></html>"
 

@@ -99,13 +99,13 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
     def do_POST(self):
       path, query = self.pre_do(self.path)
 
-      handler, params = Handler.getAPIHandler(path, "/api/", self.api_post)
-      if handler is not None:
+      api_handler, params = Handler.getAPIHandler(path, "/api/", self.api_post)
+      if api_handler is not None:
         post_data = Handler.getData(self.headers, self.rfile)
 
         rdata = handler.RequestData(stats, params, query, post_data, timeMSFunc, chipInfoFunc, tasks)
 
-        code, response = handler.doPost(rdata)
+        code, response = api_handler.doPost(rdata)
         self.sendApiResponse(code, response)
         return
       else:
@@ -117,22 +117,21 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
 
       path, query = self.pre_do(self.path)
 
-      handler, params = Handler.getAPIHandler(path, "/api/", self.api_get)
-      
+      api_handler, params = Handler.getAPIHandler(path, "/api/", self.api_get)
       rdata = handler.RequestData(stats, params, query, {}, timeMSFunc, chipInfoFunc, tasks)
-
       
-      if handler is not None:
-        code, response = handler.doGet(rdata)
+      
+      if api_handler is not None:
+        code, response = api_handler.doGet(rdata)
         self.sendApiResponse(code, response)
       else:
         # check if we have a post handler
-        handler, params = Handler.getAPIHandler(path, "/api/", self.api_post)
-        if handler is not None:
-          self.sendApiResponse(200, handler.jsonSchema())
+        api_handler, params = Handler.getAPIHandler(path, "/api/", self.api_post)
+        if api_handler is not None:
+          self.sendApiResponse(200, api_handler.jsonSchema())
           return
         else:
-          htlm = get.root.Handler().doGet(stats, timeMSFunc, chipInfoFunc)
+          htlm = handler.get.root.Handler().doGet(rdata)
           html_bytes = bytes(htlm, "utf-8")
 
           self.send_response(200)
