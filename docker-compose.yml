@@ -1,11 +1,10 @@
 version: "2"
 services:
-
   web:
     ports:
       - "80:5000"
     build: ./server
-    container_name: srcful-gw
+    container_name: eGW-web
     restart: always
     devices:
       - /dev/i2c-1
@@ -16,14 +15,32 @@ services:
 
   bluetooth:
     build: ./bluetooth
-    container_name: ble
+    container_name: eGW-ble
     privileged: true
     network_mode: host
     restart: always
     labels:
       io.balena.features.dbus: 1
-
     depends_on:
       - "web"
+
+  helium_gateway:
+    container_name: eGW-helium-miner
+    restart: always
+    build:
+      context: ./helium_miner
+      args:
+        - TARGETPLATFORM=linux/arm64
+        - BUILDPLATFORM=linux/amd64
+    environment:
+      - RUST_BACKTRACE=1
+      - GW_LISTEN=0.0.0.0:1680
+    ports:
+      - "1680:1680"
+    volumes:
+      - srcful-data:/data/srcful/helium_gateway
+    depends_on:
+      - "web"
+
 volumes:
   srcful-data:
