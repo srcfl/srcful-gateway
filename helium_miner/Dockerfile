@@ -26,7 +26,7 @@
 # Runs on native host architecture
 # Cross compiles for target architecture
 # ------------------------------------------------------------------------------
-FROM --platform=$BUILDPLATFORM rust:alpine3.17 AS cargo-build
+FROM --platform=linux/arm64 rust:alpine3.17 AS cargo-build
 RUN apk add --no-cache --update \
     clang15-libclang \
     cmake \
@@ -40,8 +40,8 @@ RUN apk add --no-cache --update \
 WORKDIR /tmp/helium_gateway
 COPY . .
 
-ARG BUILDPLATFORM
-ARG TARGETPLATFORM
+ARG BUILDPLATFORM=linux/amd64
+ARG TARGETPLATFORM=linux/arm64
 
 RUN \
 case "$BUILDPLATFORM $TARGETPLATFORM" in \
@@ -53,6 +53,12 @@ case "$BUILDPLATFORM $TARGETPLATFORM" in \
     "linux/amd64 linux/amd64") \
         echo > rust_target.txt ; \
         echo "--features=tpm" > cargo_flags.txt ; \
+        ;; \
+    "linux/arm64 linux/arm64") \
+        # Setup for ARM64 to ARM64 build
+        # If no special configuration is required, you can leave these commands simple.
+        echo > rust_target.txt ; \
+        echo > cargo_flags.txt ; \
         ;; \
     *) \
         exit 1 \

@@ -5,11 +5,11 @@
 ## can support it.
 
 # File based: 
-keypair = "/etc/helium_gateway/gateway_key.bin"
+# keypair = "/etc/helium_gateway/gateway_key.bin"
 
 # Ecc608 based:
-keypair = "ecc://i2c-1:96?slot=15&network=mainnet"
-onboarding = "ecc://i2c-1:96?slot=15"
+keypair = "ecc://i2c-1:96?slot=0&network=mainnet"
+onboarding = "ecc://i2c-1:96?slot=0"
 
 # The address to listen on for the (semtech) packet forwarder
 listen = "127.0.0.1:1680"
