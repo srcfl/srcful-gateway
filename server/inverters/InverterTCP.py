@@ -44,6 +44,9 @@ class InverterTCP(Inverter):
   def getAddress(self):
     return self.setup[3]
   
+  def getConfigDict(self):
+    return {"connection": "TCP", "type": self.getType(), "address": self.getAddress(), "host": self.getHost(), "port": self.getPort()}
+
   def getConfig(self):
     return ("TCP", self.getHost(), self.getPort(), self.getType(), self.getAddress())
 

@@ -87,3 +87,39 @@ def test_handler_getPostdata():
   data = b'{"name": "John&Doe", "age": 30, "location": "New York = Kalmar"}'
   assert h.getData({'Content-Length': len(data)}, BytesIO(data)
                    ) == {'name': 'John&Doe', 'age': 30, 'location': 'New York = Kalmar'}
+
+@patch.object(BaseHTTPRequestHandler, 'finish')
+@patch.object(BaseHTTPRequestHandler, 'handle')
+@patch.object(BaseHTTPRequestHandler, 'setup')
+def test_handler_get_root(mock_setup, mock_handle, mock_finish):
+  # test that the root handler is used when no other handler matches
+  h = requestHandlerFactory({"startTime": 7, "name":"dret"}, lambda: 10, lambda: "crypto dret", [])(None, None, None)
+
+  # we need to mock the base class methods
+  h.path = ""
+  h.send_response = lambda x: None
+  h.send_header = lambda x, y: None
+  h.end_headers = lambda: None
+  h.wfile = BytesIO()
+
+  h.do_GET()
+  v = h.wfile.getvalue().decode("utf-8")
+  assert "<html>" in v
+
+@patch.object(BaseHTTPRequestHandler, 'finish')
+@patch.object(BaseHTTPRequestHandler, 'handle')
+@patch.object(BaseHTTPRequestHandler, 'setup')
+def test_handler_get_doGet(mock_setup, mock_handle, mock_finish):
+  # check that all get handlers have a doGet method
+  h = requestHandlerFactory({"startTime": 7, "name":"dret"}, lambda: 10, lambda: "crypto dret", [])(None, None, None)
+  for handler in h.api_get.values():
+    assert hasattr(handler, 'doGet')
+
+@patch.object(BaseHTTPRequestHandler, 'finish')
+@patch.object(BaseHTTPRequestHandler, 'handle')
+@patch.object(BaseHTTPRequestHandler, 'setup')
+def test_handler_get_doPost(mock_setup, mock_handle, mock_finish):
+  # check that all post handlers have a doPost method
+  h = requestHandlerFactory({"startTime": 7, "name":"dret"}, lambda: 10, lambda: "crypto dret", [])(None, None, None)
+  for handler in h.api_post.values():
+    assert hasattr(handler, 'doPost')

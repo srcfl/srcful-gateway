@@ -15,21 +15,23 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
 
 
       self.api_get = {
-        'crypto': handler.get.crypto.Handler(),
-        'hello': handler.get.hello.Handler(),
-        'name': handler.get.name.Handler(),
-        'logger': handler.get.logger.Handler(),
-        'inverter/modbus/holding/{address}': handler.get.modbus.HoldingHandler(),
-        'inverter/modbus/input/{address}': handler.get.modbus.InputHandler()  # new endpoint
+        'crypto':                             handler.get.crypto.Handler(),
+        'hello':                              handler.get.hello.Handler(),
+        'name':                               handler.get.name.Handler(),
+        'logger':                             handler.get.logger.Handler(),
+        'inverter/modbus/holding/{address}':  handler.get.modbus.HoldingHandler(),
+        'inverter/modbus/input/{address}':    handler.get.modbus.InputHandler(),
+        'network':                            handler.get.network.Handler(),
       }
       self.api_post = {
-        'invertertcp': handler.post.inverterTCP.Handler(),
-        'inverterrtu': handler.post.inverterRTU.Handler(),
-        'wifi': handler.post.wifi.Handler(),
-        'initialize': handler.post.initialize.Handler(),
-        'logger': handler.post.logger.Handler(),
-        'inverter/modbus': handler.post.modbus.Handler(),
-        'logger': handler.post.logger.Handler()}
+        'invertertcp':      handler.post.inverterTCP.Handler(),
+        'inverterrtu':      handler.post.inverterRTU.Handler(),
+        'wifi':             handler.post.wifi.Handler(),
+        'initialize':       handler.post.initialize.Handler(),
+        'logger':           handler.post.logger.Handler(),
+        'inverter/modbus':  handler.post.modbus.Handler(),
+        'logger':           handler.post.logger.Handler(),
+        'echo':             handler.post.echo.Handler(),}
 
       self.api_get = Handler.convert_keys_to_regex(self.api_get)
       self.api_post = Handler.convert_keys_to_regex(self.api_post)

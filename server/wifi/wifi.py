@@ -9,6 +9,10 @@ except ImportError:
   logger.info("dbus not found - possibly on non linux platform")
   logger.info("wifi provisioning will not work")
 
+  def getConnectionConfigs():
+    config = {"connection": {"type": "802-11-wireless"}}
+    return [config]
+
   class WiFiHandler:
     def __init__(self, SSID, PSK):
       pass
@@ -20,6 +24,18 @@ except ImportError:
       pass
 
 else:
+
+  def getConnectionConfigs():
+    bus = dbus.SystemBus()
+    proxy = bus.get_object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings")
+    settings = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Settings")
+    ret = []
+    for conn in settings.ListConnections():
+      con_proxy = bus.get_object("org.freedesktop.NetworkManager", conn)
+      settings_connection = dbus.Interface(con_proxy, "org.freedesktop.NetworkManager.Settings.Connection")
+      config = settings_connection.GetSettings()
+      ret.append(config)
+    return ret
 
   class WiFiHandler:
 
