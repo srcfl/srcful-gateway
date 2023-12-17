@@ -1,8 +1,11 @@
 from server.inverters.InverterTCP import InverterTCP
 from server.inverters.InverterRTU import InverterRTU
 
-from server.web.post.inverterTCP import Handler as TCPHandler
-from server.web.post.inverterRTU import Handler as RTUHandler
+from server.web.handler.post.inverterTCP import Handler as TCPHandler
+from server.web.handler.post.inverterRTU import Handler as RTUHandler
+
+from server.web.handler.requestData import RequestData
+from server.tasks.openInverterTask import OpenInverterTask
 
 import queue
 
@@ -13,10 +16,18 @@ def test_post_create_InverterTCP():
             'address': 1}
     
     handler = TCPHandler()
+    q = queue.Queue()
+    rd = RequestData({'bootstrap':None}, {}, {}, conf, None, None, q)
 
-    handler.doPost(conf, None, queue.Queue())
+    handler.doPost(rd)
 
-    assert handler.inverter.getConfig()[1:] == (conf['ip'], conf['port'], conf['type'], conf['address'])
+    # check that the open inverter task was created
+    assert q.qsize() == 1
+    task = q.get_nowait()
+    assert isinstance(task, OpenInverterTask)
+    
+
+    assert task.inverter.getConfig()[1:] == (conf['ip'], conf['port'], conf['type'], conf['address'])
 
 
 def test_post_create_InverterRTU():
@@ -29,7 +40,15 @@ def test_post_create_InverterRTU():
             'address': 1}
     
     handler = RTUHandler()
+    # check that the open inverter task was created
+    q = queue.Queue()
+    
 
-    handler.doPost(conf, None, queue.Queue())
+    rd = RequestData({'bootstrap':None}, {}, {}, conf, None, None, q)
 
-    assert handler.inverter.getConfig()[1:] == (conf['port'], conf['baudrate'], conf['bytesize'], conf['parity'], conf['stopbits'], conf['type'], conf['address'])
+    handler.doPost(rd)
+    assert q.qsize() == 1
+    task = q.get_nowait()
+    assert isinstance(task, OpenInverterTask)
+
+    assert task.inverter.getConfig()[1:] == (conf['port'], conf['baudrate'], conf['bytesize'], conf['parity'], conf['stopbits'], conf['type'], conf['address'])

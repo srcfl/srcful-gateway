@@ -1,9 +1,9 @@
 import pytest
-import server.web.get.name as get_name
+import server.web.handler.get.name as get_name
 from unittest.mock import Mock, patch
 from server.tasks.getNameTask import GetNameTask
 
-@patch('server.web.get.name.GetNameTask')
+@patch('server.web.handler.get.name.GetNameTask')
 def test_get(mock_task):
 
   class MockTask:
@@ -22,11 +22,11 @@ def test_get(mock_task):
   mock_task.return_value = MockTask()
 
   handler = get_name.Handler()
-  code, jsonstr = handler.doGet({}, None, None)
+  code, jsonstr = handler.doGet(None)
   assert code == 200
   assert jsonstr == '{"name": "test_name"}'
 
-@patch('server.web.get.name.GetNameTask')
+@patch('server.web.handler.get.name.GetNameTask')
 def test_get_notfound(mock_task):
 
   class MockResponse:
@@ -49,6 +49,6 @@ def test_get_notfound(mock_task):
   mock_task.return_value = MockTask()
 
   handler = get_name.Handler()
-  code, jsonstr = handler.doGet({}, None, None)
+  code, jsonstr = handler.doGet(None)
   assert code == 404
   assert jsonstr == '{"body": "not found"}'

@@ -55,6 +55,9 @@ class InverterRTU(Inverter):
   def getAddress(self):
     return self.setup[6]
   
+  def getConfigDict(self):
+    return {"connection": "RTU", "type": self.getType(), "address": self.getAddress(), "host": self.getHost(), "baudrate": self.getBaudrate(), "bytesize": self.getBytesize(), "parity": self.getParity(), "stopbits": self.getStopbits()}
+  
   def getConfig(self):
     return ("RTU", self.getHost(), self.getBaudrate(), self.getBytesize(), self.getParity(), self.getStopbits(), self.getType(), self.getAddress())
 
