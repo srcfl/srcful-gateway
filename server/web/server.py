@@ -131,10 +131,10 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
           self.sendApiResponse(200, api_handler.jsonSchema())
           return
         else:
-          htlm = handler.get.root.Handler().doGet(rdata)
+          code, htlm = handler.get.root.Handler().doGet(rdata)
           html_bytes = bytes(htlm, "utf-8")
 
-          self.send_response(200)
+          self.send_response(code)
           self.send_header("Content-type", "text/html")
           self.send_header("Content-Length", len(html_bytes))
           self.end_headers()

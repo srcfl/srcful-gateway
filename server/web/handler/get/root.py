@@ -194,4 +194,4 @@ class Handler(GetHandler):
 
     ret += "</body></html>"
 
-    return ret
+    return 200, ret
