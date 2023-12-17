@@ -23,7 +23,7 @@ def initChip() -> bool:
   cfg = cfg_ateccx08a_i2c_default()
   cfg.cfg.atcai2c.bus = 1  # raspberry pi
   icfg = getattr(cfg.cfg, 'atcai2c')
-  setattr(icfg, "address", int('6a', 16))
+  setattr(icfg, "address", int('C0', 16))
 
   return atcab_init(cfg) == ATCA_SUCCESS
 
