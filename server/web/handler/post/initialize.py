@@ -20,8 +20,8 @@ class Handler(PostHandler):
                       })
 
   def doPost(self, request_data: RequestData):
-    if 'wallet' in request_data.post_data:
-      t = InitializeTask(0, {}, request_data.post_data['wallet'])
+    if 'wallet' in request_data.data:
+      t = InitializeTask(0, {}, request_data.data['wallet'])
       t.execute(0)
       t.t.join()
       t.execute(0)
