@@ -23,34 +23,6 @@ services:
       io.balena.features.dbus: 1
     depends_on:
       - "web"
-  
-  packet-forwarder:
-    container_name: packet-forwarder
-    build:
-      context: ./packet-forwarder
-    devices:
-      - /dev/i2c-1
-    privileged: true
-
-  gateway-rs:
-    container_name: gateway-rs
-    restart: always
-    build:
-      context: ./gateway-rs
-      args:
-        - TARGETPLATFORM=linux/arm64
-    environment:
-      - RUST_BACKTRACE=1
-      - GW_LISTEN=0.0.0.0:1680
-    devices:
-      - /dev/i2c-1
-    ports:
-      - "1680:1680"
-    volumes:
-      - srcful-data:/data/srcful/helium_gateway
-    depends_on:
-      - "web"
-      - "packet-forwarder"
 
 volumes:
   srcful-data:
