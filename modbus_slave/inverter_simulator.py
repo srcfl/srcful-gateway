@@ -42,7 +42,7 @@ class MyDataBank(DataBank):
 
       if operation == 0x03:
         for i in range(start, end):
-          v_regs_d[i] = random.randint(0, 250)
+          v_regs_d[i] = i
 
     print(v_regs_d)
 
@@ -68,7 +68,7 @@ class MyDataBank(DataBank):
 
       if operation == 0x04:
         for i in range(start, end):
-          v_regs_d[i] = random.randint(0, 250)
+          v_regs_d[i] = i
 
     print(v_regs_d)
 
