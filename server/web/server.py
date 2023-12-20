@@ -122,7 +122,6 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       api_handler, params = Handler.getAPIHandler(path, "/api/", self.api_get)
       rdata = handler.RequestData(stats, params, query, {}, timeMSFunc, chipInfoFunc, tasks)
       
-      
       if api_handler is not None:
         code, response = api_handler.doGet(rdata)
         self.sendApiResponse(code, response)

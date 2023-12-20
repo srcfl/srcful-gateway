@@ -8,6 +8,7 @@ Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps al
         * [Windows](#windows)
     * [client](#client)
     * [modbus_slave](#modbus_slave)
+  * [Rest API](#rest-api)
 * [Testing](#testing)
 * [Design](#design)
 * [Other](#other-1)
@@ -73,6 +74,8 @@ This is the directory that contains simulation servers of all inverters. This is
 
 Don't forget to change the inverter host to `localhost` in `app.py`
 
+## Rest API
+The rest API is documented in [api.md](api.md)
 
 # Testing
 We use the pytest testing framework for automated testing (https://docs.pytest.org/en/7.2.x/getting-started.html#get-started).
