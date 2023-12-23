@@ -1,7 +1,7 @@
 # Server 
 
 ## initilize 
-POST `localhost:8090/api/initialize`
+POST `localhost:8080/api/initialize`
 ```json
 {
   "wallet": "walletaddresswalletaddresswalletaddresswalletaddress"
@@ -11,7 +11,7 @@ POST `localhost:8090/api/initialize`
 
 ## logger 
 
-POST `localhost:8090/api/logger`
+POST `localhost:8080/api/logger`
 
 ```json
 {
@@ -53,7 +53,7 @@ POST `http://localhost:8080/api/inverterrtu`
 
 ## modbus 
 
-POST `http://localhost:8090/api/inverter/modbus`
+POST `http://localhost:8080/api/inverter/modbus`
 
 ```json
 {
@@ -71,12 +71,12 @@ POST `http://localhost:8090/api/inverter/modbus`
 }
 ```
 
-GET `http://localhost:8090/api/inverter/modbus/input/40000?type=float&size=4&endianess=big`
+GET `http://localhost:8080/api/inverter/modbus/input/40000?type=float&size=4&endianess=big`
 
 
 ## wifi 
 
-POST `http://localhost:8090/api/wifi`
+POST `http://localhost:8080/api/wifi`
 
 ```json
 {

@@ -23,18 +23,15 @@ INVERTERS = {
     ],
 
     GROWATT: [
-        # https://www.photovoltaicsolar.in/Growatt_Manual/MAX%20Series%20Modbus%20RTU%20Protocol.pdf
         {OPERATION: READ_INPUT, SCAN_START: 0, SCAN_RANGE: 92},
     ],
 
     SUNGROW: [
-        # https://drive.google.com/file/d/1R5o1pF0ZegdE0IDHUzrvMZVvdOITWMYr/view?usp=drive_link
         {OPERATION: READ_INPUT, SCAN_START: 4999, SCAN_RANGE: 110},
         {OPERATION: READ_INPUT, SCAN_START: 5112, SCAN_RANGE: 50},
     ],
 
     SUNGROW_HYBRID: [
-        # https://drive.google.com/file/d/1O-wIc7Avb3Kb4yOXhKSANcS2w58dSo9J/view?usp=drive_link
         {OPERATION: READ_INPUT, SCAN_START: 4999, SCAN_RANGE: 110},
         {OPERATION: READ_INPUT, SCAN_START: 5112, SCAN_RANGE: 50},
         {OPERATION: READ_INPUT, SCAN_START: 13000, SCAN_RANGE: 6},
@@ -42,17 +39,12 @@ INVERTERS = {
     ],
 
     SOLAREDGE: [
-        # https://knowledge-center.solaredge.com/sites/kc/files/sunspec-implementation-technical-note.pdf
-        # Common Model MODBUS Register Mappings
         {OPERATION: READ_HOLDING, SCAN_START: 40000, SCAN_RANGE: 61},
-        # Inverter Model MODBUS Register Mappings
         {OPERATION: READ_HOLDING, SCAN_START: 40069, SCAN_RANGE: 37},
-        # Multiple MPPT Inverter Extension Model
         {OPERATION: READ_HOLDING, SCAN_START: 40121, SCAN_RANGE: 70},
     ],
 
     HUAWEI: [
-        # https://javierin.com/wp-content/uploads/sites/2/2021/09/Solar-Inverter-Modbus-Interface-Definitions.pdf
         {OPERATION: READ_HOLDING, SCAN_START: 30000, SCAN_RANGE: 35},
         {OPERATION: READ_HOLDING, SCAN_START: 32064, SCAN_RANGE: 31}
 
@@ -84,7 +76,6 @@ INVERTERS = {
     ],
 
     LQT40S: [
-        # https://www.tillquist.com/en/power-automation/cos-phi-phase-angle/lqt400-configurable-multi-transducer-with-2-analogue-outputs-1-1-1-1-1
         {OPERATION: READ_INPUT, SCAN_START: 0, SCAN_RANGE: 2},
     ],
 }

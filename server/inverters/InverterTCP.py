@@ -89,7 +89,7 @@ class InverterTCP(Inverter):
       elif operation == 0x04:
         v = self.readInputRegisters(scan_start, scan_range)
       regs += r
-      vals += v.registers
+      vals += v
 
     # Zip the registers and values together convert them into a dictionary
     res = dict(zip(regs, vals))
@@ -108,29 +108,28 @@ class InverterTCP(Inverter):
     """
     Read a range of input registers from a start address
     """
-    v = self.client.read_input_registers(scan_start, scan_range, slave=self.getAddress())
+    resp = self.client.read_input_registers(scan_start, scan_range, slave=self.getAddress())
     log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
-    if isinstance(v, ExceptionResponse):
-      raise Exception("readInputRegisters() - ExceptionResponse: " + str(v))
-    return v
+    if isinstance(resp, ExceptionResponse):
+      raise Exception("readInputRegisters() - ExceptionResponse: " + str(resp))
+    return resp.registers
 
   def readHoldingRegisters(self, scan_start, scan_range):
     """
     Read a range of holding registers from a start address
     """
-    v = self.client.read_holding_registers(scan_start, scan_range, slave=self.getAddress())
+    resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.getAddress())
     log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
-    if isinstance(v, ExceptionResponse):
-      raise Exception("readHoldingRegisters() - ExceptionResponse: " + str(v))
-
-    return v
+    if isinstance(resp, ExceptionResponse):
+      raise Exception("readHoldingRegisters() - ExceptionResponse: " + str(resp))
+    return resp.registers
   
   def writeRegisters(self, starting_register, values):
     """
     Write a range of holding registers from a start address
     """
-    v = self.client.write_registers(starting_register, values, slave=self.getAddress())
+    resp = self.client.write_registers(starting_register, values, slave=self.getAddress())
     log.debug("OK - Writing Holdings: " + str(starting_register) + "-" + str(values))
-    if isinstance(v, ExceptionResponse):
-      raise Exception("writeRegisters() - ExceptionResponse: " + str(v))
-    return v
+    if isinstance(resp, ExceptionResponse):
+      raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
+    return resp

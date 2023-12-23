@@ -12,15 +12,16 @@ class RegisterHandler(GetHandler):
         if 'inverter' not in request_data.stats or request_data.stats['inverter'] is None:
             return 400, json.dumps({'error': 'inverter not initialized'})
 
-        registers = self.get_registers(request_data.stats['inverter'])
-
         raw_value = bytearray()
         address = int(request_data.post_params['address'])
         size = int(request_data.query_params.get('size', 1))
-        for i in range(size):
-            if address + i not in registers:
-                return 400, json.dumps({'error': 'invalid or incomplete address range'})
-            raw_value += registers[address + i]
+
+        registers = self.get_registers(request_data.stats['inverter'], address, size)
+
+        for register in registers:
+            b = register.to_bytes(2, 'big')
+            raw_value.append(b[0]) ## object register can't be interpreted as an int!!!?
+            raw_value.append(b[1])
 
         ret = {
             'register': address,
@@ -46,12 +47,9 @@ class RegisterHandler(GetHandler):
         if endianess not in ['big', 'little']:
             return 400, json.dumps({'error': 'Invalid endianess. endianess must be big or little'})
         
-        
-
         if data_type not in ['uint', 'int', 'float', 'ascii', 'utf16']:
             return 400, json.dumps({'error': 'Unknown datatype'})
 
-        
         if data_type == 'uint':
             value = int.from_bytes(raw_value, byteorder=endianess, signed=False)
         elif data_type == 'int':
@@ -75,9 +73,9 @@ class RegisterHandler(GetHandler):
         return 200, value
 
 class HoldingHandler(RegisterHandler):
-    def get_registers(self, inverter):
-        return inverter.readHoldingRegisters()
+    def get_registers(self, inverter, address, size):
+        return inverter.readHoldingRegisters(address, size)
 
 class InputHandler(RegisterHandler):
-    def get_registers(self, inverter):
-        return inverter.readInputRegisters()
+    def get_registers(self, inverter, address, size):
+        return inverter.readInputRegisters(address, size)
