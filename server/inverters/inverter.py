@@ -106,7 +106,7 @@ class Inverter:
         raise Exception("Unsupported datatype " + string)
   
   @staticmethod
-  def formatValue(raw:bytearray, type:RegisterType, endianess: RegisterEndianness):
+  def formatValue(raw:list, type:RegisterType, endianess: RegisterEndianness):
         
     value = None
 

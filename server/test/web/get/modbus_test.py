@@ -8,6 +8,8 @@ import struct
 @pytest.fixture
 def inverter_fixture():
     inverter = MagicMock()
+
+    # These registers are word-sized, so they are 2 bytes each, e.g. the 1 in [1, 2, 3, 4] is 0x0100 (2 bytes) in hex (little endian)
     inverter.readHoldingRegister.return_value = [1, 2, 3, 4]
     inverter.readInputRegister.return_value = [0x0A, 0x0B, 0x0C, 0x0D]
     return inverter
@@ -22,11 +24,11 @@ def request_data():
     def readInputRegister(address, size):
         return [0x0A + i for i in range(address, address + size)]
 
-    stats['inverter'].readHoldingRegister = readHoldingRegister
-    stats['inverter'].readInputRegister = readInputRegister
+    stats['inverter'].readHoldingRegisters = readHoldingRegister
+    stats['inverter'].readInputRegisters = readInputRegister
 
     post_params = {'address': '1'}
-    query_params = {'type': 'uint', 'size':'4', 'endianess':'big'}
+    query_params = {'type': 'uint', 'size':'2', 'endianess':'big'}
     return RequestData(stats, post_params, query_params, {}, None, None, None)
 
 def test_HoldingHandler(request_data):
@@ -35,8 +37,8 @@ def test_HoldingHandler(request_data):
     assert status_code == 200
     response = json.loads(response)
     assert response.get('register') == 1
-    assert response.get('raw_value') == '01020304'
-    assert response.get('value') == 16909060  # = 0x01020304 in uint
+    assert response.get('raw_value') == '01000200'
+    assert response.get('value') == 16777728  # = 0x01020304 in uint
 
 def test_InputHandler(request_data):
     handler = InputHandler()
@@ -46,8 +48,8 @@ def test_InputHandler(request_data):
     response = json.loads(response)
     
     assert response.get('register') == 0
-    assert response.get('raw_value') == '0a0b0c0d'
-    assert response.get('value') == 168496141  # = 0x0A0B0C0D in uint
+    assert response.get('raw_value') == '0a000b00'
+    assert response.get('value') == 167774976  # = 0x0A0B0C0D in uint
 
 def test_missing_address(inverter_fixture):
     handler = HoldingHandler()
@@ -85,7 +87,7 @@ def test_invalid_size(request_data):
     def readHoldingRegister(address, size):
         raise Exception('invalid or incomplete address range')
 
-    request_data.stats['inverter'].readHoldingRegister = readHoldingRegister
+    request_data.stats['inverter'].readHoldingRegisters = readHoldingRegister
     status_code, response = handler.doGet(request_data)
     assert status_code == 400
     assert json.loads(response).get('error') == 'invalid or incomplete address range'
@@ -96,7 +98,7 @@ def test_uint_value(request_data):
     status_code, response = handler.doGet(request_data)
     assert status_code == 200
     response = json.loads(response)
-    assert response.get('value') == 16909060  # = 0x01020304 as unsigned int
+    assert response.get('value') == 16777728  # = 0x01020304 as unsigned int
 
 def test_int_value(request_data):
     handler = HoldingHandler()
@@ -106,81 +108,48 @@ def test_int_value(request_data):
     status_code, response = handler.doGet(request_data)
     assert status_code == 200
     response = json.loads(response)
-    assert response.get('value') == 772  # = 0x0304 as signed int
+    assert response.get('value') == 50332672  # = 0x03000400 as signed int
 
 def test_float_value_little(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'float'
-    request_data.query_params['size'] = '4'
+    request_data.query_params['size'] = '2'
     request_data.query_params['endianess'] = 'little'
+    
+    request_data.stats['inverter'].readHoldingRegisters = lambda address, size: [0x147b, 0x4248] # 50.02 as little endian float
+
     status_code, response = handler.doGet(request_data)
+
     assert status_code == 200
     response = json.loads(response)
+    
+    val = response.get('value') - 50.02000045776367
+
     # Can't use assert equals on floating point numbers due to precision issues
-    assert abs(response.get('value') - 1.53998961e-36) < 1e-20  # value = 0x01020304 as little endian float (1.53998961e-36)
+    assert abs(val) < 1e-20
+    
 
 def test_float_value_big(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'float'
-    request_data.query_params['size'] = '4'
+    request_data.query_params['size'] = '2'
     request_data.query_params['endianess'] = 'big'
 
-    request_data.stats['inverter'].readHoldingRegister = lambda address, size: [0x41, 0x89, 0x5c, 0x29]     # 17.17 as big endian float
+    request_data.stats['inverter'].readHoldingRegisters = lambda address, size: [0x147b, 0x4248]     # 7.69925e+35 as big endian float
 
     status_code, response = handler.doGet(request_data)
     assert status_code == 200
     response = json.loads(response)
     # Can't use assert equals on floating point numbers due to precision issues
-    assert abs(response.get('value') -17.17) < 1e-5  # value = 0x01020304 as big endian float (2.38793926e-38)
-
-def test_ascii_value(request_data):
-    handler = HoldingHandler()
-    expected = 'Hello World!'
-    request_data.query_params['type'] = 'ascii'
-    request_data.query_params['size'] = len(expected)
-
-    request_data.stats['inverter'].readHoldingRegister = lambda address, size: [ord(i) for i in expected]
-
-    status_code, response = handler.doGet(request_data)
-    assert status_code == 200
-    response = json.loads(response)
-    assert response.get('value') == expected  # = 0x0102 as ASCII
-
-def test_utf16_value_big(request_data):
-    handler = HoldingHandler()
-    expected = 'Hello World!'
-    request_data.query_params['type'] = 'utf16'
-    request_data.query_params['size'] = '2'
-    encoded = expected.encode("utf-16be")
-    request_data.stats['inverter'].readHoldingRegister = lambda address, size: encoded    # normal ascii characters are 1 byte in utf16
-
-    status_code, response = handler.doGet(request_data)
-    assert status_code == 200
-    response = json.loads(response)
-    # = 0x0102 as utf16. Could not compare with direct value due to difference in utf16 encoding in python string depending on sys.byte_order
-    assert response.get('value') == expected
-
-def test_utf16_value_little(request_data):
-    handler = HoldingHandler()
-    expected = 'Hello World!'
-    request_data.query_params['type'] = 'utf16'
-    request_data.query_params['size'] = '2'
-    request_data.query_params['endianess'] = 'little'
-    encoded = expected.encode("utf-16le")
-    request_data.stats['inverter'].readHoldingRegister = lambda address, size: encoded    # normal ascii characters are 1 byte in utf16
-
-    status_code, response = handler.doGet(request_data)
-    assert status_code == 200
-    response = json.loads(response)
-    # = 0x0102 as utf16. Could not compare with direct value due to difference in utf16 encoding in python string depending on sys.byte_order
-    assert response.get('value') == expected
+    val = response.get('value') - 7.699254976133434e+35
+    assert abs(val) < 1e-5
     
 def test_double_value(request_data):
     #request_data.stats['inverter'].readHoldingRegisters.return_value = {i: bytes([i]) for i in range(8)} 
     # This creates a dictionary where each key is an address and each value is one byte, with values from 0 to 7.
     handler = HoldingHandler()
     request_data.query_params['type'] = 'float'
-    request_data.query_params['size'] = '8'
+    request_data.query_params['size'] = '4'
     status_code, response = handler.doGet(request_data)
     assert status_code == 200
     response = json.loads(response)

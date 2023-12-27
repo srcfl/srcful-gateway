@@ -21,11 +21,16 @@ class RegisterHandler(GetHandler):
         size = int(request_data.query_params.get('size', 1))
 
         try:
-            raw = self.get_registers(request_data.stats['inverter'], address, size)
-            # from what I understand the modbus stuff returns a list of bytes, so we need to convert it to a bytearray
-            raw = bytearray(raw)
+            registers = self.get_registers(request_data.stats['inverter'], address, size)
+
+            # Convert to bytes and keep the endianness of each register (word)
+            for register in registers:
+                byte_arr = register.to_bytes(2, 'little')
+                raw.extend(byte_arr)
+
             ret = {
                 'register': address,
+                'size': size,
                 'raw_value': raw.hex(),
             }
     
@@ -33,7 +38,8 @@ class RegisterHandler(GetHandler):
                 try:
                     
                     datatype = Inverter.RegisterType.from_str(request_data.query_params.get('type', 'uint'))
-                    endianness = Inverter.RegisterEndianness.from_str(request_data.query_params.get('endianess', 'big'))
+                    # Endianness, like other parameters, is device-specific. Consider breaking this out.
+                    endianness = Inverter.RegisterEndianness.from_str(request_data.query_params.get('endianess', 'little'))
                     value = Inverter.formatValue(raw, datatype, endianness)
                     ret['value'] = value 
                 except Exception as e:
@@ -49,8 +55,8 @@ class RegisterHandler(GetHandler):
 
 class HoldingHandler(RegisterHandler):
     def get_registers(self, inverter, address, size):
-        return inverter.readHoldingRegister(address, size)
+        return inverter.readHoldingRegisters(address, size)
 
 class InputHandler(RegisterHandler):
     def get_registers(self, inverter, address, size):
-        return inverter.readInputRegister(address, size)
+        return inverter.readInputRegisters(address, size)
