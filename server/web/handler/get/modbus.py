@@ -5,6 +5,10 @@ from ..handler import GetHandler
 
 from ..requestData import RequestData
 
+from server.inverters.inverter import Inverter
+
+# Example query: inverter/modbus/holding/40069?size=2&type=float&endianess=big
+
 class RegisterHandler(GetHandler):
     def doGet(self, request_data: RequestData):
         if 'address' not in request_data.post_params:
@@ -12,70 +16,41 @@ class RegisterHandler(GetHandler):
         if 'inverter' not in request_data.stats or request_data.stats['inverter'] is None:
             return 400, json.dumps({'error': 'inverter not initialized'})
 
-        raw_value = bytearray()
+        raw = bytearray()
         address = int(request_data.post_params['address'])
         size = int(request_data.query_params.get('size', 1))
 
-        registers = self.get_registers(request_data.stats['inverter'], address, size)
+        try:
+            raw = self.get_registers(request_data.stats['inverter'], address, size)
+            # from what I understand the modbus stuff returns a list of bytes, so we need to convert it to a bytearray
+            raw = bytearray(raw)
+            ret = {
+                'register': address,
+                'raw_value': raw.hex(),
+            }
+    
+            if len(request_data.query_params) > 0:
+                try:
+                    
+                    datatype = Inverter.RegisterType.from_str(request_data.query_params.get('type', 'uint'))
+                    endianness = Inverter.RegisterEndianness.from_str(request_data.query_params.get('endianess', 'big'))
+                    value = Inverter.formatValue(raw, datatype, endianness)
+                    ret['value'] = value 
+                except Exception as e:
+                    return 400, json.dumps({'error': str(e)})
 
-        for register in registers:
-            b = register.to_bytes(2, 'big')
-            raw_value.append(b[0]) ## object register can't be interpreted as an int!!!?
-            raw_value.append(b[1])
-
-        ret = {
-            'register': address,
-            'raw_value': raw_value.hex(),
-        }
- 
-        if len(request_data.query_params) > 0:
-            status_code, value = self.parse_params(raw_value, request_data.query_params)
-            if status_code != 200:
-                return status_code, value
-            ret['value'] = value    
-
-        return 200, json.dumps(ret)
+            return 200, json.dumps(ret)
+        except Exception as e:
+            return 400, json.dumps({'error': str(e)})
 
     def get_registers(self, inverter):
         raise NotImplementedError()
 
-    @staticmethod
-    def parse_params(raw_value, query_params):
-        data_type = query_params.get('type', 'uint')
-        endianess = query_params.get('endianess', 'big')
-        
-        if endianess not in ['big', 'little']:
-            return 400, json.dumps({'error': 'Invalid endianess. endianess must be big or little'})
-        
-        if data_type not in ['uint', 'int', 'float', 'ascii', 'utf16']:
-            return 400, json.dumps({'error': 'Unknown datatype'})
-
-        if data_type == 'uint':
-            value = int.from_bytes(raw_value, byteorder=endianess, signed=False)
-        elif data_type == 'int':
-            value = int.from_bytes(raw_value, byteorder=endianess, signed=True)
-        elif data_type == 'float':
-
-            if endianess == 'big':
-                endianess = '>'
-            if endianess != '>':
-                endianess = '<'
-
-            if len(raw_value) == 4:
-                value = struct.unpack(f'{endianess}f', raw_value)[0]
-            elif len(raw_value) == 8:
-                value = struct.unpack(f'{endianess}d', raw_value)[0]
-        elif data_type == 'ascii':
-            value = raw_value.decode('ascii')
-        elif data_type == 'utf16':
-            value = raw_value.decode('utf-16' + ('be' if endianess == 'big' else 'le'))
-
-        return 200, value
 
 class HoldingHandler(RegisterHandler):
     def get_registers(self, inverter, address, size):
-        return inverter.readHoldingRegisters(address, size)
+        return inverter.readHoldingRegister(address, size)
 
 class InputHandler(RegisterHandler):
     def get_registers(self, inverter, address, size):
-        return inverter.readInputRegisters(address, size)
+        return inverter.readInputRegister(address, size)
