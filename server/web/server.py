@@ -19,6 +19,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
         'hello':                              handler.get.hello.Handler(),
         'name':                               handler.get.name.Handler(),
         'logger':                             handler.get.logger.Handler(),
+        'inverter':                           handler.get.inverter.Handler(),
         'inverter/modbus/holding/{address}':  handler.get.modbus.HoldingHandler(),
         'inverter/modbus/input/{address}':    handler.get.modbus.InputHandler(),
         'network':                            handler.get.network.Handler(),

@@ -5,4 +5,5 @@ from . import logger
 from . import root
 from . import modbus
 from . import network
+from . import inverter
 
