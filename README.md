@@ -100,6 +100,13 @@ Integration in VSCode can be achieved by installing *Python Test Explorer for Vi
 }
 ```
 
+## Report test coverage
+To see overall test coverage you can run:
+```
+pytest --cov-report=html --cov=server server/test/
+```
+from the root folder. Then open `index.html` in `htmlcov` in any browser. 
+
 # Design
 The current design is task bases with a priority queue. The idea is that a task is scheduled to happen at a certain time. This allows for fine grained control and adjustment of task times/delays etc. The downside is that tasks cannot be blocking so IO operations typically need threading. Though this is rater easy to do and there are also some helper classes for common tasks that require threading.
 
