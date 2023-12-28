@@ -28,10 +28,6 @@ class Inverter:
     '''Opens the Modbus connection to the inverter.'''
     raise NotImplementedError("Subclass must implement abstract method")
 
-  def close(self):
-    '''Closes the Modbus connection to the inverter.'''
-    raise NotImplementedError("Subclass must implement abstract method")
-
   def getHost(self):
     '''Returns the inverter's host IP-address'''
     raise NotImplementedError("Subclass must implement abstract method")
@@ -48,24 +44,71 @@ class Inverter:
     '''Returns the inverter's address'''
     raise NotImplementedError("Subclass must implement abstract method")
 
-  def readHarvestData(self):
-    '''Reads the inverter's data.'''
-    raise NotImplementedError("Subclass must implement abstract method")
+  def close(self):
+    self.client.close()
 
-  def populateRegisters(self):
-    '''Populates the inverter's registers.'''
-    raise NotImplementedError("Subclass must implement abstract method")
- 
+  def readHarvestData(self):
+    if self.isTerminated():
+      raise Exception("readHarvestData() - inverter is terminated")
+    
+    regs = []
+    vals = []
+
+    for entry in self.registers:
+
+      operation = entry[OPERATION]
+      scan_start = entry[SCAN_START]
+      scan_range = entry[SCAN_RANGE]
+
+      r = self.populateRegisters(scan_start, scan_range)
+
+      if operation == 0x03:
+        v = self.readHoldingRegisters(scan_start, scan_range)
+      elif operation == 0x04:
+        v = self.readInputRegisters(scan_start, scan_range)
+      regs += r
+      vals += v
+
+    # Zip the registers and values together convert them into a dictionary
+    res = dict(zip(regs, vals))
+    if res:
+      return res
+    else:
+      raise Exception("readHarvestData() - res is empty")
+
+  def populateRegisters(self, scan_start, scan_range):
+    """
+    Populate a list of registers from a start address and a range
+    """
+    return [x for x in range(scan_start, scan_start + scan_range, 1)]
+
   def readInputRegisters(self, scan_start, scan_range):
-    '''Reads the inverter's input registers.'''
-    raise NotImplementedError("Subclass must implement abstract method")
+    """
+    Read a range of input registers from a start address
+    """
+    resp = self.client.read_input_registers(scan_start, scan_range, slave=self.getAddress())
+    log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
+    if isinstance(resp, ExceptionResponse):
+      raise Exception("readInputRegisters() - ExceptionResponse: " + str(resp))
+    return resp.registers
 
   def readHoldingRegisters(self, scan_start, scan_range):
-    '''Reads the inverter's holding registers.'''
-    raise NotImplementedError("Subclass must implement abstract method")
-
-  def writeRegisters(self, starting_register, values):
-    '''Writes the inverter's registers.'''
-    raise NotImplementedError("Subclass must implement abstract method")
+    """
+    Read a range of holding registers from a start address
+    """
+    resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.getAddress())
+    log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
+    if isinstance(resp, ExceptionResponse):
+      raise Exception("readHoldingRegisters() - ExceptionResponse: " + str(resp))
+    return resp.registers
   
+  def writeRegisters(self, starting_register, values):
+    """
+    Write a range of holding registers from a start address
+    """
+    resp = self.client.write_registers(starting_register, values, slave=self.getAddress())
+    log.debug("OK - Writing Holdings: " + str(starting_register) + "-" + str(values))
+    if isinstance(resp, ExceptionResponse):
+      raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
+    return resp
   
