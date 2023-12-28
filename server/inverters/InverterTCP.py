@@ -1,7 +1,7 @@
 from .inverter import Inverter
 from pymodbus.client import ModbusTcpClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
-from .inverter_types import INVERTERS, OPERATION, SCAN_RANGE, SCAN_START
+from .inverter_types import INVERTERS
 from typing_extensions import TypeAlias
 import logging
 import time

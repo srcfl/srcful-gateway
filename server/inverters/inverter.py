@@ -1,5 +1,9 @@
-import struct
 from enum import Enum
+from .inverter_types import OPERATION, SCAN_RANGE, SCAN_START
+import logging
+from pymodbus.pdu import ExceptionResponse
+
+log = logging.getLogger(__name__)
 
 class Inverter:
   '''Base class for all inverters.'''
@@ -86,7 +90,8 @@ class Inverter:
     """
     Read a range of input registers from a start address
     """
-    resp = self.client.read_input_registers(scan_start, scan_range, slave=self.getAddress())
+    slave = self.getAddress()
+    resp = self.client.read_input_registers(scan_start, scan_range, slave=slave)
     log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
     if isinstance(resp, ExceptionResponse):
       raise Exception("readInputRegisters() - ExceptionResponse: " + str(resp))
