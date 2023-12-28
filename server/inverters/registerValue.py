@@ -5,6 +5,19 @@ from enum import Enum
 
 class RegisterValue:
 
+    class RegisterType(Enum):
+        HOLDING = 'holding'
+        INPUT = 'input'
+
+        @classmethod
+        def from_str(cls, string):
+            if string == 'holding':
+                return cls.HOLDING
+            elif string == 'input':
+                return cls.INPUT
+            else:
+                raise Exception("Unsupported register type " + string)
+
     class Endianness(Enum):
         BIG = 'big'
         LITTLE = 'little'
@@ -24,6 +37,7 @@ class RegisterValue:
         FLOAT = 'float'
         ASCII = 'ascii'
         UTF16 = 'utf16'
+        NONE = 'none'
 
         @classmethod
         def from_str(cls, string):
@@ -37,19 +51,38 @@ class RegisterValue:
                 return cls.ASCII
             elif string == 'utf16':
                 return cls.UTF16
+            elif string == 'none' or string == 'raw' or string == '':
+                return cls.NONE
             else:
                 raise Exception("Unsupported datatype " + string)
 
 
-    def __init__(self, address, size, datatype:Type, endianness:Endianness):
+    def __init__(self, address, size, registerType:RegisterType, datatype:Type, endianness:Endianness):
         self.address = address
         self.size = size
         self.datatype = datatype
         self.endianness = endianness
+        self.regType = registerType
 
  
+    def readValue(self, inverter):
+        '''Reads the value of the register from the inverter'''
+        if self.regType == RegisterValue.RegisterType.HOLDING:
+            registers = inverter.readHoldingRegisters(self.address, self.size)
+        else:
+            registers = inverter.readInputRegisters(self.address, self.size)
+
+        # currently we convert the raw values that are word based to bytearray
+        self.raw = bytearray()
+        for register in registers:
+            byte_arr = register.to_bytes(2, 'little')
+            self.raw.extend(byte_arr)
+
+        if self.datatype != RegisterValue.Type.NONE:
+            return self.raw, self.getValue(self.raw)
+        return self.raw, None
     
-    def getValue(self, raw:list):
+    def getValue(self, raw:bytearray):
         '''Converts a list of bytes to a value based on the datatype and endianness of the register'''
         value = None
         endianess = self.endianness

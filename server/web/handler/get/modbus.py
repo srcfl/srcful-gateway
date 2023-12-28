@@ -5,7 +5,7 @@ from ..handler import GetHandler
 
 from ..requestData import RequestData
 
-from server.inverters.registeValue import RegisterValue
+from server.inverters.registerValue import RegisterValue
 
 # Example query: inverter/modbus/holding/40069?size=2&type=float&endianess=big
 
@@ -21,42 +21,31 @@ class RegisterHandler(GetHandler):
         size = int(request_data.query_params.get('size', 1))
 
         try:
-            registers = self.get_registers(request_data.stats['inverter'], address, size)
-
-            # Convert to bytes and keep the endianness of each register (word)
-            for register in registers:
-                byte_arr = register.to_bytes(2, 'little')
-                raw.extend(byte_arr)
+            datatype = RegisterValue.Type.from_str(request_data.query_params.get('type', 'none'))
+            endianness = RegisterValue.Endianness.from_str(request_data.query_params.get('endianess', 'little'))  
+            raw, value = RegisterValue(address, size, self.get_register_type(), datatype, endianness).readValue(request_data.stats['inverter'])
+            
 
             ret = {
                 'register': address,
                 'size': size,
                 'raw_value': raw.hex(),
             }
+            if value:
+                ret['value'] = value
     
-            if len(request_data.query_params) > 0:
-                try:
-                    
-                    datatype = RegisterValue.Type.from_str(request_data.query_params.get('type', 'uint'))
-                    # Endianness, like other parameters, is device-specific. Consider breaking this out.
-                    endianness = RegisterValue.Endianness.from_str(request_data.query_params.get('endianess', 'little'))
-                    value = RegisterValue(address, size, datatype, endianness).getValue(raw)
-                    ret['value'] = value 
-                except Exception as e:
-                    return 400, json.dumps({'error': str(e)})
-
             return 200, json.dumps(ret)
         except Exception as e:
             return 400, json.dumps({'error': str(e)})
 
-    def get_registers(self, inverter):
+    def get_register_type(self):
         raise NotImplementedError()
 
 
 class HoldingHandler(RegisterHandler):
-    def get_registers(self, inverter, address, size):
-        return inverter.readHoldingRegisters(address, size)
+    def get_register_type(self):
+        return RegisterValue.RegisterType.HOLDING
 
 class InputHandler(RegisterHandler):
-    def get_registers(self, inverter, address, size):
-        return inverter.readInputRegisters(address, size)
+    def get_register_type(self):
+        return RegisterValue.RegisterType.INPUT

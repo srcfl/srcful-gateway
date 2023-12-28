@@ -1,3 +1,6 @@
+import server.inverters.registerValue as RegisterValue
+import server.inverters.inverter as Inverter
+
 class ModbusLiveLogTask(Task):
 
     def __init__(self, inverter, frequency, registers, size):
@@ -23,7 +26,12 @@ class ModbusLiveLogTask(Task):
         self.time = eventTime + 1.0 / self.frequency
         return self
     
-    def _readRegister(self, register):
+    def _readRegister(self, inverter:Inverter, register:RegisterValue):
        
-       if register['type'] == 'holding':
-        pass    
+        if register.getRegisterType() == RegisterValue.RegisterType.HOLDING:
+            raw = inverter.readHoldingRegister(register.getAddress(), register.getSize())
+        else:
+            raw = inverter.readInputRegister(register.getAddress(), register.getSize())
+
+        
+        
