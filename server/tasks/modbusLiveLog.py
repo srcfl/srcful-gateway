@@ -24,5 +24,6 @@ class ModbusLiveLogTask(Task):
         return self
     
     def _readRegister(self, register):
+       
        if register['type'] == 'holding':
-           return self.inverter.readFormatedHoldingRegister(register['address'], register['size'], register['endianess'])
+        pass    

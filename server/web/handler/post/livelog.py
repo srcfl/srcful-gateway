@@ -16,7 +16,7 @@ class Handler:
                 'description': 'creates a new live log object',
                 'required': {'frequency': 'how many samples per second',
                             'size': 'the size of the logging buffer, the buffer is circular so if the buffer is full the oldest data is overwritten',
-                            'registers': 'a list of registers to log, each register is a dictionary with the following type: holding/input, keys: address, size, type, endianess',},
+                            'registers': 'a list of registers to log, each register is a dictionary with the following register: holding/input, keys: address, size, type, endianess',},
                 'returns': {'object': 'a unique identifier for the live log object'}
                 }
   

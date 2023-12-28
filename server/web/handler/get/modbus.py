@@ -5,7 +5,7 @@ from ..handler import GetHandler
 
 from ..requestData import RequestData
 
-from server.inverters.inverter import Inverter
+from server.inverters.registeValue import RegisterValue
 
 # Example query: inverter/modbus/holding/40069?size=2&type=float&endianess=big
 
@@ -37,10 +37,10 @@ class RegisterHandler(GetHandler):
             if len(request_data.query_params) > 0:
                 try:
                     
-                    datatype = Inverter.RegisterType.from_str(request_data.query_params.get('type', 'uint'))
+                    datatype = RegisterValue.Type.from_str(request_data.query_params.get('type', 'uint'))
                     # Endianness, like other parameters, is device-specific. Consider breaking this out.
-                    endianness = Inverter.RegisterEndianness.from_str(request_data.query_params.get('endianess', 'little'))
-                    value = Inverter.formatValue(raw, datatype, endianness)
+                    endianness = RegisterValue.Endianness.from_str(request_data.query_params.get('endianess', 'little'))
+                    value = RegisterValue(address, size, datatype, endianness).getValue(raw)
                     ret['value'] = value 
                 except Exception as e:
                     return 400, json.dumps({'error': str(e)})
