@@ -4,6 +4,8 @@ import queue
 import json
 import logging
 
+import server.inverters.registerValue as RegisterValue
+
 
 from ..requestData import RequestData
 
@@ -31,19 +33,17 @@ class Handler:
             inverter = request_data.stats['inverter']
             if inverter.isOpen():
                 # create a new live log object
-                live_log = inverter.createLiveLog(request_data.data['frequency'], request_data.data['size'])
-                # add the registers to the live log object
+                registerValues = []
                 for register in request_data.data['registers']:
-                    live_log.addRegister(register['address'], register['size'], register['type'], register['endianess'])
-                # start the live log
-                live_log.start()
-                # add the live log to the inverter
-                inverter.addLiveLog(live_log)
-                # return the live log object id
-                return 200, json.dumps({'object': live_log.id})
-            
-            
-        
+                    try:
+                        registerType = RegisterValue.RegisterType.from_str(register['register'])
+                        dataType = RegisterValue.Type.from_str(register['type'])
+                        endianess = RegisterValue.Endianness.from_str(register['endianess'])
+                        registerValues.append(RegisterValue(register['address'], register['size'], registerType, dataType, endianess))
+                    except Exception as e:
+                        return 400, json.dumps({'error': str(e)})
+            else:
+                return 400, json.dumps({'error': 'inverter not open'})
         else:
             # return a bad request and append the json schema 
-            return 400, json.dumps({'status': 'bad request', 'schema': self.jsonDict()}
+            return 400, json.dumps({'status': 'bad request', 'schema': self.jsonDict()})

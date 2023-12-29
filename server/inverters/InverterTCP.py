@@ -53,17 +53,7 @@ class InverterTCP(Inverter):
   def isOpen(self):
     return self.inverterIsOpen
 
-  def open(self):
-    if not self.isTerminated():
-      self.client = ModbusClient(host=self.getHost(), port=self.getPort(), unit_id=self.getAddress())
-      if self.client.connect():
-        self.inverterIsOpen = True
-        return self.inverterIsOpen
-      else:
-        self.terminate()
-        self.inverterIsOpen = False
-        return self.inverterIsOpen
-    else:
-      return False
+  def _createClient(self):
+      return ModbusClient(host=self.getHost(), port=self.getPort(), unit_id=self.getAddress())
 
  

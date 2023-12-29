@@ -28,7 +28,7 @@ def test_inverterTerminated():
   assert mockInverter.close.call_count == 1 
   assert mockInverter.open.call_count == 0
 
-  t.inverter.is_socket_open.return_value = False
+  t.inverter.isOpen.return_value = False
 
   t.execute(17)
 
@@ -219,7 +219,7 @@ def test_executeHarvest_incrementalBackoff_reconnectOnMax():
   ret = t.execute(17)
   assert ret is t
 
-  t.inverter.is_socket_open.return_value = False
+  t.inverter.isOpen.return_value = False
 
   t.execute(17)
 

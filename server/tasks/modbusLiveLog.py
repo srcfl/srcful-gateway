@@ -20,18 +20,15 @@ class ModbusLiveLogTask(Task):
         try:
             self.buffer[self.currentIx][0] = eventTime
             for i, register in enumerate(self.registers):
-                self.buffer[self.currentIx][i + 1] = self._readRegister(register)
+
+                self.buffer[self.currentIx][i + 1] = register.readValue(self.inverter)[1]
             
             self.currentIx = (self.currentIx + 1) % self.size
+        except Exception as e:
+            self.buffer[self.currentIx][1] = 'Error: ' + str(e)
+            
         self.time = eventTime + 1.0 / self.frequency
         return self
-    
-    def _readRegister(self, inverter:Inverter, register:RegisterValue):
-       
-        if register.getRegisterType() == RegisterValue.RegisterType.HOLDING:
-            raw = inverter.readHoldingRegister(register.getAddress(), register.getSize())
-        else:
-            raw = inverter.readInputRegister(register.getAddress(), register.getSize())
 
         
         

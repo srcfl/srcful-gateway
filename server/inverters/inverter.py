@@ -9,7 +9,8 @@ class Inverter:
   '''Base class for all inverters.'''
 
   def __init__(self):
-    self._isTerminated = False
+    self._isTerminated = False  # this means the inverter is marked for removal
+    self.inverterIsOpen = False
     pass
 
   def terminate(self):
@@ -28,8 +29,24 @@ class Inverter:
     '''Returns the inverter's setup as a dictionary.'''
     raise NotImplementedError("Subclass must implement abstract method")
 
+  def isOpen(self) -> bool:
+    return self.inverterIsOpen
+
   def open(self) -> bool:
     '''Opens the Modbus connection to the inverter.'''
+    if not self.isTerminated():
+      self.client = self._createClient()
+      if self.client.connect():
+        self.inverterIsOpen = True
+      else:
+        self.terminate()
+        self.inverterIsOpen = False
+      return self.inverterIsOpen
+    else:
+      return False
+  
+  def _createClient(self):
+    '''Creates the Modbus client.'''
     raise NotImplementedError("Subclass must implement abstract method")
 
   def getHost(self):

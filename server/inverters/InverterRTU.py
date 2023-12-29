@@ -61,20 +61,12 @@ class InverterRTU(Inverter):
   def getConfig(self):
     return ("RTU", self.getHost(), self.getBaudrate(), self.getBytesize(), self.getParity(), self.getStopbits(), self.getType(), self.getAddress())
 
-  def open(self):
-    if not self.isTerminated():
-      log.info("Opening RTU inverter with config: %s" % str(self.getConfig()))
-      self.client = ModbusClient(method='rtu', 
+  def _createClient(self):
+      log.info("Creating RTU inverter with config: %s" % str(self.getConfig()))
+      return ModbusClient(method='rtu', 
                                  port=self.getHost(), 
                                  baudrate=self.getBaudrate(), 
                                  bytesize=self.getBytesize(), 
                                  parity=self.getParity(), 
                                  stopbits=self.getStopbits(), 
                                  timeout=.1)
-      if self.client.connect():
-        return True
-      else:
-        self.terminate()
-        return False
-    else:
-      return False

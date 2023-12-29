@@ -38,7 +38,7 @@ class Harvest(Task):
 
       if self.backoff_time == self.max_backoff_time:
         log.info('Max backoff time reached, trying to close and reopen inverter at: %s:%s', self.inverter.getAddress(), self.inverter.getPort())
-        if self.inverter.is_socket_open():
+        if self.inverter.isOpen():
           self.inverter.close()
         else:
           self.inverter.open()
