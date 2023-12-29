@@ -31,7 +31,7 @@ class RegisterHandler(GetHandler):
                 'size': size,
                 'raw_value': raw.hex(),
             }
-            if value:
+            if value != None:
                 ret['value'] = value
     
             return 200, json.dumps(ret)
