@@ -80,7 +80,7 @@ def test_network():
     assert len(j['connections']) > 0
 
 def test_modbus_raw():
-    url = settings.api_url + "modbus/40000?size=2"
+    url = settings.api_url + "inverter/modbus/holding/40000?size=2"
 
     headers = {'user-agent': 'vscode-restclient'}
 
