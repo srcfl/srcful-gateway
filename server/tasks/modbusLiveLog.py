@@ -26,9 +26,6 @@ class ModbusLiveLogTask(Task):
             self.currentIx = (self.currentIx + 1) % self.size
         except Exception as e:
             self.buffer[self.currentIx][1] = 'Error: ' + str(e)
-            
+
         self.time = eventTime + 1.0 / self.frequency
         return self
-
-        
-        
