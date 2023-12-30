@@ -24,6 +24,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
         'inverter/modbus/input/{address}':    handler.get.modbus.InputHandler(),
         'network':                            handler.get.network.Handler(),
       }
+
       self.api_post = {
         'invertertcp':      handler.post.inverterTCP.Handler(),
         'inverterrtu':      handler.post.inverterRTU.Handler(),
@@ -33,9 +34,14 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
         'inverter/modbus':  handler.post.modbus.Handler(),
         'logger':           handler.post.logger.Handler(),
         'echo':             handler.post.echo.Handler(),}
+      
+      self.api_delete = {
+        'inverter':           handler.delete.inverter.Handler(),
+      }
 
       self.api_get = Handler.convert_keys_to_regex(self.api_get)
       self.api_post = Handler.convert_keys_to_regex(self.api_post)
+      self.api_delete = Handler.convert_keys_to_regex(self.api_delete)
       self.tasks = tasks
       super(Handler, self).__init__(*args, **kwargs)
 
@@ -70,6 +76,8 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
 
     @staticmethod
     def getData(headers: dict, rfile):
+      if 'Content-Length' not in headers:
+        return {}
       content_length = int(headers['Content-Length'])
       content = rfile.read(content_length).decode("utf-8")
 
@@ -142,6 +150,23 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
           self.end_headers()
 
           self.wfile.write(html_bytes)
+
+    def do_DELETE(self):
+      path, query = self.pre_do(self.path)
+
+      api_handler, params = Handler.getAPIHandler(path, "/api/", self.api_delete)
+      if api_handler is not None:
+        post_data = Handler.getData(self.headers, self.rfile)
+
+        rdata = handler.RequestData(stats, params, query, post_data, timeMSFunc, chipInfoFunc, tasks)
+
+        code, response = api_handler.doDelete(rdata)
+        self.sendApiResponse(code, response)
+        return
+      else:
+        self.send_response(404)
+        self.end_headers()
+        return
 
   return Handler
 

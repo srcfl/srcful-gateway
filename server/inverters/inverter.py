@@ -9,7 +9,7 @@ class Inverter:
   '''Base class for all inverters.'''
 
   def __init__(self):
-    self._isTerminated = False  # this means the inverter is marked for removal
+    self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
     self.inverterIsOpen = False
     pass
 

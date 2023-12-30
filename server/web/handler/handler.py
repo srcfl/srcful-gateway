@@ -7,3 +7,7 @@ class PostHandler:
 class GetHandler:
     def doGet(self, data: RequestData):
         raise NotImplementedError("doGet not implemented")
+    
+class DeleteHandler:
+    def doDelete(self, data: RequestData):
+        raise NotImplementedError("doDelete not implemented")

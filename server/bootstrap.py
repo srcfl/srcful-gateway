@@ -43,8 +43,7 @@ class Bootstrap(BootstrapSaver):
     self._createFileIfNotExists()
 
     # check if the setup already exists
-    for task in self.tasks:
-      
+    for task in self.getTasks(0, None):
       if isinstance(task, OpenInverterTask) and task.inverter.getConfig() == inverterArgs:
         return
     
@@ -52,11 +51,6 @@ class Bootstrap(BootstrapSaver):
     with open(self.filename, "w") as f:
       logger.info('Writing (w) inverter to bootstrap file: {}'.format(inverterArgs))
       f.write('OpenInverter {}\n'.format(" ".join(str(i) for i in inverterArgs)))
-
-      if inverterArgs[0] == 'TCP':
-        self.tasks.append(OpenInverterTask(0, {}, InverterTCP(inverterArgs[1:]), self))
-      elif inverterArgs[0] == 'RTU':
-        self.tasks.append(OpenInverterTask(0, {}, InverterRTU(inverterArgs[1:]), self))
 
   def getTasks(self, eventTime, stats):
     self.tasks = []
