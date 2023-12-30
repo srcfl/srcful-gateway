@@ -1,13 +1,15 @@
 import requests
+import settings
 
 # these tests are meant to be run against the local server
+# you would also need an inverter (or the simulator) running
 
 
-api_url = "http://localhost:5000/api/"
+
 
 def test_get_hello():
 
-    url = api_url + "hello"
+    url = settings.api_url + "hello"
 
     headers = {'user-agent': 'vscode-restclient'}
 
