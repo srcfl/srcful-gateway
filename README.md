@@ -67,13 +67,6 @@ This is a simple test client that you can run locally. You would need to start a
 
 The client is not to be deployed to the gateway and is just a test for now. The real client should be on the `srcful` domain.
 
-### modbus_slave
-This is the directory that contains simulation servers of all inverters. This is started with docker-compose-no_crypt or you can start it locally using pythion (this seems painfully slow on windows for some reason). Alternativealy you run the docker container (create it with `docker-compose build` first):
-
-`docker run -p 502:502 sourcefulgateway_inverter`
-
-Don't forget to change the inverter host to `localhost` in `app.py`
-
 ## Rest API
 The rest API is documented in [api.md](api.md)
 
@@ -81,7 +74,7 @@ The rest API is documented in [api.md](api.md)
 We use the pytest testing framework for automated testing (https://docs.pytest.org/en/7.2.x/getting-started.html#get-started).
 
 Test modules are placed under `/test` and mirror the structure of the main project. Tests are executed by running:  
-`pytest`
+`pytest server`
 
 Integration in VSCode can be achieved by installing *Python Test Explorer for Visual Studio Code* add the following to your `./vscode/launch.json` configuration to enable *debugging* of tests.
 
@@ -106,6 +99,25 @@ To see overall test coverage you can run:
 pytest --cov-report=html --cov=server server/test/
 ```
 from the root folder. Then open `index.html` in `htmlcov` in any browser. 
+
+## REST api integration tests
+Automatic integration testing of the REST endpoints can also be done using pytest. However this is more involved as it requires a running server, and an inverter. This can be done either locally or on a rpi.  
+
+Tests are located in a separate folder `server_rest_test`
+
+run with `pytset server_rest_test` or in vscode provided the folder is added to the `.vscode/settings.json`
+
+```json
+{
+  "python.testing.pytestArgs": [
+    "server",
+    "server_rest_test"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.formatting.provider": "none"
+}
+```
 
 # Design
 The current design is task bases with a priority queue. The idea is that a task is scheduled to happen at a certain time. This allows for fine grained control and adjustment of task times/delays etc. The downside is that tasks cannot be blocking so IO operations typically need threading. Though this is rater easy to do and there are also some helper classes for common tasks that require threading.
