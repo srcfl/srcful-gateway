@@ -37,8 +37,8 @@ def test_HoldingHandler(request_data):
     assert status_code == 200
     response = json.loads(response)
     assert response.get('register') == 1
-    assert response.get('raw_value') == '01000200'
-    assert response.get('value') == 16777728  # = 0x01020304 in uint
+    assert response.get('raw_value') == '00010002'
+    assert response.get('value') == 65538  # = 0x00010002 in uint
 
 def test_InputHandler(request_data):
     handler = InputHandler()
@@ -48,8 +48,8 @@ def test_InputHandler(request_data):
     response = json.loads(response)
     
     assert response.get('register') == 0
-    assert response.get('raw_value') == '0a000b00'
-    assert response.get('value') == 167774976  # = 0x0A0B0C0D in uint
+    assert response.get('raw_value') == '000a000b'
+    assert response.get('value') == 655371 # = 0x000a000b in uint
 
 def test_missing_address(inverter_fixture):
     handler = HoldingHandler()
@@ -98,7 +98,7 @@ def test_uint_value(request_data):
     status_code, response = handler.doGet(request_data)
     assert status_code == 200
     response = json.loads(response)
-    assert response.get('value') == 16777728  # = 0x01020304 as unsigned int
+    assert response.get('value') == 65538  # = 0x00010002 in uint
 
 def test_int_value(request_data):
     handler = HoldingHandler()
@@ -108,7 +108,7 @@ def test_int_value(request_data):
     status_code, response = handler.doGet(request_data)
     assert status_code == 200
     response = json.loads(response)
-    assert response.get('value') == 50332672  # = 0x03000400 as signed int
+    assert response.get('value') == 196612  # = 0x00030004 as signed int
 
 def test_float_value_little(request_data):
     handler = HoldingHandler()
@@ -123,7 +123,7 @@ def test_float_value_little(request_data):
     assert status_code == 200
     response = json.loads(response)
     
-    val = response.get('value') - 50.02000045776367
+    val = response.get('value') - 199148.3125
 
     # Can't use assert equals on floating point numbers due to precision issues
     assert abs(val) < 1e-20
@@ -141,7 +141,7 @@ def test_float_value_big(request_data):
     assert status_code == 200
     response = json.loads(response)
     # Can't use assert equals on floating point numbers due to precision issues
-    val = response.get('value') - 7.699254976133434e+35
+    val = response.get('value') - 1.2685333253188879e-26
     assert abs(val) < 1e-5
     
 def test_double_value(request_data):
