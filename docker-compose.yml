@@ -22,8 +22,9 @@ services:
     restart: always
     labels:
       io.balena.features.dbus: 1
-
-    depends_on:
-      - "web"
+      io.balena.features.kernel-modules: 1
+      io.balena.features.sysfs: 1
+#    depends_on:
+#      - "web"
 volumes:
   srcful-data:
