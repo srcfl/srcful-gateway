@@ -23,6 +23,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
         'inverter/modbus/holding/{address}':  handler.get.modbus.HoldingHandler(),
         'inverter/modbus/input/{address}':    handler.get.modbus.InputHandler(),
         'network':                            handler.get.network.Handler(),
+        'uptime':                             handler.get.uptime.Handler(),
       }
 
       self.api_post = {

@@ -160,7 +160,7 @@ class Handler(GetHandler):
 
     ret = "<html><head><title>Srcful Energy Gateway</title></head>"
     ret += "<body>"
-    ret += "<h1>Srcful Energy Gateway 0.0.5</h1>"
+    ret += "<h1>Srcful Energy Gateway 0.0.6</h1>"
     ret += f"<h2>{stats['name']}</h2>"
 
     ret += f"<p>chipInfo: {request_data.chipInfoFunc()}</p>"

@@ -17,6 +17,19 @@ def test_hello():
     assert response.headers['content-type'] == 'application/json'
     assert response.json()['message'] == 'hello world from srcful!'
 
+def test_uptime():
+    
+        url = settings.api_url + "uptime"
+    
+        headers = {'user-agent': 'vscode-restclient'}
+    
+        response = requests.request("GET", url, headers=headers)
+    
+        assert response.status_code == 200
+        assert response.headers['content-type'] == 'application/json'
+        assert response.json()['msek'] > 0
+
+
 def test_name():
 
     url = settings.api_url + "name"
