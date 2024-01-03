@@ -7,7 +7,7 @@ from ..requestData import RequestData
 
 class Handler:
 
-  def jsonDict(self):
+  def schema(self):
     return {'type': 'post',
             'description': 'set the log level of a logger',
             'required': {'logger': 'string, name of logger i.e. server.web.server',
@@ -16,7 +16,7 @@ class Handler:
             }
   
   def jsonSchema(self):
-    return json.dumps(self.jsonDict())
+    return json.dumps(self.schema())
 
   def doPost(self, request_data:RequestData):
     if 'logger' in request_data.data and 'level' in request_data.data:
@@ -37,4 +37,4 @@ class Handler:
       
     else:
       # return a bad request and append the json schema 
-      return 400, json.dumps({'status': 'bad request', 'schema': self.jsonDict()})
+      return 400, json.dumps({'status': 'bad request', 'schema': self.schema()})

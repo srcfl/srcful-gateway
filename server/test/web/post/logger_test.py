@@ -43,4 +43,4 @@ def test_post_no_logger():
     request_data = RequestData({}, {}, {}, obj, None, None, None)
     result = handler.doPost(request_data)
     assert result[0] == 400
-    assert result[1] == json.dumps({'status': 'bad request', 'schema': handler.jsonDict()})
+    assert result[1] == json.dumps({'status': 'bad request', 'schema': handler.schema()})

@@ -11,8 +11,8 @@ from ..requestData import RequestData
 
 class Handler(PostHandler):
 
-  def jsonSchema(self):
-    return json.dumps({ 'type': 'post',
+  def schema(self):
+    return { 'type': 'post',
                         'description': 'open an inverter',
                         'required': {'ip': 'string, ip address of the inverter',
                                      'port': 'int, port of the inverter',
@@ -20,7 +20,9 @@ class Handler(PostHandler):
                                      'address': 'int, address of the inverter'},
                         'returns': {'status': 'string, ok or error',
                                     'message': 'string, error message'}
-                      })
+                      }
+  def jsonSchema(self):
+    return json.dumps(self.schema())
 
   def doPost(self, request_data:RequestData) -> tuple[int, str]:
     if 'ip' in request_data.data and 'port' in request_data.data and 'type' in request_data.data:

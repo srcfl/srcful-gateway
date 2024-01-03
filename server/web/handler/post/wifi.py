@@ -12,14 +12,16 @@ from ..requestData import RequestData
 
 class Handler(PostHandler):
 
-  def jsonSchema(self):
-    return json.dumps({ 'type': 'post',
+  def schema(self):
+    return { 'type': 'post',
                         'description': 'open a wifi connection',
                         'required': {'ssid': 'string, ssid of the wifi',
                                      'psk': 'string, password of the wifi'},
                         'returns': {'status': 'string, ok or error',
                                     'message': 'string, error message'}
-                      })
+                      }
+  def jsonSchema(self):
+    return json.dumps(self.schema())
 
   def doPost(self, request_data:RequestData) -> tuple[int, str]:
     if 'ssid' in request_data.data and 'psk' in request_data.data:

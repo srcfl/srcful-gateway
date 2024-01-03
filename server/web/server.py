@@ -14,7 +14,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
     def __init__(self, *args, **kwargs):
 
 
-      self.api_get = {
+      self.api_get_dict = {
         'crypto':                             handler.get.crypto.Handler(),
         'hello':                              handler.get.hello.Handler(),
         'name':                               handler.get.name.Handler(),
@@ -26,7 +26,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
         'uptime':                             handler.get.uptime.Handler(),
       }
 
-      self.api_post = {
+      self.api_post_dict = {
         'invertertcp':      handler.post.inverterTCP.Handler(),
         'inverterrtu':      handler.post.inverterRTU.Handler(),
         'wifi':             handler.post.wifi.Handler(),
@@ -36,13 +36,13 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
         'logger':           handler.post.logger.Handler(),
         'echo':             handler.post.echo.Handler(),}
       
-      self.api_delete = {
+      self.api_delete_dict = {
         'inverter':           handler.delete.inverter.Handler(),
       }
 
-      self.api_get = Handler.convert_keys_to_regex(self.api_get)
-      self.api_post = Handler.convert_keys_to_regex(self.api_post)
-      self.api_delete = Handler.convert_keys_to_regex(self.api_delete)
+      self.api_get = Handler.convert_keys_to_regex(self.api_get_dict)
+      self.api_post = Handler.convert_keys_to_regex(self.api_post_dict)
+      self.api_delete = Handler.convert_keys_to_regex(self.api_delete_dict)
       self.tasks = tasks
       super(Handler, self).__init__(*args, **kwargs)
 
@@ -129,6 +129,11 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
 
       path, query = self.pre_do(self.path)
 
+      if path.startswith("/doc/") or path.endswith("/doc"):
+        schema = self.getDoc(path[4:])
+        self.sendApiResponse(200, schema)
+        return
+
       api_handler, params = Handler.getAPIHandler(path, "/api/", self.api_get)
       rdata = handler.RequestData(stats, params, query, {}, timeMSFunc, chipInfoFunc, tasks)
       
@@ -168,6 +173,27 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
         self.send_response(404)
         self.end_headers()
         return
+      
+    def getDocDict(self, api_dict: dict, path: str):
+      while path.startswith('/'):
+        path = path[1:]
+      ret = {}
+      for key, handler in api_dict.items():
+        if key.startswith(path):
+          if hasattr(handler, 'schema'):
+            ret[key] = handler.schema()
+          else:
+            ret[key] = {'status': 'not documented'}
+      return ret
+      
+    def getDoc(self, path: str):
+      ret = {}
+      ret['GET'] = self.getDocDict(self.api_get_dict, path)
+      ret['POST'] = self.getDocDict(self.api_post_dict, path)
+      ret['DELETE'] = self.getDocDict(self.api_delete_dict, path)
+      return json.dumps(ret, indent=3)
+          
+        
 
   return Handler
 
