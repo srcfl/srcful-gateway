@@ -75,7 +75,7 @@ class RegisterValue:
         # currently we convert the raw values that are word based to bytearray
         self.raw = bytearray()
         for register in registers:
-            byte_arr = register.to_bytes(2, 'little')
+            byte_arr = register.to_bytes(2, 'big')
             self.raw.extend(byte_arr)
 
         if self.datatype != RegisterValue.Type.NONE:
