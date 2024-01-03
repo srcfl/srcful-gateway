@@ -49,6 +49,10 @@ Examples:
 
 ### SSH
 
+First you need the private key. This is available in bitwarden. Create a new file, copy and paste the private key and make sure you add an ending newline to it. You can save this file either in your `.ssh` directory or wherever if you use the `-i` flag in `ssh`
+
+#### General NIX Os guide 
+
 To `SSH` like this, we will need to use `proxytunnel ` on the client.  
 
 Install `proxytunnel` and then create an API key:
@@ -99,6 +103,25 @@ ssh root@localhost -p 22222
 ```
 
 `balena ssh UUID` is still not supported on open-balena.
+
+#### Windows
+This part of the guide is for windows and maybe if you want to run things more locally in a directory. The setup is logically similar but in practice different because Windows.
+
+Create a suitable directory here you will store everything and also start `ssh` from.
+
+* Download proxytunnel (https://proxytunnel.sourceforge.io/download.php), unzip in your directory. Check that it works by running proxytunnel from a commandline.
+* Create the ssh configuration file as per nix instructions. Use relative paths to proxytunnel, and to the config file. eg:   
+`ProxyCommand ./proxytunnel -p vpn.balena.srcful.dev:3128 -d %h:22222 -F ./config_file`
+* Create the proxytunnel config file as per above (you need the api key also)
+* SSH is very sensitive to file rights of the key files - this is a breeze in nix base systems with chmod. In Windows not so much. Use file GUI properties/security. Disable inheritance of rights, add yourself and give full rights to your own user. Remove all other users. This is likely needed or the *config file* and the *private key file*.
+* Tunnel as per above to the device you want to login in to
+* You should now be ready and run ssh:
+`ssh root@localhost -p 22222 -F config_file -i private_key_file`
+
+It seems the powershell variant of ssh is better suited regading file permissions than git-bash.
+
+
+
 
 #### SSH into a docker container
 
