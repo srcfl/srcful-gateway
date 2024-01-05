@@ -30,13 +30,28 @@ echo 2000 > /sys/kernel/debug/bluetooth/hci0/supervision_timeout
 #cat /sys/kernel/debug/bluetooth/hci0/conn_max_interval
 #cat /etc/bluetooth/main.conf
 
-service dbus start
+#service dbus start
 
-bluetoothd -d
+#bluetoothd -d
 
+#sleep 10
 
-#python ble_service.py -api_url 127.0.0.1
-python nebra/ble_service.py
+#bluetoothctl <<EOF
+#agent off
+##power on
+#discoverable on
+#pairable on
+#agent NoInputNoOutput
+#default-agent 
+#EOF
+
+python ble_agent.py &
+
+# this one runs and then exits an it is likely good to take care of this before the service is up and running.
+python ble_flush.py
+
+python ble_service.py -api_url 127.0.0.1
+#python nebra/ble_service.py
 #python test_server.py
 
 /bin/bash
