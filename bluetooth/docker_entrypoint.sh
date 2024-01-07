@@ -15,15 +15,52 @@ echo 244 > /sys/kernel/debug/bluetooth/hci0/adv_max_interval
 # this could set the values for the bluetooth device values from ios documentation
 # presumably in in units of 1.25ms  (12 is 15ms) (24 is 30ms)
 # according to apple docs the min interval should be in 15ms increments ie 12, 24 etc
-echo 6 > /sys/kernel/debug/bluetooth/hci0/conn_min_interval
-echo 400 > /sys/kernel/debug/bluetooth/hci0/conn_max_interval
+#echo 6 > /sys/kernel/debug/bluetooth/hci0/conn_min_interval
+#echo 400 > /sys/kernel/debug/bluetooth/hci0/conn_max_interval
 
 cat /sys/kernel/debug/bluetooth/hci0/conn_min_interval
 cat /sys/kernel/debug/bluetooth/hci0/conn_max_interval
 
 cat /sys/kernel/debug/bluetooth/hci0/supervision_timeout
 
-echo 2000 > /sys/kernel/debug/bluetooth/hci0/supervision_timeout
+# wait for startup of services
+#msg="Waiting for services to start..."
+#time=0
+#echo -n $msg
+#while [ "$(pidof start-stop-daemon)" ]; do
+#    sleep 1
+#    time=$((time + 1))
+#    echo -en "\r$msg $time s"
+#done
+#echo -e "\r$msg done! (in $time s)"
+
+# we simply wait and see if this does the trick...
+echo "Waiting for services to start..."
+sleep 60
+
+# this resets the bluetooth device seems to be needed if the device is restarted by power cycling
+hciconfig hci0 down
+hciconfig hci0 up
+
+# we need to wait for dbus to be up and running before we can start the bluetooth service
+#while true; do
+#    dbus-send --session \
+#            --print-reply \
+#            --dest=org.freedesktop.DBus \
+#            /org/freedesktop/DBus \
+#            org.freedesktop.DBus.ListNames
+
+#            dbus_wait=$?
+#    if [ "$dbus_wait" -eq 0 ]; then
+#        break;
+#    else
+#        sleep 0.1
+#    fi
+#done
+
+#echo "DBus is now accepting connections"
+
+#echo 2000 > /sys/kernel/debug/bluetooth/hci0/supervision_timeout
 
 # these files does not seem to exist neither 0 or 1
 #cat /sys/kernel/debug/bluetooth/hci0/conn_min_interval
