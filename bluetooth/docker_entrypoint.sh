@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-
+echo 'Starting bluetooth container...'
 cat /sys/kernel/debug/bluetooth/hci0/conn_min_interval
 cat /sys/kernel/debug/bluetooth/hci0/conn_max_interval
 
@@ -35,8 +35,8 @@ cat /sys/kernel/debug/bluetooth/hci0/supervision_timeout
 #echo -e "\r$msg done! (in $time s)"
 
 # we simply wait and see if this does the trick...
-echo "Waiting for services to start..."
-sleep 60
+#echo "Waiting for services to start..."
+#sleep 60
 
 # this resets the bluetooth device seems to be needed if the device is restarted by power cycling
 hciconfig hci0 down
@@ -67,11 +67,10 @@ hciconfig hci0 up
 #cat /sys/kernel/debug/bluetooth/hci0/conn_max_interval
 #cat /etc/bluetooth/main.conf
 
-#service dbus start
+service dbus start
+bluetoothd -d
 
-#bluetoothd -d
-
-#sleep 10
+#sleep 60
 
 #bluetoothctl <<EOF
 #agent off
@@ -82,10 +81,17 @@ hciconfig hci0 up
 #default-agent 
 #EOF
 
+
+
+
 python ble_agent.py &
 
+# Disable pairing
+#printf "pairable off\nquit" | /usr/bin/bluetoothctl
+
 # this one runs and then exits an it is likely good to take care of this before the service is up and running.
-python ble_flush.py
+# flushing does not work as expected reconnecting to the pc is flaky at best.
+#python ble_flush.py
 
 python ble_service.py -api_url 127.0.0.1
 #python nebra/ble_service.py
