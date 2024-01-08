@@ -7,4 +7,5 @@ from . import modbus
 from . import network
 from . import inverter
 from . import uptime
+from . import wifi
 

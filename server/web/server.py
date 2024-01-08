@@ -24,6 +24,8 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
         'inverter/modbus/input/{address}':    handler.get.modbus.InputHandler(),
         'network':                            handler.get.network.Handler(),
         'uptime':                             handler.get.uptime.Handler(),
+        'wifi':                               handler.get.wifi.Handler(),
+        'wifi/scan':                          handler.get.wifi.ScanHandler(),
       }
 
       self.api_post_dict = {

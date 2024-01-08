@@ -7,6 +7,7 @@ from server.tasks.openInverterTask import OpenInverterTask
 from server.inverters.InverterTCP import InverterTCP
 import server.crypto.crypto as crypto
 from server.bootstrap import Bootstrap
+from server.wifi.scan import WifiScanner
 
 
 def getChipInfo():
@@ -62,6 +63,13 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup|None = None, boot
   tasks = queue.PriorityQueue()
 
   bootstrap = Bootstrap(bootstrapFile)
+
+  try:
+    s = WifiScanner()
+    ssids = s.getSSIDs()
+    print(f'Scanned SSIDs: {ssids}')
+  except Exception as e:
+    print(e)
 
   # put some initial tasks in the queue
   if inverter is not None:

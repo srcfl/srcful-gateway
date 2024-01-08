@@ -59,6 +59,34 @@ def test_crypto():
     assert 'publicKey' in j
     assert 'publicKey_pem' in j
 
+def test_wifi():
+    url = settings.api_url + "wifi"
+
+    headers = {'user-agent': 'vscode-restclient'}
+
+    response = requests.request("GET", url, headers=headers)
+
+    assert response.status_code == 200
+    assert response.headers['content-type'] == 'application/json'
+
+    j = response.json()
+    assert 'ssids' in j
+    assert len(j['ssids']) > 0
+
+def test_wifi_scan():
+    url = settings.api_url + "wifi/scan"
+
+    headers = {'user-agent': 'vscode-restclient'}
+
+    response = requests.request("GET", url, headers=headers)
+
+    assert response.status_code == 200
+    assert response.headers['content-type'] == 'application/json'
+
+    j = response.json()
+    assert 'status' in j
+    assert j['status'] == 'scan initiated'
+
 def test_running_inverter():
     # requires an inverter to be running
     url = settings.api_url + "inverter"
