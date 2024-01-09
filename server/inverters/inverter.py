@@ -4,6 +4,7 @@ import logging
 from pymodbus.pdu import ExceptionResponse
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 class Inverter:
   '''Base class for all inverters.'''

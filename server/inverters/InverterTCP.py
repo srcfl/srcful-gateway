@@ -7,6 +7,7 @@ import logging
 import time
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 # set logging info for pymodbus to INFO to avoid spamming
 from pymodbus import pymodbus_apply_logging_config
