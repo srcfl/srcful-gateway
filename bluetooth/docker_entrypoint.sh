@@ -67,8 +67,25 @@ hciconfig hci0 up
 #cat /sys/kernel/debug/bluetooth/hci0/conn_max_interval
 #cat /etc/bluetooth/main.conf
 
+# we disable bluetooth in the host os and restart in local container.
+# this is to avoid adding the default bluez plugin services
+# these services cause e.g. windows to connect in a paring mode which is more troublesome
+
+DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket \
+  dbus-send \
+  --system \
+  --print-reply \
+  --dest=org.freedesktop.systemd1 \
+  /org/freedesktop/systemd1 \
+  org.freedesktop.systemd1.Manager.StopUnit \
+  string:bluetooth.service string:replace
+
 service dbus start
-bluetoothd -d
+bluetoothd --experimental --noplugin=* &
+
+hciconfig hci0 up
+
+
 
 #sleep 60
 
