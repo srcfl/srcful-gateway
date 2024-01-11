@@ -28,6 +28,6 @@ python ble_agent.py &
 #printf "pairable off\nquit" | /usr/bin/bluetoothctl
 
 
-python ble_service.py -api_url 127.0.0.1
+python ble_service_twochars.py -api_url 127.0.0.1
 
 /bin/bash

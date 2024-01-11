@@ -164,6 +164,8 @@ async def run():
 
 if __name__ == "__main__":
 
+  print("Starting ble service...")
+
   args = argparse.ArgumentParser()
   args.add_argument("-api_url", help=f"The url of the API endpoint, default: {g_api_url}", default=g_api_url)
   args.add_argument("-service_uuid", help=f"The UUID of the service, default: {g_service_uuid}", default=g_service_uuid)
