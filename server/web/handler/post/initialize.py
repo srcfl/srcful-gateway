@@ -12,12 +12,15 @@ from ..requestData import RequestData
 
 class Handler(PostHandler):
 
-  def jsonSchema(self):
-    return json.dumps({ 'type': 'post',
+
+  def schema(self):
+    return { 'type': 'post',
                         'description': 'initialize the wallet',
                         'required': {'wallet': 'string, wallet public key'},
                         'returns': {'initialized': 'boolean, true if the wallet is initialized'}
-                      })
+                      }
+  def jsonSchema(self):
+    return json.dumps(self.schema())
 
   def doPost(self, request_data: RequestData):
     if 'wallet' in request_data.data:

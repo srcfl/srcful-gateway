@@ -9,12 +9,14 @@ import server.inverters.registerValue as RegisterValue
 
 from ..requestData import RequestData
 
-# this is the modbus love log post handler
+# this is the modbus live log post handler
 
 class Handler:
 
-    def jsonDict(self):
-        return  {'type': 'post',
+    def schema(self):
+        return  {
+                'status': 'under development',
+                'type': 'post',
                 'description': 'creates a new live log object',
                 'required': {'frequency': 'how many samples per second',
                             'size': 'the size of the logging buffer, the buffer is circular so if the buffer is full the oldest data is overwritten',
@@ -23,7 +25,7 @@ class Handler:
                 }
   
     def jsonSchema(self):
-        return json.dumps(self.jsonDict())
+        return json.dumps(self.schema())
     
     def doPost(self, request_data:RequestData):
         if 'inverter' not in request_data.stats or request_data.stats['inverter'] is None:
@@ -46,4 +48,4 @@ class Handler:
                 return 400, json.dumps({'error': 'inverter not open'})
         else:
             # return a bad request and append the json schema 
-            return 400, json.dumps({'status': 'bad request', 'schema': self.jsonDict()})
+            return 400, json.dumps({'status': 'bad request', 'schema': self.schema()})

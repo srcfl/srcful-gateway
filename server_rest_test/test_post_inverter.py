@@ -1,5 +1,6 @@
 import requests
 import settings
+import time
 
 def deleteInverter():
     return "Inverter deleted"
@@ -13,10 +14,14 @@ def getInverter():
     return response
 
 def postInverter(inverterSettings):
+
+    if 'status' in inverterSettings and inverterSettings['status'] == 'no inverter':
+        return  
+
     url = settings.api_url + "invertertcp"
     headers = {'user-agent': 'vscode-restclient'}
 
-    # remao host to ip
+    # remap host to ip
     if 'host' in inverterSettings:
         inverterSettings['ip'] = inverterSettings['host']
 
@@ -39,6 +44,9 @@ def test_postInverter():
     response = postInverter(inverter_settings)
 
     assert response.status_code == 200
+
+    # wait for inverter to connect
+    time.sleep(3)
 
     currentInverter = getInverter()
 

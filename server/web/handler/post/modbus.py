@@ -11,21 +11,26 @@ from ..requestData import RequestData
 
 class Handler(PostHandler):
 
-    def jsonSchema(self):
-        return json.dumps({ 
+    def schema(self):
+        return { 
             'type': 'post',
             'description': 'Execute a set of modbus commands',
             'required': {
-                'commands': 'list of command objects, each containing: \
-                    type (string) - type of command to execute, \
-                    startingAddress (int, required for write commands) - starting address of register, \
-                    values (list of ints in decimal, binary, or hex, required for write commands) - values to write starting from the startingAddress, \
-                    duration (int, required for pause commands) - duration in milliseconds to pause the operation.'
+                'commands': {
+                    'description': 'list of command objects, each containing:',
+                    'type': '(string) - type of command to execute (write or pause)',
+                    'startingAddress': '(int, required for write commands) - starting address of register',
+                    'values': '(list of ints in decimal, binary, or hex, required for write commands) - values to write starting from the startingAddress',
+                    'duration': '(int, required for pause commands) - duration in milliseconds to pause the operation.'
+                }
             },
             'returns': {'status': 'string, ok or error',
                         'message': 'string, error message or success confirmation'
             }
-        })
+        }
+    
+    def jsonSchema(self):
+        return json.dumps(self.schema())
 
     def map_values(self, values):
         mapped_values = []

@@ -26,8 +26,7 @@ trigger: asyncio.Event = asyncio.Event()
 
 # some global configuration constants
 g_service_uuid = "A07498CA-AD5B-474E-940D-16F1FBE7E8CD"
-g_request_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B" # for accepting requests ie. clients write to this
-g_response_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021C" # for sending responses ie client read from this
+g_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
 g_api_url = "localhost:5000"
 g_service_name = "SrcFul Energy Gateway"
 g_server = None
@@ -50,7 +49,6 @@ def request_post(path: str, content: str) -> bytearray:
 
 def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
 
-    characteristic.value = value
     # if request_response and request_response.value:
     val = value.decode('utf-8')
 
@@ -64,14 +62,9 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
 
       if header['method'] == 'GET' or header['method'] == 'POST':
         response = request_get(header['path']) if header['method'] == 'GET' else request_post(header['path'], content)
-        response_char = g_server.get_characteristic(g_response_char_uuid)
-        response_char.value = response
-        logger.debug(f"Char value set to {response_char.value}")
-        if g_server.update_value(g_service_uuid, g_response_char_uuid):
-
-          logger.debug("Value updated sent notifications to " + str(len(g_server.app.subscribed_characteristics)))
-        else:
-          logger.debug("Value not updated") 
+        characteristic.value = response
+        logger.debug(f"Char value set to {characteristic.value}")
+        g_server.update_value(g_service_uuid, g_char_uuid)   
       else:
         logger.debug("Not a GET or POST request, doing nothing")
 
@@ -111,65 +104,26 @@ async def run():
 
   # Add a Characteristic to the service
   char_flags = (
-      GATTCharacteristicProperties.write_without_response |
-      GATTCharacteristicProperties.write
+      GATTCharacteristicProperties.read |
+      GATTCharacteristicProperties.write |
+      GATTCharacteristicProperties.indicate
   )
   permissions = (
+      GATTAttributePermissions.readable |
       GATTAttributePermissions.writeable
   )
   await g_server.add_new_characteristic(
       g_service_uuid,
-      g_request_char_uuid,
+      g_char_uuid,
       char_flags,
       None,
       permissions)
-  
-  char_flags = (
-    GATTCharacteristicProperties.read |
-    GATTCharacteristicProperties.notify |
-    GATTCharacteristicProperties.indicate
-  )
-  permissions = (
-    GATTAttributePermissions.readable
-  )
-  await g_server.add_new_characteristic(
-    g_service_uuid,
-    g_response_char_uuid,
-    char_flags,
-    bytearray(b"Hello ble World"),
-    permissions)
-  
 
   logger.debug(
-    g_server.get_characteristic(
-        g_request_char_uuid
-    )
+      g_server.get_characteristic(
+          g_char_uuid
+      )
   )
-
-  logger.debug(
-    g_server.get_characteristic(
-        g_response_char_uuid
-    )
-  )
-
-  # bluez backend specific
-  if g_server.app:
-
-    async def on_startNotify(characteristic: BlessGATTCharacteristic):
-      logger.debug("StartNotify called - client subscribed")
-      await g_server.app.stop_advertising(g_server.adapter)
-      logger.debug("Advertising stopped")
-      return True
-    
-    async def on_stopNotify(characteristic: BlessGATTCharacteristic):
-      logger.debug("StopNotify called - client unsubscribed")
-      await g_server.app.start_advertising(g_server.adapter)
-      logger.debug("Advertising started")
-      return True
-
-    g_server.app.StartNotify = on_startNotify
-    g_server.app.StopNotify = on_stopNotify
-
 
   await g_server.start()
   await trigger.wait()
@@ -181,7 +135,7 @@ if __name__ == "__main__":
   args = argparse.ArgumentParser()
   args.add_argument("-api_url", help=f"The url of the API endpoint, default: {g_api_url}", default=g_api_url)
   args.add_argument("-service_uuid", help=f"The UUID of the service, default: {g_service_uuid}", default=g_service_uuid)
-  args.add_argument("-char_uuid", help=f"The UUID of the characteristic, default: {g_request_char_uuid}", default=g_request_char_uuid)
+  args.add_argument("-char_uuid", help=f"The UUID of the characteristic, default: {g_char_uuid}", default=g_char_uuid)
   args.add_argument("-log_level", help=f"The log level ({logging.getLevelNamesMapping().keys()}), default: {logging.getLevelName(logger.getEffectiveLevel())}", default=logging.getLevelName(logger.level))
   args.add_argument("-service_name", help=f"The name of the service, default: {g_service_name}", default=g_service_name)
 

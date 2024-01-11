@@ -17,6 +17,19 @@ def test_hello():
     assert response.headers['content-type'] == 'application/json'
     assert response.json()['message'] == 'hello world from srcful!'
 
+def test_uptime():
+    
+        url = settings.api_url + "uptime"
+    
+        headers = {'user-agent': 'vscode-restclient'}
+    
+        response = requests.request("GET", url, headers=headers)
+    
+        assert response.status_code == 200
+        assert response.headers['content-type'] == 'application/json'
+        assert response.json()['msek'] > 0
+
+
 def test_name():
 
     url = settings.api_url + "name"
@@ -45,6 +58,34 @@ def test_crypto():
     assert 'serialNumber' in j
     assert 'publicKey' in j
     assert 'publicKey_pem' in j
+
+def test_wifi():
+    url = settings.api_url + "wifi"
+
+    headers = {'user-agent': 'vscode-restclient'}
+
+    response = requests.request("GET", url, headers=headers)
+
+    assert response.status_code == 200
+    assert response.headers['content-type'] == 'application/json'
+
+    j = response.json()
+    assert 'ssids' in j
+    assert len(j['ssids']) > 0
+
+def test_wifi_scan():
+    url = settings.api_url + "wifi/scan"
+
+    headers = {'user-agent': 'vscode-restclient'}
+
+    response = requests.request("GET", url, headers=headers)
+
+    assert response.status_code == 200
+    assert response.headers['content-type'] == 'application/json'
+
+    j = response.json()
+    assert 'status' in j
+    assert j['status'] == 'scan initiated'
 
 def test_running_inverter():
     # requires an inverter to be running
