@@ -3,6 +3,8 @@ from server.inverters.inverter import Inverter
 import logging
 log = logging.getLogger(__name__)
 
+from server.blackboard import BlackBoard
+
 
 class ModbusWriteTask(Task):
 
@@ -23,8 +25,8 @@ class ModbusWriteTask(Task):
             self.duration = duration
 
 
-    def __init__(self, eventTime: int, stats: dict, inverter: Inverter, commands: list[Command]):
-        super().__init__(eventTime, stats)
+    def __init__(self, eventTime: int, bb: BlackBoard, inverter: Inverter, commands: list[Command]):
+        super().__init__(eventTime, bb)
         self.inverter = inverter
         self.currentCommand = 0
         self.commands = commands

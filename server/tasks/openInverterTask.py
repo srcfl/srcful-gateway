@@ -6,17 +6,19 @@ import logging
 log = logging.getLogger(__name__)
 
 
+from server.blackboard import BlackBoard
+
 class ReadFreq(Task):
-  def __init__(self, eventTime: int, stats: dict, inverter: Inverter):
-    super().__init__(eventTime, stats)
+  def __init__(self, eventTime: int, bb: BlackBoard, inverter: Inverter):
+    super().__init__(eventTime, bb)
     self.inverter = inverter
-    self.stats['lastFreq'] = 'n/a'
+    #self.stats['lastFreq'] = 'n/a'
 
   def execute(self, eventTime) -> Task or list[Task]:
     try:
       freq = self.inverter.readFrequency()
-      self.stats['lastFreq'] = freq
-      self.stats['freqReads'] += 1
+      #self.stats['lastFreq'] = freq
+      #self.stats['freqReads'] += 1
     except:
       print('error reading freq')
       return None
@@ -26,8 +28,8 @@ class ReadFreq(Task):
 
 
 class OpenInverterTask(Task):
-  def __init__(self, eventTime: int, stats: dict, inverter: Inverter, bootstrap):
-    super().__init__(eventTime, stats)
+  def __init__(self, eventTime: int, bb: BlackBoard, inverter: Inverter, bootstrap):
+    super().__init__(eventTime, bb)
     self.inverter = inverter
     self.bootstrap = bootstrap
 
@@ -35,11 +37,12 @@ class OpenInverterTask(Task):
     # Do this n times? 
     try:
       if self.inverter.open():
-        if 'inverter' in self.stats and self.stats['inverter'] != None:
-          self.stats['inverter'].terminate()
-        self.stats['inverter'] = self.inverter
-        if(self.bootstrap != None):
-          self.bootstrap.appendInverter(self.inverter.getConfig())
+        self.bb.inverter.add(self.inverter)
+        #if 'inverter' in self.stats and self.stats['inverter'] != None:
+        #  self.stats['inverter'].terminate()
+        #self.stats['inverter'] = self.inverter
+        #if(self.bootstrap != None):
+        #  self.bootstrap.appendInverter(self.inverter.getConfig())
         return [Harvest(eventTime + 10000, self.stats, self.inverter)]
       else:
         log.info('Failed to open inverter: %s', self.inverter.getType())

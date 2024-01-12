@@ -1,10 +1,13 @@
 import server.inverters.registerValue as RegisterValue
 import server.inverters.inverter as Inverter
 
+from .task import Task
+from server.blackboard import BlackBoard
+
 class ModbusLiveLogTask(Task):
 
-    def __init__(self, inverter, frequency, registers, size):
-        super().__init__()
+    def __init__(self, inverter, frequency, registers, size, bb:BlackBoard):
+        super().__init__(1000 // frequency, bb)
         self.inverter = inverter
         self.frequency = frequency
         self.registers = registers

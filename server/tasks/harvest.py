@@ -1,6 +1,8 @@
 from .task import Task
 from .srcfulAPICallTask import SrcfulAPICallTask
 from server.inverters.inverter import Inverter
+from server.blackboard import BlackBoard
+
 import server.crypto.crypto as atecc608b
 import requests
 
@@ -28,8 +30,8 @@ class Harvest(Task):
     
     try:
       harvest = self.inverter.readHarvestData()
-      self.stats['lastHarvest'] = harvest
-      self.stats['harvests'] += 1
+      #self.stats['lastHarvest'] = harvest
+      #self.stats['harvests'] += 1
       self.barn[eventTime] = harvest
 
       self.backoff_time = max(self.backoff_time - self.backoff_time * 0.1, 1000)
@@ -60,11 +62,11 @@ class Harvest(Task):
 
 class HarvestTransport(SrcfulAPICallTask):
 
-  def __init__(self, eventTime: int, stats: dict, barn: dict, inverter_type: str):
-    super().__init__(eventTime, stats)
-    self.stats['lastHarvestTransport'] = 'n/a'
-    if 'harvestTransports' not in self.stats:
-      self.stats['harvestTransports'] = 0
+  def __init__(self, eventTime: int, bb: BlackBoard, barn: dict, inverter_type: str):
+    super().__init__(eventTime, bb)
+    #self.stats['lastHarvestTransport'] = 'n/a'
+    #if 'harvestTransports' not in self.stats:
+    #  self.stats['harvestTransports'] = 0
     self.barn_ref = barn
     self.barn = dict(barn)
     self.inverter_type = inverter_type
@@ -77,7 +79,7 @@ class HarvestTransport(SrcfulAPICallTask):
 
   def _on200(self, reply):
     print("Response:", reply)
-    self.stats['harvestTransports'] += 1
+    #self.stats['harvestTransports'] += 1
 
   def _onError(self, reply: requests.Response):
     log.warning('Error in harvest transport: %s', str(reply))

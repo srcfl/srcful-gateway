@@ -1,12 +1,14 @@
+from server.blackboard import BlackBoard
+
 class Task:
   '''A task is a unit of work that can be scheduled for execution at a given time.
      Tasks are executed synchronously, so they should not block.
      Blocking operations should be performed in a separate thread. Results should 
      then be collected and processed in the task's execute method.'''
 
-  def __init__(self, eventTime: int, stats: dict):
+  def __init__(self, eventTime: int, bb: BlackBoard):
     self.time = eventTime
-    self.stats = stats
+    self.bb = bb
 
   def __eq__(self, other):
     if not isinstance(other, Task):

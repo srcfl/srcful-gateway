@@ -2,6 +2,8 @@ from .task import Task
 from threading import Thread
 import requests
 
+from server.blackboard import BlackBoard
+
 import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -13,8 +15,8 @@ def argToStr(arg):
     return "argument of type " + str(type(arg)) + " cannot be converted to string"
 
 class SrcfulAPICallTask(Task):
-  def __init__(self, eventTime: int, stats: dict):
-    super().__init__(eventTime, stats)
+  def __init__(self, eventTime: int, bb: BlackBoard):
+    super().__init__(eventTime, bb)
     self.t = None
     self.reply = None
     self.post_url = "https://testnet.srcful.dev/gw/data/"

@@ -5,43 +5,30 @@ from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
 from server.tasks.openInverterTask import OpenInverterTask
 from server.inverters.InverterTCP import InverterTCP
-import server.crypto.crypto as crypto
+
 from server.bootstrap import Bootstrap
 from server.wifi.scan import WifiScanner
 
-
-def getChipInfo():
-  crypto.initChip()
-
-  device_name = crypto.getDeviceName()
-  serial_number = crypto.getSerialNumber().hex()
-
-  crypto.release()
-
-  return 'device: ' + device_name + ' serial: ' + serial_number
+from server.blackboard import BlackBoard
 
 
-def time_ms():
-  return time.time_ns() // 1_000_000
-
-
-def mainLoop(tasks: queue.PriorityQueue):
+def mainLoop(tasks: queue.PriorityQueue, bb: BlackBoard):
   # here we could keep track of statistics for different types of tasks
   # and adjust the delay to keep the within a certain range
 
   def addTask(task):
-    if task.time < time_ms():
+    if task.time < bb.time_ms():
       print('task is in the past adjusting time')
-      task.time = time_ms() + 100
+      task.time = bb.time_ms() + 100
     tasks.put(task)
 
   while True:
     task = tasks.get()
-    delay = (task.time - time_ms()) / 1000
+    delay = (task.time - bb.time_ms()) / 1000
     if delay > 0.01:
       time.sleep(delay)
 
-    newTask = task.execute(time_ms())
+    newTask = task.execute(bb.time_ms())
 
     if newTask != None:
       try:
@@ -53,11 +40,12 @@ def mainLoop(tasks: queue.PriorityQueue):
 
 def main(webHost: tuple[str, int], inverter: InverterTCP.Setup|None = None, bootstrapFile: str|None = None):
 
-  startTime = time_ms()
+  bb = BlackBoard()
+  startTime = bb.time_ms()
   stats = {'startTime': startTime, 'freqReads': 0,
            'energyHarvested': 0, 'webRequests': 0, 'name': 'deadbeef'}
 
-  webServer = server.web.server.Server(webHost, stats, time_ms, getChipInfo)
+  webServer = server.web.server.Server(webHost, stats, bb)
   print("Server started http://%s:%s" % (webHost[0], webHost[1]))
 
   tasks = queue.PriorityQueue()

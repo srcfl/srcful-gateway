@@ -1,13 +1,17 @@
 from .task import Task
 from server.wifi.wifi import WiFiHandler
+from server.blackboard import BlackBoard
+
 
 import logging
 log = logging.getLogger(__name__)
 
 
+
+
 class OpenWiFiConTask(Task):
-  def __init__(self, eventTime: int, stats: dict, wificon: WiFiHandler):
-    super().__init__(eventTime, stats)
+  def __init__(self, eventTime: int, bb: BlackBoard, wificon: WiFiHandler):
+    super().__init__(eventTime, bb)
     self.wificon = wificon
 
   def execute(self, eventTime):

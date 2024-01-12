@@ -3,12 +3,14 @@ from .srcfulAPICallTask import SrcfulAPICallTask
 import server.crypto.crypto as atecc608b
 import requests
 
+from server.blackboard import BlackBoard
+
 
 class GetNameTask(SrcfulAPICallTask):
   '''Task to get a name from the server using the crypto chip'''
     
-  def __init__(self, eventTime: int, stats: dict):
-    super().__init__(eventTime, stats)
+  def __init__(self, eventTime: int, bb: BlackBoard):
+    super().__init__(eventTime, bb)
     self.name = None
     self.post_url = "https://api.srcful.dev/"
     
