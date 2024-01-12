@@ -45,9 +45,9 @@ class BlackBoard:
             for o in self._observers:
                 o.addInverter(inverter)
         
-        def removeInverter(self, inverter):
+        def remove(self, inverter):
             if inverter in self.lst:
                 self.lst.remove(inverter)
                 for o in self._observers:
-                    o.remove(inverter)
+                    o.removeInverter(inverter)
         

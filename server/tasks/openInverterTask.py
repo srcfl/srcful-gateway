@@ -36,13 +36,20 @@ class OpenInverterTask(Task):
     # Do this n times? 
     try:
       if self.inverter.open():
-        self.bb.inverter.add(self.inverter)
+
+        # terminate and remove all inverters from the blackboard
+        for i in self.bb.inverters.lst:
+          i.terminate()
+          self.bb.inverters.remove(i)
+        
+        self.bb.inverters.add(self.inverter)
+        
         #if 'inverter' in self.stats and self.stats['inverter'] != None:
         #  self.stats['inverter'].terminate()
         #self.stats['inverter'] = self.inverter
         #if(self.bootstrap != None):
         #  self.bootstrap.appendInverter(self.inverter.getConfig())
-        return [Harvest(eventTime + 10000, self.stats, self.inverter)]
+        return [Harvest(eventTime + 10000, self.bb, self.inverter)]
       else:
         log.info('Failed to open inverter: %s', self.inverter.getType())
         return None
