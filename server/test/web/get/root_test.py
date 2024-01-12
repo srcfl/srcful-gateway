@@ -1,11 +1,11 @@
-import pytest
 from server.web.handler.get.root import Handler
 from server.web.handler.requestData import RequestData
-import json
+from server.blackboard import BlackBoard
+
 
 def test_doGet():
     # Create a RequestData object with the parameters you want to test
-    request_data = RequestData(stats={'startTime':0, 'name':'dret'}, post_params={}, query_params={}, data={}, timeMSFunc=lambda: 10, chipInfoFunc=lambda: "dret", tasks=None)
+    request_data = RequestData(BlackBoard(), post_params={}, query_params={}, data={}, tasks=None)
 
     # Create an instance of Handler
     handler = Handler()

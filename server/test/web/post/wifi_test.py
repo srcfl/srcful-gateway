@@ -3,6 +3,7 @@
 import pytest
 from server.web.handler.post.wifi import Handler
 from server.web.handler.requestData import RequestData
+from server.blackboard import BlackBoard
 import json
 import queue
 
@@ -19,7 +20,7 @@ def test_doPost():
         "psk": "test",
     }
     tasks = queue.PriorityQueue()
-    request_data = RequestData(stats={'startTime':0, 'name':'dret'}, post_params={}, query_params={}, data=data_params, timeMSFunc=lambda: 10, chipInfoFunc=lambda: "dret", tasks=tasks)
+    request_data = RequestData(BlackBoard(), post_params={}, query_params={}, data=data_params, tasks=tasks)
 
     handler = Handler()
 
@@ -35,7 +36,7 @@ def test_doPost_bad_data():
         "password": "test",
     }
     tasks = queue.PriorityQueue()
-    request_data = RequestData(stats={'startTime':0, 'name':'dret'}, post_params={}, query_params={}, data=data_params, timeMSFunc=lambda: 10, chipInfoFunc=lambda: "dret", tasks=tasks)
+    request_data = RequestData(BlackBoard(), post_params={}, query_params={}, data=data_params, tasks=tasks)
 
     handler = Handler()
 

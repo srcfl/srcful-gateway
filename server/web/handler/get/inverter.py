@@ -8,7 +8,7 @@ class Handler(GetHandler):
     config = {'status': 'No inverter'}
 
     if len(request_data.bb.inverters.lst) > 0:
-      inverter = request_data.inverters.inverters[0]
+      inverter = request_data.bb.inverters.lst[0]
       config = inverter.getConfigDict()
     
       if inverter.isOpen():

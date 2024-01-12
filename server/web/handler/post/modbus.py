@@ -48,12 +48,10 @@ class Handler(PostHandler):
         if 'commands' not in request_data.data:
             return 400, json.dumps({'status': 'bad request', 'message': 'Missing commands in request'})
 
-        if len(request_data.bb.inverters.lst) > 0:
+        if len(request_data.bb.inverters.lst) == 0:
             return 400, json.dumps({'status': 'error', 'message': 'No Modbus device initialized'})
         
         try:
-            commands = request_data.data['commands']
-            
             # Map values in commands for Modbus device
             raw_commands = request_data.data['commands']
             command_objects = []

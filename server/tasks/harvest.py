@@ -11,11 +11,11 @@ log = logging.getLogger(__name__)
 
 
 class Harvest(Task):
-  def __init__(self, eventTime: int, stats: dict, inverter: Inverter):
-    super().__init__(eventTime, stats)
+  def __init__(self, eventTime: int, bb: BlackBoard, inverter: Inverter):
+    super().__init__(eventTime, bb)
     self.inverter = inverter
-    self.stats['lastHarvest'] = 'n/a'
-    self.stats['harvests'] = 0
+    #self.stats['lastHarvest'] = 'n/a'
+    #self.stats['harvests'] = 0
     self.barn = {}
     self.transport = None
 
@@ -53,7 +53,7 @@ class Harvest(Task):
 
     # check if it is time to transport the harvest
     if ((len(self.barn) >= 10 and len(self.barn) % 10 == 0) and (self.transport == None or self.transport.reply != None)):
-      self.transport = HarvestTransport(eventTime + 100, self.stats, self.barn, self.inverter.getType())
+      self.transport = HarvestTransport(eventTime + 100, self.bb, self.barn, self.inverter.getType())
       self.barn.clear()
       return [self, self.transport]
 

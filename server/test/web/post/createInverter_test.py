@@ -6,6 +6,7 @@ from server.web.handler.post.inverterRTU import Handler as RTUHandler
 
 from server.web.handler.requestData import RequestData
 from server.tasks.openInverterTask import OpenInverterTask
+from server.blackboard import BlackBoard
 
 import queue
 
@@ -17,7 +18,7 @@ def test_post_create_InverterTCP():
     
     handler = TCPHandler()
     q = queue.Queue()
-    rd = RequestData({'bootstrap':None}, {}, {}, conf, None, None, q)
+    rd = RequestData(BlackBoard(), {}, {}, conf, q)
 
     handler.doPost(rd)
 
@@ -44,7 +45,7 @@ def test_post_create_InverterRTU():
     q = queue.Queue()
     
 
-    rd = RequestData({'bootstrap':None}, {}, {}, conf, None, None, q)
+    rd = RequestData(BlackBoard(), {}, {}, conf, q)
 
     handler.doPost(rd)
     assert q.qsize() == 1

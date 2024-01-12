@@ -163,9 +163,9 @@ class Handler(GetHandler):
     ret += "<h1>Srcful Energy Gateway 0.0.6</h1>"
     #ret += f"<h2>{stats['name']}</h2>"
 
-    ret += f"<p>chipInfo: {request_data.bb.chipInfoFunc()}</p>"
+    ret += f"<p>chipInfo: {request_data.bb.getChipInfo()}</p>"
 
-    elapsedTime = request_data.bb.timeMSFunc() - startTime
+    elapsedTime = request_data.bb.time_ms() - startTime
 
     # convert elapsedTime to days, hours, minutes, seconds in a tuple
     days, remainder = divmod(elapsedTime // 1000, 60 * 60 * 24)

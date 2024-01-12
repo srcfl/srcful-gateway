@@ -3,10 +3,11 @@ import json
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.network import Handler
 from server.wifi.wifi import getConnectionConfigs
+from server.blackboard import BlackBoard
 
 @pytest.fixture
 def request_data():
-    return RequestData({}, {}, {}, {}, None, None, None)
+    return RequestData(BlackBoard(), {}, {}, {}, None)
 
 def test_logger(request_data):
     handler = Handler()

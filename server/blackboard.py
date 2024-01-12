@@ -20,7 +20,7 @@ class BlackBoard:
     def startTime(self):
         return self._startTime
 
-    def getChipInfo():
+    def getChipInfo(self):
         crypto.initChip()
 
         device_name = crypto.getDeviceName()
@@ -31,7 +31,7 @@ class BlackBoard:
         return 'device: ' + device_name + ' serial: ' + serial_number
 
 
-    def time_ms():
+    def time_ms(self):
         return time.time_ns() // 1_000_000
     
     class Inverters:
@@ -41,12 +41,13 @@ class BlackBoard:
             self._observers = []
         
         def add(self, inverter):
-            self._inverters.append(inverter)
+            self.lst.append(inverter)
             for o in self._observers:
                 o.addInverter(inverter)
         
         def removeInverter(self, inverter):
-            self._inverters.remove(inverter)
-            for o in self._observers:
-                o.remove(inverter)
+            if inverter in self.lst:
+                self.lst.remove(inverter)
+                for o in self._observers:
+                    o.remove(inverter)
         

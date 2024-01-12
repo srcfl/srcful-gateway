@@ -5,9 +5,9 @@ import json
 class Handler(DeleteHandler):
     def doDelete(self, request_data: RequestData):
         if len(request_data.bb.inverters.lst) > 0:
-            inverter = request_data.inverters.inverters[0]
+            inverter = request_data.bb.inverters.lst[0]
             inverter.terminate()
-            request_data.inverters.remove(inverter)
+            request_data.bb.inverters.remove(inverter)
 
             data = {'isTerminated': inverter.isTerminated(),
                     'isOpen': inverter.isOpen()}

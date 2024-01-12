@@ -5,10 +5,11 @@ from typing import Callable
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 
+from server.blackboard import BlackBoard
 from . import handler
 
 
-def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable, tasks: queue.Queue):
+def requestHandlerFactory(bb:BlackBoard, tasks: queue.Queue):
 
   class Handler(BaseHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -117,7 +118,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       if api_handler is not None:
         post_data = Handler.getData(self.headers, self.rfile)
 
-        rdata = handler.RequestData(stats, params, query, post_data, timeMSFunc, chipInfoFunc, tasks)
+        rdata = handler.RequestData(bb, params, query, post_data, tasks)
 
         code, response = api_handler.doPost(rdata)
         self.sendApiResponse(code, response)
@@ -137,7 +138,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
         return
 
       api_handler, params = Handler.getAPIHandler(path, "/api/", self.api_get)
-      rdata = handler.RequestData(stats, params, query, {}, timeMSFunc, chipInfoFunc, tasks)
+      rdata = handler.RequestData(bb, params, query, {}, tasks)
       
       if api_handler is not None:
         code, response = api_handler.doGet(rdata)
@@ -166,7 +167,7 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
       if api_handler is not None:
         post_data = Handler.getData(self.headers, self.rfile)
 
-        rdata = handler.RequestData(stats, params, query, post_data, timeMSFunc, chipInfoFunc, tasks)
+        rdata = handler.RequestData(bb, params, query, post_data, tasks)
 
         code, response = api_handler.doDelete(rdata)
         self.sendApiResponse(code, response)
@@ -203,10 +204,9 @@ def requestHandlerFactory(stats: dict, timeMSFunc: Callable, chipInfoFunc: Calla
 class Server:
   _webServer: HTTPServer = None
 
-  def __init__(self, webHost: tuple[str, int], stats: dict, timeMSFunc: Callable, chipInfoFunc: Callable):
+  def __init__(self, webHost: tuple[str, int], bb: BlackBoard):
     self.tasks = queue.Queue()
-    self._webServer = HTTPServer(webHost, requestHandlerFactory(
-        stats, timeMSFunc, chipInfoFunc, self.tasks))
+    self._webServer = HTTPServer(webHost, requestHandlerFactory(bb, self.tasks))
     self._webServer.socket.setblocking(False)
 
   def close(self):

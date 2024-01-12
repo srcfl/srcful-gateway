@@ -6,10 +6,11 @@ import logging
 from unittest.mock import MagicMock
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.logger import Handler
+from server.blackboard import BlackBoard
 
 @pytest.fixture
 def request_data():
-    return RequestData({}, {}, {}, {}, None, None, None)
+    return RequestData(BlackBoard(), {}, {}, {}, None)
 
 def test_logger(request_data):
     handler = Handler()

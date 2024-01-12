@@ -6,6 +6,7 @@ import logging
 from unittest.mock import MagicMock
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.inverter import Handler
+from server.blackboard import BlackBoard
 
 @pytest.fixture
 def request_data():
@@ -14,8 +15,10 @@ def request_data():
             return {'test': 'test'}
         def isOpen(self):
             return True
-        
-    return RequestData({"inverter":mockInverter()}, {}, {}, {}, None, None, None)
+    bb = BlackBoard()
+    bb.inverters.add(mockInverter())
+    
+    return RequestData(bb, {}, {}, {}, None)
 
 def test_inverter(request_data):
     handler = Handler()

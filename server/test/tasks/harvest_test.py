@@ -3,22 +3,24 @@ import server.tasks.harvest as harvest
 from unittest.mock import Mock, patch
 import pytest
 
+from server.blackboard import BlackBoard
+
 
 def test_createHarvest():
 
-  t = harvest.Harvest(0, {}, None)
+  t = harvest.Harvest(0, BlackBoard(), None)
   assert t is not None
 
 
 def test_createHarvestTransport():
-  t = harvest.HarvestTransport(0, {}, {}, 'huawei')
+  t = harvest.HarvestTransport(0, BlackBoard(), {}, 'huawei')
   assert t is not None
 
 def test_inverterTerminated():
   mockInverter = Mock()
   mockInverter.isTerminated.return_value = False
   
-  t = harvest.Harvest(0, {}, mockInverter)
+  t = harvest.Harvest(0, BlackBoard(), mockInverter)
   t.execute(17)
   
   t.backoff_time = t.max_backoff_time
@@ -43,7 +45,7 @@ def test_executeHarvest():
   mockInverter.readHarvestData.return_value = registers
   mockInverter.isTerminated.return_value = False
 
-  t = harvest.Harvest(0, {}, mockInverter)
+  t = harvest.Harvest(0, BlackBoard(), mockInverter)
   ret = t.execute(17)
   assert ret is t
   assert t.barn[17] == registers
@@ -58,7 +60,7 @@ def test_executeHarvestx10():
   # the 10th time we should get a list of 2 tasks back
   mockInverter = Mock()
   registers = [{'1': 1717 + x} for x in range(10)]
-  t = harvest.Harvest(0, {}, mockInverter)
+  t = harvest.Harvest(0, BlackBoard(), mockInverter)
   mockInverter.isTerminated.return_value = False
 
   for i in range(9):
@@ -82,7 +84,7 @@ def test_adaptiveBackoff():
   mockInverter = Mock()
   mockInverter.isTerminated.return_value = False
   
-  t = harvest.Harvest(0, {}, mockInverter)
+  t = harvest.Harvest(0, BlackBoard(), mockInverter)
   t.execute(17)
 
   assert t.backoff_time == 1000
@@ -115,7 +117,7 @@ def test_adaptivePoll():
   mockInverter = Mock()
   mockInverter.isTerminated.return_value = False
   
-  t = harvest.Harvest(0, {}, mockInverter)
+  t = harvest.Harvest(0, BlackBoard(), mockInverter)
   t.execute(17)
 
   assert t.backoff_time == 1000

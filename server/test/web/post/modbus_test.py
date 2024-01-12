@@ -4,11 +4,14 @@ from unittest.mock import Mock, patch
 from server.web.handler.post.modbus import Handler
 from server.tasks.modbusWriteTask import ModbusWriteTask, log
 from server.web.handler.requestData import RequestData
+from server.blackboard import BlackBoard
+
 
 # Test that doPost parses commands into tasks correctly 
 def test_do_post():
     inverter = Mock()
-    stats = {'inverter': inverter}
+    bb = BlackBoard()
+    bb.inverters.add(inverter)
 
     handler = Handler()
 
@@ -28,7 +31,7 @@ def test_do_post():
 
     
     tasks = queue.Queue()
-    rd = RequestData(stats, {}, {}, post_data, None, None, tasks)
+    rd = RequestData(bb, {}, {}, post_data, tasks)
     response_code, response_body = handler.doPost(rd)
     
     assert tasks.qsize() == 1
@@ -40,13 +43,13 @@ def test_do_post():
 # Test error handling for missing 'commands' field
 def test_missing_commands():
     handler = Handler()
-    rd = RequestData({}, {}, {}, {}, None, None, queue.Queue())
+    rd = RequestData(BlackBoard(), {}, {}, {}, queue.Queue())
     response_code, response_body = handler.doPost(rd)
     assert response_code == 400
 # Test error handling for Missing inverter field
 def test_missing_inverter():
     handler = Handler()
-    rd = RequestData({}, {}, {}, {'commands': []}, None, None, queue.Queue())
+    rd = RequestData(BlackBoard(), {}, {}, {'commands': []}, queue.Queue())
     response_code, response_body = handler.doPost(rd)
     assert response_code == 400
 
@@ -54,32 +57,34 @@ def test_missing_inverter():
 def test_malformed_commands():
     handler = Handler()
 
+    
+
+    def requestData(data):
+        bb = BlackBoard()
+        bb.inverters.add(Mock())
+        return RequestData(bb, {}, {}, data, queue.Queue())
+
     # Command without required 'type' field
     post_data_no_type = {'commands': [{}]}
-    rd = RequestData({'inverter': Mock()}, {}, {}, post_data_no_type, None, None, queue.Queue())
-    response_code, response_body = handler.doPost(rd)
+    response_code, response_body = handler.doPost(requestData(post_data_no_type))
     assert response_code == 500
 
     # Unrecognized command type
     post_data_bad_type = {'commands': [{'type': 'not_a_real_command_type'}]}
-    rd = RequestData({'inverter': Mock()}, {}, {}, post_data_bad_type, None, None, queue.Queue())
-    response_code, response_body = handler.doPost(rd)
+    response_code, response_body = handler.doPost(requestData(post_data_bad_type))
     assert response_code == 500
 
     # Write command without 'startingAddress'
     post_data_no_start = {'commands': [{'type': 'write', 'values': ['0', '1', '2']}]}
-    rd = RequestData({'inverter': Mock()}, {}, {}, post_data_no_start, None, None, queue.Queue())
-    response_code, response_body = handler.doPost(rd)
+    response_code, response_body = handler.doPost(requestData(post_data_no_start))
     assert response_code == 500
 
     # Write command without 'values' field
     post_data_no_values = {'commands': [{'type': 'write', 'startingAddress': '10'}]}
-    rd = RequestData({'inverter': Mock()}, {}, {}, post_data_no_values, None, None, queue.Queue())
-    response_code, response_body = handler.doPost(rd)
+    response_code, response_body = handler.doPost(requestData(post_data_no_values))
     assert response_code == 500
 
     # Pause command without 'duration' field
     post_data_no_duration = {'commands': [{'type': 'pause'}]}
-    rd = RequestData({'inverter': Mock()}, {}, {}, post_data_no_duration, None, None, queue.Queue())
-    response_code, response_body = handler.doPost(rd)
+    response_code, response_body = handler.doPost(requestData(post_data_no_duration))
     assert response_code == 500

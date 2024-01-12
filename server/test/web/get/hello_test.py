@@ -5,10 +5,11 @@ import json
 import logging
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.hello import Handler
+from server.blackboard import BlackBoard
 
 @pytest.fixture
 def request_data():
-    return RequestData({}, {}, {}, {}, None, None, None)
+    return RequestData(BlackBoard(), {}, {}, {}, None)
 
 def test_logger(request_data):
     handler = Handler()

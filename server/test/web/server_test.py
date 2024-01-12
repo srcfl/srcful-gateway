@@ -4,6 +4,8 @@ from server.web.server import Server, requestHandlerFactory
 from http.server import BaseHTTPRequestHandler
 import pytest
 
+from server.blackboard import BlackBoard
+
 from http.server import HTTPServer
 
 
@@ -34,7 +36,7 @@ def mock_finish():
 @patch.object(BaseHTTPRequestHandler, 'handle')
 @patch.object(BaseHTTPRequestHandler, 'setup')
 def test_handler_apiGetEnpoints(mock_setup, mock_handle, mock_finish):
-  h = requestHandlerFactory(None, None, None, None)(None, None, None)
+  h = requestHandlerFactory(None, None)(None, None, None)
   handler, params = h.getAPIHandler('/api/crypto', '/api/', h.api_get)
   assert handler != None
   assert hasattr(handler, 'doGet')
@@ -43,7 +45,7 @@ def test_handler_apiGetEnpoints(mock_setup, mock_handle, mock_finish):
 @patch.object(BaseHTTPRequestHandler, 'handle')
 @patch.object(BaseHTTPRequestHandler, 'setup')
 def test_handler_apiGetEnpointsParams(mock_setup, mock_handle, mock_finish):
-  h = requestHandlerFactory(None, None, None, None)(None, None, None)
+  h = requestHandlerFactory(None, None)(None, None, None)
   path, query = h.pre_do('/api/inverter/modbus/holding/1234?test=hello')
   handler, params = h.getAPIHandler(path, '/api/', h.api_get)
   assert handler != None
@@ -54,14 +56,14 @@ def test_handler_apiGetEnpointsParams(mock_setup, mock_handle, mock_finish):
 
 
 def test_open_close():
-  s = Server(('localhost', 8081), {}, timeFunc, getChipInfoFunc)
+  s = Server(('localhost', 8081), BlackBoard())
   assert isinstance(s._webServer, HTTPServer)
   s.close()
   assert s._webServer is None
 
 
 def test_handler_postBytest2Dict():
-  h = requestHandlerFactory(None, None, None, None)
+  h = requestHandlerFactory(None, None)
   d = h.post2Dict('')
   assert d == {}
   assert h.post2Dict('foo') == {}
@@ -73,7 +75,7 @@ def test_handler_postBytest2Dict():
 
 
 def test_handler_getPostdata():
-  h = requestHandlerFactory(None, None, None, None)
+  h = requestHandlerFactory(None, None)
   assert h.getData({'Content-Length': '0'}, BytesIO(b'')) == {}
 
   data = b'name=John%20Doe&age=30&location=New%20York'
@@ -93,7 +95,7 @@ def test_handler_getPostdata():
 @patch.object(BaseHTTPRequestHandler, 'setup')
 def test_handler_get_root(mock_setup, mock_handle, mock_finish):
   # test that the root handler is used when no other handler matches
-  h = requestHandlerFactory({"startTime": 7, "name":"dret"}, lambda: 10, lambda: "crypto dret", [])(None, None, None)
+  h = requestHandlerFactory(BlackBoard(), [])(None, None, None)
 
   # we need to mock the base class methods
   h.path = ""
@@ -111,7 +113,7 @@ def test_handler_get_root(mock_setup, mock_handle, mock_finish):
 @patch.object(BaseHTTPRequestHandler, 'setup')
 def test_handler_get_doGet(mock_setup, mock_handle, mock_finish):
   # check that all get handlers have a doGet method
-  h = requestHandlerFactory({"startTime": 7, "name":"dret"}, lambda: 10, lambda: "crypto dret", [])(None, None, None)
+  h = requestHandlerFactory(BlackBoard(), [])(None, None, None)
   for handler in h.api_get.values():
     assert hasattr(handler, 'doGet')
 
@@ -120,6 +122,6 @@ def test_handler_get_doGet(mock_setup, mock_handle, mock_finish):
 @patch.object(BaseHTTPRequestHandler, 'setup')
 def test_handler_get_doPost(mock_setup, mock_handle, mock_finish):
   # check that all post handlers have a doPost method
-  h = requestHandlerFactory({"startTime": 7, "name":"dret"}, lambda: 10, lambda: "crypto dret", [])(None, None, None)
+  h = requestHandlerFactory(BlackBoard(), [])(None, None, None)
   for handler in h.api_post.values():
     assert hasattr(handler, 'doPost')
