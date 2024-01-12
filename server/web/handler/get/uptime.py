@@ -9,4 +9,4 @@ from ..requestData import RequestData
 class Handler(GetHandler):
   def doGet(self, request_data: RequestData):  
     
-    return 200, json.dumps({'msek': request_data.timeMSFunc() - request_data.stats['startTime']})
+    return 200, json.dumps({'msek': request_data.bb.timeMSFunc() - request_data.bb.startTime})

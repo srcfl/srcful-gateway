@@ -7,8 +7,8 @@ class Handler(GetHandler):
   def doGet(self, request_data: RequestData):
     config = {'status': 'No inverter'}
 
-    if('inverter' in request_data.stats and request_data.stats['inverter'] != None): 
-      inverter = request_data.stats['inverter']
+    if len(request_data.bb.inverters.lst) > 0:
+      inverter = request_data.inverters.inverters[0]
       config = inverter.getConfigDict()
     
       if inverter.isOpen():

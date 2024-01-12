@@ -28,7 +28,7 @@ class Handler(PostHandler):
       try:
         log.info('Opening WiFi connection to {}'.format(request_data.data['ssid']))
         wificon = WiFiHandler(request_data.data['ssid'], request_data.data['psk'])
-        request_data.tasks.put(OpenWiFiConTask(1000, request_data.stats, wificon))
+        request_data.tasks.put(OpenWiFiConTask(1000, request_data.bb, wificon))
         return 200, json.dumps({'status': 'ok'})
       except Exception as e:
         return 500, json.dumps({'status': 'error', 'message': str(e)})

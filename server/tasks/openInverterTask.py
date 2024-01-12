@@ -28,10 +28,9 @@ class ReadFreq(Task):
 
 
 class OpenInverterTask(Task):
-  def __init__(self, eventTime: int, bb: BlackBoard, inverter: Inverter, bootstrap):
+  def __init__(self, eventTime: int, bb: BlackBoard, inverter: Inverter):
     super().__init__(eventTime, bb)
     self.inverter = inverter
-    self.bootstrap = bootstrap
 
   def execute(self, eventTime):
     # Do this n times? 

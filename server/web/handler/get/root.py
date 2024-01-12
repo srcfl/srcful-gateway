@@ -150,22 +150,22 @@ from ..requestData import RequestData
 
 class Handler(GetHandler):
   def doGet(self, request_data: RequestData):
-    stats = request_data.stats
-    freqReads = stats['freqReads'] if 'freqReads' in stats else 0
-    energyHarvested = stats['harvest'] if 'harvest' in stats else 0
-    energyTransported = 0
-    if 'harvestTransports' in stats:
-      energyTransported = stats['harvestTransports']
-    startTime = stats['startTime']
+    #stats = request_data.stats
+    #freqReads = stats['freqReads'] if 'freqReads' in stats else 0
+    #energyHarvested = stats['harvest'] if 'harvest' in stats else 0
+    #energyTransported = 0
+    #if 'harvestTransports' in stats:
+    #  energyTransported = stats['harvestTransports']
+    startTime = request_data.bb.startTime
 
     ret = "<html><head><title>Srcful Energy Gateway</title></head>"
     ret += "<body>"
     ret += "<h1>Srcful Energy Gateway 0.0.6</h1>"
-    ret += f"<h2>{stats['name']}</h2>"
+    #ret += f"<h2>{stats['name']}</h2>"
 
-    ret += f"<p>chipInfo: {request_data.chipInfoFunc()}</p>"
+    ret += f"<p>chipInfo: {request_data.bb.chipInfoFunc()}</p>"
 
-    elapsedTime = request_data.timeMSFunc() - startTime
+    elapsedTime = request_data.bb.timeMSFunc() - startTime
 
     # convert elapsedTime to days, hours, minutes, seconds in a tuple
     days, remainder = divmod(elapsedTime // 1000, 60 * 60 * 24)
@@ -179,18 +179,18 @@ class Handler(GetHandler):
 
     ret += cryptoStuff()
 
-    ret += f"<p>freqReads: {freqReads} in {elapsedTime} ms<br/>"
-    ret += f"average freqReads: {freqReads / elapsedTime * 1000} per second</p>"
+    #ret += f"<p>freqReads: {freqReads} in {elapsedTime} ms<br/>"
+    #ret += f"average freqReads: {freqReads / elapsedTime * 1000} per second</p>"
 
-    ret += f"last freq: {stats['lastFreq'] if 'lastFreq' in stats else 0} Hz</p>"
+    #ret += f"last freq: {stats['lastFreq'] if 'lastFreq' in stats else 0} Hz</p>"
 
-    ret += f"<p>energyHarvested: {energyHarvested} in {elapsedTime} ms</br>"
-    ret += f"average energyHarvested: {energyHarvested / elapsedTime * 1000} per second</p>"
+    #ret += f"<p>energyHarvested: {energyHarvested} in {elapsedTime} ms</br>"
+    #ret += f"average energyHarvested: {energyHarvested / elapsedTime * 1000} per second</p>"
 
-    ret += f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>"
-    ret += f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>"
+    #ret += f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>"
+    #ret += f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>"
 
-    ret += f"ALL: {stats}</p>"
+    #ret += f"ALL: {stats}</p>"
 
     ret += "</body></html>"
 

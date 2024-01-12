@@ -28,11 +28,11 @@ class Handler:
         return json.dumps(self.schema())
     
     def doPost(self, request_data:RequestData):
-        if 'inverter' not in request_data.stats or request_data.stats['inverter'] is None:
+        if len(request_data.bb.inverters.lst) > 0:
             return 400, json.dumps({'error': 'inverter not initialized'})
 
         if 'frequency' in request_data.data and 'size' in request_data.data and 'registers' in request_data.data:
-            inverter = request_data.stats['inverter']
+            inverter = request_data.bb.inverters.lst[0]
             if inverter.isOpen():
                 # create a new live log object
                 registerValues = []

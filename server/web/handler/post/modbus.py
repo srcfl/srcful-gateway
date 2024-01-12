@@ -48,10 +48,8 @@ class Handler(PostHandler):
         if 'commands' not in request_data.data:
             return 400, json.dumps({'status': 'bad request', 'message': 'Missing commands in request'})
 
-        # Check if 'inverter' field exists in the stats
-        if 'inverter' not in request_data.stats:
+        if len(request_data.bb.inverters.lst) > 0:
             return 400, json.dumps({'status': 'error', 'message': 'No Modbus device initialized'})
-
         
         try:
             commands = request_data.data['commands']
@@ -75,7 +73,7 @@ class Handler(PostHandler):
                     return 500, json.dumps({'status': 'error', 'message': str(e)})
             
             # Add ModbusTask to task queue
-            request_data.tasks.put(ModbusWriteTask(100, request_data.stats, request_data.stats['inverter'], command_objects))
+            request_data.tasks.put(ModbusWriteTask(100, request_data.bb, request_data.bb.inverters.lst[0], command_objects))
             
             return 200, json.dumps({'status': 'ok'})
         except Exception as e:

@@ -40,7 +40,7 @@ class Handler(PostHandler):
         inverter = InverterRTU(conf)
         logger.info("Created an RTU inverter")
         
-        request_data.tasks.put(OpenInverterTask(100, request_data.stats, inverter, request_data.stats['bootstrap']))
+        request_data.tasks.put(OpenInverterTask(100, request_data.bb, inverter))
         return 200, json.dumps({'status': 'ok'})
       except Exception as e:
         logger.error('Failed to open inverter: {}'.format(request_data.data))

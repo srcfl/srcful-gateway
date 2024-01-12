@@ -23,7 +23,7 @@ class RegisterHandler(GetHandler):
         try:
             datatype = RegisterValue.Type.from_str(request_data.query_params.get('type', 'none'))
             endianness = RegisterValue.Endianness.from_str(request_data.query_params.get('endianess', 'little'))  
-            raw, value = RegisterValue(address, size, self.get_register_type(), datatype, endianness).readValue(request_data.stats['inverter'])
+            raw, value = RegisterValue(address, size, self.get_register_type(), datatype, endianness).readValue(request_data.bb.inverters.lst[0])
             
 
             ret = {
