@@ -52,6 +52,8 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup|None = None, boot
 
   bootstrap = Bootstrap(bootstrapFile)
 
+  bb.inverters.addListener(bootstrap)
+
   try:
     s = WifiScanner()
     ssids = s.getSSIDs()
@@ -61,15 +63,15 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup|None = None, boot
 
   # put some initial tasks in the queue
   if inverter is not None:
-    tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter), bootstrap))
+    tasks.put(OpenInverterTask(startTime, bb, InverterTCP(inverter), bootstrap))
 
   # this is a hack to pass the bootstrap object to the post API that also creates open inverter tasks
   # this should really be handled better i.e. blackboard pattern with some observer pattern
   stats['bootstrap'] = bootstrap
-  for task in bootstrap.getTasks(startTime + 500, stats):
+  for task in bootstrap.getTasks(startTime + 500, bb):
     tasks.put(task)
 
-  tasks.put(CheckForWebRequest(startTime + 1000, stats, webServer))
+  tasks.put(CheckForWebRequest(startTime + 1000, bb, webServer))
 
   try:
     mainLoop(tasks)

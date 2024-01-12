@@ -22,6 +22,14 @@ class Bootstrap(BootstrapSaver):
     self.tasks = []
     self._createFileIfNotExists()
 
+  
+  # implementation of blackboard inverter observer
+  def addInverter(self, inverter):
+    self.appendInverter(inverter.getConfig())
+
+  def removeInverter(self, inverter):
+    logger.info('Removing inverter from bootstrap: {} not yet supported'.format(inverter.getConfig()))
+
 
   def _createFileIfNotExists(self):
     # create the directories and the file if it does not exist
@@ -92,22 +100,22 @@ class Bootstrap(BootstrapSaver):
 
     return self.tasks
   
-  def _createTask(self, taskName: str, taskArgs: list, eventTime, stats):
+  def _createTask(self, taskName: str, taskArgs: list, eventTime, bb):
     # currently we only support OpenInverter
     if taskName == 'OpenInverter':
-      return self._createOpenInverterTask(taskArgs, eventTime, stats)
+      return self._createOpenInverterTask(taskArgs, eventTime, bb)
     else:
       logger.error('Unknown task: {} in file {}'.format(taskName, self.filename))
       return None
   
-  def _createOpenInverterTask(self, taskArgs: list, eventTime, stats):
+  def _createOpenInverterTask(self, taskArgs: list, eventTime, bb):
     # check the number of arguments
     if taskArgs[0] == 'TCP':
       ip = taskArgs[1]
       port = int(taskArgs[2])
       type = taskArgs[3]
       address = int(taskArgs[4])
-      return OpenInverterTask(eventTime + 1000, stats, InverterTCP((ip, port, type, address)), self)
+      return OpenInverterTask(eventTime + 1000, bb, InverterTCP((ip, port, type, address)), self)
     elif taskArgs[0] == 'RTU':
       port = taskArgs[1]
       baudrate = int(taskArgs[2])
@@ -116,5 +124,5 @@ class Bootstrap(BootstrapSaver):
       stopbits = float(taskArgs[5])
       type = taskArgs[6]
       address = int(taskArgs[7])
-      return OpenInverterTask(eventTime + 1000, stats, InverterRTU((port, baudrate, bytesize, parity, stopbits, type, address)), self)
+      return OpenInverterTask(eventTime + 1000, bb, InverterRTU((port, baudrate, bytesize, parity, stopbits, type, address)), self)
   
