@@ -38,7 +38,13 @@ class BlackBoard:
         '''Observable list of inverters'''
         def __init__(self):
             self.lst = []
-            self._observers = []
+            self._observers = set()
+
+        def addListener(self, observer):
+            self._observers.add(observer)
+
+        def removeListener(self, observer):
+            self._observers.remove(observer)
         
         def add(self, inverter):
             self.lst.append(inverter)
