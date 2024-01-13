@@ -41,11 +41,8 @@ def mainLoop(tasks: queue.PriorityQueue, bb: BlackBoard):
 def main(webHost: tuple[str, int], inverter: InverterTCP.Setup|None = None, bootstrapFile: str|None = None):
 
   bb = BlackBoard()
-  startTime = bb.time_ms()
-  stats = {'startTime': startTime, 'freqReads': 0,
-           'energyHarvested': 0, 'webRequests': 0, 'name': 'deadbeef'}
 
-  webServer = server.web.server.Server(webHost, stats, bb)
+  webServer = server.web.server.Server(webHost, bb)
   print("Server started http://%s:%s" % (webHost[0], webHost[1]))
 
   tasks = queue.PriorityQueue()
@@ -63,26 +60,23 @@ def main(webHost: tuple[str, int], inverter: InverterTCP.Setup|None = None, boot
 
   # put some initial tasks in the queue
   if inverter is not None:
-    tasks.put(OpenInverterTask(startTime, bb, InverterTCP(inverter), bootstrap))
+    tasks.put(OpenInverterTask(bb.startTime, bb, InverterTCP(inverter)))
 
-  # this is a hack to pass the bootstrap object to the post API that also creates open inverter tasks
-  # this should really be handled better i.e. blackboard pattern with some observer pattern
-  stats['bootstrap'] = bootstrap
-  for task in bootstrap.getTasks(startTime + 500, bb):
+  for task in bootstrap.getTasks(bb.startTime + 500, bb):
     tasks.put(task)
 
-  tasks.put(CheckForWebRequest(startTime + 1000, bb, webServer))
+  tasks.put(CheckForWebRequest(bb.startTime + 1000, bb, webServer))
 
   try:
-    mainLoop(tasks)
+    mainLoop(tasks, bb)
   except KeyboardInterrupt:
     pass
   except Exception as e:
     print("Unexpected error:", sys.exc_info()[0])
     print(e)
   finally:
-    if 'inverter' in stats and stats['inverter'] is not None:
-      stats['inverter'].close()
+    for i in bb.inverters.lst:
+      i.close()
     webServer.close()
     print("Server stopped.")
 
@@ -93,4 +87,5 @@ if __name__ == "__main__":
   #handler = logging.StreamHandler(sys.stdout)
   #logging.root.addHandler(handler)
   logging.root.setLevel(logging.INFO)
-  main(('localhost', 5000), ("localhost", 502, "huawei", 1))
+  #main(('localhost', 5000), ("localhost", 502, "huawei", 1), 'bootstrap.txt')
+  main(('localhost', 5000), None, 'bootstrap.txt')
