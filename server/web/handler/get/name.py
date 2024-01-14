@@ -6,7 +6,17 @@ from ..handler import GetHandler
 
 from ..requestData import RequestData
 
+
+
 class Handler(GetHandler):
+
+
+  def schema(self):
+    return { 'type': 'get',
+                    'description': 'Returns the name of the gateway fetched from the backend',
+                    'returns': {'name': 'string, name of the gateway'}
+                  }
+
   def doGet(self, request_data: RequestData):  
     # this works as the web response task is threaded in itself and will not block
     # the task queue execution - afaik :P

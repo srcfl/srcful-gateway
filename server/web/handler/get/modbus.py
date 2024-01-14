@@ -10,6 +10,22 @@ from server.inverters.registerValue import RegisterValue
 # Example query: inverter/modbus/holding/40069?size=2&type=float&endianess=big
 
 class RegisterHandler(GetHandler):
+    def schema(self):
+        return { 'type': 'get',
+                        'description': 'Get data from a modbus registger',
+                        'required': {'{address}': 'int, address of the register to read url parameter',},
+
+                        'optional': {   'size': 'int, size of the register to read (default 1)',
+                                        'type': 'string, data type of the register to read (default none)',
+                                        'endianess': 'string, endianess of the register to read little or big, (default little)'},
+                                        
+                        'returns': {'register': 'int, address of the register read',
+                                    'size': 'int, size of the register read',
+                                    'raw_value': 'string, hex representation of the raw value read',
+                                    'value': 'string, value read from the register, if applicable'}
+                        }
+
+
     def doGet(self, request_data: RequestData):
         if 'address' not in request_data.post_params:
             return 400, json.dumps({'error': 'missing address'})

@@ -9,11 +9,8 @@ class Handler(GetHandler):
 
   def schema(self):
     return { 'type': 'get',
-                    'description': 'Get crypo chip information',
-                    'returns': {'device': 'string, device name',
-                                'serialNumber': 'string, serial number',
-                                'publikKey': 'string, public key',
-                                'publicKey_pem': 'string, public key in pem format'}
+                    'description': 'Get the gateway uptime in milliseconds',
+                    'returns': {'msek': 'int, milliseconds since boot'}
                   }
 
 

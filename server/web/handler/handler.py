@@ -14,7 +14,7 @@ class PostHandler:
 class GetHandler:
     def schema(self):
         return { 'type': 'get',
-                        'description': 'get handler default documentation',
+                        'description': 'get handler default documentation...',
                         'required': {},
                         'returns': {}
                       }
