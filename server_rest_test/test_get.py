@@ -138,3 +138,13 @@ def test_modbus_raw():
     assert j['register'] == 40000
     assert j['raw_value'] == '00000000'
 
+def test_logger():
+    url = settings.api_url + "logger"
+
+    headers = {'user-agent': 'vscode-restclient'}
+
+    response = requests.request("GET", url, headers=headers)
+
+    assert response.status_code == 200
+    assert response.headers['content-type'] == 'application/json'
+    assert "server.tasks.openInverterTask" in response.json()
