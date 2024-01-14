@@ -6,6 +6,14 @@ from ..handler import GetHandler
 from ..requestData import RequestData
 
 class Handler(GetHandler):
+  
+  def schema(self):
+    return { 'type': 'get',
+                    'description': 'Returns the configuration of the running inverter, details depend on the inverter type.',
+                    'returns': {'A dictionary with all log names and their respective log level (DEGUG, INFO, WARNING, ERROR, CRITICAL)'}
+                    }
+
+
   def doGet(self, request_data: RequestData):    
     loggers = [logging.getLogger()]  # get the root logger
     loggers = loggers + [logging.getLogger(name) for name in logging.root.manager.loggerDict]
