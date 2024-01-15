@@ -8,6 +8,8 @@ import requests
 import egwttp
 from typing import Any
 
+import macAddr
+
 # import wifiprov
 
 from bless import (  # type: ignore
@@ -23,11 +25,11 @@ logger = logging.getLogger(name=__name__)
 trigger: asyncio.Event = asyncio.Event()
 
 # some global configuration constants
-g_service_uuid = "A07498CA-AD5B-474E-940D-16F1FBE7E8CD"
-g_request_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B" # for accepting requests ie. clients write to this
-g_response_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021C" # for sending responses ie client read from this
+g_service_uuid = "A07498CA-AD5B-474E-940D-16F1FBE7E8CD".lower() # this is the uuid of the service
+g_request_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B".lower() # for accepting requests ie. clients write to this
+g_response_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021C".lower() # for sending responses ie client read from this
 g_api_url = "localhost:5000"
-g_service_name = "SrcFul Energy Gateway"
+g_service_name = f"SrcFul Energy Gateway {macAddr.get().replace(':', '')[-6:]}" # we cannot use special characters in the name as this will mess upp the bluez service name filepath
 g_server = None
 
 
@@ -93,7 +95,7 @@ async def run():
 
   # Add Service
   await g_server.add_new_service(g_service_uuid)
-  logger.debug("Service added")
+  logger.debug(f"Service added with uuid {g_service_uuid} and name {g_service_name}.")
 
   # Add a Characteristic to the service
   char_flags = (
@@ -140,19 +142,17 @@ async def run():
 
   # bluez backend specific
   if g_server.app:
-
     async def on_startNotify(characteristic: BlessGATTCharacteristic):
       logger.debug("StartNotify called - client subscribed")
       await g_server.app.stop_advertising(g_server.adapter)
       logger.debug("Advertising stopped")
       return True
-    
+   
     async def on_stopNotify(characteristic: BlessGATTCharacteristic):
       logger.debug("StopNotify called - client unsubscribed")
       await g_server.app.start_advertising(g_server.adapter)
       logger.debug("Advertising started")
       return True
-
     g_server.app.StartNotify = on_startNotify
     g_server.app.StopNotify = on_stopNotify
 
@@ -164,7 +164,7 @@ async def run():
 
 if __name__ == "__main__":
 
-  print("Starting ble service...")
+  print("Starting ble service... ")
 
   args = argparse.ArgumentParser()
   args.add_argument("-api_url", help=f"The url of the API endpoint, default: {g_api_url}", default=g_api_url)
@@ -175,8 +175,8 @@ if __name__ == "__main__":
 
 
   args = args.parse_args()
-  g_service_uuid = args.service_uuid
-  g_char_uuid = args.char_uuid
+  g_service_uuid = args.service_uuid.lower()
+  g_char_uuid = args.char_uuid.lower()
   g_api_url = "http://" + args.api_url
   g_service_name = args.service_name
   if args.log_level not in logging.getLevelNamesMapping().keys():
