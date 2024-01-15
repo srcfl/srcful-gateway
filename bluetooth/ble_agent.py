@@ -1,197 +1,152 @@
-#!/usr/bin/python3
-# SPDX-License-Identifier: LGPL-2.1-or-later
+# Based on https://git.kernel.org/pub/scm/bluetooth/bluez.git/tree/test/simple-agent
+# and https://github.com/nicokaiser/rpi-audio-receiver/blob/master/install-bluetooth.sh
 
 from __future__ import absolute_import, print_function, unicode_literals
+import argparse
+from gi.repository import GLib
 
-from optparse import OptionParser
+import os
 import sys
+import time
 import dbus
 import dbus.service
 import dbus.mainloop.glib
 
-try:
-    from gi.repository import GObject
-except ImportError:
-    import gobject as GObject
-import bluezutils
+# Bluez DBus constants
+DBUS_NAME = "org.bluez"
+DBUS_OBJECT = "/org/bluez"
+DBUS_INTERFACE_PROPERTIES = "org.freedesktop.DBus.Properties"
+DBUS_INTERFACE_AGENT = "org.bluez.Agent1"
+DBUS_INTERFACE_MANAGER = "org.bluez.AgentManager1"
+DBUS_INTERFACE_DEVICE = "org.bluez.Device1"
+DBUS_INTERFACE_ADAPTER = "org.bluez.Adapter1"
 
-import logging
+# Agent default settings
+capabilities = [ "KeyboardDisplay", "NoInputNoOutput" ]
+DEFAULT_CAPABILITY = os.getenv("AGENT_CAPABILITY", "NoInputNoOutput")
+DEFAULT_INTERFACE = os.getenv("HCI_INTERFACE", "hci0")
+DEFAULT_PIN_CODE = os.getenv("PIN_CODE", "0000")
 
-logger = logging.getLogger("ble_agent")
+# Other settings
+RECONNECT_MAX_RETRIES = os.getenv("RECONNECT_MAX_RETRIES", 5)
 
-BUS_NAME = "org.bluez"
-AGENT_INTERFACE = "org.bluez.Agent1"
-AGENT_PATH = "/test/agent"
+# DBus helper functions
+def dbus_get_interface(bus_name, object_name, interface_name):
+    dbus_obj = bus.get_object(bus_name, object_name)
+    return dbus.Interface(dbus_obj, interface_name)
 
-bus = None
-device_obj = None
-dev_path = None
+def dbus_set_property(bus_name, object_name, interface_name, prop_name, value):
+    props = dbus_get_interface(bus_name, object_name, DBUS_INTERFACE_PROPERTIES)
+    props.Set(interface_name, prop_name, value)
 
+def dbus_get_property(bus_name, object_name, interface_name, prop_name):
+    props = dbus_get_interface(bus_name, object_name, DBUS_INTERFACE_PROPERTIES)
+    return props.Get(interface_name, prop_name)
 
-def ask(prompt):
+def dbus_get_all_properties(bus_name, object_name, interface_name):
+  props = dbus_get_interface(bus_name, object_name, DBUS_INTERFACE_PROPERTIES)
+  return props.GetAll(interface_name)
+
+def dbus_filter_objects_by_interface(objects, interface_name):
+    result = []
+    for path in objects.keys():
+        interfaces = objects[path]
+        for interface in interfaces.keys():
+            if interface == interface_name:
+                result.append(path)
+    return result
+
+def valid_pin_code(pin_code):
     try:
-        return raw_input(prompt)
+        int_pin_code = int(pin_code)
     except:
-        return input(prompt)
-
-
-def set_trusted(path):
-    props = dbus.Interface(
-        bus.get_object("org.bluez", path), "org.freedesktop.DBus.Properties"
-    )
-    props.Set("org.bluez.Device1", "Trusted", True)
-
-
-def dev_connect(path):
-    dev = dbus.Interface(bus.get_object("org.bluez", path), "org.bluez.Device1")
-    dev.Connect()
-
-
-class Rejected(dbus.DBusException):
-    _dbus_error_name = "org.bluez.Error.Rejected"
-
+        return False
+    return len(pin_code) > 0 and len(pin_code) <= 6 and int_pin_code >= 0 and int_pin_code <= 999999
 
 class Agent(dbus.service.Object):
     exit_on_release = True
 
+    def __init__(self, bus, path, pin_code):
+        self.pin_code = pin_code
+        super(Agent, self).__init__(bus, path)
+
     def set_exit_on_release(self, exit_on_release):
         self.exit_on_release = exit_on_release
 
-    @dbus.service.method(AGENT_INTERFACE, in_signature="", out_signature="")
+    @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="", out_signature="")
     def Release(self):
         print("Release")
         if self.exit_on_release:
             mainloop.quit()
 
-    @dbus.service.method(AGENT_INTERFACE, in_signature="os", out_signature="")
+    @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="os", out_signature="")
     def AuthorizeService(self, device, uuid):
         print("AuthorizeService (%s, %s)" % (device, uuid))
-        # authorize = ask("Authorize connection (yes/no): ")
-        # if (authorize == "yes"):
-        return
-        # raise Rejected("Connection rejected by user")
-
-    @dbus.service.method(AGENT_INTERFACE, in_signature="os", out_signature="")
-    def Authorize(self, device, uuid):
-        print("AuthorizeService (%s, %s)" % (device, uuid))
-        # authorize = ask("Authorize connection (yes/no): ")
-        # if (authorize == "yes"):
+        dbus_set_property(DBUS_NAME, device, DBUS_INTERFACE_DEVICE, "Trusted", True)
         return
 
-    @dbus.service.method(AGENT_INTERFACE, in_signature="o", out_signature="s")
+    @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="o", out_signature="s")
     def RequestPinCode(self, device):
         print("RequestPinCode (%s)" % (device))
-        set_trusted(device)
-        return ask("Enter PIN Code: ")
+        dbus_set_property(DBUS_NAME, device, DBUS_INTERFACE_DEVICE, "Trusted", True)
+        return self.pin_code
 
-    @dbus.service.method(AGENT_INTERFACE, in_signature="o", out_signature="u")
+    @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="o", out_signature="u")
     def RequestPasskey(self, device):
         print("RequestPasskey (%s)" % (device))
-        set_trusted(device)
-        passkey = ask("Enter passkey: ")
-        return dbus.UInt32(passkey)
+        dbus_set_property(DBUS_NAME, device, DBUS_INTERFACE_DEVICE, "Trusted", True)
+        return dbus.UInt32(PIN_CODE)
 
-    @dbus.service.method(AGENT_INTERFACE, in_signature="ouq", out_signature="")
+    @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="ouq", out_signature="")
     def DisplayPasskey(self, device, passkey, entered):
         print("DisplayPasskey (%s, %06u entered %u)" % (device, passkey, entered))
 
-    @dbus.service.method(AGENT_INTERFACE, in_signature="os", out_signature="")
+    @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="os", out_signature="")
     def DisplayPinCode(self, device, pincode):
         print("DisplayPinCode (%s, %s)" % (device, pincode))
 
-    @dbus.service.method(AGENT_INTERFACE, in_signature="ou", out_signature="")
+    @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="ou", out_signature="")
     def RequestConfirmation(self, device, passkey):
         print("RequestConfirmation (%s, %06d)" % (device, passkey))
-        # confirm = ask("Confirm passkey (yes/no): ")
-        # if (confirm == "yes"):
-        set_trusted(device)
+        dbus_set_property(DBUS_NAME, device, DBUS_INTERFACE_DEVICE, "Trusted", True)
         return
-        # raise Rejected("Passkey doesn't match")
 
-    @dbus.service.method(AGENT_INTERFACE, in_signature="o", out_signature="")
+    @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="o", out_signature="")
     def RequestAuthorization(self, device):
         print("RequestAuthorization (%s)" % (device))
-        # auth = ask("Authorize? (yes/no): ")
-        # if (auth == "yes"):
+        dbus_set_property(DBUS_NAME, device, DBUS_INTERFACE_DEVICE, "Trusted", True)
         return
-        # raise Rejected("Pairing rejected")
 
-    @dbus.service.method(AGENT_INTERFACE, in_signature="", out_signature="")
+    @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="", out_signature="")
     def Cancel(self):
         print("Cancel")
 
-
-def pair_reply():
-    print("Device paired")
-    set_trusted(dev_path)
-    dev_connect(dev_path)
-    mainloop.quit()
-
-
-def pair_error(error):
-    err_name = error.get_dbus_name()
-    if err_name == "org.freedesktop.DBus.Error.NoReply" and device_obj:
-        print("Timed out. Cancelling pairing")
-        device_obj.CancelPairing()
-    else:
-        print("Creating device failed: %s" % (error))
-
-    mainloop.quit()
-
-
 if __name__ == "__main__":
+    # Initialize DBus library
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SystemBus()
-    # capability = "KeyboardDisplay"
-    capability = "NoInputNoOutput"
 
-    parser = OptionParser()
-    parser.add_option(
-        "-i",
-        "--adapter",
-        action="store",
-        type="string",
-        dest="adapter_pattern",
-        default=None,
-    )
-    parser.add_option(
-        "-c", "--capability", action="store", type="string", dest="capability"
-    )
-    parser.add_option(
-        "-t", "--timeout", action="store", type="int", dest="timeout", default=60000
-    )
-    (options, args) = parser.parse_args()
-    if options.capability:
-        capability = options.capability
+    # Parse command line options
+    parser = argparse.ArgumentParser(description='Balena bluez authentication agent')
+    parser.add_argument("-c", "--capability", dest="capability", choices=capabilities, default=DEFAULT_CAPABILITY, help="Define the bluez agent capability. Defaults to 'NoInputNoOutput'.")
+    parser.add_argument("-i", "--interface", dest="interface", default=DEFAULT_INTERFACE, help="Define the bluetooth interface to be used. Defaults to 'hci0'.")
+    parser.add_argument("-p", "--pincode", dest="pin_code", default=DEFAULT_PIN_CODE, help="Set PIN Code to be used for authentication. Only used if running in legacy mode (SSP off). Defaults to '0000'")
+    args = parser.parse_args()
 
-    path = "/code/ble_agent"
-    agent = Agent(bus, path)
+    # Set agent settings
+    capability = args.capability or DEFAULT_CAPABILITY
+    interface = args.interface or DEFAULT_INTERFACE
+    pin_code = args.pin_code if valid_pin_code(args.pin_code) else DEFAULT_PIN_CODE
 
-    # dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-    mainloop = GObject.MainLoop()
-    # mainloop = dbus.mainloop.glib.MainLoop()
+    # Set bluez discoverable timeout to infinite. Most smartphones won't connect with shorter timeouts
+    dbus_set_property(DBUS_NAME, DBUS_OBJECT + '/' + interface, DBUS_INTERFACE_ADAPTER, "DiscoverableTimeout", dbus.UInt32(0))
 
-    obj = bus.get_object(BUS_NAME, "/org/bluez")
-    manager = dbus.Interface(obj, "org.bluez.AgentManager1")
+    # Create and register bluetooth agent
+    path = "/test/agent"
+    agent = Agent(bus, path, pin_code)
+    manager = dbus_get_interface(DBUS_NAME, DBUS_OBJECT, DBUS_INTERFACE_MANAGER)
     manager.RegisterAgent(path, capability)
+    manager.RequestDefaultAgent(path)
 
-    print("Agent registered")
-
-    # Fix-up old style invocation (BlueZ 4)
-    if len(args) > 0 and args[0].startswith("hci"):
-        options.adapter_pattern = args[0]
-        del args[:1]
-
-    if len(args) > 0:
-        device = bluezutils.find_device(args[0], options.adapter_pattern)
-        dev_path = device.object_path
-        agent.set_exit_on_release(False)
-        device.Pair(reply_handler=pair_reply, error_handler=pair_error, timeout=60000)
-        device_obj = device
-    else:
-        manager.RequestDefaultAgent(path)
-
-    mainloop.run()
-
-# adapter.UnregisterAgent(path)
-# print("Agent unregistered")
+    # Log agent info
+    print("Bluetooth agent started!")
