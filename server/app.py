@@ -1,6 +1,8 @@
 import queue
 import sys
 import time
+import logging
+
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
 from server.tasks.openInverterTask import OpenInverterTask
@@ -11,6 +13,7 @@ from server.wifi.scan import WifiScanner
 
 from server.blackboard import BlackBoard
 
+logger = logging.getLogger(__name__)
 
 def mainLoop(tasks: queue.PriorityQueue, bb: BlackBoard):
   # here we could keep track of statistics for different types of tasks
@@ -28,7 +31,11 @@ def mainLoop(tasks: queue.PriorityQueue, bb: BlackBoard):
     if delay > 0.01:
       time.sleep(delay)
 
-    newTask = task.execute(bb.time_ms())
+    try:
+      newTask = task.execute(bb.time_ms())
+    except Exception as e:
+      logger.error('Failed to execute task: %s', e)
+      newTask = None
 
     if newTask != None:
       try:

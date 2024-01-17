@@ -38,7 +38,10 @@ class ModbusWriteTask(Task):
         while self.currentCommand < len(self.commands):
             command = self.commands[self.currentCommand]
             if isinstance(command, ModbusWriteTask.WriteCommand):
-                self.inverter.writeRegisters(command.startingAddress, command.values)
+                try:
+                    self.inverter.writeRegisters(command.startingAddress, command.values)
+                except Exception as e:
+                    log.error('Failed to write to Modbus device: %s', e)
                 self.currentCommand += 1
             elif isinstance(command, ModbusWriteTask.PauseCommand):
                 self.time = eventTime + command.duration

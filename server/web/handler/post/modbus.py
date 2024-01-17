@@ -35,12 +35,17 @@ class Handler(PostHandler):
     def map_values(self, values):
         mapped_values = []
         for value in values:
-            if value.startswith('0b'):  # Binary
-                mapped_values.append(int(value, 2))
-            elif value.startswith('0x'):  # Hexadecimal
-                mapped_values.append(int(value, 16))
-            else:  # Decimal
-                mapped_values.append(int(value))
+            if isinstance(value, str):
+                if value.startswith('0b'):  # Binary
+                    mapped_values.append(int(value, 2))
+                elif value.startswith('0x'):  # Hexadecimal
+                    mapped_values.append(int(value, 16))
+                else:  # Decimal
+                    mapped_values.append(int(value))
+            elif isinstance(value, int):
+                mapped_values.append(value)
+            else:
+                raise Exception('Unknown value type: %s', type(value))
         return mapped_values
 
     def doPost(self, request_data:RequestData) -> tuple[int, str]:
