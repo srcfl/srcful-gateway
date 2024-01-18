@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import threading
 
 import argparse
 
@@ -37,19 +38,18 @@ def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray
   logger.debug(f"Reading {characteristic.value}")
   return characteristic.value
 
-def handle_response(path:str, reply: requests.Response):
-  egwttp_response = egwttp.construct_response(path, reply.text)
+def handle_response(path:str, method:str, reply: requests.Response):
+  egwttp_response = egwttp.construct_response(path, method, reply.text)
   logger.debug(f"Reply: {egwttp_response}")
   return egwttp_response
 
 def request_get(path: str) -> bytearray:
-  return bytearray(handle_response(path, requests.get(g_api_url + path)))
+  return bytearray(handle_response(path, 'GET', requests.get(g_api_url + path)))
 
 def request_post(path: str, content: str) -> bytearray:
-  return bytearray(handle_response(path, requests.post(g_api_url + path, data=content)))
+  return bytearray(handle_response(path, 'POST', requests.post(g_api_url + path, data=content)))
 
-def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
-
+def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
     characteristic.value = value
     # if request_response and request_response.value:
     val = value.decode('utf-8')
@@ -81,6 +81,10 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
       # when the response is received, transfer it to a egwttp response
     else:
         logger.debug("Not a EGWTTP request, doing nothing")
+
+def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
+  threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
+  
     
     
 
@@ -141,20 +145,20 @@ async def run():
   )
 
   # bluez backend specific
-  if g_server.app:
-    async def on_startNotify(characteristic: BlessGATTCharacteristic):
-      logger.debug("StartNotify called - client subscribed")
-      await g_server.app.stop_advertising(g_server.adapter)
-      logger.debug("Advertising stopped")
-      return True
-   
-    async def on_stopNotify(characteristic: BlessGATTCharacteristic):
-      logger.debug("StopNotify called - client unsubscribed")
-      await g_server.app.start_advertising(g_server.adapter)
-      logger.debug("Advertising started")
-      return True
-    g_server.app.StartNotify = on_startNotify
-    g_server.app.StopNotify = on_stopNotify
+  #if g_server.app:
+  #  async def on_startNotify(characteristic: BlessGATTCharacteristic):
+  #    logger.debug("StartNotify called - client subscribed")
+  #    await g_server.app.stop_advertising(g_server.adapter)
+  #    logger.debug("Advertising stopped")
+  #    return True
+  # 
+  #  async def on_stopNotify(characteristic: BlessGATTCharacteristic):
+  #    logger.debug("StopNotify called - client unsubscribed")
+  #    await g_server.app.start_advertising(g_server.adapter)
+  #    logger.debug("Advertising started")
+  #    return True
+  #  g_server.app.StartNotify = on_startNotify
+  #  g_server.app.StopNotify = on_stopNotify
 
 
   await g_server.start()
