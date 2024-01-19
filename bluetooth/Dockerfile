@@ -5,7 +5,6 @@ ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 WORKDIR /code
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
-RUN pip install dbus-python pycairo PyGObject
-RUN pip install python-networkmanager
+RUN pip install dbus-python
 COPY . .
 ENTRYPOINT sh docker_entrypoint.sh
