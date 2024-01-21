@@ -1,60 +1,66 @@
 from .inverter import Inverter
 from pymodbus.client import ModbusTcpClient as ModbusClient
-from pymodbus.pdu import ExceptionResponse
-from .inverter_types import INVERTERS
+
 from typing_extensions import TypeAlias
 import logging
-import time
+
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
-
-# set logging info for pymodbus to INFO to avoid spamming
-from pymodbus import pymodbus_apply_logging_config
-pymodbus_apply_logging_config('INFO')
-
 # create a host tuple alias
 
 
 class InverterTCP(Inverter):
 
-  """
+    """
     ip: string, IP address of the inverter,
     port: int, Port of the inverter,
     type: string, solaredge, huawei or fronius etc...,
     address: int, Modbus address of the inverter,
-  """
-  Setup: TypeAlias = tuple[str | bytes | bytearray, int, str, int]
+    """
 
-  def __init__(self, setup: Setup):
-    super().__init__()
-    log.info("Creating with: %s" % str(setup))
-    self.setup = setup
-    self.registers = INVERTERS[self.getType()]
-    self.inverterIsOpen = False
+    Setup: TypeAlias = tuple[str | bytes | bytearray, int, str, int]
 
-  def getHost(self):
-    return self.setup[0]
+    def __init__(self, setup: Setup):
+        log.info("Creating with: %s" % str(setup))
+        self.setup = setup
+        self.inverterIsOpen = False
+        super().__init__()
 
-  def getPort(self):
-    return self.setup[1]
+    def get_host(self):
+        return self.setup[0]
 
-  def getType(self):
-    return self.setup[2]
+    def get_port(self):
+        return self.setup[1]
 
-  def getAddress(self):
-    return self.setup[3]
-  
-  def getConfigDict(self):
-    return {"connection": "TCP", "type": self.getType(), "address": self.getAddress(), "host": self.getHost(), "port": self.getPort()}
+    def get_type(self):
+        return self.setup[2]
 
-  def getConfig(self):
-    return ("TCP", self.getHost(), self.getPort(), self.getType(), self.getAddress())
+    def get_address(self):
+        return self.setup[3]
 
-  def isOpen(self):
-    return self.inverterIsOpen
+    def get_config_dict(self):
+        return {
+            "connection": "TCP",
+            "type": self.get_type(),
+            "address": self.get_address(),
+            "host": self.get_host(),
+            "port": self.get_port(),
+        }
 
-  def _createClient(self):
-      return ModbusClient(host=self.getHost(), port=self.getPort(), unit_id=self.getAddress())
+    def get_config(self):
+        return (
+            "TCP",
+            self.get_host(),
+            self.get_port(),
+            self.get_type(),
+            self.get_address(),
+        )
 
- 
+    def is_open(self):
+        return self.inverterIsOpen
+
+    def _create_client(self):
+        return ModbusClient(
+            host=self.get_host(), port=self.get_port(), unit_id=self.get_address()
+        )

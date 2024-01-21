@@ -11,7 +11,7 @@ def test_doGet():
     handler = Handler()
 
     # Call the doGet method and capture the output
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
 
     # Check that the status code is 200
     assert status_code == 200

@@ -2,28 +2,32 @@
 
 import pytest
 import json
-import logging
-from unittest.mock import MagicMock
+from server.inverters.inverter import Inverter
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.inverter import Handler
 from server.blackboard import BlackBoard
 
+
 @pytest.fixture
 def request_data():
-    class mockInverter:
-        def getConfigDict(self):
-            return {'test': 'test'}
-        def isOpen(self):
+    class MockInverter:
+        def get_config_dict(self):
+            assert "get_config_dict" in dir(Inverter)
+            return {"test": "test"}
+
+        def is_open(self):
+            assert "is_open" in dir(Inverter)
             return True
+
     bb = BlackBoard()
-    bb.inverters.add(mockInverter())
-    
+    bb.inverters.add(MockInverter())
+
     return RequestData(bb, {}, {}, {}, None)
+
 
 def test_inverter(request_data):
     handler = Handler()
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
-    assert response == {'test': 'test', 'status': 'open'}
-   
+    assert response == {"test": "test", "status": "open"}

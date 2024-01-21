@@ -20,8 +20,8 @@ def test_makeTheCallWithTaskJson():
   # mock atecc608b.base64UrlEncode(atecc608b.getSignature(idAndWallet))
 
   with patch('server.tasks.initializeTask.atecc608b') as mock_atecc608b:
-    mock_atecc608b.getSerialNumber.return_value = b"deadbeef"
-    mock_atecc608b.getSignature.return_value = b"123456789abcdef"
+    mock_atecc608b.get_serial_number.return_value = b"deadbeef"
+    mock_atecc608b.get_signature.return_value = b"123456789abcdef"
 
     t = InitializeTask(0, {}, "aaa")
     theJson = t._json()

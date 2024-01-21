@@ -1,8 +1,11 @@
-from typing import Callable
+
+from ..handler import GetHandler
+
+from ..requestData import RequestData
 
 
-def cryptoStuff():
-  return """<h1>Crypto API</h1>
+def crypto_stuff():
+    return """<h1>Crypto API</h1>
   <p>Device Name: <span id="device-name"></span></p>
   <p>Serial Number: <span id="serial-number"></span></p>
   <p>Public Key: <span id="public-key"></span></p>
@@ -32,18 +35,20 @@ def cryptoStuff():
   </script>"""
 
 
-def inverterForm():
-  return """
+def inverter_form():
+    return """
   <h1>Inverter Form</h1>
 
 <form id="inverter-form">
   <label>
-    <input type="radio" name="preferred_protocol" value="tcp" onclick="methodSelected('tcp')" checked="checked" /> TCP/IP
+    <input type="radio" name="preferred_protocol" value="tcp" onclick="methodSelected('tcp')" checked="checked" />
+    TCP/IP
   </label>
 
   <br />
   <label>
-    <input type="radio" name="preferred_protocol" value="rtu" onclick="methodSelected('rtu')" /> RTU
+    <input type="radio" name="preferred_protocol" value="rtu" onclick="methodSelected('rtu')" />
+    RTU
   </label>
 
   <br /><br />
@@ -144,54 +149,51 @@ def inverterForm():
 </script>
   """
 
-from ..handler import GetHandler
-
-from ..requestData import RequestData
 
 class Handler(GetHandler):
-  def doGet(self, request_data: RequestData):
-    #stats = request_data.stats
-    #freqReads = stats['freqReads'] if 'freqReads' in stats else 0
-    #energyHarvested = stats['harvest'] if 'harvest' in stats else 0
-    #energyTransported = 0
-    #if 'harvestTransports' in stats:
-    #  energyTransported = stats['harvestTransports']
-    startTime = request_data.bb.startTime
+    def do_get(self, request_data: RequestData):
+        # stats = request_data.stats
+        # freqReads = stats['freqReads'] if 'freqReads' in stats else 0
+        # energyHarvested = stats['harvest'] if 'harvest' in stats else 0
+        # energyTransported = 0
+        # if 'harvestTransports' in stats:
+        #  energyTransported = stats['harvestTransports']
+        start_time = request_data.bb.start_time
 
-    ret = "<html><head><title>Srcful Energy Gateway</title></head>"
-    ret += "<body>"
-    ret += "<h1>Srcful Energy Gateway 0.0.6</h1>"
-    #ret += f"<h2>{stats['name']}</h2>"
+        ret = "<html><head><title>Srcful Energy Gateway</title></head>"
+        ret += "<body>"
+        ret += "<h1>Srcful Energy Gateway 0.0.6</h1>"
+        # ret += f"<h2>{stats['name']}</h2>"
 
-    ret += f"<p>chipInfo: {request_data.bb.getChipInfo()}</p>"
+        ret += f"<p>chipInfo: {request_data.bb.get_chip_info()}</p>"
 
-    elapsedTime = request_data.bb.time_ms() - startTime
+        elapsed_time = request_data.bb.time_ms() - start_time
 
-    # convert elapsedTime to days, hours, minutes, seconds in a tuple
-    days, remainder = divmod(elapsedTime // 1000, 60 * 60 * 24)
-    hours, remainder = divmod(remainder, 60 * 60)
-    minutes, seconds = divmod(remainder, 60)
+        # convert elapsedTime to days, hours, minutes, seconds in a tuple
+        days, remainder = divmod(elapsed_time // 1000, 60 * 60 * 24)
+        hours, remainder = divmod(remainder, 60 * 60)
+        minutes, seconds = divmod(remainder, 60)
 
-    # output the gateway current uptime in days, hours, minutes, seconds
-    ret += f"<p>Uptime (days, hours, minutes, seconds): {(days, hours, minutes, seconds)}</p>"
+        # output the gateway current uptime in days, hours, minutes, seconds
+        ret += f"<p>Uptime (days, hours, minutes, seconds): {(days, hours, minutes, seconds)}</p>"
 
-    ret += inverterForm()
+        ret += inverter_form()
 
-    ret += cryptoStuff()
+        ret += crypto_stuff()
 
-    #ret += f"<p>freqReads: {freqReads} in {elapsedTime} ms<br/>"
-    #ret += f"average freqReads: {freqReads / elapsedTime * 1000} per second</p>"
+        # ret += f"<p>freqReads: {freqReads} in {elapsedTime} ms<br/>"
+        # ret += f"average freqReads: {freqReads / elapsedTime * 1000} per second</p>"
 
-    #ret += f"last freq: {stats['lastFreq'] if 'lastFreq' in stats else 0} Hz</p>"
+        # ret += f"last freq: {stats['lastFreq'] if 'lastFreq' in stats else 0} Hz</p>"
 
-    #ret += f"<p>energyHarvested: {energyHarvested} in {elapsedTime} ms</br>"
-    #ret += f"average energyHarvested: {energyHarvested / elapsedTime * 1000} per second</p>"
+        # ret += f"<p>energyHarvested: {energyHarvested} in {elapsedTime} ms</br>"
+        # ret += f"average energyHarvested: {energyHarvested / elapsedTime * 1000} per second</p>"
 
-    #ret += f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>"
-    #ret += f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>"
+        # ret += f"<p>energyTransported: {energyTransported} in {elapsedTime} ms</br>"
+        # ret += f"average energyTransported: {energyTransported / elapsedTime * 1000} per second</p>"
 
-    #ret += f"ALL: {stats}</p>"
+        # ret += f"ALL: {stats}</p>"
 
-    ret += "</body></html>"
+        ret += "</body></html>"
 
-    return 200, ret
+        return 200, ret

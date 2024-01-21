@@ -20,7 +20,7 @@ def test_execute_calls_post_and_handles_200_response():
   with patch('requests.post') as mock_post:
     mock_post.return_value = mock_response
     task._data = Mock(return_value=mock_data)
-    task._on200 = mock_on200
+    task._on_200 = mock_on200
 
     task.execute(0)
 
@@ -44,7 +44,7 @@ def test_execute_calls_post_and_handles_post_request_exception():
   with patch('requests.post', side_effect=requests.exceptions.RequestException) as mock_post:
     mock_post.return_value = mock_response
     task._data = Mock(return_value=mock_data)
-    task._onError = mock_onError
+    task._on_error = mock_onError
 
     task.execute(0)
 
@@ -74,7 +74,7 @@ def test_execute_calls_post_and_handles_non_200_response():
   with patch('requests.post') as mock_post:
     mock_post.return_value = mock_response
     task._data = Mock(return_value=mock_data)
-    task._onError = mock_on_error
+    task._on_error = mock_on_error
 
     result = task.execute(0)
     mock_post.assert_called_once_with(
@@ -99,7 +99,7 @@ def test_execute_handles_request_exception():
     task._data = Mock(return_value=mock_data)
 
     # Set the task's _onError method to our mock method
-    task._onError = mock_on_error
+    task._on_error = mock_on_error
 
     # Act
     result = task.execute(0)
@@ -128,7 +128,7 @@ def test_on200_not_implemented():
 
   # Act/Assert
   with pytest.raises(NotImplementedError):
-    task._on200(reply)
+    task._on_200(reply)
 
 
 def test_onError_not_implemented():
@@ -138,4 +138,4 @@ def test_onError_not_implemented():
 
   # Act/Assert
   with pytest.raises(NotImplementedError):
-    task._onError(reply)
+    task._on_error(reply)

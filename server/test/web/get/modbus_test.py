@@ -36,7 +36,7 @@ def request_data():
 
 def test_HoldingHandler(request_data):
     handler = HoldingHandler()
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
     assert response.get('register') == 1
@@ -46,7 +46,7 @@ def test_HoldingHandler(request_data):
 def test_InputHandler(request_data):
     handler = InputHandler()
     request_data.post_params['address'] = 0
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
     
@@ -61,14 +61,14 @@ def test_missing_address(inverter_fixture):
     bb.inverters.add(inverter_fixture)
 
     request_data = RequestData(bb, {}, {}, {}, None)
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 400
     assert json.loads(response).get('error') == 'missing address'
 
 def test_inverter_not_initialized():
     handler = HoldingHandler()
     request_data = RequestData(BlackBoard(), {'address': '0'}, {}, {}, None)
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 400
     assert json.loads(response).get('error') == 'inverter not initialized'
 
@@ -76,14 +76,14 @@ def test_inverter_not_initialized():
 def test_unknown_datatype(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'unknown'
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 400
     assert 'Unsupported datatype' in json.loads(response).get('error')
 
 def test_invalid_endianess(request_data):
     handler = HoldingHandler()
     request_data.query_params['endianess'] = 'wrong_endianess'
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 400
     assert 'Unsupported endianess' in json.loads(response).get('error')
 
@@ -95,14 +95,14 @@ def test_invalid_size(request_data):
         raise Exception('invalid or incomplete address range')
 
     request_data.bb.inverters.lst[0].readHoldingRegisters = readHoldingRegister
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 400
     assert json.loads(response).get('error') == 'invalid or incomplete address range'
 
 def test_uint_value(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'uint'
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
     assert response.get('value') == 65538  # = 0x00010002 in uint
@@ -112,7 +112,7 @@ def test_int_value(request_data):
     request_data.query_params['type'] = 'int'
     request_data.query_params['size'] = '2'
     request_data.post_params['address'] = '3'
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
     assert response.get('value') == 196612  # = 0x00030004 as signed int
@@ -125,7 +125,7 @@ def test_float_value_little(request_data):
     
     request_data.bb.inverters.lst[0].readHoldingRegisters = lambda address, size: [0x147b, 0x4248] # 50.02 as little endian float
 
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
 
     assert status_code == 200
     response = json.loads(response)
@@ -144,7 +144,7 @@ def test_float_value_big(request_data):
 
     request_data.bb.inverters.lst[0].readHoldingRegisters = lambda address, size: [0x147b, 0x4248]     # 7.69925e+35 as big endian float
 
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
     # Can't use assert equals on floating point numbers due to precision issues
@@ -157,7 +157,7 @@ def test_double_value(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'float'
     request_data.query_params['size'] = '4'
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
     result = response.get('value')    # round to ensure accurate comparison of floating points

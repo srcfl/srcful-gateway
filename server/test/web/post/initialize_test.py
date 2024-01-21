@@ -13,7 +13,7 @@ def request_data():
 def test_initialize(request_data):
     handler = Handler()
 
-    status_code, response = handler.doPost(request_data)
+    status_code, response = handler.do_post(request_data)
     assert status_code == 200
     response = json.loads(response)
     assert response == {'initialized': False}

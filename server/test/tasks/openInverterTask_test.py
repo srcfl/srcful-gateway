@@ -3,7 +3,8 @@ from server.blackboard import BlackBoard
 
 from unittest.mock import MagicMock
 
-def test_execute_invertertAdded():
+
+def test_execute_invertert_added():
     bb = BlackBoard()
     inverter = MagicMock()
     inverter.open.return_value = True
@@ -14,7 +15,8 @@ def test_execute_invertertAdded():
     assert inverter.open.called
     assert harvest is not None
 
-def test_execute_oldInverterTerminated():
+
+def test_execute_old_inverter_terminated():
     bb = BlackBoard()
     inverter = MagicMock()
     inverter.open.return_value = True

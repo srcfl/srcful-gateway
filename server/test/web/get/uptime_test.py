@@ -11,7 +11,7 @@ def request_data():
 
 def test_uptime(request_data):
     handler = Handler()
-    status_code, response = handler.doGet(request_data)
+    status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
     assert len(response) > 0
