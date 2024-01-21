@@ -1,10 +1,10 @@
-from .srcfulAPICallTask import SrcfulAPICallTask
+import logging
+import requests
 
 import server.crypto.crypto as atecc608b
 from server.blackboard import BlackBoard
-import requests
 
-import logging
+from .srcfulAPICallTask import SrcfulAPICallTask
 
 log = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 class InitializeTask(SrcfulAPICallTask):
     def __init__(self, event_time: int, bb: BlackBoard, wallet: str):
         super().__init__(event_time, bb)
-        self.isInitialized = None
+        self.is_initialized = None
         self.post_url = "https://api.srcful.dev/"
         self.wallet = wallet
 
@@ -48,9 +48,13 @@ class InitializeTask(SrcfulAPICallTask):
             and reply.json()["data"]["gatewayInception"]["initialize"]["initialized"]
             is not None
         ):
-            self.isInitialized = reply.json()["data"]["gatewayInception"]["initialize"][
+            self.is_initialized = reply.json()["data"]["gatewayInception"]["initialize"][
                 "initialized"
             ]
-        self.isInitialized = reply.json()["data"]["gatewayInception"]["initialize"][
+        self.is_initialized = reply.json()["data"]["gatewayInception"]["initialize"][
             "initialized"
         ]
+
+    def _on_error(self, reply: requests.Response) -> int:
+        log.warning("Failed to initialize wallet %s", self.wallet)
+        return 0

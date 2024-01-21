@@ -28,9 +28,9 @@ class Handler(PostHandler):
             t.t.join()
             t.execute(0)
 
-            if t.isInitialized is None:
+            if t.is_initialized is None:
                 return t.response.status, json.dumps({"body": t.response.body})
 
-            return 200, json.dumps({"initialized": t.isInitialized})
+            return 200, json.dumps({"initialized": t.is_initialized})
         else:
             return 400, json.dumps({"status": "bad request"})

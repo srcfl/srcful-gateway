@@ -1,10 +1,11 @@
-from .task import Task
+from abc import ABC, abstractmethod 
+import logging
 from threading import Thread
 import requests
 
 from server.blackboard import BlackBoard
 
-import logging
+from .task import Task
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -17,46 +18,48 @@ def arg_2_str(arg):
         return "argument of type " + str(type(arg)) + " cannot be converted to string"
 
 
-class SrcfulAPICallTask(Task):
+class SrcfulAPICallTask(Task, ABC):
     def __init__(self, event_time: int, bb: BlackBoard):
         super().__init__(event_time, bb)
         self.t = None
         self.reply = None
         self.post_url = "https://testnet.srcful.dev/gw/data/"
 
-    def _json(self):
+    def _json(self) -> dict:
         """override to return the json to send to the server json argument in post"""
         return None
 
-    def _data(self):
+    def _data(self) -> any:
         """override to return the data to send to the server, data argument in post"""
         return None
 
+    @abstractmethod
     def _on_200(self, reply: requests.Response):
-        # throw not implemented exception
-        raise NotImplementedError
+        """override to handle the reply from the server"""""
 
+    @abstractmethod
     def _on_error(self, reply: requests.Response) -> int:
         """return 0 to stop retrying,
         otherwise return the number of milliseconds to wait before retrying"""
-        # throw not implemented exception
-        raise NotImplementedError
 
     def execute(self, event_time):
+
+        # this is the function that will be executed in the thread
         def post():
             log.debug("post")
             try:
+                # pylint: disable=assignment-from-none
                 data = self._data()
                 if data is not None:
-                    log.debug("{} {}".format(self.post_url, arg_2_str(data)))
+                    log.debug("%s %s", self.post_url, arg_2_str(data))
                     self.reply = requests.post(self.post_url, data=data)
                 else:
                     json = self._json()
                     if json is not None:
-                        log.debug("{} {}".format(self.post_url, arg_2_str(json)))
+                        log.debug("%s %s", self.post_url, arg_2_str(json))
                         self.reply = requests.post(self.post_url, json=json)
                     else:
-                        log.debug("{} {}".format(self.post_url, "no data or json"))
+                        log.debug("%s %s", self.post_url, "no data or json")
                         self.reply = requests.post(self.post_url)
             except requests.exceptions.RequestException as e:
                 log.exception(e)

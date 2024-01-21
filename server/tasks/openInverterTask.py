@@ -1,9 +1,11 @@
-from .task import Task
-from server.inverters.inverter import Inverter
-from .harvest import Harvest
-from server.blackboard import BlackBoard
-
 import logging
+
+from server.blackboard import BlackBoard
+from server.inverters.inverter import Inverter
+
+from .task import Task
+from .harvest import Harvest
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +56,6 @@ class OpenInverterTask(Task):
                 logger.info("Failed to open inverter: %s", self.inverter.get_type())
                 return None
         except Exception as e:
-            logger.exception("Exception opening inverter: {}".format(e))
+            logger.exception("Exception opening inverter: %s", e)
             self.time = event_time + 10000
             return self

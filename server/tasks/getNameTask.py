@@ -1,9 +1,9 @@
-from .srcfulAPICallTask import SrcfulAPICallTask
-
-import server.crypto.crypto as atecc608b
 import requests
 
+import server.crypto.crypto as atecc608b
 from server.blackboard import BlackBoard
+
+from .srcfulAPICallTask import SrcfulAPICallTask
 
 
 class GetNameTask(SrcfulAPICallTask):

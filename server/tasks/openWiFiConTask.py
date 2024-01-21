@@ -1,9 +1,10 @@
-from .task import Task
+import logging
+
 from server.wifi.wifi import WiFiHandler
 from server.blackboard import BlackBoard
 
+from .task import Task
 
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -14,9 +15,10 @@ class OpenWiFiConTask(Task):
         self.wificon = wificon
 
     def execute(self, event_time):
-        log.info("Opening WiFi connection to {}".format(self.wificon.ssid))
+        log.info("Opening WiFi connection to %s", self.wificon.ssid)
         try:
             self.wificon.connect()
+            return None
         except Exception as e:
             log.Error("Failed to connect to WiFi. Invalid SSID or PSK: ")
             log.exception(e)

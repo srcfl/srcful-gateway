@@ -1,12 +1,13 @@
-from .task import Task
-from .srcfulAPICallTask import SrcfulAPICallTask
-from server.inverters.inverter import Inverter
-from server.blackboard import BlackBoard
-
-import server.crypto.crypto as atecc608b
-import requests
 
 import logging
+import requests
+
+from server.inverters.inverter import Inverter
+from server.blackboard import BlackBoard
+import server.crypto.crypto as atecc608b
+
+from .task import Task
+from .srcfulAPICallTask import SrcfulAPICallTask
 
 log = logging.getLogger(__name__)
 
