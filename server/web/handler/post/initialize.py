@@ -15,21 +15,23 @@ class Handler(PostHandler):
             "type": "post",
             "description": "initialize the wallet",
             "required": {"wallet": "string, wallet public key"},
+            "optional": {"dry_run": "boolean, if true, all messages are sent to the backend but the wallet is not initialized"},
             "returns": {"initialized": "boolean, true if the wallet is initialized"},
         }
 
     def json_schema(self):
         return json.dumps(self.schema())
 
-    def do_post(self, request_data: RequestData):
-        if "wallet" in request_data.data:
-            t = InitializeTask(0, {}, request_data.data["wallet"])
-            t.execute(0)
-            t.t.join()
-            t.execute(0)
+    def do_post(self, data: RequestData):
+        if "wallet" in data.data:
+
+            dry_run = not ("dry_run" not in data.data or not data.data["dry_run"])
+
+            t = InitializeTask(0, {}, data.data["wallet"], dry_run)
+            t.execute_and_wait()
 
             if t.is_initialized is None:
-                return t.response.status, json.dumps({"body": t.response.body})
+                return t.reply.status, json.dumps({"body": t.reply.body})
 
             return 200, json.dumps({"initialized": t.is_initialized})
         else:

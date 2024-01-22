@@ -10,11 +10,14 @@ log = logging.getLogger(__name__)
 
 
 class InitializeTask(SrcfulAPICallTask):
-    def __init__(self, event_time: int, bb: BlackBoard, wallet: str):
+    def __init__(
+        self, event_time: int, bb: BlackBoard, wallet: str, dry_run: bool = False
+    ):
         super().__init__(event_time, bb)
         self.is_initialized = None
         self.post_url = "https://api.srcful.dev/"
         self.wallet = wallet
+        self.dry_run = dry_run
 
     def _json(self):
         atecc608b.init_chip()
@@ -37,6 +40,12 @@ class InitializeTask(SrcfulAPICallTask):
         m = m.replace("$var_idAndWallet", id_and_wallet)
         m = m.replace("$var_sign", sign)
 
+        if self.dry_run:
+            m = m.replace(
+                "gatewayInitialization:{idAndWallet",
+                "gatewayInitialization:{dryRun:true, idAndWallet",
+            )
+
         log.info("Preparing intialization of wallet %s with sn %s", self.wallet, serial)
 
         return {"query": m}
@@ -48,9 +57,9 @@ class InitializeTask(SrcfulAPICallTask):
             and reply.json()["data"]["gatewayInception"]["initialize"]["initialized"]
             is not None
         ):
-            self.is_initialized = reply.json()["data"]["gatewayInception"]["initialize"][
-                "initialized"
-            ]
+            self.is_initialized = reply.json()["data"]["gatewayInception"][
+                "initialize"
+            ]["initialized"]
         self.is_initialized = reply.json()["data"]["gatewayInception"]["initialize"][
             "initialized"
         ]

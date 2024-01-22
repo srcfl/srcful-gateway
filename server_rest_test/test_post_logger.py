@@ -4,7 +4,7 @@ import json
 
 
 def get_log_level(logger):
-    url = settings.api_url + "logger"
+    url = settings.API_URL + "logger"
 
     payload = {"logger": logger}
 
@@ -15,7 +15,7 @@ def get_log_level(logger):
     return response.json()[logger]
 
 def set_log_level(logger, level):
-    url = settings.api_url + "logger"
+    url = settings.API_URL + "logger"
 
     payload = {"logger": logger,
                "level": level}

@@ -17,3 +17,4 @@ def test_initialize(request_data):
     assert status_code == 200
     response = json.loads(response)
     assert response == {'initialized': False}
+    

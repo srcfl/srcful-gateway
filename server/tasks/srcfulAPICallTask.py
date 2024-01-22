@@ -42,6 +42,12 @@ class SrcfulAPICallTask(Task, ABC):
         """return 0 to stop retrying,
         otherwise return the number of milliseconds to wait before retrying"""
 
+    def execute_and_wait(self):
+        """execute the task and block until finished"""
+        self.execute(0)
+        self.t.join()
+        self.execute(0)
+
     def execute(self, event_time):
 
         # this is the function that will be executed in the thread

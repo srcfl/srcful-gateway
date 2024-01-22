@@ -4,7 +4,7 @@ import json
 
 
 def test_pause_command():
-    url = settings.api_url + "inverter/modbus"
+    url = settings.API_URL + "inverter/modbus"
     payload = {"commands": [{"type": "pause", "duration": 1000}]}
     payload = json.dumps(payload)
     headers = {
@@ -19,7 +19,7 @@ def test_pause_command():
     assert response.json()['status'] == 'ok'
 
 def test_write_command():
-    url = settings.api_url + "inverter/modbus"
+    url = settings.API_URL + "inverter/modbus"
     payload = {"commands": [{"type": "write", "startingAddress": 40069, "values": [0x00, 0x00]}]}
     payload = json.dumps(payload)
     headers = {
@@ -34,7 +34,7 @@ def test_write_command():
     assert response.json()['status'] == 'ok'
 
 def test_write_pause_write_command():
-    url = settings.api_url + "inverter/modbus"
+    url = settings.API_URL + "inverter/modbus"
     payload = {"commands": [{"type": "write", "startingAddress": 40069, "values": [0x00, 0x00]},
                             {"type": "pause", "duration": 1000},
                             {"type": "write", "startingAddress": 40069, "values": [0x00, 0x00]}]}

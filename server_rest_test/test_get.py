@@ -6,11 +6,11 @@ import settings
 
 
 def test_hello():
-    url = settings.api_url + "hello"
+    url = settings.API_URL + "hello"
 
     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
@@ -18,11 +18,11 @@ def test_hello():
 
 
 def test_uptime():
-    url = settings.api_url + "uptime"
+    url = settings.API_URL + "uptime"
 
     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
@@ -30,11 +30,11 @@ def test_uptime():
 
 
 def test_name():
-    url = settings.api_url + "name"
+    url = settings.API_URL + "name"
 
     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
@@ -42,11 +42,11 @@ def test_name():
 
 
 def test_crypto():
-    url = settings.api_url + "crypto"
+    url = settings.API_URL + "crypto"
 
     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
@@ -59,11 +59,11 @@ def test_crypto():
 
 
 def test_wifi():
-    url = settings.api_url + "wifi"
+    url = settings.API_URL + "wifi"
 
     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
@@ -74,11 +74,11 @@ def test_wifi():
 
 
 def test_wifi_scan():
-    url = settings.api_url + "wifi/scan"
+    url = settings.API_URL + "wifi/scan"
 
     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
@@ -90,11 +90,11 @@ def test_wifi_scan():
 
 def test_running_inverter():
     # requires an inverter to be running
-    url = settings.api_url + "inverter"
+    url = settings.API_URL + "inverter"
 
     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
@@ -109,11 +109,11 @@ def test_running_inverter():
 
 
 def test_network():
-    url = settings.api_url + "network"
+    url = settings.API_URL + "network"
 
     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
@@ -124,11 +124,11 @@ def test_network():
 
 
 def test_modbus_raw():
-    url = settings.api_url + "inverter/modbus/holding/40000?size=2"
+    url = settings.API_URL + "inverter/modbus/holding/40000?size=2"
 
     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
@@ -143,11 +143,11 @@ def test_modbus_raw():
 
 
 def test_logger():
-    url = settings.api_url + "logger"
+    url = settings.API_URL + "logger"
 
     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers)
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
