@@ -22,7 +22,7 @@ def test_get(mock_task):
   mock_task.return_value = MockTask()
 
   handler = get_name.Handler()
-  code, jsonstr = handler.doGet(None)
+  code, jsonstr = handler.do_get(None)
   assert code == 200
   assert jsonstr == '{"name": "test_name"}'
 
@@ -49,6 +49,6 @@ def test_get_notfound(mock_task):
   mock_task.return_value = MockTask()
 
   handler = get_name.Handler()
-  code, jsonstr = handler.doGet(None)
+  code, jsonstr = handler.do_get(None)
   assert code == 404
   assert jsonstr == '{"body": "not found"}'

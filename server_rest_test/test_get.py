@@ -6,145 +6,149 @@ import settings
 
 
 def test_hello():
-
     url = settings.api_url + "hello"
 
-    headers = {'user-agent': 'vscode-restclient'}
+    headers = {"user-agent": "vscode-restclient"}
 
     response = requests.request("GET", url, headers=headers)
 
     assert response.status_code == 200
-    assert response.headers['content-type'] == 'application/json'
-    assert response.json()['message'] == 'hello world from srcful!'
+    assert response.headers["content-type"] == "application/json"
+    assert response.json()["message"] == "hello world from srcful!"
+
 
 def test_uptime():
-    
-        url = settings.api_url + "uptime"
-    
-        headers = {'user-agent': 'vscode-restclient'}
-    
-        response = requests.request("GET", url, headers=headers)
-    
-        assert response.status_code == 200
-        assert response.headers['content-type'] == 'application/json'
-        assert response.json()['msek'] > 0
+    url = settings.api_url + "uptime"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    assert response.json()["msek"] > 0
 
 
 def test_name():
-
     url = settings.api_url + "name"
 
-    headers = {'user-agent': 'vscode-restclient'}
+    headers = {"user-agent": "vscode-restclient"}
 
     response = requests.request("GET", url, headers=headers)
 
     assert response.status_code == 200
-    assert response.headers['content-type'] == 'application/json'
-    assert len(response.json()['name'].split(" ")) == 3
+    assert response.headers["content-type"] == "application/json"
+    assert len(response.json()["name"].split(" ")) == 3
+
 
 def test_crypto():
-
     url = settings.api_url + "crypto"
 
-    headers = {'user-agent': 'vscode-restclient'}
+    headers = {"user-agent": "vscode-restclient"}
 
     response = requests.request("GET", url, headers=headers)
 
     assert response.status_code == 200
-    assert response.headers['content-type'] == 'application/json'
+    assert response.headers["content-type"] == "application/json"
 
     j = response.json()
-    assert 'deviceName' in j
-    assert 'serialNumber' in j
-    assert 'publicKey' in j
-    assert 'publicKey_pem' in j
+    assert "deviceName" in j
+    assert "serialNumber" in j
+    assert "publicKey" in j
+    assert "publicKey_pem" in j
+
 
 def test_wifi():
     url = settings.api_url + "wifi"
 
-    headers = {'user-agent': 'vscode-restclient'}
+    headers = {"user-agent": "vscode-restclient"}
 
     response = requests.request("GET", url, headers=headers)
 
     assert response.status_code == 200
-    assert response.headers['content-type'] == 'application/json'
+    assert response.headers["content-type"] == "application/json"
 
     j = response.json()
-    assert 'ssids' in j
-    assert len(j['ssids']) > 0
+    assert "ssids" in j
+    assert len(j["ssids"]) > 0
+
 
 def test_wifi_scan():
     url = settings.api_url + "wifi/scan"
 
-    headers = {'user-agent': 'vscode-restclient'}
+    headers = {"user-agent": "vscode-restclient"}
 
     response = requests.request("GET", url, headers=headers)
 
     assert response.status_code == 200
-    assert response.headers['content-type'] == 'application/json'
+    assert response.headers["content-type"] == "application/json"
 
     j = response.json()
-    assert 'status' in j
-    assert j['status'] == 'scan initiated'
+    assert "status" in j
+    assert j["status"] == "scan initiated"
+
 
 def test_running_inverter():
     # requires an inverter to be running
     url = settings.api_url + "inverter"
 
-    headers = {'user-agent': 'vscode-restclient'}
+    headers = {"user-agent": "vscode-restclient"}
 
     response = requests.request("GET", url, headers=headers)
 
     assert response.status_code == 200
-    assert response.headers['content-type'] == 'application/json'
+    assert response.headers["content-type"] == "application/json"
 
     j = response.json()
-    assert 'connection' in j
-    assert j['connection'] == 'TCP' or j['connection'] == 'RTU'
-    assert 'type' in j
-    assert 'address' in j   # this could be dependant on TCP connection
-    assert 'port' in j
-    assert 'status' in j
+    assert "connection" in j
+    assert j["connection"] == "TCP" or j["connection"] == "RTU"
+    assert "type" in j
+    assert "address" in j  # this could be dependant on TCP connection
+    assert "port" in j
+    assert "status" in j
+
 
 def test_network():
     url = settings.api_url + "network"
 
-    headers = {'user-agent': 'vscode-restclient'}
+    headers = {"user-agent": "vscode-restclient"}
 
     response = requests.request("GET", url, headers=headers)
 
     assert response.status_code == 200
-    assert response.headers['content-type'] == 'application/json'
+    assert response.headers["content-type"] == "application/json"
 
     j = response.json()
-    assert 'connections' in j
-    assert len(j['connections']) > 0
+    assert "connections" in j
+    assert len(j["connections"]) > 0
+
 
 def test_modbus_raw():
     url = settings.api_url + "inverter/modbus/holding/40000?size=2"
 
-    headers = {'user-agent': 'vscode-restclient'}
+    headers = {"user-agent": "vscode-restclient"}
 
     response = requests.request("GET", url, headers=headers)
 
     assert response.status_code == 200
-    assert response.headers['content-type'] == 'application/json'
+    assert response.headers["content-type"] == "application/json"
 
     j = response.json()
-    assert 'register' in j
-    assert 'raw_value' in j
-    assert 'size' in j
-    assert j['size'] == 2
-    assert j['register'] == 40000
-    assert j['raw_value'] == '00000000'
+    assert "register" in j
+    assert "raw_value" in j
+    assert "size" in j
+    assert j["size"] == 2
+    assert j["register"] == 40000
+    assert j["raw_value"] == "00000000"
+
 
 def test_logger():
     url = settings.api_url + "logger"
 
-    headers = {'user-agent': 'vscode-restclient'}
+    headers = {"user-agent": "vscode-restclient"}
 
     response = requests.request("GET", url, headers=headers)
 
     assert response.status_code == 200
-    assert response.headers['content-type'] == 'application/json'
+    assert response.headers["content-type"] == "application/json"
     assert "server.tasks.openInverterTask" in response.json()

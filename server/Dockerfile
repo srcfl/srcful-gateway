@@ -1,4 +1,4 @@
-FROM python:3.11-alpine
+FROM python:3.11-alpine@sha256:558d14432cef380aec99155f348ac1c5cb35072abf32209aecd5a8a422ff519a
 COPY . /server
 ENV CRYPTOAUTHLIB_NOUSB=True
 ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
@@ -12,7 +12,7 @@ RUN apk add --no-cache dbus dbus-dev glib-dev dbus-glib
 
 RUN pip install --upgrade pip
 # Install Python D-Bus library
-RUN pip install --no-cache-dir dbus-python
+RUN pip install --no-cache-dir dbus-python==1.3.2
 
 RUN pip install -r server/requirements.txt
 EXPOSE 5000

@@ -3,7 +3,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 import argparse
-from gi.repository import GLib
 
 import os
 import sys

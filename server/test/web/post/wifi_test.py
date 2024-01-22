@@ -24,7 +24,7 @@ def test_doPost():
 
     handler = Handler()
 
-    status_code, response = handler.doPost(request_data)
+    status_code, response = handler.do_post(request_data)
 
     assert status_code == 200
     assert json.loads(response) == {"status": "ok"}
@@ -40,7 +40,7 @@ def test_doPost_bad_data():
 
     handler = Handler()
 
-    status_code, response = handler.doPost(request_data)
+    status_code, response = handler.do_post(request_data)
 
     assert status_code == 400
     assert tasks.qsize() == 0

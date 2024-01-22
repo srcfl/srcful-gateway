@@ -10,7 +10,8 @@ def test_write_registers_call():
 
     task.execute(0)
 
-    inverter.writeRegisters.assert_called_once_with(10, [0, 1, 2])
+    inverter.write_registers.assert_called_once_with(10, [0, 1, 2])
+
 
 # Test that pause affects the next event time
 def test_pause_command_changes_event_time():
@@ -20,12 +21,13 @@ def test_pause_command_changes_event_time():
     task = ModbusWriteTask(0, {}, inverter, commands)
 
     next_task = task.execute(0)
-    
+
     assert next_task.time == 1000
-    assert inverter.writeRegisters.call_count == 0
+    assert inverter.write_registers.call_count == 0
 
     task.execute(1000)
-    inverter.writeRegisters.assert_called_once_with(20, [1, 2, 3])
+    inverter.write_registers.assert_called_once_with(20, [1, 2, 3])
+
 
 # Test that commands are processed in order
 def test_commands_executed_in_order():
@@ -37,4 +39,4 @@ def test_commands_executed_in_order():
     task.execute(0)
     task.execute(0)
 
-    inverter.writeRegisters.assert_has_calls([call(10, [0, 1, 2]), call(20, [3, 4, 5])])
+    inverter.write_registers.assert_has_calls([call(10, [0, 1, 2]), call(20, [3, 4, 5])])
