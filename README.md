@@ -6,10 +6,11 @@ Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps al
     * [server](#server)
     * [bluetooth](#bluetooth)
         * [Windows](#windows)
-    * [client](#client)
-    * [modbus_slave](#modbus_slave)
   * [Rest API](#rest-api)
 * [Testing](#testing)
+  * [Report test coverage](#report-test-coverage)
+  * [REST api integration tests](#rest-api-integration-tests)
+  * [ble REST api integration tests](#ble-rest-api-integration-tests)
 * [Design](#design)
 * [Other](#other-1)
 
@@ -59,22 +60,14 @@ or if using a venv
 python setup.py install
 ``` 
 
-
-### client
-This is a simple test client that you can run locally. You would need to start a web-server (e.g. twisted) to service the page and this needs to run on https for things to work (or the ble stuff will not work in a browser on android). A generated certificate is included.
-
-`twistd --nodaemon web --listen "ssl:8000:privateKey=key.pem:certKey=certificate.pem" --path .`
-
-The client is not to be deployed to the gateway and is just a test for now. The real client should be on the `srcful` domain.
-
 ## Rest API
-The rest API is documented in [api.md](api.md)
+The rest API is documented in [api.md](api.md) but this documentation is always one step behind so use the gateway REST endpoint `doc` to get the latest version.
 
 # Testing
 We use the pytest testing framework for automated testing (https://docs.pytest.org/en/7.2.x/getting-started.html#get-started).
 
-Test modules are placed under `/test` and mirror the structure of the main project. Tests are executed by running:  
-`pytest server`
+Unit test modules are placed under `/server_unit_test` and mirror the structure of the main project. Tests are executed by running:  
+`pytest server_unit_test`
 
 Integration in VSCode can be achieved by installing *Python Test Explorer for Visual Studio Code* add the following to your `./vscode/launch.json` configuration to enable *debugging* of tests.
 
@@ -93,10 +86,25 @@ Integration in VSCode can be achieved by installing *Python Test Explorer for Vi
 }
 ```
 
+For vscode add test folders to the `.vscode/settings.json`
+
+```json
+{
+  "python.testing.pytestArgs": [
+    "server_unit_test",
+    "server_rest_test",
+    "ble_rest_test"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.formatting.provider": "none"
+}
+```
+
 ## Report test coverage
 To see overall test coverage you can run:
 ```
-pytest --cov-report=html --cov=server server/test/
+pytest --cov-report=html --cov=server server_unit_test
 ```
 from the root folder. Then open `index.html` in `htmlcov` in any browser. 
 
@@ -105,19 +113,27 @@ Automatic integration testing of the REST endpoints can also be done using pytes
 
 Tests are located in a separate folder `server_rest_test`
 
-run with `pytset server_rest_test` or in vscode provided the folder is added to the `.vscode/settings.json`
+## ble REST api integration tests
+You can test the ble service REST endpoints using pytest. Note that this is a work in progress. As for the normal API tests this is more involved and bascially requires a running gateway so the ble service is up and running.
 
-```json
-{
-  "python.testing.pytestArgs": [
-    "server",
-    "server_rest_test"
-  ],
-  "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true,
-  "python.formatting.provider": "none"
-}
+One caveat is that (windows specific) you cannot connect to the same ble service from the same client (eg running the tests and having the configurator connected on the same computer)
+
+Another caveat that remains to be solved is that pytest can start running these calls in parralell. E.g. make every ble call the same time and this will not work for obvious reasons - some tests will time out.
+
+It seems like running each file with tests separately solves this for now. I.e you run it like:
+
 ```
+pytest ./ble_rest_test/get.py
+```
+
+# Code Standard
+Basically `flake8` with pep8 naming and `bugbear`. Use the flake8 vscode extension and also install pep8-naming (`pip install pep8-naming`) and bugbear (`pip install pip install flake8-bugbear`). There is a config file for the project (`.flake8`)
+
+Black is a nice vscode extension to fix basic formatting.
+
+We allow long lines as some strings etc. will become very wonky. Black will do its best and that is fine for 90% of the code. But feel free to have longer lines of code if this makes it more readable.
+
+**pyLint** - voluntary use the vscode extension, it catches many important issues but also paints your code :P A lot of documentation for functions etc are not present and this is currently not a prio. Possibly some energy on configuration could be put here.
 
 # Design
 The current design is task bases with a priority queue. The idea is that a task is scheduled to happen at a certain time. This allows for fine grained control and adjustment of task times/delays etc. The downside is that tasks cannot be blocking so IO operations typically need threading. Though this is rater easy to do and there are also some helper classes for common tasks that require threading.
