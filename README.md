@@ -11,6 +11,7 @@ Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps al
   * [Report test coverage](#report-test-coverage)
   * [REST api integration tests](#rest-api-integration-tests)
   * [ble REST api integration tests](#ble-rest-api-integration-tests)
+* [Code standard](#code-standard)
 * [Design](#design)
 * [Other](#other-1)
 
@@ -126,7 +127,7 @@ It seems like running each file with tests separately solves this for now. I.e y
 pytest ./ble_rest_test/get.py
 ```
 
-# Code Standard
+# Code standard
 Basically `flake8` with pep8 naming and `bugbear`. Use the flake8 vscode extension and also install pep8-naming (`pip install pep8-naming`) and bugbear (`pip install pip install flake8-bugbear`). There is a config file for the project (`.flake8`)
 
 Black is a nice vscode extension to fix basic formatting.
