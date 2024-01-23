@@ -1,4 +1,3 @@
-import pytest
 import queue
 from unittest.mock import Mock, patch
 from server.web.handler.post.modbus import Handler

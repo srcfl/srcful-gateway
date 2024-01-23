@@ -1,6 +1,6 @@
 import os
 from pyfakefs.fake_filesystem_unittest import Patcher
-from .. import bootstrap
+import server.bootstrap as bootstrap
 from server.inverters.inverter import Inverter
 
 from unittest.mock import MagicMock

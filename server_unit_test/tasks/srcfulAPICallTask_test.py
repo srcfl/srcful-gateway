@@ -1,7 +1,6 @@
 import server.tasks.srcfulAPICallTask as apiCall
 from unittest.mock import Mock, patch
 import requests
-import pytest
 
 
 class ConcreteSUT(apiCall.SrcfulAPICallTask):

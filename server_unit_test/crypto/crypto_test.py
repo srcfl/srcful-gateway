@@ -1,4 +1,4 @@
-from ...crypto import crypto
+from server.crypto import crypto
 
 
 def test_init_chip_release():

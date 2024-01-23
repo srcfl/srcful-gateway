@@ -1,4 +1,4 @@
-from ...tasks.checkForWebRequestTask import CheckForWebRequest
+from server.tasks.checkForWebRequestTask import CheckForWebRequest
 
 
 def test_create():

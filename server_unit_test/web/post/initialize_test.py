@@ -1,6 +1,5 @@
 import pytest
 import json
-import logging
 from server.web.handler.requestData import RequestData
 from server.web.handler.post.initialize import Handler
 from server.blackboard import BlackBoard

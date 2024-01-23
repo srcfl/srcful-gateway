@@ -1,15 +1,14 @@
 import pytest
 import json
-import logging
 from server.web.handler.requestData import RequestData
-from server.web.handler.get.uptime import Handler
+from server.web.handler.get.logger import Handler
 from server.blackboard import BlackBoard
 
 @pytest.fixture
 def request_data():
     return RequestData(BlackBoard(), {}, {}, {}, None)
 
-def test_uptime(request_data):
+def test_logger(request_data):
     handler = Handler()
     status_code, response = handler.do_get(request_data)
     assert status_code == 200

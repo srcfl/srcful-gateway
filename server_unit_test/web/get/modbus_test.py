@@ -1,10 +1,12 @@
-import pytest
-from unittest.mock import MagicMock
-from server.web.handler.requestData import RequestData
-from server.web.handler.get.modbus import RegisterHandler, HoldingHandler, InputHandler  # adapt to your actual module import
-from server.blackboard import BlackBoard
 import json
 import struct
+from unittest.mock import MagicMock
+
+import pytest
+
+from server.web.handler.requestData import RequestData
+from server.web.handler.get.modbus import HoldingHandler, InputHandler  # adapt to your actual module import
+from server.blackboard import BlackBoard
 from server.inverters.inverter import Inverter
 
 @pytest.fixture

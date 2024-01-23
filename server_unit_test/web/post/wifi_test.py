@@ -1,14 +1,10 @@
 # test for server.web.handler.post.wifi
-
-import pytest
 from server.web.handler.post.wifi import Handler
 from server.web.handler.requestData import RequestData
 from server.blackboard import BlackBoard
 import json
 import queue
 
-
-#from unittest.mock import patch
 
 def mock__init__(self, SSID, PSK):
     pass
