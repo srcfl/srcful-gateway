@@ -48,20 +48,20 @@ class Handler(PostHandler):
                 raise Exception("Unknown value type: %s", type(value))
         return mapped_values
 
-    def do_post(self, request_data: RequestData) -> tuple[int, str]:
-        if "commands" not in request_data.data:
+    def do_post(self, data: RequestData) -> tuple[int, str]:
+        if "commands" not in data.data:
             return 400, json.dumps(
                 {"status": "bad request", "message": "Missing commands in request"}
             )
 
-        if len(request_data.bb.inverters.lst) == 0:
+        if len(data.bb.inverters.lst) == 0:
             return 400, json.dumps(
                 {"status": "error", "message": "No Modbus device initialized"}
             )
 
         try:
             # Map values in commands for Modbus device
-            raw_commands = request_data.data["commands"]
+            raw_commands = data.data["commands"]
             command_objects = []
 
             # Check command type and construct appropriate command objects
@@ -81,17 +81,12 @@ class Handler(PostHandler):
                     return 500, json.dumps({"status": "error", "message": error})
 
             # Add ModbusTask to task queue
-            request_data.tasks.put(
-                ModbusWriteTask(
-                    100,
-                    request_data.bb,
-                    request_data.bb.inverters.lst[0],
-                    command_objects,
-                )
+            data.tasks.put(
+                ModbusWriteTask(100, data.bb, data.bb.inverters.lst[0], command_objects)
             )
 
             return 200, json.dumps({"status": "ok"})
         except Exception as e:
-            logger.error("Failed to handle Modbus commands: %s", request_data.data)
+            logger.error("Failed to handle Modbus commands: %s", data.data)
             logger.error(e)
             return 500, json.dumps({"status": "error", "message": str(e)})

@@ -1,11 +1,12 @@
 import json
+import logging
+
 from server.wifi.wifi import WiFiHandler
 from server.tasks.openWiFiConTask import OpenWiFiConTask
 
 from ..handler import PostHandler
 from ..requestData import RequestData
 
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -28,16 +29,12 @@ class Handler(PostHandler):
     def json_schema(self):
         return json.dumps(self.schema())
 
-    def do_post(self, request_data: RequestData) -> tuple[int, str]:
-        if "ssid" in request_data.data and "psk" in request_data.data:
+    def do_post(self, data: RequestData) -> tuple[int, str]:
+        if "ssid" in data.data and "psk" in data.data:
             try:
-                log.info(
-                    "Opening WiFi connection to {}".format(request_data.data["ssid"])
-                )
-                wificon = WiFiHandler(
-                    request_data.data["ssid"], request_data.data["psk"]
-                )
-                request_data.tasks.put(OpenWiFiConTask(1000, request_data.bb, wificon))
+                log.info("Opening WiFi connection to %s", data.data["ssid"])
+                wificon = WiFiHandler(data.data["ssid"], data.data["psk"])
+                data.tasks.put(OpenWiFiConTask(1000, data.bb, wificon))
                 return 200, json.dumps({"status": "ok"})
             except Exception as e:
                 return 500, json.dumps({"status": "error", "message": str(e)})

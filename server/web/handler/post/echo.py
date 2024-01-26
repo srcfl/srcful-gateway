@@ -14,7 +14,7 @@ class Handler(PostHandler):
             "returns": {"echo": "string, the data it received"},
         }
 
-    def do_post(self, request_data: RequestData):
-        ret = {"echo": request_data.data}
+    def do_post(self, data: RequestData):
+        ret = {"echo": data.data}
 
         return 200, json.dumps(ret)

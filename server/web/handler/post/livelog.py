@@ -28,28 +28,25 @@ class Handler(PostHandler):
     def json_schema(self):
         return json.dumps(self.schema())
 
-    def do_post(self, request_data: RequestData):
-        if len(request_data.bb.inverters.lst) > 0:
+    def do_post(self, data: RequestData):
+        if len(data.bb.inverters.lst) > 0:
             return 400, json.dumps({"error": "inverter not initialized"})
 
         if (
-            "frequency" in request_data.data
-            and "size" in request_data.data
-            and "registers" in request_data.data
+            "frequency" in data.data
+            and "size" in data.data
+            and "registers" in data.data
         ):
-            inverter = request_data.bb.inverters.lst[0]
+            inverter = data.bb.inverters.lst[0]
             if inverter.isOpen():
                 # create a new live log object
                 register_values = []
-                for register in request_data.data["registers"]:
+                for register in data.data["registers"]:
                     try:
-                        register_type = RegisterValue.RegisterType.from_str(
-                            register["register"]
-                        )
+                        # false pylint positives
+                        register_type = RegisterValue.RegisterType.from_str(register["register"])
                         datatype = RegisterValue.Type.from_str(register["type"])
-                        endianess = RegisterValue.Endianness.from_str(
-                            register["endianess"]
-                        )
+                        endianess = RegisterValue.Endianness.from_str(register["endianess"])
                         register_values.append(
                             RegisterValue(
                                 register["address"],

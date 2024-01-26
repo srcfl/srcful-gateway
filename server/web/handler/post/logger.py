@@ -24,24 +24,24 @@ class Handler(PostHandler):
     def json_schema(self):
         return json.dumps(self.schema())
 
-    def do_post(self, request_data: RequestData):
-        if "logger" in request_data.data and "level" in request_data.data:
+    def do_post(self, data: RequestData):
+        if "logger" in data.data and "level" in data.data:
             # check that the logger and level are valid
             try:
                 # check that the logger actually exits in the logging module - we cannot directl use getLogger as this will create the logger
                 if (
-                    request_data.data["logger"] != "root"
-                    and request_data.data["logger"]
+                    data.data["logger"] != "root"
+                    and data.data["logger"]
                     not in logging.root.manager.loggerDict
                 ):
                     return 200, json.dumps({"level": False})
 
-                logger = logging.getLogger(request_data.data["logger"])
-                level = logging.getLevelName(request_data.data["level"])
-                logger.setLevel(level)
+                the_logger = logging.getLogger(data.data["logger"])
+                level = logging.getLevelName(data.data["level"])
+                the_logger.setLevel(level)
                 return 200, json.dumps({"level": True})
             except Exception as e:
-                logger.error("Failed to set logger level: {}".format(request_data.data))
+                logger.error("Failed to set logger level: %s", data.data)
                 logger.error(e)
                 return 200, json.dumps({"level": False})
 

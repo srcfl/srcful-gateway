@@ -30,26 +30,26 @@ class Handler(PostHandler):
     def json_schema(self):
         return json.dumps(self.schema())
 
-    def do_post(self, request_data: RequestData) -> tuple[int, str]:
+    def do_post(self, data: RequestData) -> tuple[int, str]:
         if (
-            "ip" in request_data.data
-            and "port" in request_data.data
-            and "type" in request_data.data
+            "ip" in data.data
+            and "port" in data.data
+            and "type" in data.data
         ):
             try:
                 conf = (
-                    request_data.data["ip"],
-                    int(request_data.data["port"]),
-                    request_data.data["type"],
-                    int(request_data.data["address"]),
+                    data.data["ip"],
+                    int(data.data["port"]),
+                    data.data["type"],
+                    int(data.data["address"]),
                 )
                 inverter = InverterTCP(conf)
                 logger.info("Created a TCP inverter")
 
-                request_data.tasks.put(OpenInverterTask(100, request_data.bb, inverter))
+                data.tasks.put(OpenInverterTask(100, data.bb, inverter))
                 return 200, json.dumps({"status": "ok"})
             except Exception as e:
-                logger.error("Failed to open inverter: {}".format(request_data.data))
+                logger.error("Failed to open inverter: %s", data.data)
                 logger.error(e)
                 return 500, json.dumps({"status": "error", "message": str(e)})
         else:

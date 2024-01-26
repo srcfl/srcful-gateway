@@ -33,25 +33,25 @@ class Handler(PostHandler):
     def json_schema(self):
         return json.dumps(self.schema())
 
-    def do_post(self, request_data: RequestData) -> tuple[int, str]:
-        if "port" in request_data.data and "type" in request_data.data:
+    def do_post(self, data: RequestData) -> tuple[int, str]:
+        if "port" in data.data and "type" in data.data:
             try:
                 conf = (
-                    request_data.data["port"],
-                    int(request_data.data["baudrate"]),
-                    int(request_data.data["bytesize"]),
-                    request_data.data["parity"],
-                    float(request_data.data["stopbits"]),
-                    request_data.data["type"],
-                    int(request_data.data["address"]),
+                    data.data["port"],
+                    int(data.data["baudrate"]),
+                    int(data.data["bytesize"]),
+                    data.data["parity"],
+                    float(data.data["stopbits"]),
+                    data.data["type"],
+                    int(data.data["address"]),
                 )
                 inverter = InverterRTU(conf)
                 logger.info("Created an RTU inverter")
 
-                request_data.tasks.put(OpenInverterTask(100, request_data.bb, inverter))
+                data.tasks.put(OpenInverterTask(100, data.bb, inverter))
                 return 200, json.dumps({"status": "ok"})
             except Exception as e:
-                logger.error("Failed to open inverter: {}".format(request_data.data))
+                logger.error("Failed to open inverter: %s", data.data)
                 logger.error(e)
                 return 500, json.dumps({"status": "error", "message": str(e)})
         else:
