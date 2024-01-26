@@ -15,5 +15,5 @@ class Handler(GetHandler):
             },
         }
 
-    def do_get(self, request_data: RequestData):
+    def do_get(self, data: RequestData):
         return 200, json.dumps({"connections": get_connection_configs()})

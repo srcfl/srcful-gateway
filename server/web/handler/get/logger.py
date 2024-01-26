@@ -13,7 +13,7 @@ class Handler(GetHandler):
             "returns": "A dictionary with all log names and their respective log level (DEGUG, INFO, WARNING, ERROR, CRITICAL)"
         }
 
-    def do_get(self, request_data: RequestData):
+    def do_get(self, data: RequestData):
         loggers = [logging.getLogger()]  # get the root logger
         loggers = loggers + [
             logging.getLogger(name) for name in logging.root.manager.loggerDict

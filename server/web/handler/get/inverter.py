@@ -18,11 +18,11 @@ class Handler(GetHandler):
             },
         }
 
-    def do_get(self, request_data: RequestData):
+    def do_get(self, data: RequestData):
         config = {"status": "No inverter"}
 
-        if len(request_data.bb.inverters.lst) > 0:
-            inverter = request_data.bb.inverters.lst[0]
+        if len(data.bb.inverters.lst) > 0:
+            inverter = data.bb.inverters.lst[0]
             config = inverter.get_config_dict()
 
             if inverter.is_open():

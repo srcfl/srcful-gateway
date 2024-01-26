@@ -1,8 +1,11 @@
 import json
 import logging
+
+from server.wifi.scan import WifiScanner
+
 from ..handler import GetHandler
 from ..requestData import RequestData
-from server.wifi.scan import WifiScanner
+
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +18,7 @@ class Handler(GetHandler):
             "returns": {"ssids": "list of SSID strings ['ssid1', 'ssid2', ...]"},
         }
 
-    def do_get(self, request_data: RequestData):
+    def do_get(self, data: RequestData):
         try:
             s = WifiScanner()
             ssids = s.get_ssids()
@@ -33,7 +36,7 @@ class ScanHandler(GetHandler):
             "returns": {"status": "scan initiated"},
         }
 
-    def do_get(self, request_data: RequestData):
+    def do_get(self, data: RequestData):
         try:
             s = WifiScanner()
             s.scan()

@@ -151,23 +151,23 @@ def inverter_form():
 
 
 class Handler(GetHandler):
-    def do_get(self, request_data: RequestData):
+    def do_get(self, data: RequestData):
         # stats = request_data.stats
         # freqReads = stats['freqReads'] if 'freqReads' in stats else 0
         # energyHarvested = stats['harvest'] if 'harvest' in stats else 0
         # energyTransported = 0
         # if 'harvestTransports' in stats:
         #  energyTransported = stats['harvestTransports']
-        start_time = request_data.bb.start_time
+        start_time = data.bb.start_time
 
         ret = "<html><head><title>Srcful Energy Gateway</title></head>"
         ret += "<body>"
         ret += "<h1>Srcful Energy Gateway 0.0.6</h1>"
         # ret += f"<h2>{stats['name']}</h2>"
 
-        ret += f"<p>chipInfo: {request_data.bb.get_chip_info()}</p>"
+        ret += f"<p>chipInfo: {data.bb.get_chip_info()}</p>"
 
-        elapsed_time = request_data.bb.time_ms() - start_time
+        elapsed_time = data.bb.time_ms() - start_time
 
         # convert elapsedTime to days, hours, minutes, seconds in a tuple
         days, remainder = divmod(elapsed_time // 1000, 60 * 60 * 24)

@@ -11,7 +11,7 @@ class Handler(GetHandler):
             "returns": {"message": "hello world from srcful!"},
         }
 
-    def do_get(self, request_data: RequestData):
+    def do_get(self, data: RequestData):
         ret = self.schema()["returns"]
 
         return 200, json.dumps(ret)

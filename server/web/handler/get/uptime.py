@@ -13,7 +13,7 @@ class Handler(GetHandler):
             "returns": {"msek": "int, milliseconds since boot"},
         }
 
-    def do_get(self, request_data: RequestData):
+    def do_get(self, data: RequestData):
         return 200, json.dumps(
-            {"msek": request_data.bb.time_ms() - request_data.bb.start_time}
+            {"msek": data.bb.time_ms() - data.bb.start_time}
         )
