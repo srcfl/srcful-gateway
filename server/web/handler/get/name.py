@@ -23,6 +23,6 @@ class Handler(GetHandler):
         t.execute(0)
 
         if t.name is None:
-            return t.response.status, json.dumps({"body": t.response.body})
+            return t.reply.status, json.dumps({"body": t.reply.body})
 
         return 200, json.dumps({"name": t.name})
