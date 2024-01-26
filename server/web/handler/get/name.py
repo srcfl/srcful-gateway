@@ -14,7 +14,7 @@ class Handler(GetHandler):
             "returns": {"name": "string, name of the gateway"},
         }
 
-    def do_get(self, request_data: RequestData):
+    def do_get(self, data: RequestData):
         # this works as the web response task is threaded in itself and will not block
         # the task queue execution - afaik :P
         t = GetNameTask(0, {})
