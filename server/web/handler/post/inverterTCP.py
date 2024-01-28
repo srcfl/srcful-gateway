@@ -12,23 +12,19 @@ logger = logging.getLogger(__name__)
 
 class Handler(PostHandler):
     def schema(self):
-        return {
-            "type": "post",
-            "description": "open an inverter",
-            "required": {
+        return self.create_schema(
+            "Open an inverter and start harvesting the data",
+            required={
                 "ip": "string, ip address of the inverter",
                 "port": "int, port of the inverter",
                 "type": "string, type of inverter",
                 "address": "int, address of the inverter",
             },
-            "returns": {
+            returns={
                 "status": "string, ok or error",
                 "message": "string, error message",
             },
-        }
-
-    def json_schema(self):
-        return json.dumps(self.schema())
+        )
 
     def do_post(self, data: RequestData) -> tuple[int, str]:
         if (

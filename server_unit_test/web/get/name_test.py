@@ -2,21 +2,25 @@ import pytest
 import server.web.handler.get.name as get_name
 from unittest.mock import Mock, patch
 
+from server.tasks.getNameTask import GetNameTask
+
 
 @patch("server.web.handler.get.name.GetNameTask")
 def test_get(mock_task):
     class MockTask:
         def __init__(self):
             self.name = "test_name"
-            self.response = Mock()
-            self.response.status = 200
+            self.reply = Mock()
+            self.reply.status = 200
             self.t = Mock()
+
+            assert hasattr(GetNameTask(0, None), "reply")
 
         def execute(self, timeMS):
             pass
 
         def name(self):
-            return self._name
+            return self.name
 
     mock_task.return_value = MockTask()
 
@@ -36,14 +40,16 @@ def test_get_notfound(mock_task):
     class MockTask:
         def __init__(self):
             self.name = None
-            self.response = MockResponse()
+            self.reply = MockResponse()
             self.t = Mock()
+
+            assert hasattr(GetNameTask(0, None), "reply")
 
         def execute(self, timeMS):
             pass
 
         def name(self):
-            return self._name
+            return self.name
 
     mock_task.return_value = MockTask()
 

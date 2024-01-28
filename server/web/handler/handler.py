@@ -5,21 +5,25 @@ from .requestData import RequestData
 
 class Handler:
     '''Base class for handlers'''
-    def schema_prot(self, method: str, description: str):
+    def schema_prot(self, method: str, description: str, required: dict = None, returns: dict = None) -> dict:
         '''Override to return the schema of the handler'''
         return {
             "type": method,
             "description": description,
-            "required": {},
-            "returns": {},
+            "required": required if required is not None else {},
+            "returns": returns if returns is not None else {}
         }
 
 
 class PostHandler(Handler):
     '''Base class for post handlers'''
-    def schema(self):
+    def schema(self) -> dict:
         '''Override to return the schema of the handler'''
-        return self.schema_prot("post", "post handler default documentation")
+        return self.create_schema("post handler default documentation")
+
+    def create_schema(self, description: str, required: dict = None, returns: dict = None) -> dict:
+        '''Use to create the schema of the handler'''
+        return super().schema_prot("post", description, required, returns)
 
     def do_post(self, data: RequestData):
         '''Override to implement the handler'''
@@ -29,9 +33,13 @@ class PostHandler(Handler):
 class GetHandler(Handler):
     '''Base class for get handlers'''
 
-    def schema(self):
+    def schema(self) -> dict:
         '''Override to return the schema of the handler'''
-        return self.schema_prot("get", "get handler default documentation")
+        return self.create_schema("get handler default documentation")
+
+    def create_schema(self, description: str, required: dict = None, returns: dict = None) -> dict:
+        '''Use to create the schema of the handler'''
+        return super().schema_prot("get", description, required, returns)
 
     def do_get(self, data: RequestData):
         '''Override to implement the handler'''
@@ -41,9 +49,13 @@ class GetHandler(Handler):
 class DeleteHandler(Handler):
     '''Base class for delete handlers'''
 
-    def schema(self):
+    def schema(self) -> dict:
         '''Override to return the schema of the handler'''
-        return self.schema_prot("delete", "delete handler default documentation")
+        return self.create_schema("delete handler default documentation")
+
+    def create_schema(self, description: str, required: dict = None, returns: dict = None):
+        '''Use to create the schema of the handler'''
+        return super().schema_prot("delete", description, required, returns)
 
     def do_delete(self, data: RequestData):
         '''Override to implement the handler'''

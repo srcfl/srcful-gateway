@@ -1,5 +1,5 @@
-#API_URL = "http://localhost:5000/api/"
-API_URL = "http://192.168.0.215/api/"
+API_URL = "http://localhost:5000/api/"
+#API_URL = "http://192.168.0.215/api/"
 
 INVERTER_HOST = "20.218.129.227"
 INVERTER_PORT = 502
