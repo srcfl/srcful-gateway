@@ -26,8 +26,16 @@ and select Credentials and use the email and password avaiable in bitwarden.
 More on how to monitor, build and deploy [here](balena.md).
 
 
+## Branching strategy
+In general one issue is one branch. For smaller issues you can work directly in eg. Dev.
+
+*main* is stable branch for development. Basically this branch should be safe to create working branches from. This branch would be "locked" at some point then things are tested and finally merged into a fleet release branch.
+
+*fleet-x* is deploy branch connected to a particular fleet (x would be the fleet name e.g. beta). It is ok to have your own fleet and branch for that particular fleet if you feel the need for it.
+
+
 ## Services 
-The gateway is composed of several services that are deployed as docker containers. Only web and bluetooth are deployed to the gateway. The other services are for testing and development.
+The gateway is composed of two services that are deployed as docker containers. Only web and bluetooth are deployed to the gateway. The other services are for testing and development.
 
 ### server
 The crypto stuff is partially mocked and does not require the libs to be installed as this does not seem to work well in a windows based container environment (even though the container itself runs linux...). This should handle iteself gracefully in the code.
@@ -103,6 +111,12 @@ For vscode add test folders to the `.vscode/settings.json`
 ```
 
 ## Report test coverage
+pytest can issue a coverage report using the plugin pytest-cov. Install with
+
+```
+pip install pytest-cov
+```
+
 To see overall test coverage you can run:
 ```
 pytest --cov-report=html --cov=server server_unit_test
