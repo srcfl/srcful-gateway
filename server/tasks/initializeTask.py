@@ -1,25 +1,33 @@
-from .srcfulAPICallTask import SrcfulAPICallTask
-
-import server.crypto.crypto as atecc608b
+import logging
 import requests
 
+import server.crypto.crypto as atecc608b
+from server.blackboard import BlackBoard
+
+from .srcfulAPICallTask import SrcfulAPICallTask
+
+log = logging.getLogger(__name__)
+
+
 class InitializeTask(SrcfulAPICallTask):
-  
-  def __init__(self, eventTime: int, stats: dict, wallet: str):
-    super().__init__(eventTime, stats)
-    self.isInitialized = None
-    self.post_url = "https://api.srcful.dev/"
-    self.wallet = wallet
+    def __init__(
+        self, event_time: int, bb: BlackBoard, wallet: str, dry_run: bool = False
+    ):
+        super().__init__(event_time, bb)
+        self.is_initialized = None
+        self.post_url = "https://api.srcful.dev/"
+        self.wallet = wallet
+        self.dry_run = dry_run
 
-  def _json(self):
-    atecc608b.initChip()
-    serial = atecc608b.getSerialNumber().hex()
+    def _json(self):
+        atecc608b.init_chip()
+        serial = atecc608b.get_serial_number().hex()
 
-    idAndWallet = serial + ':' + self.wallet
-    sign = atecc608b.getSignature(idAndWallet).hex()
-    atecc608b.release()
+        id_and_wallet = serial + ":" + self.wallet
+        sign = atecc608b.get_signature(id_and_wallet).hex()
+        atecc608b.release()
 
-    m = """
+        m = """
     mutation {
       gatewayInception {
         initialize(gatewayInitialization:{idAndWallet:"$var_idAndWallet", signature:"$var_sign"}) {
@@ -29,14 +37,33 @@ class InitializeTask(SrcfulAPICallTask):
     }
     """
 
-    m = m.replace('$var_idAndWallet', idAndWallet)
-    m = m.replace('$var_sign', sign)
+        m = m.replace("$var_idAndWallet", id_and_wallet)
+        m = m.replace("$var_sign", sign)
 
-    return {'query': m}
-  
-  def _on200(self, reply: requests.Response):
-    if  reply.json()['data']['gatewayInception'] != None and \
-        reply.json()['data']['gatewayInception']['initialize'] != None and \
-        reply.json()['data']['gatewayInception']['initialize']['initialized'] != None:
-          self.isInitialized = reply.json()['data']['gatewayInception']['initialize']['initialized']
-    self.isInitialized = reply.json()['data']['gatewayInception']['initialize']['initialized']
+        if self.dry_run:
+            m = m.replace(
+                "gatewayInitialization:{idAndWallet",
+                "gatewayInitialization:{dryRun:true, idAndWallet",
+            )
+
+        log.info("Preparing intialization of wallet %s with sn %s", self.wallet, serial)
+
+        return {"query": m}
+
+    def _on_200(self, reply: requests.Response):
+        if (
+            reply.json()["data"]["gatewayInception"] is not None
+            and reply.json()["data"]["gatewayInception"]["initialize"] is not None
+            and reply.json()["data"]["gatewayInception"]["initialize"]["initialized"]
+            is not None
+        ):
+            self.is_initialized = reply.json()["data"]["gatewayInception"][
+                "initialize"
+            ]["initialized"]
+        self.is_initialized = reply.json()["data"]["gatewayInception"]["initialize"][
+            "initialized"
+        ]
+
+    def _on_error(self, reply: requests.Response) -> int:
+        log.warning("Failed to initialize wallet %s", self.wallet)
+        return 0

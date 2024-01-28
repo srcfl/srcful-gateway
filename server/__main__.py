@@ -3,63 +3,99 @@ import server.app as app
 
 import logging
 import os
-import sys
-
 
 
 if __name__ == "__main__":
 
-  class OneLineExceptionFormatter(logging.Formatter):
-    def formatException(self, exc_info):
-        result = super().formatException(exc_info)
-        return repr(result)
- 
-    def format(self, record):
-        result = super().format(record)
-        if record.exc_text:
-            result = result.replace("\n", "")
-        return result
- 
-  #handler = logging.StreamHandler(sys.stdout)
-  handler = logging.StreamHandler()
-  formatter = OneLineExceptionFormatter(logging.BASIC_FORMAT)
-  handler.setFormatter(formatter)
-  logging.root.setLevel(os.environ.get("LOGLEVEL", "DEBUG"))
-  #logging.root.setLevel("DEBUG")
-  logging.root.handlers = []
-  logging.root.addHandler(handler)
+    # Formatter does not follow pep8
+    class OneLineExceptionFormatter(logging.Formatter):
+        def formatException(self, exc_info):
+            result = super().formatException(exc_info)
+            return repr(result)
 
-  log = logging.getLogger(__name__)
+        def format(self, record):
+            result = super().format(record)
+            if record.exc_text:
+                result = result.replace("\n", "")
+            return result
 
-  #logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
+    # handler = logging.StreamHandler(sys.stdout)
+    handler = logging.StreamHandler()
+    formatter = OneLineExceptionFormatter(logging.BASIC_FORMAT)
+    handler.setFormatter(formatter)
+    logging.root.setLevel(os.environ.get("LOGLEVEL", "DEBUG"))
+    # logging.root.setLevel("DEBUG")
+    logging.root.handlers = []
+    logging.root.addHandler(handler)
 
-  # parse arguments from command line
-  parser = argparse.ArgumentParser(description='Srcful Energy Gateway')
+    log = logging.getLogger(__name__)
 
-  # port and host for the web server
-  parser.add_argument('-wh', '--web_host', type=str,
-                      default='0.0.0.0', help='host for the web server.')
-  parser.add_argument('-wp', '--web_port', type=int,
-                      default=5000, help='port for the web server.')
+    # logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
-  # port, host and type for the inverter
-  default_inverter_type = 'unknown'
-  parser.add_argument('-ih', '--inverter_host', type=str,
-                      default='localhost', help='host for the inverter.')
-  parser.add_argument('-ip', '--inverter_port', type=int,
-                      default=502, help='port for the inverter (default=502).')
-  parser.add_argument('-it', '--inverter_type', type=str, default=default_inverter_type,
-                      help='type of inverter, e.g. huawei (default=unknown).')
-  parser.add_argument('-ia', '--inverter_address', type=int,
-                      default=1, help='modbus address of the inverter (default=1).')
-  parser.add_argument('-b', '--bootstrap', type=str, help='bootstrap file if it does not exist it will be created.', default='bootstrap.txt')
+    # parse arguments from command line
+    parser = argparse.ArgumentParser(description="Srcful Energy Gateway")
 
-  args = parser.parse_args()
+    # port and host for the web server
+    parser.add_argument(
+        "-wh",
+        "--web_host",
+        type=str,
+        default="0.0.0.0",
+        help="host for the web server.",
+    )
+    parser.add_argument(
+        "-wp", "--web_port", type=int, default=5000, help="port for the web server."
+    )
 
-  log.info("Running with the following configuration: %s", args)
-    
-  inverter = None
-  # check if the invertertype is the default value
-  if args.inverter_type is not default_inverter_type:
-     inverter = (args.inverter_host, args.inverter_port, args.inverter_type, args.inverter_address)
-  app.main((args.web_host, args.web_port), inverter, args.bootstrap)
+    # port, host and type for the inverter
+    default_inverter_type = "unknown"
+    parser.add_argument(
+        "-ih",
+        "--inverter_host",
+        type=str,
+        default="localhost",
+        help="host for the inverter.",
+    )
+    parser.add_argument(
+        "-ip",
+        "--inverter_port",
+        type=int,
+        default=502,
+        help="port for the inverter (default=502).",
+    )
+    parser.add_argument(
+        "-it",
+        "--inverter_type",
+        type=str,
+        default=default_inverter_type,
+        help="type of inverter, e.g. huawei (default=unknown).",
+    )
+    parser.add_argument(
+        "-ia",
+        "--inverter_address",
+        type=int,
+        default=1,
+        help="modbus address of the inverter (default=1).",
+    )
+    parser.add_argument(
+        "-b",
+        "--bootstrap",
+        type=str,
+        help="bootstrap file if it does not exist it will be created.",
+        default="bootstrap.txt",
+    )
+
+    args = parser.parse_args()
+
+    log.info("Running with the following configuration: %s", args)
+
+    inverter = None
+    # check if the invertertype is the default value
+    if args.inverter_type is not default_inverter_type:
+        inverter = (
+            args.inverter_host,
+            args.inverter_port,
+            args.inverter_type,
+            args.inverter_address,
+        )
+    app.main((args.web_host, args.web_port), inverter, args.bootstrap)

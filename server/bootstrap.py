@@ -1,5 +1,4 @@
-from .tasks.task import Task
-
+from .inverters.inverter import Inverter
 from .inverters.InverterTCP import InverterTCP
 from .inverters.InverterRTU import InverterRTU
 from .tasks.openInverterTask import OpenInverterTask
@@ -7,120 +6,140 @@ from .tasks.openInverterTask import OpenInverterTask
 import os
 
 import logging
+
 logger = logging.getLogger(__name__)
 
-class BootstrapSaver():
-  '''Abstract class for saving bootstrap tasks to a file'''
-  def appendInverter(self, setup):
-    '''Appends an inverter to the bootstrap file'''
-    raise NotImplementedError("Subclass must implement abstract method")
+
+class BootstrapSaver:
+    """Abstract class for saving bootstrap tasks to a file"""
+
+    def append_inverter(self, setup):
+        """Appends an inverter to the bootstrap file"""
+        raise NotImplementedError("Subclass must implement abstract method")
+
 
 class Bootstrap(BootstrapSaver):
-  '''A bootstrap is a list of tasks that are executed on startup.'''
-  def __init__(self, filename: str):
-    self.filename = filename
-    self.tasks = []
-    self._createFileIfNotExists()
+    """A bootstrap is a list of tasks that are executed on startup."""
 
+    def __init__(self, filename: str):
+        self.filename = filename
+        self.tasks = []
+        self._create_file_if_not_exists()
 
-  def _createFileIfNotExists(self):
-    # create the directories and the file if it does not exist
-    # log any errors
-    if not os.path.exists(self.filename):
+    # implementation of blackboard inverter observer
+    def add_inverter(self, inverter: Inverter):
+        self.append_inverter(inverter.get_config())
 
-      try:
-        os.makedirs(os.path.dirname(self.filename), exist_ok=True)
-        with open(self.filename) as f:
-          f.write('# This file contains the tasks that are executed on startup\n')
-          f.write('# Each line contains a task name and its arguments\n')
+    def remove_inverter(self, inverter: Inverter):
+        logger.info(
+            "Removing inverter from bootstrap: {} not yet supported".format(
+                inverter.get_config()
+            )
+        )
 
-      except Exception as e:
-        logger.error('Failed to create file: {}'.format(self.filename))
-        logger.error(e)
+    def _create_file_if_not_exists(self):
+        # create the directories and the file if it does not exist
+        # log any errors
+        if not os.path.exists(self.filename):
+            try:
+                os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+                with open(self.filename) as f:
+                    f.write(
+                        "# This file contains the tasks that are executed on startup\n"
+                    )
+                    f.write("# Each line contains a task name and its arguments\n")
 
+            except Exception as e:
+                logger.error("Failed to create file: {}".format(self.filename))
+                logger.error(e)
 
-  def appendInverter(self, inverterArgs):
-    self._createFileIfNotExists()
+    def append_inverter(self, inverter_args):
+        self._create_file_if_not_exists()
 
-    # check if the setup already exists
-    for task in self.tasks:
-      
-      if isinstance(task, OpenInverterTask) and task.inverter.getConfig() == inverterArgs:
-        return
-    
-    # append the setup to the file
-    with open(self.filename, "w") as f:
-      logger.info('Writing (w) inverter to bootstrap file: {}'.format(inverterArgs))
-      f.write('OpenInverter {}\n'.format(" ".join(str(i) for i in inverterArgs)))
+        # check if the setup already exists
+        for task in self.get_tasks(0, None):
+            if (
+                isinstance(task, OpenInverterTask)
+                and task.inverter.get_config() == inverter_args
+            ):
+                return
 
-      if inverterArgs[0] == 'TCP':
-        self.tasks.append(OpenInverterTask(0, {}, InverterTCP(inverterArgs[1:]), self))
-      elif inverterArgs[0] == 'RTU':
-        self.tasks.append(OpenInverterTask(0, {}, InverterRTU(inverterArgs[1:]), self))
+        # append the setup to the file
+        with open(self.filename, "w") as f:
+            logger.info(
+                "Writing (w) inverter to bootstrap file: {}".format(inverter_args)
+            )
+            f.write("OpenInverter {}\n".format(" ".join(str(i) for i in inverter_args)))
 
-  def getTasks(self, eventTime, stats):
-    self.tasks = []
-    # read the file handle errors
-    try:
-      with open(self.filename, "r") as f:
-        logger.info('Reading bootstrap file: {}'.format(self.filename))
-        lines = f.readlines()
-    except Exception as e:
-      logger.error('Failed to read file: {}'.format(self.filename))
-      logger.error(e)
-      return self.tasks
-    
-    
-    return self._processLines(lines, eventTime, stats)
+    def get_tasks(self, event_time, stats):
+        self.tasks = []
+        # read the file handle errors
+        try:
+            with open(self.filename, "r") as f:
+                logger.info("Reading bootstrap file: {}".format(self.filename))
+                lines = f.readlines()
+        except Exception as e:
+            logger.error("Failed to read file: {}".format(self.filename))
+            logger.error(e)
+            return self.tasks
 
-  def _processLines(self, lines: list, eventTime, stats):
-    # for each line, create a task and execute it
-    for line in lines:
-      line = line.strip()
-      line = line.replace('\n', '')
-      tokens = line.split(' ')
+        return self._process_lines(lines, event_time, stats)
 
-      # ignore empty lines, comments and lines without tokens
-      if len(line) == 0 or line[0] == '#' or len(tokens) == 0:
-        continue
+    def _process_lines(self, lines: list, event_time, stats):
+        # for each line, create a task and execute it
+        for line in lines:
+            line = line.strip()
+            line = line.replace("\n", "")
+            tokens = line.split(" ")
 
-      # get the task name
-      taskName = tokens[0]
+            # ignore empty lines, comments and lines without tokens
+            if len(line) == 0 or line[0] == "#" or len(tokens) == 0:
+                continue
 
-      # get the task arguments
-      taskArgs = tokens[1:]
+            # get the task name
+            task_name = tokens[0]
 
-      # create the task
-      task = self._createTask(taskName, taskArgs, eventTime, stats)
-      if task is None:
-        continue
-      self.tasks.append(task)
+            # get the task arguments
+            task_args = tokens[1:]
 
-    return self.tasks
-  
-  def _createTask(self, taskName: str, taskArgs: list, eventTime, stats):
-    # currently we only support OpenInverter
-    if taskName == 'OpenInverter':
-      return self._createOpenInverterTask(taskArgs, eventTime, stats)
-    else:
-      logger.error('Unknown task: {} in file {}'.format(taskName, self.filename))
-      return None
-  
-  def _createOpenInverterTask(self, taskArgs: list, eventTime, stats):
-    # check the number of arguments
-    if taskArgs[0] == 'TCP':
-      ip = taskArgs[1]
-      port = int(taskArgs[2])
-      type = taskArgs[3]
-      address = int(taskArgs[4])
-      return OpenInverterTask(eventTime + 1000, stats, InverterTCP((ip, port, type, address)), self)
-    elif taskArgs[0] == 'RTU':
-      port = taskArgs[1]
-      baudrate = int(taskArgs[2])
-      bytesize = int(taskArgs[3])
-      parity = taskArgs[4]
-      stopbits = float(taskArgs[5])
-      type = taskArgs[6]
-      address = int(taskArgs[7])
-      return OpenInverterTask(eventTime + 1000, stats, InverterRTU((port, baudrate, bytesize, parity, stopbits, type, address)), self)
-  
+            # create the task
+            task = self._create_task(task_name, task_args, event_time, stats)
+            if task is None:
+                continue
+            self.tasks.append(task)
+
+        return self.tasks
+
+    def _create_task(self, task_name: str, task_args: list, event_time, bb):
+        # currently we only support OpenInverter
+        if task_name == "OpenInverter":
+            return self._create_open_inverter_task(task_args, event_time, bb)
+        else:
+            logger.error("Unknown task: {} in file {}".format(task_name, self.filename))
+            return None
+
+    def _create_open_inverter_task(self, task_args: list, event_time, bb):
+        # check the number of arguments
+        if task_args[0] == "TCP":
+            ip = task_args[1]
+            port = int(task_args[2])
+            type = task_args[3]
+            address = int(task_args[4])
+            return OpenInverterTask(
+                event_time + 1000, bb, InverterTCP((ip, port, type, address))
+            )
+        elif task_args[0] == "RTU":
+            port = task_args[1]
+            baudrate = int(task_args[2])
+            bytesize = int(task_args[3])
+            parity = task_args[4]
+            stopbits = float(task_args[5])
+            type = task_args[6]
+            address = int(task_args[7])
+            return OpenInverterTask(
+                event_time + 1000,
+                bb,
+                InverterRTU(
+                    (port, baudrate, bytesize, parity, stopbits, type, address)
+                ),
+            )

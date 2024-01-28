@@ -1,0 +1,154 @@
+import requests
+import settings
+
+# these tests are meant to be run against the local server
+# you would also need an inverter (or the simulator) running
+
+
+def test_hello():
+    url = settings.API_URL + "hello"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    assert response.json()["message"] == "hello world from srcful!"
+
+
+def test_uptime():
+    url = settings.API_URL + "uptime"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    assert response.json()["msek"] > 0
+
+
+def test_name():
+    url = settings.API_URL + "name"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    assert len(response.json()["name"].split(" ")) == 3
+
+
+def test_crypto():
+    url = settings.API_URL + "crypto"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+
+    j = response.json()
+    assert "deviceName" in j
+    assert "serialNumber" in j
+    assert "publicKey" in j
+    assert "publicKey_pem" in j
+
+
+def test_wifi():
+    url = settings.API_URL + "wifi"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+
+    j = response.json()
+    assert "ssids" in j
+    assert len(j["ssids"]) > 0
+
+
+def test_wifi_scan():
+    url = settings.API_URL + "wifi/scan"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+
+    j = response.json()
+    assert "status" in j
+    assert j["status"] == "scan initiated"
+
+
+def test_running_inverter():
+    # requires an inverter to be running
+    url = settings.API_URL + "inverter"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+
+    j = response.json()
+    assert "connection" in j
+    assert j["connection"] == "TCP" or j["connection"] == "RTU"
+    assert "type" in j
+    assert "address" in j  # this could be dependant on TCP connection
+    assert "port" in j
+    assert "status" in j
+
+
+def test_network():
+    url = settings.API_URL + "network"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+
+    j = response.json()
+    assert "connections" in j
+    assert len(j["connections"]) > 0
+
+
+def test_modbus_raw():
+    url = settings.API_URL + "inverter/modbus/holding/40000?size=2"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+
+    j = response.json()
+    assert "register" in j
+    assert "raw_value" in j
+    assert "size" in j
+    assert j["size"] == 2
+    assert j["register"] == 40000
+    assert j["raw_value"] == "00000000"
+
+
+def test_logger():
+    url = settings.API_URL + "logger"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    assert "server.tasks.openInverterTask" in response.json()
