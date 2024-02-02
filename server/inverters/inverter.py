@@ -2,6 +2,7 @@ from .inverter_types import OPERATION, SCAN_RANGE, SCAN_START
 import logging
 from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
+from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 
 from .inverter_types import INVERTERS
 
@@ -18,7 +19,6 @@ class Inverter:
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
         self.inverterIsOpen = False
         self.registers = INVERTERS[self.get_type()]
-        pass
 
     def terminate(self):
         """Terminates the inverter."""
@@ -73,6 +73,7 @@ class Inverter:
         raise NotImplementedError("Subclass must implement abstract method")
 
     def close(self):
+        self.inverterIsOpen = False
         self.client.close()
 
     def read_harvest_data(self):
@@ -113,24 +114,55 @@ class Inverter:
         """
         Read a range of input registers from a start address
         """
-        slave = self.get_address()
-        resp = self.client.read_input_registers(scan_start, scan_range, slave=slave)
-        log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
-        if isinstance(resp, ExceptionResponse):
-            raise Exception("readInputRegisters() - ExceptionResponse: " + str(resp))
-        return resp.registers
+        registers = []
+        try:
+            resp = self.client.read_input_registers(scan_start, scan_range, slave=self.get_address())
+            
+            # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
+            # We solve this by raising the exception manually
+            if isinstance(resp, ModbusIOException):
+                raise ModbusIOException("Exception occurred while reading input registers")
+             
+            log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
+            registers = resp.registers
+
+        except ModbusException as me:
+        
+            # Decide whether to break or continue based on the type of ModbusException
+            if isinstance(me, ConnectionException):
+                log.error("ConnectionException occurred:", me)
+
+            if isinstance(me, ModbusIOException):
+                log.error("ModbusIOException occurred:", me)
+            
+        return registers
 
     def read_holding_registers(self, scan_start, scan_range):
         """
         Read a range of holding registers from a start address
         """
-        resp = self.client.read_holding_registers(
-            scan_start, scan_range, slave=self.get_address()
-        )
-        log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
-        if isinstance(resp, ExceptionResponse):
-            raise Exception("readHoldingRegisters() - ExceptionResponse: " + str(resp))
-        return resp.registers
+        registers = []
+        try:
+            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.get_address())
+            
+            # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
+            # We solve this by raising the exception manually
+            if isinstance(resp, ModbusIOException):
+                raise ModbusIOException("Exception occurred while reading holding registers")
+
+            log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
+            registers = resp.registers
+
+        except ModbusException as me:
+
+            # Decide whether to break or continue based on the type of ModbusException
+            if isinstance(me, ConnectionException):
+                log.error("ConnectionException occurred:", me)
+            
+            if isinstance(me, ModbusIOException):
+                log.error("ModbusIOException occurred:", me)
+
+        return registers
 
     def write_registers(self, starting_register, values):
         """
