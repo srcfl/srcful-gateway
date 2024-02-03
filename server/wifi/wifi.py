@@ -123,9 +123,7 @@ else:
                 # only delete wifi connections
                 if config["connection"]["type"] == "802-11-wireless":
                     settings_connection.Delete()
-                    logger.debug(
-                        "Deleted connection profile:", config["connection"]["id"]
-                    )
+                    logger.debug("Deleted connection profile: %s", config["connection"]["id"])
 
             logger.debug("Deleted all wifi connection profiles...")
 

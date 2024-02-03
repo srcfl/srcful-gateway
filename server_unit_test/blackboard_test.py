@@ -8,6 +8,11 @@ def test_blackboard():
     assert bb.inverters is not None
     assert bb.inverters.lst is not None
 
+def test_blackboard_get_version():
+    bb = BlackBoard()
+
+    # assert that string contains two dots
+    assert bb.get_version().count(".") == 2
 
 def test_blackboard_add_inverter():
     listener = MagicMock()

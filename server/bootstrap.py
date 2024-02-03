@@ -66,17 +66,16 @@ class Bootstrap(BootstrapSaver):
 
         # append the setup to the file
         with open(self.filename, "w") as f:
-            logger.info(
-                "Writing (w) inverter to bootstrap file: {}".format(inverter_args)
-            )
-            f.write("OpenInverter {}\n".format(" ".join(str(i) for i in inverter_args)))
+            logger.info("Writing (w) inverter to bootstrap file: %s", inverter_args)
+            inverter_str = " ".join(str(i) for i in inverter_args)
+            f.write(f"OpenInverter {inverter_str}\n")
 
     def get_tasks(self, event_time, stats):
         self.tasks = []
         # read the file handle errors
         try:
             with open(self.filename, "r") as f:
-                logger.info("Reading bootstrap file: {}".format(self.filename))
+                logger.info("Reading bootstrap file: %s", self.filename)
                 lines = f.readlines()
         except Exception as e:
             logger.error("Failed to read file: {}".format(self.filename))

@@ -49,12 +49,10 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
                 add_task(new_task)
 
 
-def main(
-    web_host: tuple[str, int],
-    inverter: InverterTCP.Setup | None = None,
-    bootstrap_file: str | None = None,
-):
+def main(web_host: tuple[str, int], inverter: InverterTCP.Setup | None = None, bootstrap_file: str | None = None):
     bb = BlackBoard()
+
+    logger.info("eGW version: %s", bb.get_version())
 
     web_server = server.web.server.Server(web_host, bb)
     print("Server started http://%s:%s" % (web_host[0], web_host[1]))
@@ -86,8 +84,8 @@ def main(
     except KeyboardInterrupt:
         pass
     except Exception as e:
-        print("Unexpected error:", sys.exc_info()[0])
-        print(e)
+        logger.exception("Unexpected error: %s", sys.exc_info()[0])
+        logger.exception("Exception: %s", e)
     finally:
         for i in bb.inverters.lst:
             i.close()

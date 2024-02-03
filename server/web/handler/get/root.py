@@ -162,7 +162,7 @@ class Handler(GetHandler):
 
         ret = "<html><head><title>Srcful Energy Gateway</title></head>"
         ret += "<body>"
-        ret += "<h1>Srcful Energy Gateway 0.0.6</h1>"
+        ret += f"<h1>Srcful Energy Gateway {data.bb.get_version()}</h1>"
         # ret += f"<h2>{stats['name']}</h2>"
 
         ret += f"<p>chipInfo: {data.bb.get_chip_info()}</p>"
