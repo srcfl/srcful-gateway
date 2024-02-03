@@ -17,7 +17,6 @@ class Inverter:
 
     def __init__(self):
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
-        self.inverterIsOpen = False
         self.registers = INVERTERS[self.get_type()]
 
     def terminate(self):
@@ -37,18 +36,25 @@ class Inverter:
         raise NotImplementedError("Subclass must implement abstract method")
 
     def is_open(self) -> bool:
-        return self.inverterIsOpen
+        """
+        Returns True if the inverter is open.
+        Reason for checking the socket is because that is that ModbusTcpClient and 
+        ModbusSerialClient uses different methods to check if the connection is open, 
+        but they both have a socket attribute that is None if the connection is closed, 
+        so we use that to check if the connection is open. 
+
+        """
+        log.debug("is_open() - Checking if inverter is open")
+        return bool(self.client.socket)
 
     def open(self) -> bool:
         """Opens the Modbus connection to the inverter."""
         if not self.is_terminated():
             self.client = self._create_client()
-            if self.client.connect():
-                self.inverterIsOpen = True
-            else:
+            if not self.client.connect():
+                log.error("FAILED to open inverter: %s", self.get_type())
                 self.terminate()
-                self.inverterIsOpen = False
-            return self.inverterIsOpen
+            return bool(self.client.socket)
         else:
             return False
 
@@ -73,7 +79,6 @@ class Inverter:
         raise NotImplementedError("Subclass must implement abstract method")
 
     def close(self):
-        self.inverterIsOpen = False
         self.client.close()
 
     def read_harvest_data(self):
@@ -130,10 +135,10 @@ class Inverter:
         
             # Decide whether to break or continue based on the type of ModbusException
             if isinstance(me, ConnectionException):
-                log.error("ConnectionException occurred:", me)
+                log.error("ConnectionException occurred: %s", str(me))
 
             if isinstance(me, ModbusIOException):
-                log.error("ModbusIOException occurred:", me)
+                log.error("ModbusIOException occurred: %s", str(me))
             
         return registers
 
@@ -157,10 +162,10 @@ class Inverter:
 
             # Decide whether to break or continue based on the type of ModbusException
             if isinstance(me, ConnectionException):
-                log.error("ConnectionException occurred:", me)
-            
+                log.error("ConnectionException occurred: %s", str(me))
+
             if isinstance(me, ModbusIOException):
-                log.error("ModbusIOException occurred:", me)
+                log.error("ModbusIOException occurred: %s", str(me))
 
         return registers
 
