@@ -24,7 +24,6 @@ class InverterTCP(Inverter):
     def __init__(self, setup: Setup):
         log.info("Creating with: %s" % str(setup))
         self.setup = setup
-        self.inverterIsOpen = False
         super().__init__()
 
     def get_host(self):
@@ -56,9 +55,6 @@ class InverterTCP(Inverter):
             self.get_type(),
             self.get_address(),
         )
-
-    def is_open(self):
-        return self.inverterIsOpen
 
     def _create_client(self):
         return ModbusClient(
