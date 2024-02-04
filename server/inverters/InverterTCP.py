@@ -56,7 +56,8 @@ class InverterTCP(Inverter):
             self.get_address(),
         )
 
-    def _create_client(self):
+    def _create_client(self, **kwargs):
         return ModbusClient(
-            host=self.get_host(), port=self.get_port(), unit_id=self.get_address()
+            host=self.get_host(), port=self.get_port(), unit_id=self.get_address(),
+            **kwargs
         )

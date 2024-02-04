@@ -47,18 +47,22 @@ class Inverter:
         log.debug("is_open() - Checking if inverter is open")
         return bool(self.client.socket)
 
-    def open(self) -> bool:
-        """Opens the Modbus connection to the inverter."""
+    def open(self, **kwargs) -> bool:
+        """Opens the Modbus connection to the inverter.
+
+        :param kwargs (optional) parameters to be passed to the _create_client method used for creating specific client types (TCP/RTU etc...)
+        
+        :return True if the connection is open, otherwise False.
+        """
         if not self.is_terminated():
-            self.client = self._create_client()
+            self.client = self._create_client(**kwargs)
             if not self.client.connect():
                 log.error("FAILED to open inverter: %s", self.get_type())
-                self.terminate()
             return bool(self.client.socket)
         else:
             return False
 
-    def _create_client(self):
+    def _create_client(self, **kwargs):
         """Creates the Modbus client."""
         raise NotImplementedError("Subclass must implement abstract method")
 

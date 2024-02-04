@@ -66,7 +66,8 @@ class Harvest(Task):
         if self.inverter.is_open():
             self.inverter.close()
         else:
-            self.inverter.open()
+            if not self.inverter.open():
+                log.error("FAILED to reopen inverter: %s", self.inverter.get_config_dict())
 
     def _handle_harvest_exception(self, e: Exception):
         if self.backoff_time == self.max_backoff_time:
