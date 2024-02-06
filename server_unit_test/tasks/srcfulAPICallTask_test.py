@@ -38,7 +38,7 @@ def test_execute_calls_post_and_handles_200_response():
         # wait for the thread to finish
         task.t.join()
         mock_post.assert_called_once_with(
-            "https://testnet.srcful.dev/gw/data/", data=mock_data
+            "https://testnet.srcful.dev/gw/data/", data=mock_data, timeout=5
         )
 
         # execute again as replies are handled in the next call
@@ -66,7 +66,7 @@ def test_execute_calls_post_and_handles_post_request_exception():
         # wait for the thread to finish
         task.t.join()
         mock_post.assert_called_once_with(
-            "https://testnet.srcful.dev/gw/data/", data=mock_data
+            "https://testnet.srcful.dev/gw/data/", data=mock_data, timeout=5
         )
 
         # execute again as replies are handled in the next call
@@ -94,7 +94,7 @@ def test_execute_calls_post_and_handles_non_200_response():
 
         result = task.execute(0)
         mock_post.assert_called_once_with(
-            "https://testnet.srcful.dev/gw/data/", data=mock_data
+            "https://testnet.srcful.dev/gw/data/", data=mock_data, timeout=5
         )
 
         # execute again as replies are handled in the next call

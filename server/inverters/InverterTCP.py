@@ -26,6 +26,10 @@ class InverterTCP(Inverter):
         self.setup = setup
         super().__init__()
 
+    def clone(self):
+        return InverterTCP((self.get_host(), self.get_port(),
+                            self.get_type(), self.get_address()))
+
     def get_host(self):
         return self.setup[0]
 

@@ -1,4 +1,5 @@
 import server.tasks.harvest as harvest
+import server.tasks.openInverterTask as oit
 from unittest.mock import Mock, patch
 import pytest
 
@@ -17,24 +18,11 @@ def test_create_harvest_transport():
 
 def test_inverter_terminated():
     mock_inverter = Mock()
-    mock_inverter.is_terminated.return_value = False
+    mock_inverter.is_terminated.return_value = True
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter)
-    t.execute(17)
-
-    t.backoff_time = t.max_backoff_time
-    t.inverter.read_harvest_data.side_effect = Exception("mocked exception")
-    t.execute(17)
-
-    assert mock_inverter.close.call_count == 1
-    assert mock_inverter.open.call_count == 0
-
-    t.inverter.is_open.return_value = False
-
-    t.execute(17)
-
-    assert mock_inverter.close.call_count == 1
-    assert mock_inverter.open.call_count == 1
+    ret = t.execute(17)
+    assert ret is None
 
 
 def test_execute_harvest():
@@ -51,7 +39,7 @@ def test_execute_harvest():
     assert t.time == 17 + 1000
 
 
-def test_execute_arvest_x10():
+def test_execute_harvest_x10():
     # in this test we check that we get the desired behavior when we execute a harvest task 10 times
     # the first 9 times we should get the same task back
     # the 10th time we should get a list of 2 tasks back
@@ -150,31 +138,18 @@ def test_execute_harvest_no_transport():
 
     for i in range(len(registers)):
         mock_inverter.read_harvest_data.return_value = registers[i]
-        t.execute(i)
+        tasks = t.execute(i)
 
     # we should now have issued a transport and the barn should be empty
-    assert t.transport is not None
+    assert len(tasks) == 2
+
+    transport = tasks[0] if type(tasks[0]) is harvest.HarvestTransport else tasks[1]
+
+    assert type(transport) is harvest.HarvestTransport
+
     assert len(t.barn) == 0
-
-    # we now continue to harvest but these should not be transported as the transport task is not executed
-    for i in range(len(registers)):
-        mock_inverter.read_harvest_data.return_value = registers[i]
-        t.execute(i + 100)
-
-    assert len(t.barn) == 10
-
-    # finally we fake that the barn has been transported and we should get a new transport task
-    # note that we only transport every 10th harvest
-    t.transport.reply = "all done"
-    for i in range(len(registers)):
-        mock_inverter.read_harvest_data.return_value = registers[i]
-        ret = t.execute(i + 200)
-    assert len(t.barn) == 0
-    assert ret is not t
-    assert len(ret) == 2
-    assert ret[0] is t
-    assert ret[1] is not t
-
+    assert len(transport.barn) == 10
+  
 
 def test_execute_harvest_incremental_backoff_increasing():
     mock_inverter = Mock()
@@ -208,7 +183,7 @@ def test_execute_harvest_incremental_backoff_reset():
     assert ret.time == 17 + ret.backoff_time
 
 
-def test_execute_harvest_incremental_backoff_reconnect_on_max():
+def test_execute_harvest_incremental_backoff_terminate_on_max():
     mock_inverter = Mock()
     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
     mock_inverter.is_terminated.return_value = False
@@ -217,20 +192,29 @@ def test_execute_harvest_incremental_backoff_reconnect_on_max():
     while t.backoff_time < t.max_backoff_time:
         ret = t.execute(17)
 
-        # assert that the inverter has not been closed and opened again
-        assert mock_inverter.close.call_count == 0
-    assert mock_inverter.open.call_count == 0
-
+    # we are now at max backoff time and the inverter should be terminated
+    # the tasks returned should be t and the open inverter task
     ret = t.execute(17)
-    assert ret is t
+    assert len(ret) == 2
+    oit_ix = 0 if type(ret[0]) is oit.OpenInverterTask else 1
+    assert type(ret[oit_ix]) is oit.OpenInverterTask
+    assert ret[(oit_ix + 1) % 2] is t
 
-    t.inverter.is_open.return_value = False
+    # make sure the open inverter task has a cloned inverter
+    assert mock_inverter.clone.call_count == 1
+    
+    # assert that inverter has been terminated
+    assert t.inverter.terminate.call_count == 1
+    mock_inverter.is_terminated.return_value = True
 
-    t.execute(17)
+    # make sure we get nothing as the barn is empty
+    assert t.execute(17) is None
 
-    # assert that inverter has been closed and opened again
-    assert mock_inverter.close.call_count == 1
-    assert mock_inverter.open.call_count == 1
+    # Test that the execute method returns a HarvestTransport object when the has some data
+    t.barn[17] = {"1": 1717}
+    ret = t.execute(17)
+    assert type(ret) is harvest.HarvestTransport
+
 
 
 @pytest.fixture

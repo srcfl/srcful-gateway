@@ -3,10 +3,12 @@ import logging
 import requests
 
 from server.inverters.inverter import Inverter
+import server.tasks.openInverterTask as oit
 from server.blackboard import BlackBoard
 import server.crypto.crypto as atecc608b
 
 from .task import Task
+
 from .srcfulAPICallTask import SrcfulAPICallTask
 
 log = logging.getLogger(__name__)
@@ -19,7 +21,6 @@ class Harvest(Task):
         # self.stats['lastHarvest'] = 'n/a'
         # self.stats['harvests'] = 0
         self.barn = {}
-        self.transport = None
 
         # incremental backoff stuff
         self.backoff_time = 1000  # start with a 1-second backoff
@@ -27,8 +28,8 @@ class Harvest(Task):
 
     def execute(self, event_time) -> Task | list[Task]:
         if self.inverter.is_terminated():
-            return None
-
+            log.info("Inverter is terminated make the final transport if there is anything in the barn")
+            return self._create_transport(1, event_time=event_time)
         try:
             harvest = self.inverter.read_harvest_data()
             # self.stats['lastHarvest'] = harvest
@@ -38,44 +39,34 @@ class Harvest(Task):
             self.backoff_time = max(self.backoff_time - self.backoff_time * 0.1, 1000)
 
         except Exception as e:
-            self._handle_harvest_exception(e)
-
+            log.debug("Handling exeption reading harvest: %s", str(e))
+            if self.backoff_time >= self.max_backoff_time:
+                log.debug("Max timeout reached terminating inverter and issuing new reopen in 30 sec")
+                self.inverter.terminate()
+                open_inverter = oit.OpenInverterTask(event_time + 30000, self.bb, self.inverter.clone())
+                self.time = event_time + 10000
+                # we return self so that in the next execute the last harvest will be transported
+                return [self, open_inverter]
+            else:
+                log.info("Incrementing backoff time to: %s", self.backoff_time)
+                self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
+            
         self.time = event_time + self.backoff_time
 
         # check if it is time to transport the harvest
-        if (self._is_time_to_transport()):
-
-            self.transport = HarvestTransport(
-                event_time + 100, self.bb, self.barn, self.inverter.get_type()
-            )
-            self.barn.clear()
-            return [self, self.transport]
-
+        transport = self._create_transport(10, event_time=event_time)
+        if (transport):
+            return [self, transport]
         return self
 
-    def _is_time_to_transport(self):
-        return (len(self.barn) >= 10 and len(self.barn) % 10 == 0) and (
-              self.transport is None or self.transport.reply is not None)
-
-    def _reopen_inverter(self):
-        log.info(
-            "Max backoff time reached, trying to close and reopen inverter at: %s:%s",
-            self.inverter.get_address(),
-            self.inverter.get_port(),
-        )
-        if self.inverter.is_open():
-            self.inverter.close()
-        else:
-            if not self.inverter.open():
-                log.error("FAILED to reopen inverter: %s", self.inverter.get_config_dict())
-
-    def _handle_harvest_exception(self, e: Exception):
-        if self.backoff_time == self.max_backoff_time:
-            self._reopen_inverter()
-        else:
-            log.debug("Handling exeption reading harvest: %s", str(e))
-            self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
-            log.info("Incrementing backoff time to: %s", self.backoff_time)
+    def _create_transport(self, limit: int, event_time: int):
+        if (len(self.barn) > 0 and len(self.barn) % limit == 0):
+            transport = HarvestTransport(
+                event_time + 100, self.bb, self.barn, self.inverter.get_type()
+            )
+            self.barn = {}
+            return transport
+        return None
 
 
 class HarvestTransport(SrcfulAPICallTask):
@@ -84,8 +75,7 @@ class HarvestTransport(SrcfulAPICallTask):
         # self.stats['lastHarvestTransport'] = 'n/a'
         # if 'harvestTransports' not in self.stats:
         #  self.stats['harvestTransports'] = 0
-        self.barn_ref = barn
-        self.barn = dict(barn)
+        self.barn = barn
         self.inverter_type = inverter_type
 
     def _data(self):

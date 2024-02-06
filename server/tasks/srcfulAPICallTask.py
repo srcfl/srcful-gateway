@@ -58,15 +58,15 @@ class SrcfulAPICallTask(Task, ABC):
                 data = self._data()
                 if data is not None:
                     log.debug("%s %s", self.post_url, arg_2_str(data))
-                    self.reply = requests.post(self.post_url, data=data)
+                    self.reply = requests.post(self.post_url, data=data, timeout=5)
                 else:
                     json = self._json()
                     if json is not None:
                         log.debug("%s %s", self.post_url, arg_2_str(json))
-                        self.reply = requests.post(self.post_url, json=json)
+                        self.reply = requests.post(self.post_url, json=json, timeout=5)
                     else:
                         log.debug("%s %s", self.post_url, "no data or json")
-                        self.reply = requests.post(self.post_url)
+                        self.reply = requests.post(self.post_url, timeout=5)
             except requests.exceptions.RequestException as e:
                 log.exception(e)
                 self.reply = requests.Response()

@@ -25,6 +25,11 @@ class InverterRTU(Inverter):
         self.setup = setup
         super().__init__()
 
+    def clone(self):
+        return InverterRTU((self.get_host(), self.get_baudrate(),
+                            self.get_bytesize(), self.get_parity(),
+                            self.get_stopbits(), self.get_type(), self.get_address()))
+
     def get_host(self):
         return self.setup[0]
 

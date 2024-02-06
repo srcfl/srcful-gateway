@@ -21,31 +21,19 @@ def test_execute_harvest_incremental_backoff_server_does_not_reply():
     t = harvest.Harvest(0, {}, inverter)
 
     i = 0
-    while t.backoff_time < t.max_backoff_time and i < 100:
+    while t.backoff_time < t.max_backoff_time and i < 10:
         ret = t.execute(17)
         i += 1
 
     # we should not have been able to read 100 times before the backoff time is maxed out
     assert i < 100
 
-    # the next call closes the connection if it has not already been closed
-    if inverter.is_open():
-        ret = t.execute(17)
-        assert inverter.is_open() is False
+    assert inverter.is_terminated() is False
 
-    # this call should open the connection again
+    # the next call therminates the inverter
     ret = t.execute(17)
-    assert inverter.is_open() is True
+    assert inverter.is_terminated() is True
 
-    server.should_reply(True)
-
-    # we are now reconnected and should be able to read once again
-    ret = t.execute(17)
-
-    assert t.backoff_time < t.max_backoff_time
-
-    server.stop_server()
-    server_thread.join(3)
 
 
 

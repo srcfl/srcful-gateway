@@ -2,10 +2,9 @@ import logging
 
 from server.blackboard import BlackBoard
 from server.inverters.inverter import Inverter
+import server.tasks.harvest as harvest
 
 from .task import Task
-from .harvest import Harvest
-
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ class OpenInverterTask(Task):
                 # self.stats['inverter'] = self.inverter
                 # if(self.bootstrap != None):
                 #  self.bootstrap.appendInverter(self.inverter.getConfig())
-                return [Harvest(event_time + 10000, self.bb, self.inverter)]
+                return [harvest.Harvest(event_time + 10000, self.bb, self.inverter)]
             else:
                 self.inverter.terminate()
                 logger.info("Failed to open inverter: %s", self.inverter.get_type())
