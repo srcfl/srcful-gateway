@@ -1,6 +1,6 @@
 version: "2"
-services:
 
+services:
   web:
     ports:
       - "80:5000"
@@ -26,5 +26,6 @@ services:
       io.balena.features.sysfs: 1
     depends_on:
       - "web"
+      
 volumes:
   srcful-data:
