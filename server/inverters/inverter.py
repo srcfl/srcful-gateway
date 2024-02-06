@@ -6,7 +6,7 @@ from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOEx
 
 # from .inverter_types import INVERTERS
 
-from .supported_inverters import profiles as p
+from .supported_inverters import profiles
 
 
 pymodbus_apply_logging_config("INFO")
@@ -21,7 +21,7 @@ class Inverter:
     def __init__(self):
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
         # self.registers = INVERTERS[self.get_type()]
-        self.registers = p.get_inverter_profile(self.get_type())['registers']
+        self.registers = profiles.get_inverter_profile(self.get_type())['registers']
         print(self.registers)
         print(self.registers)
         print(self.registers)
