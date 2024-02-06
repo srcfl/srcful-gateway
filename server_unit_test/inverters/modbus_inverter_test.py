@@ -1,12 +1,16 @@
 from unittest.mock import MagicMock
 from server.inverters.InverterTCP import InverterTCP
-from server.inverters.inverter_types import INVERTERS, SUNGROW
 
+from server.inverters.supported_inverters import profiles as p
+
+from server.inverters.supported_inverters.inverters.sungrow import profile as SUNGROW
+
+inverter_name = SUNGROW['name']
 
 def test_read_harvest_data():
-    inv = InverterTCP(("localhost", 8081, SUNGROW, 1))
+    inv = InverterTCP(("localhost", 8081, inverter_name, 1))
 
-    inv.registers = INVERTERS[SUNGROW]
+    
     inv.client = MagicMock()
     inv.get_address = MagicMock(return_value=1)
 
