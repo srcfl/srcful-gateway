@@ -37,7 +37,7 @@ class OpenInverterTask(Task):
     def execute(self, event_time):
         # Do this n times?
         try:
-            if self.inverter.open():
+            if self.inverter.open(reconnect_delay=0, retries=3, timeout=5, reconnect_delay_max=0):
                 # terminate and remove all inverters from the blackboard
                 for i in self.bb.inverters.lst:
                     i.terminate()
