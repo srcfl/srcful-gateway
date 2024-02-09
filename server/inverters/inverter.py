@@ -22,10 +22,7 @@ class Inverter:
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
         # self.registers = INVERTERS[self.get_type()]
         self.registers = profiles.get_inverter_profile(self.get_type())['registers']
-        print(self.registers)
-        print(self.registers)
-        print(self.registers)
-        print(self.registers)
+
 
     def terminate(self):
         """Terminates the inverter."""
@@ -103,11 +100,6 @@ class Inverter:
 
         regs = []
         vals = []
-        print(self.registers)
-        print(self.registers)
-        print(self.registers)
-        print(self.registers)
-        print(self.registers)
         for entry in self.registers:
             operation = entry['operation']
             scan_start = entry['scanStart']
