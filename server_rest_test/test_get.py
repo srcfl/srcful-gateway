@@ -17,6 +17,19 @@ def test_hello():
     assert response.json()["message"] == "hello world from srcful!"
 
 
+def test_version():
+    url = settings.API_URL + "version"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+
+    # assert we get a reply containting 2 dots
+    assert response.json()["version"].count(".") == 2
+
 def test_uptime():
     url = settings.API_URL + "uptime"
 

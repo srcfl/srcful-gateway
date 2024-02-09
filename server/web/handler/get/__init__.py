@@ -8,4 +8,5 @@ from . import network
 from . import inverter
 from . import uptime
 from . import wifi
+from . import version
 

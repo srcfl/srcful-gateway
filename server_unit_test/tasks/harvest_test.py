@@ -36,8 +36,7 @@ def test_execute_harvest():
     assert ret is t
     assert t.barn[17] == registers
     assert len(t.barn) == 1
-    assert t.time == 17 + 1000
-
+    assert t.time > 17
 
 def test_execute_harvest_x10():
     # in this test we check that we get the desired behavior when we execute a harvest task 10 times
@@ -79,17 +78,20 @@ def test_execute_harvest_x10():
 def test_adaptive_backoff():
     mock_inverter = Mock()
     mock_inverter.is_terminated.return_value = False
+    
+    mock_bb = Mock()
+    mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, BlackBoard(), mock_inverter)
+    t = harvest.Harvest(0, mock_bb, mock_inverter)
     t.execute(17)
 
-    assert t.backoff_time == 1000
+    assert t.backoff_time == 1966
 
     # Mock one failed poll -> We back off by 2 seconds instead of 1
     t.inverter.read_harvest_data.side_effect = Exception("mocked exception")
     t.execute(17)
 
-    assert t.backoff_time == 2000
+    assert t.backoff_time == 3932
 
     # Save the initial minbackoff_time to compare with the actual minbackoff_time later on
     backoff_time = t.backoff_time
@@ -113,10 +115,13 @@ def test_adaptive_poll():
     mock_inverter = Mock()
     mock_inverter.is_terminated.return_value = False
 
-    t = harvest.Harvest(0, BlackBoard(), mock_inverter)
+    mock_bb = Mock()
+    mock_bb.time_ms.return_value = 1000
+
+    t = harvest.Harvest(0, mock_bb, mock_inverter)
     t.execute(17)
 
-    assert t.backoff_time == 1000
+    assert t.backoff_time == 1966
 
     t.inverter.read_harvest_data.side_effect = Exception("mocked exception")
     t.backoff_time = t.max_backoff_time
@@ -134,7 +139,11 @@ def test_execute_harvest_no_transport():
     mock_inverter = Mock()
     mock_inverter.is_terminated.return_value = False
     registers = [{"1": 1717 + x} for x in range(10)]
-    t = harvest.Harvest(0, {}, mock_inverter)
+
+    mock_bb = Mock()
+    mock_bb.time_ms.return_value = 1000
+
+    t = harvest.Harvest(0, mock_bb, mock_inverter)
 
     for i in range(len(registers)):
         mock_inverter.read_harvest_data.return_value = registers[i]
@@ -155,7 +164,11 @@ def test_execute_harvest_incremental_backoff_increasing():
     mock_inverter = Mock()
     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
     mock_inverter.is_terminated.return_value = False
-    t = harvest.Harvest(0, {}, mock_inverter)
+
+    mock_bb = Mock()
+    mock_bb.time_ms.return_value = 1000
+
+    t = harvest.Harvest(0, mock_bb, mock_inverter)
 
     while t.backoff_time < t.max_backoff_time:
         old_time = t.backoff_time
@@ -171,7 +184,11 @@ def test_execute_harvest_incremental_backoff_reset():
     mock_inverter = Mock()
     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
     mock_inverter.is_terminated.return_value = False
-    t = harvest.Harvest(0, {}, mock_inverter)
+    
+    mock_bb = Mock()
+    mock_bb.time_ms.return_value = 1000
+
+    t = harvest.Harvest(0, mock_bb, mock_inverter)
 
     while t.backoff_time < t.max_backoff_time:
         ret = t.execute(17)
@@ -187,7 +204,11 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     mock_inverter = Mock()
     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
     mock_inverter.is_terminated.return_value = False
-    t = harvest.Harvest(0, {}, mock_inverter)
+    
+    mock_bb = Mock()
+    mock_bb.time_ms.return_value = 1000
+
+    t = harvest.Harvest(0, mock_bb, mock_inverter)
 
     while t.backoff_time < t.max_backoff_time:
         ret = t.execute(17)

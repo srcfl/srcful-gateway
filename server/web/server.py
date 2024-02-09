@@ -27,6 +27,7 @@ def request_handler_factory(bb: BlackBoard, tasks: queue.Queue):
                 "uptime": handler.get.uptime.Handler(),
                 "wifi": handler.get.wifi.Handler(),
                 "wifi/scan": handler.get.wifi.ScanHandler(),
+                "version": handler.get.version.Handler(),
             }
 
             self.api_post_dict = {

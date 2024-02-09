@@ -165,6 +165,7 @@ class Inverter:
             # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
             # We solve this by raising the exception manually
             if isinstance(resp, ModbusIOException):
+                log.debug(f"Exception: %s, function code: %s", resp, str(resp.fcode))
                 raise ModbusIOException("Exception occurred while reading holding registers")
 
             log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
