@@ -38,3 +38,5 @@ __pycache__
 
 htmlcov
 .coverage
+
+bootstrap.txt
