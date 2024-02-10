@@ -139,8 +139,10 @@ if __name__ == "__main__":
   args.add_argument("-log_level", help=f"The log level ({logging.getLevelNamesMapping().keys()}), default: {logging.getLevelName(logger.getEffectiveLevel())}", default=logging.getLevelName(logger.level))
   args.add_argument("-service_name", help=f"The name of the service, default: {g_service_name}", default=g_service_name)
 
+  
 
   args = args.parse_args()
+  print("BLE service called with arguments: ", args)
   g_service_uuid = args.service_uuid
   g_char_uuid = args.char_uuid
   g_api_url = "http://" + args.api_url

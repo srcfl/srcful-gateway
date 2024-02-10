@@ -3,6 +3,20 @@ import server.app as app
 
 import logging
 import os
+import socket
+
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.254.254.254', 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = '127.0.0.1'
+    finally:
+        s.close()
+    return ip
 
 
 if __name__ == "__main__":
@@ -41,10 +55,23 @@ if __name__ == "__main__":
         "--web_host",
         type=str,
         default="0.0.0.0",
-        help="host for the web server.",
+        help="host address for the rest web server.",
     )
     parser.add_argument(
-        "-wp", "--web_port", type=int, default=5000, help="port for the web server."
+        "-wp", "--web_port", type=int, default=5000, help="host port for the rest web server."
+    )
+
+    # address and port of the host environment i.e how you actually reach the rest api
+    # this is more complex because docker.
+    parser.add_argument(
+        "-hip",
+        "--host_ip",
+        type=str,
+        default="",
+        help="host environment address to access the rest web server. Typically set if running in container.",
+    )
+    parser.add_argument(
+        "-hp", "--host_port", type=int, default=-1, help="host enviroment port for the rest web server. Typically set if running in container."
     )
 
     # port, host and type for the inverter
@@ -87,7 +114,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    log.info("Running with the following configuration: %s", args)
+    # if the host ip is not set, use the web host
+    if args.host_ip == "":
+        args.host_ip = args.web_host
+    if args.host_ip == "0.0.0.0":
+        args.host_ip = get_ip()
+    if args.host_port == -1:
+        args.host_port = args.web_port
+    
+
+    log.info("Running server service with the following configuration: %s", args)
 
     inverter = None
     # check if the invertertype is the default value
@@ -98,4 +134,4 @@ if __name__ == "__main__":
             args.inverter_type,
             args.inverter_address,
         )
-    app.main((args.web_host, args.web_port), inverter, args.bootstrap)
+    app.main((args.host_ip, args.host_port), (args.web_host, args.web_port), inverter, args.bootstrap)

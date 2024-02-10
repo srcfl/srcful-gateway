@@ -137,6 +137,27 @@ def test_network():
     assert len(j["connections"]) > 0
 
 
+def test_local_address():
+    url = settings.API_URL + "network/address"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+
+    j = response.json()
+    assert "ip" in j
+    assert "port" in j
+    assert j["ip"].count(".") == 3
+    for part in j["ip"].split("."):
+        assert 0 <= int(part) <= 255
+
+    assert str(j["port"]) in settings.API_URL or j["port"] == 80
+    assert not settings.IP_DO_TEST_AGAINST_API_URL or (j["ip"] in settings.API_URL) # this could be flaky
+
+
 def test_modbus_raw():
     url = settings.API_URL + "inverter/modbus/holding/40000?size=2"
 
