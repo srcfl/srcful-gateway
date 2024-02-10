@@ -1,6 +1,7 @@
 version: "2"
 
 services:
+
   web:
     ports:
       - "80:5000"
@@ -13,6 +14,7 @@ services:
       io.balena.features.dbus: 1
     volumes:
       - srcful-data:/data/srcful
+      - /var/run/dbus:/host/run/dbus
 
   bluetooth:
     build: ./bluetooth
@@ -26,6 +28,8 @@ services:
       io.balena.features.sysfs: 1
     depends_on:
       - "web"
-      
+    volumes:
+      - /var/run/dbus:/host/run/dbus
+
 volumes:
   srcful-data:
