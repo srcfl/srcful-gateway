@@ -30,6 +30,7 @@ def test_version():
     # assert we get a reply containting 2 dots
     assert response.json()["version"].count(".") == 2
 
+
 def test_uptime():
     url = settings.API_URL + "uptime"
 

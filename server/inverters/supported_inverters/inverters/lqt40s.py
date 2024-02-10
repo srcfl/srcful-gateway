@@ -3,8 +3,8 @@ profile = {
     "registers": [
         {
             "operation": 0x04,
-            "scanStart": 0,
-            "scanRange": 2
+            "start_register": 0,
+            "num_of_registers": 2
         }
     ]
 }

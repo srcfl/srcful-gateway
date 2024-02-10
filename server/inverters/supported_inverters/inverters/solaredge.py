@@ -3,18 +3,18 @@ profile = {
     "registers": [
         {
             "operation": 0x03,
-            "scanStart": 40000,
-            "scanRange": 61
+            "start_register": 40000,
+            "num_of_registers": 61
         },
         {
             "operation": 0x03,
-            "scanStart": 40069,
-            "scanRange": 37
+            "start_register": 40069,
+            "num_of_registers": 37
         },
         {
             "operation": 0x03,
-            "scanStart": 40121,
-            "scanRange": 70
+            "start_register": 40121,
+            "num_of_registers": 70
         }
     ]
 }

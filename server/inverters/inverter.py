@@ -6,7 +6,7 @@ from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOEx
 
 # from .inverter_types import INVERTERS
 
-from .supported_inverters import profiles
+from .supported_inverters.profiles import InverterProfiles
 
 
 pymodbus_apply_logging_config("INFO")
@@ -21,8 +21,7 @@ class Inverter:
     def __init__(self):
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
         # self.registers = INVERTERS[self.get_type()]
-        self.registers = profiles.get_inverter_profile(self.get_type())['registers']
-
+        self.profile = InverterProfiles().get(self.get_type())
 
     def terminate(self):
         """Terminates the inverter."""
@@ -31,7 +30,7 @@ class Inverter:
 
     def is_terminated(self) -> bool:
         return self._isTerminated
-    
+
     def clone(self):
         """Returns a clone of the inverter. This clone will only have the configuration and not the connection."""
         raise NotImplementedError("Subclass must implement abstract method")
@@ -60,7 +59,7 @@ class Inverter:
         """Opens the Modbus connection to the inverter.
 
         :param kwargs (optional) parameters to be passed to the _create_client method used for creating specific client types (TCP/RTU etc...)
-        
+
         :return True if the connection is open, otherwise False.
         """
         if not self.is_terminated():
@@ -100,10 +99,10 @@ class Inverter:
 
         regs = []
         vals = []
-        for entry in self.registers:
-            operation = entry['operation']
-            scan_start = entry['scanStart']
-            scan_range = entry['scanRange']
+        for entry in self.profile.registers:
+            operation = entry.operation
+            scan_start = entry.start_register
+            scan_range = entry.offset
 
             r = self.populate_registers(scan_start, scan_range)
 
@@ -134,24 +133,24 @@ class Inverter:
         registers = []
         try:
             resp = self.client.read_input_registers(scan_start, scan_range, slave=self.get_address())
-            
+
             # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
             # We solve this by raising the exception manually
             if isinstance(resp, ModbusIOException):
                 raise ModbusIOException("Exception occurred while reading input registers")
-             
+
             log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
             registers = resp.registers
 
         except ModbusException as me:
-        
+
             # Decide whether to break or continue based on the type of ModbusException
             if isinstance(me, ConnectionException):
                 log.error("ConnectionException occurred: %s", str(me))
 
             if isinstance(me, ModbusIOException):
                 log.error("ModbusIOException occurred: %s", str(me))
-            
+
         return registers
 
     def read_holding_registers(self, scan_start, scan_range):
@@ -161,7 +160,7 @@ class Inverter:
         registers = []
         try:
             resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.get_address())
-            
+
             # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
             # We solve this by raising the exception manually
             if isinstance(resp, ModbusIOException):

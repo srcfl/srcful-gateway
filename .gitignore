@@ -40,3 +40,6 @@ htmlcov
 .coverage
 
 bootstrap.txt
+
+venv 
+.venv

@@ -1,26 +1,26 @@
 profile = {
     "name": "sungrow_hybrid",
     "registers": [
-    {
-        "operation": 0x04,
-        "scanStart": 4999,
-        "scanRange": 110
-    },
-    {
-        "operation":0x04,
-        "scanStart": 5112,
-        "scanRange": 50
-    },
-    {
-        "operation":0x04,
-        "scanStart": 13000,
-        "scanRange": 6
-    },
-    {
-        "operation":0x04,
-        "scanStart": 13028,
-        "scanRange": 6
-    }
+        {
+            "operation": 0x04,
+            "start_register": 4999,
+            "num_of_registers": 110
+        },
+        {
+            "operation": 0x04,
+            "start_register": 5112,
+            "num_of_registers": 50
+        },
+        {
+            "operation": 0x04,
+            "start_register": 13000,
+            "num_of_registers": 6
+        },
+        {
+            "operation": 0x04,
+            "start_register": 13028,
+            "num_of_registers": 6
+        }
     ],
     "controlRegister": {
         "enableControl": {
