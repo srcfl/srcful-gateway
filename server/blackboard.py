@@ -9,9 +9,33 @@ class BlackBoard:
     the observers when the state changes.
     """
 
+    _inverters: "BlackBoard.Inverters"
+    _start_time: int
+    _rest_server_port: int
+    _rest_server_ip: str
+
     def __init__(self):
         self._inverters = BlackBoard.Inverters()
-        self._startTime = self.time_ms()
+        self._start_time = self.time_ms()
+        self._rest_server_port = 80
+        self._rest_server_ip = "localhost"
+
+    
+    @property
+    def rest_server_port(self):
+        return self._rest_server_port
+
+    @rest_server_port.setter
+    def rest_server_port(self, port:int):
+        self._rest_server_port = port
+
+    @property
+    def rest_server_ip(self):
+        return self._rest_server_ip
+
+    @rest_server_ip.setter
+    def rest_server_ip(self, ip:str):
+        self._rest_server_ip = ip
 
     @property
     def inverters(self):
@@ -19,7 +43,7 @@ class BlackBoard:
 
     @property
     def start_time(self):
-        return self._startTime
+        return self._start_time
 
     def get_version(self) -> str:
         return "0.6.3"

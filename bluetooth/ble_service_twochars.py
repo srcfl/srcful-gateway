@@ -194,6 +194,7 @@ if __name__ == "__main__":
     )
 
     args = args.parse_args()
+    print("BLE service called with arguments: ", args)
     g_service_uuid = args.service_uuid.lower()
     g_char_uuid = args.char_uuid.lower()
     g_api_url = "http://" + args.api_url
