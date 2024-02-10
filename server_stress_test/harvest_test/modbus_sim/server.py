@@ -22,7 +22,7 @@ class Event_ts(asyncio.Event):
 _STOP_EVENT: Event_ts = None
 _SHOULD_REPLY: bool = True
 
-_logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class Manipulator:
@@ -48,7 +48,7 @@ class Manipulator:
 
         All server requests passes this filter before being handled.
         """
-        print(f"---> REQUEST: {request}")
+        log.info("---> REQUEST: %s", request)
 
     def server_response_manipulator(self, response):
         """Manipulate responses.
@@ -64,7 +64,7 @@ class Manipulator:
         self.message_count -= 1
 
         if not _SHOULD_REPLY:
-            print("---> NOT RESPONDING!")
+            log.info("---> NOT RESPONDING!")
             response.should_respond = False
 
         return response, False
@@ -117,7 +117,7 @@ async def updating_task(server: Manipulator):
     #print(txt)
     #_logger.debug(txt)
 
-    print("updating_task: started")
+    log.info("updating_task: started")
 
     global _STOP_EVENT
     _STOP_EVENT = Event_ts()
@@ -125,7 +125,7 @@ async def updating_task(server: Manipulator):
     # incrementing loop
     while True:
         await _STOP_EVENT.wait()
-        print("Shutting down server...")
+        log.info("Shutting down server...")
         await server.server.shutdown()
         _STOP_EVENT.clear()
 
@@ -158,9 +158,9 @@ async def run_updating_server(server):
 
 async def main(server):
     """internal Combine setup and run."""
-    print("Running server...")
+    log.info("Running server...")
     await run_updating_server(server)
-    print("Server stopped... ")
+    log.info("Server stopped... ")
 
 
 def stop_server():

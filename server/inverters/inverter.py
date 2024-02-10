@@ -99,6 +99,7 @@ class Inverter:
 
         regs = []
         vals = []
+
         for entry in self.profile.registers:
             operation = entry.operation
             scan_start = entry.start_register
@@ -139,7 +140,7 @@ class Inverter:
             if isinstance(resp, ModbusIOException):
                 raise ModbusIOException("Exception occurred while reading input registers")
 
-            log.debug("OK - Reading Input: " + str(scan_start) + "-" + str(scan_range))
+            log.debug("OK - Reading Input: %s - %s", str(scan_start), str(scan_range))
             registers = resp.registers
 
         except ModbusException as me:
@@ -164,10 +165,10 @@ class Inverter:
             # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
             # We solve this by raising the exception manually
             if isinstance(resp, ModbusIOException):
-                log.debug(f"Exception: %s, function code: %s", resp, str(resp.fcode))
+                log.debug("Exception: %s, function code: %s", resp, str(resp.fcode))
                 raise ModbusIOException("Exception occurred while reading holding registers")
 
-            log.debug("OK - Reading Holding: " + str(scan_start) + "-" + str(scan_range))
+            log.debug("OK - Reading Holding: %s - %s", str(scan_start), str(scan_range))
             registers = resp.registers
 
         except ModbusException as me:
@@ -188,9 +189,8 @@ class Inverter:
         resp = self.client.write_registers(
             starting_register, values, slave=self.get_address()
         )
-        log.debug(
-            "OK - Writing Holdings: " + str(starting_register) + "-" + str(values)
-        )
+        log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
+        
         if isinstance(resp, ExceptionResponse):
             raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
         return resp

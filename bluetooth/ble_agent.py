@@ -10,6 +10,9 @@ import time
 import dbus
 import dbus.service
 import dbus.mainloop.glib
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Bluez DBus constants
 DBUS_NAME = "org.bluez"
@@ -74,51 +77,51 @@ class Agent(dbus.service.Object):
 
     @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="", out_signature="")
     def Release(self):
-        print("Release")
+        logger.info("Release")
         if self.exit_on_release:
             mainloop.quit()
 
     @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="os", out_signature="")
     def AuthorizeService(self, device, uuid):
-        print("AuthorizeService (%s, %s)" % (device, uuid))
+        logger.info("AuthorizeService (%s, %s)", device, uuid)
         dbus_set_property(DBUS_NAME, device, DBUS_INTERFACE_DEVICE, "Trusted", True)
         return
 
     @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="o", out_signature="s")
     def RequestPinCode(self, device):
-        print("RequestPinCode (%s)" % (device))
+        logger.info("RequestPinCode (%s)", device)
         dbus_set_property(DBUS_NAME, device, DBUS_INTERFACE_DEVICE, "Trusted", True)
         return self.pin_code
 
     @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="o", out_signature="u")
     def RequestPasskey(self, device):
-        print("RequestPasskey (%s)" % (device))
+        logger.info("RequestPasskey (%s)", device)
         dbus_set_property(DBUS_NAME, device, DBUS_INTERFACE_DEVICE, "Trusted", True)
         return dbus.UInt32(PIN_CODE)
 
     @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="ouq", out_signature="")
     def DisplayPasskey(self, device, passkey, entered):
-        print("DisplayPasskey (%s, %06u entered %u)" % (device, passkey, entered))
+        logger.info("DisplayPasskey (%s, %06u entered %u)",  device, passkey, entered)
 
     @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="os", out_signature="")
     def DisplayPinCode(self, device, pincode):
-        print("DisplayPinCode (%s, %s)" % (device, pincode))
+        logger.info("DisplayPinCode (%s, %s)", device, pincode)
 
     @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="ou", out_signature="")
     def RequestConfirmation(self, device, passkey):
-        print("RequestConfirmation (%s, %06d)" % (device, passkey))
+        logger.info("RequestConfirmation (%s, %06d)", device, passkey)
         dbus_set_property(DBUS_NAME, device, DBUS_INTERFACE_DEVICE, "Trusted", True)
         return
 
     @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="o", out_signature="")
     def RequestAuthorization(self, device):
-        print("RequestAuthorization (%s)" % (device))
+        logger.info("RequestAuthorization (%s)", device)
         dbus_set_property(DBUS_NAME, device, DBUS_INTERFACE_DEVICE, "Trusted", True)
         return
 
     @dbus.service.method(DBUS_INTERFACE_AGENT, in_signature="", out_signature="")
     def Cancel(self):
-        print("Cancel")
+        logger.info("Cancel")
 
 if __name__ == "__main__":
     # Initialize DBus library
@@ -148,4 +151,4 @@ if __name__ == "__main__":
     manager.RequestDefaultAgent(path)
 
     # Log agent info
-    print("Bluetooth agent started!")
+    logger.info("Bluetooth agent started!")

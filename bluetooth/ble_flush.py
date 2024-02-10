@@ -14,6 +14,9 @@ import time
 import dbus
 import dbus.service
 import dbus.mainloop.glib
+import logging 
+
+logger = logging.getLogger(__name__)
 
 # Bluez DBus constants
 DBUS_NAME = "org.bluez"
@@ -81,13 +84,13 @@ def remove_all_paired_devices():
 
     # it seems very flaky to reconnect to devices this way for some reason
 
-    print("Checking for known bluetooth devices...")
+    logger.info("Checking for known bluetooth devices...")
     for device_path in device_paths:
         props = dbus_get_all_properties(bus, "org.bluez", device_path, "org.bluez.Device1")
         #print("checking.... - %s (%s)..." % (props["Name"], props["Address"]))
         #print(props)
         if bool(props["Paired"]):
-            print("- Removing %s (%s)..." % (props["Name"], props["Address"]))
+            logger.info("- Removing %s (%s)...", props["Name"], props["Address"])
 
             # Try to reconnect...
             # Bluez throws "Protocol not available" if the host device is not ready to accept the target device profile reconnection request
@@ -95,4 +98,4 @@ def remove_all_paired_devices():
             # we introduce a delay and retry a few times before assuming it's not possible to reconnect.
             device = dbus_get_interface(bus, "org.bluez", device_path, "org.bluez.Device1")
             adapter.RemoveDevice(device)
-    print("Done.")
+    logger.info("Done.")

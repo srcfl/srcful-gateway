@@ -24,8 +24,8 @@ async def client():
     service = "a07498ca-ad5b-474e-940d-16f1fbe7e8cd"
 
     def blefilter(d: BLEDevice, adv: AdvertisementData):
-        print('Name:', adv.local_name, type(adv.local_name))
-        print('Services:', adv.service_uuids)
+        logger.info('Name: %s %s', adv.local_name, type(adv.local_name))
+        logger.info('Services: %s', adv.service_uuids)
         
         return adv.local_name and adv.local_name.startswith("SrcFul Energy Gateway") and service in adv.service_uuids
 
@@ -53,7 +53,7 @@ async def test_hello(client):
         await bclient.write_gatt_char(request_char_uuid, req, False)
         await trigger.wait()
         response = response[0].decode()
-        print("Response:", response)
+        logger.info("Response: %s", response)
         assert response == 'EGWTP/1.1 200 OK\r\nLocation: /api/hello\r\nMethod: GET\r\nContent-Type: text/json\r\nContent-Length: 39\r\n\r\n{"message": "hello world from srcful!"}'
 
 
@@ -66,7 +66,7 @@ async def test_hello_again(client):
         await bclient.write_gatt_char(request_char_uuid, req, False)
         await trigger.wait()
         response = response[0].decode()
-        print("Response:", response)
+        logger.info("Response: %s", response)
         assert response == 'EGWTP/1.1 200 OK\r\nLocation: /api/hello\r\nMethod: GET\r\nContent-Type: text/json\r\nContent-Length: 39\r\n\r\n{"message": "hello world from srcful!"}'
 
 

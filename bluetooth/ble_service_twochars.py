@@ -37,13 +37,13 @@ g_server = None
 
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
-    logger.debug(f"Reading {characteristic.value}")
+    logger.debug("Reading %", characteristic.value)
     return characteristic.value
 
 
 def handle_response(path: str, method: str, reply: requests.Response):
     egwttp_response = egwttp.construct_response(path, method, reply.text)
-    logger.debug(f"Reply: {egwttp_response}")
+    logger.debug("Reply: %s", egwttp_response)
     return egwttp_response
 
 
@@ -62,13 +62,13 @@ def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **
     # if request_response and request_response.value:
     val = value.decode("utf-8")
 
-    logger.debug(f"Chars value set to {val}")
+    logger.debug("Chars value set to %s", val)
 
     if egwttp.is_request(val):
         logger.debug("Request received...")
         header, content = egwttp.parse_request(val)
-        logger.debug(f"Header: {header}")
-        logger.debug(f"Content: {content}")
+        logger.debug("Header: %s", header)
+        logger.debug("Content: %s", content)
 
         if header["method"] == "GET" or header["method"] == "POST":
             response = (
@@ -78,12 +78,9 @@ def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **
             )
             response_char = g_server.get_characteristic(g_response_char_uuid)
             response_char.value = response
-            logger.debug(f"Char value set to {response_char.value}")
+            logger.debug("Char value set to %s", response_char.value)
             if g_server.update_value(g_service_uuid, g_response_char_uuid):
-                logger.debug(
-                    "Value updated sent notifications to "
-                    + str(len(g_server.app.subscribed_characteristics))
-                )
+                logger.debug("Value updated sent notifications to %s", str(len(g_server.app.subscribed_characteristics)))
             else:
                 logger.debug("Value not updated")
         else:
@@ -111,7 +108,7 @@ async def run():
 
     # Add Service
     await g_server.add_new_service(g_service_uuid)
-    logger.debug(f"Service added with uuid {g_service_uuid} and name {g_service_name}.")
+    logger.debug("Service added with uuid %s and name %s.", g_service_uuid, g_service_name)
 
     # Add a Characteristic to the service
     char_flags = (
@@ -164,7 +161,7 @@ async def run():
 
 
 if __name__ == "__main__":
-    print("Starting ble service... ")
+    logger.info("Starting ble service... ")
 
     args = argparse.ArgumentParser()
     args.add_argument(
@@ -199,9 +196,7 @@ if __name__ == "__main__":
     g_api_url = "http://" + args.api_url
     g_service_name = args.service_name
     if args.log_level not in logging.getLevelNamesMapping().keys():
-        logger.error(
-            f"Invalid log level {args.log_level} continuing with default log level."
-        )
+        logger.error("Invalid log level %s continuing with default log level.", args.log_level)
     else:
         logger.setLevel(logging.getLevelName(args.log_level))
 

@@ -1,14 +1,11 @@
-"""
-Maybe the get function below should return a class object? 
-"""
-
+# To add a new inverter, create a new file in the inverters folder and import it here
+# Then add the new inverter to the inverters list and it will be supported by the gateway (PoS)
 from .inverters.sungrow import profile as sungrow
 from .inverters.sungrow_hybrid import profile as sungrow_hybrid
 from .inverters.solaredge import profile as solaredge
 from .inverters.growatt import profile as growatt
 from .inverters.huawei import profile as huawei
 from .inverters.lqt40s import profile as lqt40s
-import json as JSON
 
 inverters = [sungrow, sungrow_hybrid, solaredge, growatt, huawei, lqt40s]
 
@@ -30,8 +27,7 @@ class InverterProfile:
             self.registers.append(
                 RegisterInterval(register_intervall["operation"],
                                  register_intervall["start_register"],
-                                 register_intervall["num_of_registers"])
-            )
+                                 register_intervall["num_of_registers"]))
 
     def get(self):
         return self.profile

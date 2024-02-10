@@ -22,7 +22,7 @@ class ReadFreq(Task):
             # self.stats['lastFreq'] = freq
             # self.stats['freqReads'] += 1
         except Exception:
-            print("error reading freq")
+            logger.error("error reading freq")
             return None
 
         self.time = event_time + 100

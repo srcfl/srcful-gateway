@@ -23,9 +23,8 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     def add_task(task):
         if task.time < bb.time_ms():
             dt = bb.time_ms() - task.time
-            logger.info(
-                "task {} is in the past {} adjusting time".format(type(task), dt)
-            )
+            s = "task {} is in the past {} adjusting time".format(type(task), dt)
+            logger.info(s)
             task.time = bb.time_ms() + 100
         tasks.put(task)
 
@@ -55,7 +54,7 @@ def main(web_host: tuple[str, int], inverter: InverterTCP.Setup | None = None, b
     logger.info("eGW version: %s", bb.get_version())
 
     web_server = server.web.server.Server(web_host, bb)
-    print("Server started http://%s:%s" % (web_host[0], web_host[1]))
+    logger.info("Server started http://%s:%s", web_host[0], web_host[1])
 
     tasks = queue.PriorityQueue()
 
@@ -66,9 +65,9 @@ def main(web_host: tuple[str, int], inverter: InverterTCP.Setup | None = None, b
     try:
         s = WifiScanner()
         ssids = s.get_ssids()
-        print(f"Scanned SSIDs: {ssids}")
+        logger.info("Scanned SSIDs: %s", ssids)
     except Exception as e:
-        print(e)
+        logger.error(e)
 
     # put some initial tasks in the queue
     if inverter is not None:
@@ -90,7 +89,7 @@ def main(web_host: tuple[str, int], inverter: InverterTCP.Setup | None = None, b
         for i in bb.inverters.lst:
             i.close()
         web_server.close()
-        print("Server stopped.")
+        logger.info("Server stopped.")
 
 
 # this is for debugging purposes only

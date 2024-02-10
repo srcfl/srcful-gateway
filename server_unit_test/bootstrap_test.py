@@ -2,9 +2,10 @@ import os
 from pyfakefs.fake_filesystem_unittest import Patcher
 import server.bootstrap as bootstrap
 from server.inverters.inverter import Inverter
-
 from unittest.mock import MagicMock
+import logging
 
+log = logging.getLogger(__name__)
 
 def test_bootstrap_constructor():
     b = bootstrap.Bootstrap("test.txt")
@@ -77,7 +78,7 @@ def test_bootstrap_add_inverter():
 
         with open(file_name, "r") as f:
             lines = f.readlines()
-            print("######", lines)
+            log.info("######", lines)
 
         assert os.path.exists(file_name)
         assert patcher.fs.exists(file_name)
@@ -98,7 +99,7 @@ def test_bootstrap_append_inverter():
 
         with open(file_name, "r") as f:
             lines = f.readlines()
-            print("######", lines)
+            log.info("######", lines)
 
         assert os.path.exists(file_name)
         assert patcher.fs.exists(file_name)

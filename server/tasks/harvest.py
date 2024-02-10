@@ -101,7 +101,7 @@ class HarvestTransport(SrcfulAPICallTask):
         return jwt
 
     def _on_200(self, reply):
-        print("Response:", reply)
+        log.info("Response: %s", reply)
         # self.stats['harvestTransports'] += 1
 
     def _on_error(self, reply: requests.Response):
