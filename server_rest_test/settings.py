@@ -19,7 +19,7 @@ REQUEST_TIMEOUT = 5
 # testing wifi can be potentially messy
 # if you try to connect to a non existent network the old network is lost
 # ethernet is recommended as backup or the gateway could lose internet
-WIFI_DO_TEST = True
+WIFI_DO_TEST = False
 WIFI_REAL_SETTINGS = False  # check if we have a valid ssid and psk that should connect to a network
 
 WIFI_SSID = "test"  # do not check in real settings
