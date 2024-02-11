@@ -11,6 +11,7 @@ from server.blackboard import BlackBoard
 def request_data():
     bb = BlackBoard()
     bb.rest_server_port = 8081
+    bb.rest_server_ip = "127.0.0.1"
     return RequestData(bb, {}, {}, {}, None)
 
 

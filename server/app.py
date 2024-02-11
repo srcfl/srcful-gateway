@@ -6,6 +6,7 @@ import logging
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
 from server.tasks.openInverterTask import OpenInverterTask
+from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.InverterTCP import InverterTCP
 
 from server.bootstrap import Bootstrap
@@ -64,13 +65,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Inve
 
     bb.inverters.add_listener(bootstrap)
 
-    try:
-        s = WifiScanner()
-        ssids = s.get_ssids()
-        logger.info("Scanned SSIDs: %s", ssids)
-    except Exception as e:
-        logger.error(e)
-
     # put some initial tasks in the queue
     if inverter is not None:
         tasks.put(OpenInverterTask(bb.start_time, bb, InverterTCP(inverter)))
@@ -79,6 +73,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Inve
         tasks.put(task)
 
     tasks.put(CheckForWebRequest(bb.start_time + 1000, bb, web_server))
+    tasks.put(ScanWiFiTask(bb.start_time + 45000, bb))
 
     try:
         main_loop(tasks, bb)
