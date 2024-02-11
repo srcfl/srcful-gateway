@@ -1,15 +1,17 @@
+from ...enums import ProfileKey, RegistersKey, OperationKey
+
 profile = {
-    "name": "huawei",
-    "registers": [
+    ProfileKey.NAME: "huawei",
+    ProfileKey.REGISTERS: [
         {
-            "operation": 0x03,
-            "start_register": 30000,
-            "num_of_registers": 35
+            RegistersKey.OPERATION: OperationKey.READ_HOLDING_REGISTERS,
+            RegistersKey.START_REGISTER: 30000,
+            RegistersKey.NUM_OF_REGISTERS: 35
         },
         {
-            "operation": 0x03,
-            "start_register": 32064,
-            "num_of_registers": 31
+            RegistersKey.OPERATION: OperationKey.READ_HOLDING_REGISTERS,
+            RegistersKey.START_REGISTER: 32064,
+            RegistersKey.NUM_OF_REGISTERS: 31
         }
     ]
 }

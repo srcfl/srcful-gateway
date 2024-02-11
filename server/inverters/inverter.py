@@ -1,11 +1,7 @@
-from .inverter_types import OPERATION, SCAN_RANGE, SCAN_START
 import logging
 from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
-
-# from .inverter_types import INVERTERS
-
 from .supported_inverters.profiles import InverterProfiles
 
 
@@ -101,16 +97,19 @@ class Inverter:
         vals = []
 
         for entry in self.profile.registers:
-            operation = entry.operation
+            operation = entry.operation.value
             scan_start = entry.start_register
             scan_range = entry.offset
 
             r = self.populate_registers(scan_start, scan_range)
+            v = []
 
             if operation == 0x03:
                 v = self.read_holding_registers(scan_start, scan_range)
             elif operation == 0x04:
                 v = self.read_input_registers(scan_start, scan_range)
+
+            log.debug("readHarvestData() - Registers: %s, Values: %s", r, v)
             regs += r
             vals += v
 
