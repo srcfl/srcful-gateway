@@ -1,25 +1,27 @@
+from ...enums import ProfileKey, RegistersKey, OperationKey
+
 profile = {
-    "name": "sungrow_hybrid",
-    "registers": [
+    ProfileKey.NAME: "sungrow_hybrid",
+    ProfileKey.REGISTERS: [
         {
-            "operation": 0x04,
-            "start_register": 4999,
-            "num_of_registers": 110
+            RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
+            RegistersKey.START_REGISTER: 4999,
+            RegistersKey.NUM_OF_REGISTERS: 110
         },
         {
-            "operation": 0x04,
-            "start_register": 5112,
-            "num_of_registers": 50
+            RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
+            RegistersKey.START_REGISTER: 5112,
+            RegistersKey.NUM_OF_REGISTERS: 50
         },
         {
-            "operation": 0x04,
-            "start_register": 13000,
-            "num_of_registers": 6
+            RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
+            RegistersKey.START_REGISTER: 13000,
+            RegistersKey.NUM_OF_REGISTERS: 6
         },
         {
-            "operation": 0x04,
-            "start_register": 13028,
-            "num_of_registers": 6
+            RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
+            RegistersKey.START_REGISTER: 13028,
+            RegistersKey.NUM_OF_REGISTERS: 6
         }
     ],
     "controlRegister": {

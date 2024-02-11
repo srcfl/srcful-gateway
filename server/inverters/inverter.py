@@ -1,11 +1,7 @@
-from .inverter_types import OPERATION, SCAN_RANGE, SCAN_START
 import logging
 from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
-
-# from .inverter_types import INVERTERS
-
 from .supported_inverters.profiles import InverterProfiles
 
 
@@ -20,8 +16,8 @@ class Inverter:
 
     def __init__(self):
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
-        # self.registers = INVERTERS[self.get_type()]
         self.profile = InverterProfiles().get(self.get_type())
+
 
     def terminate(self):
         """Terminates the inverter."""
@@ -100,22 +96,25 @@ class Inverter:
         regs = []
         vals = []
 
-        for entry in self.profile.registers:
-            operation = entry.operation
+        for entry in self.profile.get_registers():
+            operation = entry.operation.value
             scan_start = entry.start_register
             scan_range = entry.offset
 
             r = self.populate_registers(scan_start, scan_range)
+            v = []
 
             if operation == 0x03:
                 v = self.read_holding_registers(scan_start, scan_range)
             elif operation == 0x04:
                 v = self.read_input_registers(scan_start, scan_range)
+
             regs += r
             vals += v
 
         # Zip the registers and values together convert them into a dictionary
         res = dict(zip(regs, vals))
+
         if res:
             return res
         else:

@@ -1,20 +1,22 @@
+from ...enums import ProfileKey, RegistersKey, OperationKey
+
 profile = {
-    "name": "solaredge",
-    "registers": [
+    ProfileKey.NAME: "solaredge",
+    ProfileKey.REGISTERS: [
         {
-            "operation": 0x03,
-            "start_register": 40000,
-            "num_of_registers": 61
+            RegistersKey.OPERATION: OperationKey.READ_HOLDING_REGISTERS,
+            RegistersKey.START_REGISTER: 40000,
+            RegistersKey.NUM_OF_REGISTERS: 61
         },
         {
-            "operation": 0x03,
-            "start_register": 40069,
-            "num_of_registers": 37
+            RegistersKey.OPERATION: OperationKey.READ_HOLDING_REGISTERS,
+            RegistersKey.START_REGISTER: 40069,
+            RegistersKey.NUM_OF_REGISTERS: 37
         },
         {
-            "operation": 0x03,
-            "start_register": 40121,
-            "num_of_registers": 70
+            RegistersKey.OPERATION: OperationKey.READ_HOLDING_REGISTERS,
+            RegistersKey.START_REGISTER: 40121,
+            RegistersKey.NUM_OF_REGISTERS: 70
         }
     ]
 }

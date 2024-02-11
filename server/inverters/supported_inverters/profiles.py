@@ -1,5 +1,7 @@
 # To add a new inverter, create a new file in the inverters folder and import it here
 # Then add the new inverter to the inverters list and it will be supported by the gateway (PoS)
+import typing
+from ..enums import ProfileKey, RegistersKey, OperationKey
 from .inverters.sungrow import profile as sungrow
 from .inverters.sungrow_hybrid import profile as sungrow_hybrid
 from .inverters.solaredge import profile as solaredge
@@ -19,18 +21,18 @@ class RegisterInterval:
 
 class InverterProfile:
     def __init__(self, inverter_profile):
-        self.inverter_profile = inverter_profile
-        self.name = self.inverter_profile["name"]
+        self.name = inverter_profile[ProfileKey.NAME]
         self.registers = []
 
-        for register_intervall in self.inverter_profile["registers"]:
+        for register_intervall in inverter_profile[ProfileKey.REGISTERS]:
             self.registers.append(
-                RegisterInterval(register_intervall["operation"],
-                                 register_intervall["start_register"],
-                                 register_intervall["num_of_registers"]))
+                RegisterInterval(register_intervall[RegistersKey.OPERATION],
+                                 register_intervall[RegistersKey.START_REGISTER],
+                                 register_intervall[RegistersKey.NUM_OF_REGISTERS])
+            )
 
-    def get(self):
-        return self.profile
+    def get_registers(self) -> typing.List[RegisterInterval]:
+        return self.registers
 
 
 class InverterProfiles:
@@ -46,5 +48,5 @@ class InverterProfiles:
                 return profile
         return None
 
-    def get_supported_inverters(self):
+    def get_supported_inverters(self) -> typing.List[str]:
         return [profile.name for profile in self.profiles]
