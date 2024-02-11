@@ -16,8 +16,8 @@ class Inverter:
 
     def __init__(self):
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
-        # self.registers = INVERTERS[self.get_type()]
         self.profile = InverterProfiles().get(self.get_type())
+
 
     def terminate(self):
         """Terminates the inverter."""
@@ -96,7 +96,7 @@ class Inverter:
         regs = []
         vals = []
 
-        for entry in self.profile.registers:
+        for entry in self.profile.get_registers():
             operation = entry.operation.value
             scan_start = entry.start_register
             scan_range = entry.offset
@@ -109,12 +109,12 @@ class Inverter:
             elif operation == 0x04:
                 v = self.read_input_registers(scan_start, scan_range)
 
-            log.debug("readHarvestData() - Registers: %s, Values: %s", r, v)
             regs += r
             vals += v
 
         # Zip the registers and values together convert them into a dictionary
         res = dict(zip(regs, vals))
+
         if res:
             return res
         else:
