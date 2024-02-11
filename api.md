@@ -2,6 +2,9 @@
 
 Welcome to the Energy Gateway (eGW) API documentation. The eGW offers a RESTful API for configuration and management. This document outlines the necessary details to interact with the API, configure your eGW, and effectively utilize its features. 
 
+## API Documentatiion
+The latest eGW API documentation is accessible at: `http://EGW-LOCAL-IP-ADDR/doc/`. You can also use the endpoint names to filter what you are interested in.
+
 ## API Endpoint
 The eGW API is accessible at: `http://EGW-LOCAL-IP-ADDR/api/`. Ensure the eGW is connected to the internet via ethernet for initial setup and obtain the local IP address for access.
 
