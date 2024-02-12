@@ -23,12 +23,14 @@ def request_handler_factory(bb: BlackBoard, tasks: queue.Queue):
                 "inverter": handler.get.inverter.Handler(),
                 "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
                 "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
+                "inverter/supported": handler.get.supported.Handler(),
                 "network": handler.get.network.NetworkHandler(),
                 "network/address": handler.get.network.AddressHandler(),
                 "uptime": handler.get.uptime.Handler(),
                 "wifi": handler.get.wifi.Handler(),
                 "wifi/scan": handler.get.wifi.ScanHandler(),
                 "version": handler.get.version.Handler(),
+                "supported": handler.get.supported.Handler(),
             }
 
             self.api_post_dict = {
