@@ -190,7 +190,7 @@ def test_logger():
 
 
 def test_supported():
-    url = settings.API_URL + "supported"
+    url = settings.API_URL + "inverter/supported"
 
     headers = {"user-agent": "vscode-restclient"}
 

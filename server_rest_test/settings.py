@@ -1,5 +1,7 @@
-API_URL = "http://192.168.50.246/api/"
+API_URL = "http://localhost:8080/api/"
 #API_URL = "http://192.168.0.215/api/"
+
+IP_DO_TEST_AGAINST_API_URL = False
 
 INVERTER_HOST = "20.218.129.227"
 INVERTER_PORT = 502
