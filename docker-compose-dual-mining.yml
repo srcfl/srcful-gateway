@@ -1,10 +1,5 @@
 version: '2.4'
 
-x-environment:
-  &shared_env
-  - REST_SERVICE_PORT: 80 # should correspond to the port in the web service below
-  - REST_SERVICE_PORT_INTERNAL: 5000 # should correspond to the port in the web service below
-
 services:
 
   web:
@@ -14,13 +9,16 @@ services:
     container_name: srcful-gw
     restart: always
     environment:
-      <<: *shared_env
+      - HOST_IP
+      - REST_SERVICE_PORT=80 # should correspond to the port in the web service below
+      - REST_SERVICE_PORT_INTERNAL=5000 # should correspond to the port in the web service below
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
     devices:
       - /dev/i2c-1
-    labels:
-      io.balena.features.dbus: 1
     volumes:
       - srcful-data:/data/srcful
+      - /var/run/dbus:/host/run/dbus
 
   bluetooth:
     build: ./bluetooth
@@ -29,13 +27,18 @@ services:
     network_mode: host
     restart: always
     environment:
-      <<: *shared_env
+      - HOST_IP
+      - REST_SERVICE_PORT=80
+      - REST_SERVICE_PORT_INTERNAL=5000
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
     labels:
-      io.balena.features.dbus: 1
       io.balena.features.kernel-modules: 1
       io.balena.features.sysfs: 1
     depends_on:
       - "web"
+    volumes:
+      - /var/run/dbus:/host/run/dbus
 
   gateway-config:
     image: nebraltd/hm-config:arm64-a198b83
@@ -94,7 +97,7 @@ services:
     expose:
       - "1681"
 
-  helium-miner:
+    helium-miner:
     image: nebraltd/hm-gatewayrs:arm64-5428419
     depends_on:
       - diagnostics
@@ -108,12 +111,15 @@ services:
     environment:
       - FIRMWARE_VERSION=v1.3.0
       - FIRMWARE_SHORT_HASH=c2dd87a
+      - FREQ="N/A (Non Nebra Miner)"
+      - VARIANT=COMP-RAKHM
     volumes:
       - pktfwdr:/var/pktfwd
       - miner-storage:/var/data
       - nebra:/var/nebra
 
   diagnostics:
+    privileged: true
     image: nebraltd/hm-diag:arm64-6d56740
     depends_on:
       - dbus-session
@@ -126,17 +132,23 @@ services:
       - CONFIG_VERSION=a198b83
       - PKTFWD_VERSION=5c3c90a
       - MULTIPLEXER_VERSION=a1fc09b
+      - FREQ="N/A (Non Nebra Miner)"
+      - VARIANT=COMP-RAKHM
     volumes:
+      - /var/run/dbus:/host/run/dbus
       - pktfwdr:/var/pktfwd
       - miner-storage:/var/data
       - watchdog-log:/var/watchdog
       - nebra:/var/nebra
+      - type: bind
+        source: /sys
+        target: /sys
+
     ports:
       - "8080:80"
     cap_add:
       - SYS_RAWIO
     restart: always
-    privileged: true
     labels:
       io.balena.features.sysfs: 1
       io.balena.features.procfs: 1
