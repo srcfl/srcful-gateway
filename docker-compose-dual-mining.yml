@@ -131,6 +131,10 @@ services:
       - MULTIPLEXER_VERSION=a1fc09b
       - FREQ="N/A (Non Nebra Miner)"
       - VARIANT=COMP-RAKHM
+      - BALENA_DEVICE_UUID=2024
+      - BALENA_APP_NAME=SRCFUL
+      - BALENA_APP_ID=1337
+      - BALENA_SUPERVISOR_ADDRESS="localhost"
     volumes:
       - /var/run/dbus:/host/run/dbus
       - pktfwdr:/var/pktfwd
