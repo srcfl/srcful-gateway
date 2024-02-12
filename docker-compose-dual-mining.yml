@@ -97,7 +97,7 @@ services:
     expose:
       - "1681"
 
-    helium-miner:
+  helium-miner:
     image: nebraltd/hm-gatewayrs:arm64-5428419
     depends_on:
       - diagnostics
