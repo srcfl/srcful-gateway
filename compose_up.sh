@@ -21,7 +21,7 @@ echo "Select a Docker Compose file:"
 select file in "${compose_files[@]}"; do
   if [[ -n "${file}" ]]; then
     # Run docker-compose up with the selected file
-    docker-compose -f "${file}" up
+    docker compose -f "${file}" up
     break
   else
     echo "Invalid selection. Please try again."
