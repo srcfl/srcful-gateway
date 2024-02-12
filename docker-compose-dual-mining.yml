@@ -90,6 +90,7 @@ services:
     environment:
       - FIRMWARE_VERSION=v1.3.0
       - FIRMWARE_SHORT_HASH=c2dd87a
+      - BALENA_APP_NAME=""
     expose:
       - "1681"
 
