@@ -34,11 +34,11 @@ services:
       - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
     labels:
       io.balena.features.kernel-modules: 1
-      io.balena.features.sysfs: 1
     depends_on:
       - "web"
     volumes:
       - /var/run/dbus:/host/run/dbus
+      - /sys:/sys
 
   gateway-config:
     image: nebraltd/hm-config:arm64-a198b83
@@ -60,8 +60,8 @@ services:
       - dbus:/session/dbus
       - nebra:/var/nebra
       - /var/run/dbus:/host/run/dbus
+      - /sys:/sys
     labels:
-      io.balena.features.sysfs: 1
       io.balena.features.kernel-modules: 1
       io.balena.features.dbus: 1
     stop_signal: SIGINT
@@ -75,11 +75,11 @@ services:
     volumes:
       - pktfwdr:/var/pktfwd
       - nebra:/var/nebra
+      - /sys:/sys
     environment:
       - FIRMWARE_VERSION=v1.3.0
       - FIRMWARE_SHORT_HASH=c2dd87a
     labels:
-      io.balena.features.sysfs: 1
       io.balena.features.procfs: 1
 
   multiplexer:
@@ -88,10 +88,10 @@ services:
     depends_on:
       - helium-miner
     labels:
-      io.balena.features.sysfs: 1
       io.balena.features.procfs: 1
     volumes:
       - nebra:/var/nebra
+      - /sys:/sys
     environment:
       - FIRMWARE_VERSION=v1.3.0
       - FIRMWARE_SHORT_HASH=c2dd87a
@@ -141,9 +141,7 @@ services:
       - miner-storage:/var/data
       - watchdog-log:/var/watchdog
       - nebra:/var/nebra
-      - type: bind
-        source: /sys
-        target: /sys
+      - /sys:/sys
 
     ports:
       - "8080:80"
@@ -151,7 +149,6 @@ services:
       - SYS_RAWIO
     restart: always
     labels:
-      io.balena.features.sysfs: 1
       io.balena.features.procfs: 1
       io.balena.features.dbus: 1
       io.balena.features.supervisor-api: 1
