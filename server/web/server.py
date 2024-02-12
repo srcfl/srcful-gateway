@@ -29,6 +29,7 @@ def request_handler_factory(bb: BlackBoard, tasks: queue.Queue):
                 "wifi": handler.get.wifi.Handler(),
                 "wifi/scan": handler.get.wifi.ScanHandler(),
                 "version": handler.get.version.Handler(),
+                "supported": handler.get.supported.Handler(),
             }
 
             self.api_post_dict = {
