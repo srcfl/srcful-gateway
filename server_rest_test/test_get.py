@@ -187,3 +187,19 @@ def test_logger():
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
     assert "server.tasks.openInverterTask" in response.json()
+
+
+def test_supported():
+    url = settings.API_URL + "supported"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    
+    assert "solaredge" in response.json()['inverters']
+    assert "sungrow" in response.json()['inverters']
+    assert "growatt" in response.json()['inverters']
+    assert "huawei" in response.json()['inverters']
