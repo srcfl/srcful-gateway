@@ -76,11 +76,6 @@ class InverterRTU(Inverter):
         )
 
     def _create_client(self, **kwargs):
-        log.info("Creating RTU inverter with config: %s" % str(self.get_config()))
-
-        if "timeout" not in kwargs:
-            kwargs["timeout"] = 0.1
-
         return ModbusClient(
             method="rtu",
             port=self.get_host(),
