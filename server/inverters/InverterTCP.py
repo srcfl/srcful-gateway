@@ -16,7 +16,7 @@ class InverterTCP(Inverter):
     ip: string, IP address of the inverter,
     port: int, Port of the inverter,
     type: string, solaredge, huawei or fronius etc...,
-    address: int, Modbus address of the inverter,
+    address: int, Modbus address of the inverter
     """
 
     Setup: TypeAlias = tuple[str | bytes | bytearray, int, str, int]
