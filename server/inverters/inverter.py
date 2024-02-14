@@ -17,7 +17,7 @@ class Inverter:
     def __init__(self):
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
         self.profile = InverterProfiles().get(self.get_type())
-
+        self.client = None
 
     def terminate(self):
         """Terminates the inverter."""
@@ -164,7 +164,6 @@ class Inverter:
             # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
             # We solve this by raising the exception manually
             if isinstance(resp, ModbusIOException):
-                log.debug("Exception: %s, function code: %s", resp, str(resp.fcode))
                 raise ModbusIOException("Exception occurred while reading holding registers")
 
             log.debug("OK - Reading Holding: %s - %s", str(scan_start), str(scan_range))
