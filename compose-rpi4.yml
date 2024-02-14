@@ -1,0 +1,44 @@
+version: '2.4'
+
+services:
+
+  web:
+    ports:
+      - "80:5000"
+    build: ./server
+    container_name: srcful-gw
+    restart: always
+    environment:
+      - HOST_IP
+      - REST_SERVICE_PORT=80 # should correspond to the port in the web service below
+      - REST_SERVICE_PORT_INTERNAL=5000 # should correspond to the port in the web service below
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
+    devices:
+      - /dev/i2c-1
+    volumes:
+      - srcful-data:/data/srcful
+      - /var/run/dbus:/host/run/dbus
+
+  bluetooth:
+    build: ./bluetooth
+    container_name: ble
+    privileged: true
+    network_mode: host
+    restart: always
+    environment:
+      - HOST_IP
+      - REST_SERVICE_PORT=80
+      - REST_SERVICE_PORT_INTERNAL=5000
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
+    depends_on:
+      - "web"
+    volumes:
+      - /var/run/dbus:/host/run/dbus
+      - /sys:/sys
+      - /lib/modules:/lib/modules
+
+  
+volumes:
+  srcful-data:
