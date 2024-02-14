@@ -20,7 +20,7 @@ services:
       - srcful-data:/data/srcful
       - /var/run/dbus:/host/run/dbus
     labels:
-      - io.balena.features.supervisor-api: 1  # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
+      io.balena.features.supervisor-api: 1  # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
 
   bluetooth:
     build: ./bluetooth
