@@ -21,7 +21,7 @@ class ScanWiFiTask(Task):
             s.scan()
             return None
         except Exception as e:
-            log.Error("Failed to scan for WiFi networks")
+            log.error("Failed to scan for WiFi networks")
             log.exception(e)
             self.retries -= 1
             if self.retries <= 0:
