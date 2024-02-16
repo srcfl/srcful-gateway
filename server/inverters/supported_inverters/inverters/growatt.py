@@ -1,7 +1,8 @@
-from ...enums import ProfileKey, RegistersKey, OperationKey
+from ...enums import ProfileKey, RegistersKey, OperationKey, InverterKey
 
 profile = {
-    ProfileKey.NAME: "growatt",
+    ProfileKey.NAME: InverterKey.GROWATT.name,
+    ProfileKey.DISPLAY_NAME: InverterKey.GROWATT.value,
     ProfileKey.REGISTERS: [
         {
             RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,

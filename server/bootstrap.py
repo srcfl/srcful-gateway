@@ -79,7 +79,6 @@ class Bootstrap(BootstrapSaver):
                 lines = f.readlines()
         except Exception as e:
             logger.error("Failed to read file: {}".format(self.filename))
-            logger.error(e)
             return self.tasks
 
         return self._process_lines(lines, event_time, stats)

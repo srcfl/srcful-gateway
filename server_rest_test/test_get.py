@@ -199,7 +199,8 @@ def test_supported():
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
     
-    assert "solaredge" in response.json()['inverters']
-    assert "sungrow" in response.json()['inverters']
-    assert "growatt" in response.json()['inverters']
-    assert "huawei" in response.json()['inverters']
+    assert ['SOLAREDGE', 'SolarEdge'] in response.json()['inverters']
+    assert ['SUNGROW', 'Sungrow'] in response.json()['inverters']
+    assert ['GROWATT', 'Growatt'] in response.json()['inverters']
+    assert ['HUAWEI', 'Huawei'] in response.json()['inverters']
+    assert ['GOODWE', 'Goodwe'] in response.json()['inverters']

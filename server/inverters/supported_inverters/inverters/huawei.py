@@ -1,7 +1,8 @@
-from ...enums import ProfileKey, RegistersKey, OperationKey
+from ...enums import ProfileKey, RegistersKey, OperationKey, InverterKey
 
 profile = {
-    ProfileKey.NAME: "huawei",
+    ProfileKey.NAME: InverterKey.HUAWEI.name,
+    ProfileKey.DISPLAY_NAME: InverterKey.HUAWEI.value,
     ProfileKey.REGISTERS: [
         {
             RegistersKey.OPERATION: OperationKey.READ_HOLDING_REGISTERS,

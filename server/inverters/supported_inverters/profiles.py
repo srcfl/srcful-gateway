@@ -8,8 +8,9 @@ from .inverters.solaredge import profile as solaredge
 from .inverters.growatt import profile as growatt
 from .inverters.huawei import profile as huawei
 from .inverters.lqt40s import profile as lqt40s
+from .inverters.goodwe import profile as goodwe
 
-inverters = [sungrow, sungrow_hybrid, solaredge, growatt, huawei, lqt40s]
+inverters = [sungrow, sungrow_hybrid, solaredge, growatt, huawei, lqt40s, goodwe]
 
 
 class RegisterInterval:
@@ -22,6 +23,8 @@ class RegisterInterval:
 class InverterProfile:
     def __init__(self, inverter_profile):
         self.name = inverter_profile[ProfileKey.NAME]
+        self.display_name = inverter_profile[ProfileKey.DISPLAY_NAME]
+
         self.registers = []
 
         for register_intervall in inverter_profile[ProfileKey.REGISTERS]:
@@ -49,4 +52,4 @@ class InverterProfiles:
         return None
 
     def get_supported_inverters(self) -> typing.List[str]:
-        return [profile.name for profile in self.profiles]
+        return [(profile.name, profile.display_name) for profile in self.profiles]

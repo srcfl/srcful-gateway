@@ -1,14 +1,15 @@
+import pytest
 from unittest.mock import MagicMock, patch
 from server.inverters.InverterTCP import InverterTCP
 from server.inverters.InverterRTU import InverterRTU 
-from server.inverters.inverter import Inverter
 from server.inverters.supported_inverters.profiles import InverterProfiles
-import pytest
 from pymodbus.exceptions import ModbusException, ModbusIOException, ConnectionException
 
+from server.inverters.enums import InverterKey
 
 profiles = InverterProfiles()
-huawei = profiles.get("huawei")
+huawei = profiles.get(InverterKey.HUAWEI.name)
+lqt40s = profiles.get(InverterKey.LQT40S.name)
 
 
 def get_inverters():
@@ -17,7 +18,7 @@ def get_inverters():
     """
 
     inv_tcp = InverterTCP(("localhost", 8081, huawei.name, 1))
-    inv_rtu = InverterRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, "lqt40s", 1))
+    inv_rtu = InverterRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, lqt40s.name, 1))
 
     # We open to make the client attribute available, then
     # we mock the socket attribute to make the is_open() method return True.
@@ -67,7 +68,7 @@ def test_get_tcp_config():
 
     assert inv.get_config_dict() == {
         "connection": "TCP",
-        "type": "huawei",
+        "type": huawei.name,
         "address": 1,
         "host": "localhost",
         "port": 8081,
@@ -78,11 +79,11 @@ def test_get_rt_config():
     """
     Test that the get_config_dict() method returns the correct dictionary.
     """
-    inv = InverterRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, 'lqt40s', 1))
+    inv = InverterRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, lqt40s.name, 1))
 
     assert inv.get_config_dict() == { 
         "connection": "RTU",
-        "type": "lqt40s",
+        "type": lqt40s.name,
         "address": 1,
         "host": "/dev/ttyUSB0",
         "baudrate": 9600,
@@ -178,10 +179,10 @@ def test_modbus_connection_exception():
             # We check the type since we want to test both read_holding_registers
             # and read_input_registers. Huawei inverters use holding registers and
             # lqt40s uses input registers.
-            if inverter.get_type() == "huawei":
+            if inverter.get_type() == huawei.name:
                 mock_client.read_holding_registers.side_effect = ConnectionException()
                 registers = inverter.read_holding_registers(0, 12)
-            elif inverter.get_type() == "lqt40s":
+            elif inverter.get_type() == lqt40s.name:
                 mock_client.read_input_registers.side_effect = ConnectionException()
                 registers = inverter.read_input_registers(0, 12)
             
@@ -206,10 +207,10 @@ def test_modbus_io_exception():
             # We check the type since we want to test both read_holding_registers
             # and read_input_registers. Huawei inverters use holding registers and
             # lqt40s uses input registers.
-            if inverter.get_type() == "huawei":
+            if inverter.get_type() == huawei.name:
                 mock_client.read_holding_registers.side_effect = ModbusIOException()
                 registers = inverter.read_holding_registers(0, 12)
-            elif inverter.get_type() == "lqt40s":
+            elif inverter.get_type() == lqt40s.name:
                 mock_client.read_input_registers.side_effect = ModbusIOException()
                 registers = inverter.read_input_registers(0, 12)
             
