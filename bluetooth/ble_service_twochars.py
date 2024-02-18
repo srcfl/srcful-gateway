@@ -20,6 +20,8 @@ from bless import (  # type: ignore
     GATTAttributePermissions,
 )
 
+from bluetooth.gpioButton import GpioButton
+
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(name=__name__)
 # this trigger is never used atm but could be used to signal the main thread that a request has been received
@@ -98,6 +100,28 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
     threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
 
 
+# if we are on a bluez backend then we add the start and stop advertising functions
+try:
+    from bless.backends.bluezdbus.application import BlueZGattApplication
+    async def start_advertising():
+        await g_server.app.start_advertising(g_server.adapter)
+        # add the stop advertising task to the event loop
+        asyncio.create_task(stop_advertising())
+
+
+    async def stop_advertising():
+        asyncio.sleep(60 * 3)
+        await g_server.app.stop_advertising(g_server.adapter)
+
+except ImportError:
+    logging.info("Not using bluez backend, not adding start and stop advertising functions")
+    async def start_advertising(app):
+        pass
+
+    asynch def stop_advertising(app):
+        pass
+    pass
+
 async def run():
     global g_server, g_service_uuid, g_char_uuid, g_api_url, g_service_name
     trigger.clear()
@@ -155,6 +179,13 @@ async def run():
     #  g_server.app.StopNotify = on_stopNotify
 
     await g_server.start()
+
+    # if we are using the bluez backend and gpio buttin is set then we stop advertising after 3 minutes and also set up the button
+    if g_server.app and g_server.app is BlueZGattApplication:
+        await stop_advertising()
+        button = GpioButton(7, 3, start_advertising)
+        asyncio.create_task(button.run())
+
     await trigger.wait()
 
     await g_server.stop()
