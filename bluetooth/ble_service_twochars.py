@@ -104,13 +104,16 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
 try:
     from bless.backends.bluezdbus.application import BlueZGattApplication
     async def start_advertising():
+        logging.info("Starting advertising")
         await g_server.app.start_advertising(g_server.adapter)
         # add the stop advertising task to the event loop
         asyncio.create_task(stop_advertising())
 
 
     async def stop_advertising():
+        logging.info("Stopping advertising in 3 minutes")
         asyncio.sleep(60 * 3)
+        logging.info("Stopping advertising")
         await g_server.app.stop_advertising(g_server.adapter)
 
 except ImportError:
@@ -181,10 +184,13 @@ async def run():
     await g_server.start()
 
     # if we are using the bluez backend and gpio buttin is set then we stop advertising after 3 minutes and also set up the button
-    if g_server.app and g_server.app is BlueZGattApplication:
+    if g_server.app and isinstance(g_server.app, BlueZGattApplication):
+        logging.info("Using bluez backend, adding gpio button")
         await stop_advertising()
         button = GpioButton(7, 3, start_advertising)
         asyncio.create_task(button.run())
+    else:
+        logging.info("Not using bluez backend, not adding gpio button")
 
     await trigger.wait()
 
