@@ -1,6 +1,7 @@
 import asyncio
 import time
 import logging
+from typing import Callable
 from gpio4 import SysfsGPIO
 
 logger = logging.getLogger(name=__name__)
@@ -10,8 +11,8 @@ MONITOR_CHECK_INTERVAL_SECONDS = 0.05
 
 
 class GpioButton:
-    def __init__(self, pin_number, hold_seconds, when_held:function):
-        logger.info("Initializing GPIO button on pin %s" % pin_number)
+    def __init__(self, pin_number, hold_seconds, when_held: Callable[[], None]):
+        logger.info("Initializing GPIO button on pin %s", pin_number)
         self.gpio = SysfsGPIO(pin_number)
         self.gpio.export = True
         self.gpio.direction = 'in'
