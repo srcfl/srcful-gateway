@@ -37,8 +37,8 @@ if sys.platform == "linux":
         logging.info("Starting advertising")
         # we depend on that we are now on a bluez backend
         await g_server.app.start_advertising(g_server.adapter)
-        # add the stop advertising task to the event loop
-        asyncio.create_task(stop_advertising())
+        # we don't create a new task as the button loop should be blocked until we have stoped advertising
+        await stop_advertising()
 
 
     async def stop_advertising():
@@ -232,6 +232,7 @@ if __name__ == "__main__":
         "-gpio_button_pin",
         help="Pin for a gpio button to start advertising on double click, default: -1 (eternal advertising)",
         default=-1,
+        type=int,
     )
 
     args.add_argument(
