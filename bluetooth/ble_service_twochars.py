@@ -103,6 +103,7 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
 # if we are on a bluez backend then we add the start and stop advertising functions
 try:
     from bless.backends.bluezdbus.application import BlueZGattApplication
+    
     async def start_advertising():
         logging.info("Starting advertising")
         await g_server.app.start_advertising(g_server.adapter)
@@ -121,7 +122,7 @@ except ImportError:
     async def start_advertising(app):
         pass
 
-    asynch def stop_advertising(app):
+    async def stop_advertising(app):
         pass
     pass
 
