@@ -20,7 +20,7 @@ from bless import (  # type: ignore
     GATTAttributePermissions,
 )
 
-from bluetooth.gpioButton import GpioButton
+from gpioButton import GpioButton
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(name=__name__)
