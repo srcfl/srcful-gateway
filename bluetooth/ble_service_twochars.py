@@ -196,12 +196,12 @@ async def run(gpio_button_pin: int = -1):
 
     # if we are using the bluez backend and gpio buttin is set then we stop advertising after 3 minutes and also set up the button
     if sys.platform == "linux" and gpio_button_pin >= 0:
-        logging.info("Using bluez backend, adding gpio button")
+        logging.info("Using bluez backend, adding button on pin %s", gpio_button_pin)
         await stop_advertising()
         button = GpioButton(gpio_button_pin, start_advertising)
         asyncio.create_task(button.run())
     else:
-        logging.info("Not using bluez backend, not adding gpio button")
+        logging.info("Not using bluez backend or pin < 0 (pin is: %s), advertising indefinitely", gpio_button_pin)
 
     await trigger.wait()
 
