@@ -43,7 +43,7 @@ if sys.platform == "linux":
 
     async def stop_advertising():
         logging.info("Stopping advertising in 3 minutes")
-        asyncio.sleep(60 * 3)
+        await asyncio.sleep(60 * 3)
         logging.info("Stopping advertising")
         # we depend on that we are now on a bluez backend
         await g_server.app.stop_advertising(g_server.adapter)
