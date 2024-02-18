@@ -47,7 +47,7 @@ if sys.platform == "linux":
         logging.info("Stopping advertising...")
 
         # we depend on that we are now on a bluez backend
-        adv = g_server.app.advertisements[0].path
+        adv = g_server.app.advertisements[0]
         await g_server.app.stop_advertising(g_server.adapter)
 
         # we also need to remove the exported advertisement endpoint
