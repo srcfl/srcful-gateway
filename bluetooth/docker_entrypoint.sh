@@ -40,7 +40,12 @@ python ble_agent.py &
 # Disable pairing
 #printf "pairable off\nquit" | /usr/bin/bluetoothctl
 
+# set gpio pin to -1 if not set
+if [ -z "$GPIO_BUTTON_PIN" ]; then
+  GPIO_BUTTON_PIN=-1
+fi
 
-python ble_service_twochars.py -api_url 127.0.0.1:${REST_SERVICE_PORT}
+
+python ble_service_twochars.py -api_url 127.0.0.1:${REST_SERVICE_PORT} -gpio_button_pin ${GPIO_BUTTON_PIN}
 
 /bin/bash

@@ -136,7 +136,7 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
 
 
 
-async def run():
+async def run(gpio_button_pin: int = -1):
     global g_server, g_service_uuid, g_char_uuid, g_api_url, g_service_name
     trigger.clear()
     # Instantiate the server
@@ -195,10 +195,10 @@ async def run():
     await g_server.start()
 
     # if we are using the bluez backend and gpio buttin is set then we stop advertising after 3 minutes and also set up the button
-    if sys.platform == "linux":
+    if sys.platform == "linux" and gpio_button_pin >= 0:
         logging.info("Using bluez backend, adding gpio button")
         await stop_advertising()
-        button = GpioButton(7, start_advertising)
+        button = GpioButton(gpio_button_pin, start_advertising)
         asyncio.create_task(button.run())
     else:
         logging.info("Not using bluez backend, not adding gpio button")
@@ -227,6 +227,13 @@ if __name__ == "__main__":
         help=f"The UUID of the characteristic, default: {g_request_char_uuid}",
         default=g_request_char_uuid,
     )
+
+    args.add_argument(
+        "-gpio_button_pin",
+        help="Pin for a gpio button to start advertising on double click, default: -1 (eternal advertising)",
+        default=-1,
+    )
+
     args.add_argument(
         "-log_level",
         help=f"The log level ({logging.getLevelNamesMapping().keys()}), default: {logging.getLevelName(logger.getEffectiveLevel())}",
@@ -249,4 +256,4 @@ if __name__ == "__main__":
     else:
         logger.setLevel(logging.getLevelName(args.log_level))
 
-    asyncio.run(run())
+    asyncio.run(run(args.gpio_button_pin))
