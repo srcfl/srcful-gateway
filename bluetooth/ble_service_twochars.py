@@ -32,10 +32,10 @@ logger = logging.getLogger(name=__name__)
 
 if sys.platform == "linux":
     # if we are on a bluez backend then we add the start and stop advertising functions
-    from bless.backends.bluezdbus.application import BlueZGattApplication
-
+    logger.info("Using bluez backend, adding start and stop advertising functions")
     async def start_advertising():
         logging.info("Starting advertising")
+        # we depend on that we are now on a bluez backend
         await g_server.app.start_advertising(g_server.adapter)
         # add the stop advertising task to the event loop
         asyncio.create_task(stop_advertising())
@@ -45,6 +45,7 @@ if sys.platform == "linux":
         logging.info("Stopping advertising in 3 minutes")
         asyncio.sleep(60 * 3)
         logging.info("Stopping advertising")
+        # we depend on that we are now on a bluez backend
         await g_server.app.stop_advertising(g_server.adapter)
 else:
     logger.info("Not using bluez backend, not adding start and stop advertising functions")
