@@ -1,6 +1,7 @@
 import logging
 import asyncio
 import threading
+import sys
 
 import argparse
 
@@ -10,6 +11,9 @@ import egwttp
 from typing import Any
 
 import macAddr
+
+
+
 
 # import wifiprov
 
@@ -24,6 +28,28 @@ from gpioButton import GpioButton
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(name=__name__)
+
+
+if sys.platform == "linux":
+    # if we are on a bluez backend then we add the start and stop advertising functions
+    from bless.backends.bluezdbus.application import BlueZGattApplication
+
+    async def start_advertising():
+        logging.info("Starting advertising")
+        await g_server.app.start_advertising(g_server.adapter)
+        # add the stop advertising task to the event loop
+        asyncio.create_task(stop_advertising())
+
+
+    async def stop_advertising():
+        logging.info("Stopping advertising in 3 minutes")
+        asyncio.sleep(60 * 3)
+        logging.info("Stopping advertising")
+        await g_server.app.stop_advertising(g_server.adapter)
+else:
+    logger.info("Not using bluez backend, not adding start and stop advertising functions")
+
+
 # this trigger is never used atm but could be used to signal the main thread that a request has been received
 trigger: asyncio.Event = asyncio.Event()
 
@@ -100,31 +126,7 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
     threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
 
 
-# if we are on a bluez backend then we add the start and stop advertising functions
-try:
-    from bless.backends.bluezdbus.application import BlueZGattApplication
-    
-    async def start_advertising():
-        logging.info("Starting advertising")
-        await g_server.app.start_advertising(g_server.adapter)
-        # add the stop advertising task to the event loop
-        asyncio.create_task(stop_advertising())
 
-
-    async def stop_advertising():
-        logging.info("Stopping advertising in 3 minutes")
-        asyncio.sleep(60 * 3)
-        logging.info("Stopping advertising")
-        await g_server.app.stop_advertising(g_server.adapter)
-
-except ImportError:
-    logging.info("Not using bluez backend, not adding start and stop advertising functions")
-    async def start_advertising(app):
-        pass
-
-    async def stop_advertising(app):
-        pass
-    pass
 
 async def run():
     global g_server, g_service_uuid, g_char_uuid, g_api_url, g_service_name
@@ -185,7 +187,7 @@ async def run():
     await g_server.start()
 
     # if we are using the bluez backend and gpio buttin is set then we stop advertising after 3 minutes and also set up the button
-    if g_server.app and isinstance(g_server.app, BlueZGattApplication):
+    if sys.platform == "linux":
         logging.info("Using bluez backend, adding gpio button")
         await stop_advertising()
         button = GpioButton(7, 3, start_advertising)
