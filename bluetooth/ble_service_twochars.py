@@ -198,7 +198,7 @@ async def run():
     if sys.platform == "linux":
         logging.info("Using bluez backend, adding gpio button")
         await stop_advertising()
-        button = GpioButton(7, 3, start_advertising)
+        button = GpioButton(7, start_advertising)
         asyncio.create_task(button.run())
     else:
         logging.info("Not using bluez backend, not adding gpio button")
