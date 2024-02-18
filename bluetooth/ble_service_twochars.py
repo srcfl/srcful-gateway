@@ -44,9 +44,16 @@ if sys.platform == "linux":
     async def stop_advertising():
         logging.info("Stopping advertising in 3 minutes")
         await asyncio.sleep(60 * 3)
-        logging.info("Stopping advertising")
+        logging.info("Stopping advertising...")
+
         # we depend on that we are now on a bluez backend
+        adv = g_server.app.advertisements[0].path
         await g_server.app.stop_advertising(g_server.adapter)
+
+        # we also need to remove the exported advertisement endpoint
+        # this is a hack to get bless start advertising to work
+        g_server.app.bus.unexport(adv.path, adv)
+        logging.info("Stopped advertising")
 else:
     logger.info("Not using bluez backend, not adding start and stop advertising functions")
 
