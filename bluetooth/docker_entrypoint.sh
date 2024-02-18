@@ -38,7 +38,7 @@ hciconfig hci0 up
 python ble_agent.py &
 
 # Disable pairing
-#printf "pairable off\nquit" | /usr/bin/bluetoothctl
+#printf "pairable off\nquit" | /usr/bin/bluetoothctl 
 
 # set gpio pin to -1 if not set
 if [ -z "$GPIO_BUTTON_PIN" ]; then
