@@ -46,7 +46,7 @@ class BlackBoard:
         return self._start_time
 
     def get_version(self) -> str:
-        return "0.6.3"
+        return "0.7.0"
 
     def get_chip_info(self):
         crypto.init_chip()
