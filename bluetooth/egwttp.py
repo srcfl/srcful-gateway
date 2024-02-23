@@ -1,6 +1,9 @@
 from typing import Tuple
+import logging
 
-def construct_response(location: str, data:str) -> bytes:
+log = logging.getLogger(__name__)
+
+def construct_response(location: str, method: str, data:str) -> bytes:
   # we construct a response similar to http
   # eg. EGWTP/1.1 200 OK
   #     Content-Type: text/json
@@ -8,6 +11,7 @@ def construct_response(location: str, data:str) -> bytes:
 
   header = "EGWTP/1.1 200 OK\r\n"
   header += "Location: {}\r\n".format(location)
+  header += "Method: {}\r\n".format(method)
   header += "Content-Type: text/json\r\n"
   header += "Content-Length: {}\r\n\r\n".format(len(data.encode('utf-8')))
   content = header + data
@@ -17,7 +21,7 @@ def construct_response(location: str, data:str) -> bytes:
 
 def is_request(data: str):
   first_line = data.split("\r\n")[0].strip()
-  print(f'line:"{first_line}"')
+  log.debug('line:" %s"', first_line)
   return first_line.endswith(" EGWTTP/1.1")
 
 

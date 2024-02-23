@@ -1,98 +1,101 @@
 import queue
 import sys
 import time
+import logging
+
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
 from server.tasks.openInverterTask import OpenInverterTask
+from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.InverterTCP import InverterTCP
-import server.crypto.crypto as crypto
+
 from server.bootstrap import Bootstrap
+from server.wifi.scan import WifiScanner
+
+from server.blackboard import BlackBoard
+
+logger = logging.getLogger(__name__)
 
 
-def getChipInfo():
-  crypto.initChip()
+def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
+    # here we could keep track of statistics for different types of tasks
+    # and adjust the delay to keep the within a certain range
 
-  device_name = crypto.getDeviceName()
-  serial_number = crypto.getSerialNumber().hex()
+    def add_task(task):
+        if task.time < bb.time_ms():
+            dt = bb.time_ms() - task.time
+            s = "task {} is in the past {} adjusting time".format(type(task), dt)
+            logger.info(s)
+            task.time = bb.time_ms() + 100
+        tasks.put(task)
 
-  crypto.release()
+    while True:
+        task = tasks.get()
+        delay = (task.time - bb.time_ms()) / 1000
+        if delay > 0.01:
+            time.sleep(delay)
 
-  return 'device: ' + device_name + ' serial: ' + serial_number
+        try:
+            new_task = task.execute(bb.time_ms())
+        except Exception as e:
+            logger.error("Failed to execute task: %s", e)
+            new_task = None
 
-
-def time_ms():
-  return time.time_ns() // 1_000_000
-
-
-def mainLoop(tasks: queue.PriorityQueue):
-  # here we could keep track of statistics for different types of tasks
-  # and adjust the delay to keep the within a certain range
-
-  def addTask(task):
-    if task.time < time_ms():
-      print('task is in the past adjusting time')
-      task.time = time_ms() + 100
-    tasks.put(task)
-
-  while True:
-    task = tasks.get()
-    delay = (task.time - time_ms()) / 1000
-    if delay > 0.01:
-      time.sleep(delay)
-
-    newTask = task.execute(time_ms())
-
-    if newTask != None:
-      try:
-        for e in newTask:
-          addTask(e)
-      except TypeError:
-        addTask(newTask)
+        if new_task is not None:
+            try:
+                for e in new_task:
+                    add_task(e)
+            except TypeError:
+                add_task(new_task)
 
 
-def main(webHost: tuple[str, int], inverter: InverterTCP.Setup|None = None, bootstrapFile: str|None = None):
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: InverterTCP.Setup | None = None, bootstrap_file: str | None = None):
+    bb = BlackBoard()
 
-  startTime = time_ms()
-  stats = {'startTime': startTime, 'freqReads': 0,
-           'energyHarvested': 0, 'webRequests': 0, 'name': 'deadbeef'}
+    logger.info("eGW version: %s", bb.get_version())
 
-  webServer = server.web.server.Server(webHost, stats, time_ms, getChipInfo)
-  print("Server started http://%s:%s" % (webHost[0], webHost[1]))
+    bb.rest_server_port = server_host[1]
+    bb.rest_server_ip = server_host[0]
+    web_server = server.web.server.Server(web_host, bb)
+    logger.info("Server started http://%s:%s", web_host[0], web_host[1])
 
-  tasks = queue.PriorityQueue()
+    tasks = queue.PriorityQueue()
 
-  bootstrap = Bootstrap(bootstrapFile)
+    bootstrap = Bootstrap(bootstrap_file)
 
-  # put some initial tasks in the queue
-  if inverter is not None:
-    tasks.put(OpenInverterTask(startTime, stats, InverterTCP(inverter), bootstrap))
+    bb.inverters.add_listener(bootstrap)
 
-  # this is a hack to pass the bootstrap object to the post API that also creates open inverter tasks
-  # this should really be handled better i.e. blackboard pattern with some observer pattern
-  stats['bootstrap'] = bootstrap
-  for task in bootstrap.getTasks(startTime + 500, stats):
-    tasks.put(task)
+    # put some initial tasks in the queue
+    if inverter is not None:
+        tasks.put(OpenInverterTask(bb.start_time, bb, InverterTCP(inverter)))
 
-  tasks.put(CheckForWebRequest(startTime + 1000, stats, webServer))
+    for task in bootstrap.get_tasks(bb.start_time + 500, bb):
+        tasks.put(task)
 
-  try:
-    mainLoop(tasks)
-  except KeyboardInterrupt:
-    pass
-  except Exception as e:
-    print("Unexpected error:", sys.exc_info()[0])
-    print(e)
-  finally:
-    if 'inverter' in stats and stats['inverter'] is not None:
-      stats['inverter'].close()
-    webServer.close()
-    print("Server stopped.")
+    tasks.put(CheckForWebRequest(bb.start_time + 1000, bb, web_server))
+    tasks.put(ScanWiFiTask(bb.start_time + 45000, bb))
+
+    try:
+        main_loop(tasks, bb)
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        logger.exception("Unexpected error: %s", sys.exc_info()[0])
+        logger.exception("Exception: %s", e)
+    finally:
+        for i in bb.inverters.lst:
+            i.close()
+        web_server.close()
+        logger.info("Server stopped.")
+
 
 # this is for debugging purposes only
 if __name__ == "__main__":
-  import logging
-  logging.basicConfig()
-  #handler = logging.StreamHandler(sys.stdout)
-  #logging.root.addHandler(handler)
-  logging.root.setLevel(logging.INFO)
-  main(('localhost', 5000), ("localhost", 502, "huawei", 1))
+    import logging
+
+    logging.basicConfig()
+    # handler = logging.StreamHandler(sys.stdout)
+    # logging.root.addHandler(handler)
+    logging.root.setLevel(logging.INFO)
+    # main(('localhost', 5000), ("localhost", 502, "huawei", 1), 'bootstrap.txt')
+    main(("localhost", 5000), ("localhost", 5000), None, "bootstrap.txt")

@@ -15,10 +15,5 @@ services:
     #devices:
     #  - /dev/ttyACM0:/dev/ttyACM0 # bluethooth
 
-  inverter:
-    build: ./modbus_slave
-    container_name: srcfull-inverter
-    restart: always
-
 volumes:
   srcful-data:

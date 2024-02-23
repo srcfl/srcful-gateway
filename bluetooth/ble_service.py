@@ -10,6 +10,8 @@ from typing import Any
 
 # import wifiprov
 
+from ble_flush import remove_all_paired_devices
+
 from bless import (  # type: ignore
     BlessServer,
     BlessGATTCharacteristic,
@@ -71,7 +73,19 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
       # transfer the request to a http request to the server
       # when the response is received, transfer it to a egwttp response
     else:
-        logger.debug("Not a EGWTTP request, doing nothing")
+        if val == "remove_all_paired_devices":
+          logger.debug("Removing all paired devices...")
+          g_server.update_value(g_service_uuid, g_response_char_uuid)
+          response_char = g_server.get_characteristic(g_response_char_uuid)
+          response_char.value = bytearray(b"Removing all paired devices")
+          remove_all_paired_devices()
+        elif val == "hello":
+          logger.debug("Hello received")
+          response_char = g_server.get_characteristic(g_response_char_uuid)
+          response_char.value = bytearray(b"Hello from the ble service")
+          g_server.update_value(g_service_uuid, g_response_char_uuid)
+        else:
+          logger.debug("Not a EGWTTP nor a ble request, doing nothing")
     
     
 
@@ -125,8 +139,10 @@ if __name__ == "__main__":
   args.add_argument("-log_level", help=f"The log level ({logging.getLevelNamesMapping().keys()}), default: {logging.getLevelName(logger.getEffectiveLevel())}", default=logging.getLevelName(logger.level))
   args.add_argument("-service_name", help=f"The name of the service, default: {g_service_name}", default=g_service_name)
 
+  
 
   args = args.parse_args()
+  print("BLE service called with arguments: ", args)
   g_service_uuid = args.service_uuid
   g_char_uuid = args.char_uuid
   g_api_url = "http://" + args.api_url

@@ -1,0 +1,174 @@
+version: '2.4'
+
+services:
+
+  web:
+    ports:
+      - "80:5000"
+    build: ./server
+    container_name: srcful-gw
+    restart: always
+    environment:
+      - HOST_IP
+      - REST_SERVICE_PORT=80 # should correspond to the port in the web service below
+      - REST_SERVICE_PORT_INTERNAL=5000 # should correspond to the port in the web service below
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
+    devices:
+      - /dev/i2c-1
+    volumes:
+      - srcful-data:/data/srcful
+      - /var/run/dbus:/host/run/dbus
+
+  bluetooth:
+    build: ./bluetooth
+    container_name: ble
+    privileged: true
+    network_mode: host
+    restart: always
+    environment:
+      - GPIO_BUTTON_PIN=7
+      - HOST_IP
+      - REST_SERVICE_PORT=80
+      - REST_SERVICE_PORT_INTERNAL=5000
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
+    depends_on:
+      - "web"
+    volumes:
+      - /var/run/dbus:/host/run/dbus
+      - /sys:/sys
+      - /lib/modules:/lib/modules
+
+  gateway-config:
+    image: nebraltd/hm-config:arm64-a198b83
+    depends_on:
+      - dbus-session
+      - helium-miner
+      - diagnostics
+    environment:
+      - FIRMWARE_VERSION=v1.3.0
+      - FIRMWARE_SHORT_HASH=c2dd87a
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
+      - BALENA_APP_NAME=SRCFUL
+      - BALENA_DEVICE_UUID=2024
+    restart: on-failure
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - /var/run/dbus:/host/run/dbus
+      - miner-storage:/var/data
+      - dbus:/session/dbus
+      - nebra:/var/nebra
+      - /sys:/sys
+      - /lib/modules:/lib/modules
+    stop_signal: SIGINT
+
+  packet-forwarder:
+    image: nebraltd/hm-pktfwd:5c3c90a
+    depends_on:
+      - multiplexer
+    restart: always
+    privileged: true
+    volumes:
+      - pktfwdr:/var/pktfwd
+      - nebra:/var/nebra
+      - /sys:/sys
+      - /proc:/proc
+    environment:
+      - FIRMWARE_VERSION=v1.3.0
+      - FIRMWARE_SHORT_HASH=c2dd87a
+
+  multiplexer:
+    image: nebraltd/hm-multiplexer:a1fc09b
+    restart: always
+    depends_on:
+      - helium-miner
+    volumes:
+      - nebra:/var/nebra
+      - /sys:/sys
+      - /proc:/proc
+    environment:
+      - FIRMWARE_VERSION=v1.3.0
+      - FIRMWARE_SHORT_HASH=c2dd87a
+      - BALENA_APP_NAME=SRCFUL
+    expose:
+      - "1681"
+
+  helium-miner:
+    image: nebraltd/hm-gatewayrs:arm64-5428419
+    depends_on:
+      - diagnostics
+    cap_add:
+      - SYS_RAWIO
+    privileged: true
+    restart: always
+    expose:
+      - "1680"
+      - "4467"
+    environment:
+      - FIRMWARE_VERSION=v1.3.0
+      - FIRMWARE_SHORT_HASH=c2dd87a
+      - FREQ="N/A (Non Nebra Miner)"
+      - VARIANT=COMP-RAKHM
+    volumes:
+      - pktfwdr:/var/pktfwd
+      - miner-storage:/var/data
+      - nebra:/var/nebra
+
+  diagnostics:
+    privileged: true
+    image: nebraltd/hm-diag:arm64-6d56740
+    depends_on:
+      - dbus-session
+    environment:
+      - FIRMWARE_VERSION=v1.3.0
+      - FIRMWARE_SHORT_HASH=c2dd87a
+      - DIAGNOSTICS_VERSION=6d56740
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+      - GATEWAYRS_VERSION=5428419
+      - CONFIG_VERSION=a198b83
+      - PKTFWD_VERSION=5c3c90a
+      - MULTIPLEXER_VERSION=a1fc09b
+      - FREQ="N/A (Non Nebra Miner)"
+      - VARIANT=COMP-RAKHM
+      - BALENA_DEVICE_UUID=2024
+      - BALENA_APP_NAME=SRCFUL
+      - BALENA_APP_ID=1337
+      - BALENA_SUPERVISOR_ADDRESS="localhost"
+    volumes:
+      - /var/run/dbus:/host/run/dbus
+      - pktfwdr:/var/pktfwd
+      - miner-storage:/var/data
+      - watchdog-log:/var/watchdog
+      - nebra:/var/nebra
+      - /sys:/sys
+      - /proc:/proc
+    ports:
+      - "8080:80"
+    cap_add:
+      - SYS_RAWIO
+    restart: always
+    labels:
+      io.balena.features.supervisor-api: 1
+      io.balena.features.balena-api: 1
+
+  dbus-session:
+    image: balenablocks/dbus:rpi-0.0.2
+    restart: always
+    volumes:
+      - dbus:/session/dbus
+    environment:
+      - DBUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
+      - FIRMWARE_VERSION=v1.3.0
+      - FIRMWARE_SHORT_HASH=c2dd87a
+
+volumes:
+  miner-storage:
+  pktfwdr:
+  dbus:
+  nebra:
+  watchdog-log:
+  srcful-data:

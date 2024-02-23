@@ -59,7 +59,7 @@ else:
       proxy = bus.get_object("org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Settings")
       settings = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Settings")
 
-      print(settings.ListConnections())
+      logger.debug(settings.ListConnections())
 
       logger.debug(settings.ListConnections())
       
@@ -74,7 +74,7 @@ else:
       settings = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Settings")
 
       connection_paths = settings.ListConnections()
-      logger.debug("Num of connection profiles:", len(connection_paths))
+      logger.debug("Num of connection profiles: %d", len(connection_paths))
       for path in connection_paths:
           con_proxy = bus.get_object("org.freedesktop.NetworkManager", path)
           settings_connection = dbus.Interface(con_proxy, "org.freedesktop.NetworkManager.Settings.Connection")

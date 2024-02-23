@@ -2,22 +2,16 @@
 Architectural overview of the Sourceful Energy Gateway (eGW) project. Perhaps also add an image here. 
 * [Srcful eGW](#srcful-egw)
 * [Getting started](#getting-started)
-* [Open-Balena](#open-balena)
-   * [Services](#services)
-      * [server](#server)
-      * [bluetooth](#bluetooth)
-         * [Windows](#windows)
-      * [client](#client)
-      * [modbus_slave](#modbus_slave)
-   * [Commnads](#commnads)
-      * [Monitor](#monitor)
-      * [Tunnel](#tunnel)
-      * [SSH](#ssh)
-        * [SSH into a docker container](#ssh-into-a-docker-container)
-      * [Build](#build)
-      * [Deploy](#deploy)
-      * [Other](#other)
+  * [Services](#services)
+    * [server](#server)
+    * [bluetooth](#bluetooth)
+        * [Windows](#windows)
+  * [Rest API](#rest-api)
 * [Testing](#testing)
+  * [Report test coverage](#report-test-coverage)
+  * [REST api integration tests](#rest-api-integration-tests)
+  * [ble REST api integration tests](#ble-rest-api-integration-tests)
+* [Code standard](#code-standard)
 * [Design](#design)
 * [Other](#other-1)
 
@@ -29,11 +23,19 @@ balena login
 
 and select Credentials and use the email and password avaiable in bitwarden. 
 
-# Open-Balena
-The gateway is deployed using open-balena. This is a self-hosted version of balena-cloud. The balena-cli is used to deploy the gateway.
+More on how to monitor, build and deploy [here](balena.md).
+
+
+## Branching strategy
+In general one issue is one branch. For smaller issues you can work directly in eg. Dev.
+
+*main* is stable branch for development. Basically this branch should be safe to create working branches from. This branch would be "locked" at some point then things are tested and finally merged into a fleet release branch.
+
+*fleet-x* is deploy branch connected to a particular fleet (x would be the fleet name e.g. beta). It is ok to have your own fleet and branch for that particular fleet if you feel the need for it.
+
 
 ## Services 
-The gateway is composed of several services that are deployed as docker containers. Only web and bluetooth are deployed to the gateway. The other services are for testing and development.
+The gateway is composed of two services that are deployed as docker containers. Only web and bluetooth are deployed to the gateway. The other services are for testing and development.
 
 ### server
 The crypto stuff is partially mocked and does not require the libs to be installed as this does not seem to work well in a windows based container environment (even though the container itself runs linux...). This should handle iteself gracefully in the code.
@@ -67,170 +69,14 @@ or if using a venv
 python setup.py install
 ``` 
 
-
-### client
-This is a simple test client that you can run locally. You would need to start a web-server (e.g. twisted) to service the page and this needs to run on https for things to work (or the ble stuff will not work in a browser on android). A generated certificate is included.
-
-`twistd --nodaemon web --listen "ssl:8000:privateKey=key.pem:certKey=certificate.pem" --path .`
-
-The client is not to be deployed to the gateway and is just a test for now. The real client should be on the `srcful` domain.
-
-### modbus_slave
-This is the directory that contains simulation servers of all inverters. This is started with docker-compose-no_crypt or you can start it locally using pythion (this seems painfully slow on windows for some reason). Alternativealy you run the docker container (create it with `docker-compose build` first):
-
-`docker run -p 502:502 sourcefulgateway_inverter`
-
-Don't forget to change the inverter host to `localhost` in `app.py`
-
-## Commnads 
-Open-balena has a set of commands that are used to manage the server and all the device
-
-### Monitor
-Show logs for a specific device. The device in logs <device> can be a UUID or a device name.
-
-Examples:
-
-	$ balena logs 23c73a1
-	$ balena logs 23c73a1 --tail
-	
-	$ balena logs 192.168.0.31
-	$ balena logs 192.168.0.31 --service my-service
-	$ balena logs 192.168.0.31 --service my-service-1 --service my-service-2
-	
-	$ balena logs 23c73a1.local --system
-	$ balena logs 23c73a1.local --system --service my-service
-
-### Tunnel
-Use this command to open local TCP ports that tunnel to listening sockets in a balenaOS device. This is useful for debugging purposes, or for accessing services running on the device.
-
-Examples:
-
-	# map remote port 22222 to localhost:22222
-	$ balena tunnel myFleet -p 22222
-	
-	# map remote port 22222 to localhost:222
-	$ balena tunnel 2ead211 -p 22222:222
-	
-	# map remote port 22222 to any address on your host machine, port 22222
-	$ balena tunnel 1546690 -p 22222:0.0.0.0
-	
-	# map remote port 22222 to any address on your host machine, port 222
-	$ balena tunnel myFleet -p 22222:0.0.0.0:222
-	
-	# multiple port tunnels can be specified at any one time
-	$ balena tunnel myFleet -p 8080:3000 -p 8081:9000
-
-* `deviceOrFleet` - the UUID of the device or the name of the fleet to tunnel to
-* `-p`, `--port` - the port mapping to use, in the format: <remotePort>[:[localIP:]localPort]
-
-### SSH
-
-To `SSH` like this, we will need to use `proxytunnel ` on the client.  
-
-Install `proxytunnel` and then create an API key:
-
-```
-$ balena api-key generate proxytunnel
-
-Registered api key 'proxytunnel':
-
-sbdfvjvsbvvbliBLJiBlJHBlJHBljhBY
-
-This key will not be shown again, so please save it now.
-```
-
-Then configure `SSH` to use proxytunnel to connect to the balena VPN tunnelling service on your openBalena instance:
-
-```
-$ nano ~/.ssh/config
-
-Host *.balena
-  ProxyCommand proxytunnel -p vpn.balena.srcful.dev:3128 -d %h:22222 -F ~/.ssh/balena-ssh
-  ServerAliveInterval 30
-```
-
-Create the permission file: 
-
-```
-$ nano ~/.ssh/balena-ssh
-
-proxy_user=root
-proxy_passwd=sbdfvjvsbvvbliBLJiBlJHBlJHBljhBY
-```
-
-Then modify the permissions: 
-
-```
-$ chmod 600 ~/.ssh/balena-ssh 
-```
-
-Once that is set up, we can SSH into our devices, if our public key is added to the device's `config.json` file. More info [here](https://docs.balena.io/reference/OS/configuration/#sshkeys). Once its added, we can SSH into the device using:
-
-```
-balena tunnel <UUID> -p 22222:22222    
-```
-Followed by:
-```
-ssh root@localhost -p 22222
-```
-
-`balena ssh UUID` is still not supported on open-balena.
-
-#### SSH into a docker container
-
-Once you've successfully accessed the host OS through SSH, you can then access the individual service (container) within the device. Balena uses Docker to run services, so you can use Docker commands for this.
-
-To get a list of all running containers, you can use:
-
-```
-balena-engine ps
-```
-
-And to access a specific container, use the following command:
-
-```
-balena-engine exec -it <containerID> /bin/sh
-```
-
-Change to `/bin/bash` if needed.
-
-
-### Build 
-To build the gateway we use the `balena build` command. This command is used to build a single application or a fleet of devices. The command is used as follows:
-
-```
-balena build --fleet myFleet
-balena build ./source/ --fleet myorg/myfleet
-balena build --deviceType raspberrypi3 --arch armv7hf --emulated
-balena build --docker /var/run/docker.sock --fleet myFleet   # Linux, Mac
-balena build --docker //./pipe/docker_engine --fleet myFleet # Windows
-balena build --dockerHost my.docker.host --dockerPort 2376 --ca ca.pem --key key.pem --cert cert.pem -f myFleet
-```
-
-
-### Deploy
-To deploy to the devices we use the `balena deploy` command. This command is used to deploy a single application or a fleet of devices. The command is used as follows:
-
-Examples:
-```
-balena deploy myFleet
-balena deploy myorg/myfleet --build --source myBuildDir/
-balena deploy myorg/myfleet --build --source myBuildDir/ --note "this is the note for this release"
-balena deploy myorg/myfleet myRepo/myImage
-balena deploy myFleet myRepo/myImage --release-tag key1 "" key2 "value2 with spaces"
-``` 
-
-The commands above will use the normal `docker-compose.yml`. 
-
-
-### Other
-Other commands can be found at the [balena CLI Documentation](https://github.com/balena-io/balena-cli/blob/master/docs/balena-cli.md) page. 
+## Rest API
+The rest API is documented in [api.md](api.md) but this documentation is always one step behind so use the gateway REST endpoint `doc` to get the latest version.
 
 # Testing
 We use the pytest testing framework for automated testing (https://docs.pytest.org/en/7.2.x/getting-started.html#get-started).
 
-Test modules are placed under `/test` and mirror the structure of the main project. Tests are executed by running:  
-`pytest`
+Unit test modules are placed under `/server_unit_test` and mirror the structure of the main project. Tests are executed by running:  
+`pytest server_unit_test`
 
 Integration in VSCode can be achieved by installing *Python Test Explorer for Visual Studio Code* add the following to your `./vscode/launch.json` configuration to enable *debugging* of tests.
 
@@ -248,6 +94,61 @@ Integration in VSCode can be achieved by installing *Python Test Explorer for Vi
   ]
 }
 ```
+
+For vscode add test folders to the `.vscode/settings.json`
+
+```json
+{
+  "python.testing.pytestArgs": [
+    "server_unit_test",
+    "server_rest_test",
+    "ble_rest_test"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "python.formatting.provider": "none"
+}
+```
+
+## Report test coverage
+pytest can issue a coverage report using the plugin pytest-cov. Install with
+
+```
+pip install pytest-cov
+```
+
+To see overall test coverage you can run:
+```
+pytest --cov-report=html --cov=server server_unit_test
+```
+from the root folder. Then open `index.html` in `htmlcov` in any browser. 
+
+## REST api integration tests
+Automatic integration testing of the REST endpoints can also be done using pytest. However this is more involved as it requires a running server, and an inverter. This can be done either locally or on a rpi.  
+
+Tests are located in a separate folder `server_rest_test`
+
+## ble REST api integration tests
+You can test the ble service REST endpoints using pytest. Note that this is a work in progress. As for the normal API tests this is more involved and bascially requires a running gateway so the ble service is up and running.
+
+One caveat is that (windows specific) you cannot connect to the same ble service from the same client (eg running the tests and having the configurator connected on the same computer)
+
+Another caveat that remains to be solved is that pytest can start running these calls in parralell. E.g. make every ble call the same time and this will not work for obvious reasons - some tests will time out.
+
+It seems like running each file with tests separately solves this for now. I.e you run it like:
+
+```
+pytest ./ble_rest_test/get.py
+```
+
+# Code standard
+Basically `flake8` with pep8 naming and `bugbear`. Use the flake8 vscode extension and also install pep8-naming (`pip install pep8-naming`) and bugbear (`pip install pip install flake8-bugbear`). There is a config file for the project (`.flake8`)
+
+Black is a nice vscode extension to fix basic formatting.
+
+We allow long lines as some strings etc. will become very wonky. Black will do its best and that is fine for 90% of the code. But feel free to have longer lines of code if this makes it more readable.
+
+**pyLint** - voluntary use the vscode extension, it catches many important issues but also paints your code :P A lot of documentation for functions etc are not present and this is currently not a prio. Possibly some energy on configuration could be put here.
 
 # Design
 The current design is task bases with a priority queue. The idea is that a task is scheduled to happen at a certain time. This allows for fine grained control and adjustment of task times/delays etc. The downside is that tasks cannot be blocking so IO operations typically need threading. Though this is rater easy to do and there are also some helper classes for common tasks that require threading.

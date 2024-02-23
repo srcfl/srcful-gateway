@@ -34,3 +34,12 @@ node_modules
 .cache/
 
 __pycache__
+
+
+htmlcov
+.coverage
+
+bootstrap.txt
+
+venv 
+.venv
