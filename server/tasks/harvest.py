@@ -92,7 +92,7 @@ class HarvestTransport(SrcfulAPICallTask):
         # if 'harvestTransports' not in self.stats:
         #  self.stats['harvestTransports'] = 0
         self.barn = barn
-        self.inverter_type = inverter_type
+        self.inverter_type = inverter_type.lower()
 
     def _data(self):
         atecc608b.init_chip()
