@@ -15,7 +15,7 @@ def test_bootstrap_constructor():
 
 def test_bootstrap_process_lines():
     b = bootstrap.Bootstrap("test.txt")
-    exp = ("TCP", "localhost", 502, "solaredge", 4)
+    exp = ("TCP", "localhost", 502, "SOLAREDGE", 4)
     # exp = ("RTU", "/dev/ttyS0", 9600, 8, 'N', 1, "lqt40s", 1)
     assert b._process_lines([], 10, []) == []
     assert b._process_lines([""], 10, []) == []
@@ -51,7 +51,7 @@ def test_booststrap_get_tasks_nofile():
 
 def test_booststrap_remove_inverter():
     inverter = MagicMock()
-    exp = ("TCP", "localhost", 502, "solaredge", 4)
+    exp = ("TCP", "localhost", 502, "SOLAREDGE", 4)
     assert "get_config" in dir(Inverter)
     inverter.get_config.return_value = exp
 
@@ -67,7 +67,7 @@ def test_bootstrap_add_inverter():
         file_name = "/var/srcfulgw/bootstrap_test.txt"
         assert not patcher.fs.exists(file_name)
         b = bootstrap.Bootstrap(file_name)
-        exp = ("TCP", "localhost", 502, "solaredge", 4)
+        exp = ("TCP", "localhost", 502, "SOLAREDGE", 4)
         # exp = ("RTU", "/dev/ttyS0", 9600, 8, 'N', 1, "lqt40s", 1)
         inverter = MagicMock()
 
@@ -92,7 +92,7 @@ def test_bootstrap_append_inverter():
         file_name = "/var/srcfulgw/bootstrap_test.txt"
         assert not patcher.fs.exists(file_name)
         b = bootstrap.Bootstrap(file_name)
-        exp = ("TCP", "localhost", 502, "solaredge", 4)
+        exp = ("TCP", "localhost", 502, "SOLAREDGE", 4)
         # exp = ("RTU", "/dev/ttyS0", 9600, 8, 'N', 1, "lqt40s", 1)
 
         b.append_inverter(exp)
