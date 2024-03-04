@@ -1,4 +1,6 @@
+import random
 import server.crypto.crypto as crypto
+from server.message import Message
 import time
 
 
@@ -13,12 +15,46 @@ class BlackBoard:
     _start_time: int
     _rest_server_port: int
     _rest_server_ip: str
+    _messages: list[Message]
 
     def __init__(self):
         self._inverters = BlackBoard.Inverters()
         self._start_time = self.time_ms()
         self._rest_server_port = 80
         self._rest_server_ip = "localhost"
+
+    def add_error(self, message: str):
+        self._messages.append(Message(message, Message.Type.Error, self.time_ms() // 1_000, self._getMessageId()))
+
+    def add_warning(self, message: str):
+        self._messages.append(Message(message, Message.Type.Warning, self.time_ms() // 1_000, self._getMessageId()))
+
+    def add_info(self, message: str):
+        self._messages.append(Message(message, Message.Type.Info, self.time_ms() // 1_000, self._getMessageId()))
+
+    def clear_messages(self):
+        self._messages = []
+    
+    def delete_message(self, id):
+        for m in self._messages:
+            if m.id == id:
+                self._messages.remove(m)
+                return True
+        return False
+
+    def get_messages(self):
+        return self._messages
+    
+    def _getMessageId(self):
+        id = random.randint(0, 1000)
+        def is_unique(id):
+            for m in self._messages:
+                if m.id == id:
+                    return False
+            return True
+        while not is_unique(id):
+            id = random.randint(0, 1000)
+        return id
 
     
     @property
