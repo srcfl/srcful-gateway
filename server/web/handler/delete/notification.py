@@ -13,8 +13,8 @@ class Handler(DeleteHandler):
         )
     
     def do_delete(self, data: RequestData):
-        id = data.parameters["id"]
-        if data.bb.delete_message(id):
+        id = data.post_params["id"]
+        if data.bb.delete_message(int(id)):
             return 200, json.dumps({"id": id})
         else:
             return 404, json.dumps({"id": id})

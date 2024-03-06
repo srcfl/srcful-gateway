@@ -36,7 +36,7 @@ class BlackBoard:
     def clear_messages(self):
         self._messages = []
     
-    def delete_message(self, id):
+    def delete_message(self, id:int):
         for m in self._messages:
             if m.id == id:
                 self._messages.remove(m)
