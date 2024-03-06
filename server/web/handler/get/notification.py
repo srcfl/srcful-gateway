@@ -11,7 +11,7 @@ class ListHandler(GetHandler):
         }
 
     def do_get(self, data: RequestData):
-        ids = [m.id for m in data.blackboard.get_messages()]
+        ids = [m.id for m in data.bb.messages]
         return 200, json.dumps({"ids": ids})
     
 class MessageHandler(GetHandler):
@@ -28,7 +28,7 @@ class MessageHandler(GetHandler):
 
     def do_get(self, data: RequestData):
         id = data.parameters["id"]
-        messages = data.bb.get_messages()
+        messages = data.bb.messages
         for m in messages:
             if m.id == id:
                 ret = {

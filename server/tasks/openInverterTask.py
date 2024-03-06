@@ -44,6 +44,7 @@ class OpenInverterTask(Task):
                     self.bb.inverters.remove(i)
 
                 self.bb.inverters.add(self.inverter)
+                self.bb.add_info("Inverter opened: " + str(self.inverter.get_config()))
 
                 # if 'inverter' in self.stats and self.stats['inverter'] != None:
                 #  self.stats['inverter'].terminate()
@@ -53,7 +54,9 @@ class OpenInverterTask(Task):
                 return [harvest.Harvest(event_time + 10000, self.bb, self.inverter)]
             else:
                 self.inverter.terminate()
-                logger.info("Failed to open inverter: %s", self.inverter.get_type())
+                message = "Failed to open inverter: " + str(self.inverter.get_config())
+                logger.info(message)
+                self.bb.add_error(message)
                 return None
         except Exception as e:
             logger.exception("Exception opening inverter: %s", e)

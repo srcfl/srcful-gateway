@@ -22,15 +22,16 @@ class BlackBoard:
         self._start_time = self.time_ms()
         self._rest_server_port = 80
         self._rest_server_ip = "localhost"
+        self._messages = []
 
-    def add_error(self, message: str):
-        self._messages.append(Message(message, Message.Type.Error, self.time_ms() // 1_000, self._getMessageId()))
+    def add_error(self, message: str) -> Message:
+        return self._add_message(Message(message, Message.Type.Error, self.time_ms() // 1_000, self._get_message_id()))
 
-    def add_warning(self, message: str):
-        self._messages.append(Message(message, Message.Type.Warning, self.time_ms() // 1_000, self._getMessageId()))
+    def add_warning(self, message: str) -> Message:
+        return self._add_message(Message(message, Message.Type.Warning, self.time_ms() // 1_000, self._get_message_id()))
 
-    def add_info(self, message: str):
-        self._messages.append(Message(message, Message.Type.Info, self.time_ms() // 1_000, self._getMessageId()))
+    def add_info(self, message: str) -> Message:
+        return self._add_message(Message(message, Message.Type.Info, self.time_ms() // 1_000, self._get_message_id()))
 
     def clear_messages(self):
         self._messages = []
@@ -42,10 +43,27 @@ class BlackBoard:
                 return True
         return False
 
-    def get_messages(self):
-        return self._messages
+    @property
+    def messages(self) -> tuple[Message]:
+        return tuple(self._messages)
     
-    def _getMessageId(self):
+    def _add_message(self, message: Message) -> Message:
+        # check if we already have a message then just update the timestamp and move to the last place in the list
+        for m in self._messages:
+            if m.message == message.message:
+                m.timestamp = message.timestamp
+                self._messages.remove(m)
+                self._messages.append(m)
+
+                return m
+        # make sure we have a max of 10 messages
+        self._messages.append(message)
+        if len(self._messages) > 10:
+            self._messages.pop(0)
+        
+        return message
+    
+    def _get_message_id(self):
         id = random.randint(0, 1000)
         def is_unique(id):
             for m in self._messages:
@@ -120,3 +138,5 @@ class BlackBoard:
                 self.lst.remove(inverter)
                 for o in self._observers:
                     o.remove_inverter(inverter)
+
+

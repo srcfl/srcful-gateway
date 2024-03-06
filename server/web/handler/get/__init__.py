@@ -10,4 +10,5 @@ from . import uptime
 from . import wifi
 from . import version
 from . import supported
+from . import notification
 
