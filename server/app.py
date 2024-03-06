@@ -29,6 +29,8 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
             task.time = bb.time_ms() + 100
         tasks.put(task)
 
+    bb.add_info("eGW started - all is good")
+
     while True:
         task = tasks.get()
         delay = (task.time - bb.time_ms()) / 1000

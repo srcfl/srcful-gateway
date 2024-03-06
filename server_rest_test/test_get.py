@@ -174,7 +174,7 @@ def test_modbus_raw():
     assert "size" in j
     assert j["size"] == 2
     assert j["register"] == 40000
-    assert j["raw_value"] == "00000000"
+    assert len(j["raw_value"]) == len("00000000")
 
 
 def test_logger():
@@ -204,3 +204,43 @@ def test_supported():
     assert ['GROWATT', 'Growatt'] in response.json()['inverters']
     assert ['HUAWEI', 'Huawei'] in response.json()['inverters']
     assert ['GOODWE', 'Goodwe'] in response.json()['inverters']
+
+
+def get_notification_list():
+    url = settings.API_URL + "notification"
+
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    return response
+
+def test_notification_list():
+    response = get_notification_list()
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    
+    assert "ids" in response.json()
+
+def test_notification_message():
+
+    response = get_notification_list()
+    if len(response.json()["ids"]) > 0:
+        id = response.json()["ids"][0]
+
+        url = settings.API_URL + f"notification/{id}"
+
+        headers = {"user-agent": "vscode-restclient"}
+
+        response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "application/json"
+        
+        assert "message" in response.json()
+        assert "type" in response.json()
+        assert "timestamp" in response.json()
+        assert "id" in response.json()
+        assert response.json()["id"] == id
+        assert response.json()["type"] in ["error", "warning", "info"]

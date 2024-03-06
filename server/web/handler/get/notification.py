@@ -27,15 +27,18 @@ class MessageHandler(GetHandler):
         }
 
     def do_get(self, data: RequestData):
-        id = data.parameters["id"]
-        messages = data.bb.messages
-        for m in messages:
-            if m.id == id:
-                ret = {
-                    "message": m.message,
-                    "type": m.type.value,
-                    "timestamp": m.timestamp,
-                    "id": m.id
-                }
-                return 200, json.dumps(ret)
-        return 404, json.dumps({"message": f"message {id} not found"})
+        try:
+            id = int(data.post_params["id"])
+            messages = data.bb.messages
+            for m in messages:
+                if m.id == id:
+                    ret = {
+                        "message": m.message,
+                        "type": m.type.value,
+                        "timestamp": m.timestamp,
+                        "id": m.id
+                    }
+                    return 200, json.dumps(ret)
+            return 404, json.dumps({"message": f"message {id} not found"})
+        except Exception as e:
+            return 400, json.dumps({"error": str(e)})

@@ -17,7 +17,7 @@ def mock_messages():
 def mock_request_data(mock_messages):
     class MockRequestData:
         def __init__(self, messages):
-            self.parameters = {}
+            self.post_params = {}
             self.bb = BlackBoard()
             
             messages[0] = self.bb.add_error(messages[0].message)
@@ -42,7 +42,7 @@ def test_list_handler_success(mock_request_data):
 def test_message_handler_success(mock_request_data):
     message_handler = MessageHandler()
     test_id = mock_request_data.bb.messages[0].id
-    mock_request_data.parameters['id'] = test_id
+    mock_request_data.post_params['id'] = str(test_id)
     
     expected_message = next(m for m in mock_request_data.bb.messages if m.id == test_id)
 
@@ -61,7 +61,7 @@ def test_message_handler_success(mock_request_data):
 def test_message_handler_not_found(mock_request_data):
     message_handler = MessageHandler()
     test_id = 99  # Assuming this ID does not exist in mock_messages
-    mock_request_data.parameters['id'] = test_id
+    mock_request_data.post_params['id'] = str(test_id)
 
     status_code, response = message_handler.do_get(mock_request_data)
     response_data = json.loads(response)
