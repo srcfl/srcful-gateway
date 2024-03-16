@@ -1,8 +1,9 @@
-from ...enums import ProfileKey, RegistersKey, OperationKey, InverterKey
+from ...enums import ProfileKey, RegistersKey, OperationKey, InverterKey, ProtocolKey
 
 profile = {
     ProfileKey.NAME: InverterKey.LQT40S.name,
     ProfileKey.DISPLAY_NAME: InverterKey.LQT40S.value,
+    ProfileKey.PROTOCOL: ProtocolKey.MODBUS.value,
     ProfileKey.REGISTERS: [
         {
             RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,

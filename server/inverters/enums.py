@@ -20,7 +20,12 @@ class ProfileKey(Enum):
     NAME = 'name'
     DISPLAY_NAME = 'display_name'
     REGISTERS = 'registers'
+    PROTOCOL = 'protocol'
 
+
+class ProtocolKey(Enum):
+    MODBUS = 'modbus'
+    SOLARMAN_V5 = 'solarmanv5'
 
 class RegistersKey(Enum):
     OPERATION = 'operation'

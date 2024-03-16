@@ -6,7 +6,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class InverterRTU(Inverter):
+class ModbusRTU(Inverter):
 
     """
     port: string, Serial port used for communication,
@@ -26,7 +26,7 @@ class InverterRTU(Inverter):
         super().__init__()
 
     def clone(self):
-        return InverterRTU((self.get_host(), self.get_baudrate(),
+        return ModbusRTU((self.get_host(), self.get_baudrate(),
                             self.get_bytesize(), self.get_parity(),
                             self.get_stopbits(), self.get_type(), self.get_address()))
 

@@ -1,6 +1,7 @@
 from .inverters.inverter import Inverter
-from .inverters.InverterTCP import InverterTCP
-from .inverters.InverterRTU import InverterRTU
+from .inverters.ModbusTCP import ModbusTCP
+from .inverters.ModbusRTU import ModbusRTU
+from .inverters.SolarmanTCP import SolarmanTCP
 from .tasks.openInverterTask import OpenInverterTask
 
 import os
@@ -124,7 +125,9 @@ class Bootstrap(BootstrapSaver):
             inverter_type = task_args[3].upper()
             address = int(task_args[4])
             return OpenInverterTask(
-                event_time + 1000, bb, InverterTCP((ip, port, inverter_type, address))
+                event_time + 1000, 
+                bb, 
+                ModbusTCP((ip, port, inverter_type, address))
             )
         elif task_args[0] == "RTU":
             port = task_args[1]
@@ -137,7 +140,21 @@ class Bootstrap(BootstrapSaver):
             return OpenInverterTask(
                 event_time + 1000,
                 bb,
-                InverterRTU(
+                ModbusRTU(
                     (port, baudrate, bytesize, parity, stopbits, inverter_type, address)
                 ),
             )
+        elif task_args[0] == "SOLARMAN":
+            ip = task_args[1]
+            serial = int(task_args[2])
+            port = int(task_args[3])
+            inverter_type = task_args[4].upper()
+            address = int(task_args[5])
+
+            return OpenInverterTask(
+                event_time + 1000,
+                bb,
+                SolarmanTCP(ip, serial, port, inverter_type, address, False),
+            )
+
+

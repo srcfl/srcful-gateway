@@ -104,10 +104,7 @@ class Inverter:
             r = self.populate_registers(scan_start, scan_range)
             v = []
 
-            if operation == 0x03:
-                v = self.read_holding_registers(scan_start, scan_range)
-            elif operation == 0x04:
-                v = self.read_input_registers(scan_start, scan_range)
+            self.read_registers(operation, scan_start, scan_range)
 
             regs += r
             vals += v
@@ -126,13 +123,14 @@ class Inverter:
         """
         return [x for x in range(scan_start, scan_start + scan_range, 1)]
 
-    def read_input_registers(self, scan_start, scan_range):
+    def read_registers(self, operation, scan_start, scan_range):
         """
         Read a range of input registers from a start address
         """
         registers = []
         try:
-            resp = self.client.read_input_registers(scan_start, scan_range, slave=self.get_address())
+
+            resp = self._read_registers(operation, scan_start, scan_range)
 
             # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
             # We solve this by raising the exception manually
@@ -153,32 +151,6 @@ class Inverter:
 
         return registers
 
-    def read_holding_registers(self, scan_start, scan_range):
-        """
-        Read a range of holding registers from a start address
-        """
-        registers = []
-        try:
-            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.get_address())
-
-            # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
-            # We solve this by raising the exception manually
-            if isinstance(resp, ModbusIOException):
-                raise ModbusIOException("Exception occurred while reading holding registers")
-
-            log.debug("OK - Reading Holding: %s - %s", str(scan_start), str(scan_range))
-            registers = resp.registers
-
-        except ModbusException as me:
-
-            # Decide whether to break or continue based on the type of ModbusException
-            if isinstance(me, ConnectionException):
-                log.error("ConnectionException occurred: %s", str(me))
-
-            if isinstance(me, ModbusIOException):
-                log.error("ModbusIOException occurred: %s", str(me))
-
-        return registers
 
     def write_registers(self, starting_register, values):
         """
@@ -191,4 +163,12 @@ class Inverter:
         
         if isinstance(resp, ExceptionResponse):
             raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
+        return resp
+
+    def _read_registers(self, operation, scan_start, scan_range):
+        if operation != 0x04:
+            resp = self.client.read_input_registers(scan_start, scan_range, slave=self.get_address())
+        elif operation == 0x03:
+            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.get_address())
+
         return resp

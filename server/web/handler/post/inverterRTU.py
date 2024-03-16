@@ -1,5 +1,5 @@
 import json
-from server.inverters.InverterRTU import InverterRTU
+from server.inverters.ModbusRTU import ModbusRTU
 from server.tasks.openInverterTask import OpenInverterTask
 
 from ..handler import PostHandler
@@ -45,7 +45,7 @@ class Handler(PostHandler):
                     data.data["type"],
                     int(data.data["address"]),
                 )
-                inverter = InverterRTU(conf)
+                inverter = ModbusRTU(conf)
                 logger.info("Created an RTU inverter")
 
                 data.tasks.put(OpenInverterTask(100, data.bb, inverter))

@@ -1,7 +1,7 @@
 import threading
 
 import server.tasks.harvest as harvest
-from server.inverters.InverterTCP import InverterTCP
+from server.inverters.ModbusTCP import ModbusTCP
 from server.blackboard import BlackBoard
 
 from modbus_sim import server
@@ -15,7 +15,7 @@ def test_execute_harvest_incremental_backoff_server_does_not_reply():
     server.should_reply(False)
     server_thread.start()
 
-    inverter = InverterTCP(("localhost", 5021, "solaredge", 1))
+    inverter = ModbusTCP(("localhost", 5021, "solaredge", 1))
     inverter.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
 
     # this inverter allows for connecting and one harvest (3 reads) read before it disconnects
@@ -46,7 +46,7 @@ def test_execute_harvest_server_disconnects():
     server_thread = threading.Thread(target=lambda: server.start_server(5022))
     server_thread.start()
 
-    inverter = InverterTCP(("localhost", 5022, "solaredge", 1))
+    inverter = ModbusTCP(("localhost", 5022, "solaredge", 1))
     inverter.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
 
     server.stop_server()

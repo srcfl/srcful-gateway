@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
-from server.inverters.InverterTCP import InverterTCP
-from server.inverters.InverterRTU import InverterRTU 
+from server.inverters.ModbusTCP import ModbusTCP
+from server.inverters.ModbusRTU import ModbusRTU 
 from server.inverters.supported_inverters.profiles import InverterProfiles
 from pymodbus.exceptions import ModbusException, ModbusIOException, ConnectionException
 
@@ -17,8 +17,8 @@ def get_inverters():
     Returns a list of two inverters, one TCP and one RTU.
     """
 
-    inv_tcp = InverterTCP(("localhost", 8081, huawei.name, 1))
-    inv_rtu = InverterRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, lqt40s.name, 1))
+    inv_tcp = ModbusTCP(("localhost", 8081, huawei.name, 1))
+    inv_rtu = ModbusRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, lqt40s.name, 1))
 
     # We open to make the client attribute available, then
     # we mock the socket attribute to make the is_open() method return True.
@@ -64,7 +64,7 @@ def test_get_tcp_config():
     """
     Test that the get_config_dict() method returns the correct dictionary.
     """
-    inv = InverterTCP(("localhost", 8081, huawei.name, 1))
+    inv = ModbusTCP(("localhost", 8081, huawei.name, 1))
 
     assert inv.get_config_dict() == {
         "connection": "TCP",
@@ -79,7 +79,7 @@ def test_get_rt_config():
     """
     Test that the get_config_dict() method returns the correct dictionary.
     """
-    inv = InverterRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, lqt40s.name, 1))
+    inv = ModbusRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, lqt40s.name, 1))
 
     assert inv.get_config_dict() == { 
         "connection": "RTU",
