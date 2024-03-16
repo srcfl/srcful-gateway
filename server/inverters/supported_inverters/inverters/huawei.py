@@ -1,4 +1,4 @@
-from ...enums import ProfileKey, RegistersKey, OperationKey, InverterKey, ProtocolKey
+from ...enums import ProfileKey, RegistersKey, OperationKey, InverterKey
 
 profile = {
     ProfileKey.NAME: InverterKey.HUAWEI.name,
