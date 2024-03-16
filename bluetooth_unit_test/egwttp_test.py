@@ -1,4 +1,5 @@
 import pytest
+import random
 from bluetooth.egwttp import construct_response, is_request, is_response, parse_request
 
 def test_construct_response():
@@ -90,5 +91,33 @@ def test_reconstruct_long_message_pattern():
         reconstructed_data += received_data
         if len(reconstructed_data) >= content_length:  # if we got all the data, break
             break
+    assert len(reconstructed_data) == len(data)  # Check that we got all the data
+    assert reconstructed_data == data  # Check that the reconstructed data matches the original data
+
+
+def test_reconstruct_long_message_with_offsets_and_buffer():
+    location = "/test"
+    method = "GET"
+    data = "ABC" * 503  # Long message
+    buffer = [""]
+    offset = 0  # we start at offset 0 as the first message so we dont need to wait for 0 to be needed in randomization
+    while True:
+        
+        response = construct_response(location, method, data, offset)
+        assert len(response) <= 512
+        header, received_data = response.decode().split("\r\n\r\n", 1)
+        header_lines = header.split("\r\n")[1:]  # Skip the status line
+        headers = dict(h.split(": ", 1) for h in header_lines)
+
+        content_length = int(headers["Content-Length"])  # Get the Content-Length header
+        if len(buffer) < content_length:
+            buffer = [""] * content_length
+
+        buffer[offset:offset+len(received_data)] = received_data  # Place the received data in the buffer at the correct offset
+        offset = random.randint(0, len(data) - 1)  # Simulate receiving data at a random offset
+        if "" not in buffer:  # If the buffer is full, we've received all the data
+            break
+
+    reconstructed_data = "".join(buffer)  # Join the buffer into a single string
     assert len(reconstructed_data) == len(data)  # Check that we got all the data
     assert reconstructed_data == data  # Check that the reconstructed data matches the original data

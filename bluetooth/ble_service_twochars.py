@@ -225,11 +225,6 @@ if __name__ == "__main__":
         help=f"The url of the API endpoint, default: {API_URL}",
         default=API_URL,
     )
-    args.add_argument(
-        "-char_uuid",
-        help=f"The UUID of the characteristic, default: {REQUEST_CHAR}",
-        default=REQUEST_CHAR,
-    )
 
     args.add_argument(
         "-gpio_button_pin",
@@ -251,7 +246,6 @@ if __name__ == "__main__":
 
     args = args.parse_args()
     print("BLE service called with arguments: ", args)
-    SERVICE_UUID = args.service_uuid.lower()
     API_URL = "http://" + args.api_url
     SERVICE_NAME = args.service_name
     if args.log_level not in logging.getLevelNamesMapping().keys():
