@@ -85,14 +85,12 @@ def handle_response(path: str, method: str, reply: requests.Response, offset: in
     return egwttp_response
 
 
-def request_get(path: str, offset: int) -> bytearray:
-    return bytearray(handle_response(path, "GET", requests.get(API_URL + path, timeout=REQUEST_TIMEOUT), offset))
+def request_get(path: str, offset: int) -> bytes:
+    return handle_response(path, "GET", requests.get(API_URL + path, timeout=REQUEST_TIMEOUT), offset)
 
 
-def request_post(path: str, content: str, offset: int) -> bytearray:
-    return bytearray(
-        handle_response(path, "POST", requests.post(API_URL + path, data=content, timeout=REQUEST_TIMEOUT), offset)
-    )
+def request_post(path: str, content: str, offset: int) -> bytes:
+    return handle_response(path, "POST", requests.post(API_URL + path, data=content, timeout=REQUEST_TIMEOUT), offset)
 
 
 def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):

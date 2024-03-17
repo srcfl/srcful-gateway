@@ -17,11 +17,11 @@ def construct_response(location: str, method: str, data: str, offset: int) -> by
     header += f"Content-Length: {len(data.encode('utf-8'))}\r\n"
     if offset > 0:
         header += f"Offset: {offset}\r\n"
-        data = data[offset:]
+    
+    data = data.encode("utf-8")[offset:]
     header += "\r\n"
     
-    content = header + data
-    response = content.encode("utf-8")
+    response = header.encode("utf-8") + data
 
     return response[:512]
 
