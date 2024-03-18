@@ -1,4 +1,6 @@
+import random
 import server.crypto.crypto as crypto
+from server.message import Message
 import time
 
 
@@ -13,12 +15,64 @@ class BlackBoard:
     _start_time: int
     _rest_server_port: int
     _rest_server_ip: str
+    _messages: list[Message]
 
     def __init__(self):
         self._inverters = BlackBoard.Inverters()
         self._start_time = self.time_ms()
         self._rest_server_port = 80
         self._rest_server_ip = "localhost"
+        self._messages = []
+
+    def add_error(self, message: str) -> Message:
+        return self._add_message(Message(message, Message.Type.Error, self.time_ms() // 1_000, self._get_message_id()))
+
+    def add_warning(self, message: str) -> Message:
+        return self._add_message(Message(message, Message.Type.Warning, self.time_ms() // 1_000, self._get_message_id()))
+
+    def add_info(self, message: str) -> Message:
+        return self._add_message(Message(message, Message.Type.Info, self.time_ms() // 1_000, self._get_message_id()))
+
+    def clear_messages(self):
+        self._messages = []
+    
+    def delete_message(self, id:int):
+        for m in self._messages:
+            if m.id == id:
+                self._messages.remove(m)
+                return True
+        return False
+
+    @property
+    def messages(self) -> tuple[Message]:
+        return tuple(self._messages)
+    
+    def _add_message(self, message: Message) -> Message:
+        # check if we already have a message then just update the timestamp and move to the last place in the list
+        for m in self._messages:
+            if m.message == message.message:
+                m.timestamp = message.timestamp
+                self._messages.remove(m)
+                self._messages.append(m)
+
+                return m
+        # make sure we have a max of 10 messages
+        self._messages.append(message)
+        if len(self._messages) > 10:
+            self._messages.pop(0)
+        
+        return message
+    
+    def _get_message_id(self):
+        id = random.randint(0, 1000)
+        def is_unique(id):
+            for m in self._messages:
+                if m.id == id:
+                    return False
+            return True
+        while not is_unique(id):
+            id = random.randint(0, 1000)
+        return id
 
     
     @property
@@ -84,3 +138,5 @@ class BlackBoard:
                 self.lst.remove(inverter)
                 for o in self._observers:
                     o.remove_inverter(inverter)
+
+

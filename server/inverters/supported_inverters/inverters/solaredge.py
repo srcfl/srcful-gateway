@@ -7,12 +7,17 @@ profile = {
         {
             RegistersKey.OPERATION: OperationKey.READ_HOLDING_REGISTERS,
             RegistersKey.START_REGISTER: 40000,
-            RegistersKey.NUM_OF_REGISTERS: 61
+            RegistersKey.NUM_OF_REGISTERS: 69
         },
         {
             RegistersKey.OPERATION: OperationKey.READ_HOLDING_REGISTERS,
             RegistersKey.START_REGISTER: 40069,
-            RegistersKey.NUM_OF_REGISTERS: 37
+            RegistersKey.NUM_OF_REGISTERS: 33
+        },
+        {
+            RegistersKey.OPERATION: OperationKey.READ_HOLDING_REGISTERS,
+            RegistersKey.START_REGISTER: 40106,
+            RegistersKey.NUM_OF_REGISTERS: 3
         },
         {
             RegistersKey.OPERATION: OperationKey.READ_HOLDING_REGISTERS,

@@ -35,7 +35,7 @@ echo "REST_SERVICE_PORT is set to ${REST_SERVICE_PORT}"
 
 echo ""
 echo "Starting server container... visit http://${HOST_IP}:${REST_SERVICE_PORT} to access the service once it has started."
-echo "You can also visit https://configurator.srcful.ip to configure the service."
+echo "You can also visit https://configurator.srcful.io to configure the service."
 echo ""
 
 # Run your Python module here

@@ -31,6 +31,8 @@ def request_handler_factory(bb: BlackBoard, tasks: queue.Queue):
                 "wifi/scan": handler.get.wifi.ScanHandler(),
                 "version": handler.get.version.Handler(),
                 "supported": handler.get.supported.Handler(),
+                "notification": handler.get.notification.ListHandler(),
+                "notification/{id}": handler.get.notification.MessageHandler(),
             }
 
             self.api_post_dict = {
@@ -45,6 +47,7 @@ def request_handler_factory(bb: BlackBoard, tasks: queue.Queue):
 
             self.api_delete_dict = {
                 "inverter": handler.delete.inverter.Handler(),
+                "notification/{id}": handler.delete.notification.Handler(),
             }
 
             self.api_get = Handler.convert_keys_to_regex(self.api_get_dict)
