@@ -1,4 +1,5 @@
 import pytest
+import sys
 from unittest.mock import MagicMock, patch
 from server.inverters.InverterTCP import InverterTCP
 from server.inverters.InverterRTU import InverterRTU 
@@ -17,19 +18,24 @@ def get_inverters():
     Returns a list of two inverters, one TCP and one RTU.
     """
 
-    inv_tcp = InverterTCP(("localhost", 8081, huawei.name, 1))
-    inv_rtu = InverterRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, lqt40s.name, 1))
+    
+    
 
     # We open to make the client attribute available, then
     # we mock the socket attribute to make the is_open() method return True.
     # This would normally be true if a real connection was established.
+    inv_tcp = InverterTCP(("localhost", 8081, huawei.name, 1))
     inv_tcp.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
     inv_tcp.client.socket = MagicMock()
 
-    inv_rtu.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
-    inv_rtu.client.socket = MagicMock()
+    if sys.platform != "win32":
+        inv_rtu = InverterRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, lqt40s.name, 1))
+        inv_rtu.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
+        inv_rtu.client.socket = MagicMock()
 
-    return [inv_tcp, inv_rtu]
+        return [inv_tcp, inv_rtu]
+    else:
+        return [inv_tcp]
 
 
 def test_inverters_are_open():

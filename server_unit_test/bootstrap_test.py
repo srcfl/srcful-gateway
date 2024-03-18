@@ -51,7 +51,7 @@ def test_booststrap_get_tasks_nofile():
 
 def test_booststrap_remove_inverter():
     inverter = MagicMock()
-    exp = ("TCP", "localhost", 502, "solaredge", 4)
+    exp = ("TCP", "localhost", 502, "SOLAREDGE", 4)
     assert "get_config" in dir(Inverter)
     inverter.get_config.return_value = exp
 
