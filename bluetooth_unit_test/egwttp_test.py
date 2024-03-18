@@ -1,4 +1,3 @@
-import pytest
 import random
 from bluetooth.egwttp import construct_response, is_request, is_response, parse_request
 
