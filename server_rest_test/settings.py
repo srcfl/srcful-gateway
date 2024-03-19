@@ -1,11 +1,9 @@
 #API_URL = "http://localhost:5000/api/"
 API_URL = "http://192.168.0.215/api/"
 
-IP_DO_TEST_AGAINST_API_URL = False  # checks if the ip adress is part of the API_URL
+IP_DO_TEST_AGAINST_API_URL = True  # checks if the ip adress is part of the API_URL
 
-IP_DO_TEST_AGAINST_API_URL = False
-
-INVERTER_HOST = "20.218.129.227"
+INVERTER_HOST = "35.198.102.58"
 INVERTER_PORT = 502
 INVERTER_TYPE = "SOLAREDGE"
 INVERTER_CONNECTION = "TCP"
