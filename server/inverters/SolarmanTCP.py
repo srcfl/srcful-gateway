@@ -33,13 +33,13 @@ class SolarmanTCP(Inverter):
     def get_host(self):
         return self.setup[0]
 
-    def get_port(self):
+    def get_serial(self):
         return self.setup[1]
-
-    def get_type(self):
+    
+    def get_port(self):
         return self.setup[2]
 
-    def get_serial(self):
+    def get_type(self):
         return self.setup[3]
     
     def get_address(self):
