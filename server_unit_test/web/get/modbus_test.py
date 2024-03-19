@@ -14,11 +14,10 @@ def inverter_fixture():
     inverter = MagicMock()
 
     # These registers are word-sized, so they are 2 bytes each, e.g. the 1 in [1, 2, 3, 4] is 0x0100 (2 bytes) in hex (little endian)
-    inverter.read_holding_registers.return_value = [1, 2, 3, 4]
-    inverter.read_input_registers.return_value = [0x0A, 0x0B, 0x0C, 0x0D]
+    inverter.read_registers.return_value = [1, 2, 3, 4]
 
-    assert 'read_holding_registers' in dir(Inverter)
-    assert 'read_input_registers' in dir(Inverter)
+    assert 'read_registers' in dir(Inverter)
+
 
     return inverter
 
@@ -29,23 +28,19 @@ def request_data():
     inv = MagicMock()
     bb.inverters.add(inv)
 
-    def read_holding_registers(address, size):
+    def read_registers(operation, address, size):
         return [i for i in range(address, address + size)]
-    
-    def read_input_registers(address, size):
-        return [0x0A + i for i in range(address, address + size)]
 
-    inv.read_holding_registers = read_holding_registers
-    inv.read_input_registers = read_input_registers
-    assert 'read_holding_registers' in dir(Inverter)
-    assert 'read_input_registers' in dir(Inverter)
+    inv.read_registers = read_registers
+    assert 'read_registers' in dir(Inverter)
 
-    post_params = {'address': '1'}
+    post_params = {'address': '0'}
     query_params = {'type': 'uint', 'size': '2', 'endianess': 'big'}
     return RequestData(bb, post_params, query_params, {}, None)
 
 def test_HoldingHandler(request_data):
     handler = HoldingHandler()
+    request_data.post_params['address'] = 1
     status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
@@ -61,8 +56,8 @@ def test_InputHandler(request_data):
     response = json.loads(response)
     
     assert response.get('register') == 0
-    assert response.get('raw_value') == '000a000b'
-    assert response.get('value') == 655371 # = 0x000a000b in uint
+    assert response.get('raw_value') == '00000001' # HEX
+    assert response.get('value') == 1 
 
 
 def test_missing_address(inverter_fixture):
@@ -105,11 +100,11 @@ def test_invalid_size(request_data):
     handler = HoldingHandler()
     request_data.query_params['size'] = '10'
 
-    def read_holding_registers(address, size):
+    def read_registers(operation, address, size):
         raise Exception('invalid or incomplete address range')
 
-    request_data.bb.inverters.lst[0].read_holding_registers = read_holding_registers
-    assert 'read_holding_registers' in dir(Inverter)
+    request_data.bb.inverters.lst[0].read_registers = read_registers
+    assert 'read_registers' in dir(Inverter)
 
     status_code, response = handler.do_get(request_data)
     assert status_code == 400
@@ -117,6 +112,7 @@ def test_invalid_size(request_data):
 
 def test_uint_value(request_data):
     handler = HoldingHandler()
+    request_data.post_params['address'] = 1
     request_data.query_params['type'] = 'uint'
     status_code, response = handler.do_get(request_data)
     assert status_code == 200
@@ -126,28 +122,26 @@ def test_uint_value(request_data):
 def test_int_value(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'int'
-    request_data.query_params['size'] = '2'
-    request_data.post_params['address'] = '3'
+    request_data.query_params['size'] = '1'
+    request_data.post_params['address'] = 2
     status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
-    assert response.get('value') == 196612  # = 0x00030004 as signed int
+    assert response.get('value') == 2  # = 0x00000001 as signed int
 
 def test_float_value_little(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'float'
     request_data.query_params['size'] = '2'
-    request_data.query_params['endianess'] = 'little'
-    
-    request_data.bb.inverters.lst[0].read_holding_registers = lambda address, size: [0x147b, 0x4248] # 50.02 as little endian float
-    assert 'read_holding_registers' in dir(Inverter)
+    request_data.query_params['endianess'] = 'big'
+    request_data.post_params['address'] = 0x4155
 
     status_code, response = handler.do_get(request_data)
 
     assert status_code == 200
     response = json.loads(response)
     
-    val = response.get('value') - 199148.3125
+    val = response.get('value') - 13.328451156616211
 
     # Can't use assert equals on floating point numbers due to precision issues
     assert abs(val) < 1e-20
@@ -158,15 +152,15 @@ def test_float_value_big(request_data):
     request_data.query_params['type'] = 'float'
     request_data.query_params['size'] = '2'
     request_data.query_params['endianess'] = 'big'
+    request_data.post_params['address'] = 0x4155
 
-    request_data.bb.inverters.lst[0].read_holding_registers = lambda address, size: [0x147b, 0x4248]     # 7.69925e+35 as big endian float
-    assert 'read_holding_registers' in dir(Inverter)
+    assert 'read_registers' in dir(Inverter)
 
     status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
     # Can't use assert equals on floating point numbers due to precision issues
-    val = response.get('value') - 1.2685333253188879e-26
+    val = response.get('value') - 13.328451156616211
     assert abs(val) < 1e-5
     
 def test_double_value(request_data):

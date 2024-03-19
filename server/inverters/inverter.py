@@ -102,9 +102,7 @@ class Inverter:
             scan_range = entry.offset
 
             r = self.populate_registers(scan_start, scan_range)
-            v = []
-
-            self.read_registers(operation, scan_start, scan_range)
+            v = self.read_registers(operation, scan_start, scan_range)
 
             regs += r
             vals += v
@@ -166,7 +164,7 @@ class Inverter:
         return resp
 
     def _read_registers(self, operation, scan_start, scan_range):
-        if operation != 0x04:
+        if operation == 0x04:
             resp = self.client.read_input_registers(scan_start, scan_range, slave=self.get_address())
         elif operation == 0x03:
             resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.get_address())

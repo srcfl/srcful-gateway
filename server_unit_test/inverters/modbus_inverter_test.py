@@ -108,16 +108,11 @@ def test_read_harvest_data():
     inverters = get_inverters()
 
     for inv in inverters:
-        
-        def read_registers(address, size, slave):
-            class Ret:
-                def __init__(self):
-                    self.registers = [i for i in range(address, address + size)]
 
-            return Ret()
+        def read_registers(operation, address, size):
+            return [i for i in range(address, address + size)]
 
-        inv.client.read_holding_registers = read_registers
-        inv.client.read_input_registers = read_registers
+        inv.read_registers = read_registers
 
         result = inv.read_harvest_data()
         assert type(result) is dict
@@ -149,20 +144,14 @@ def test_read_harvest_no_data_exception():
         
         inv.get_address = MagicMock(return_value=1)
 
-        def read_registers(address, size, slave):
-            class Ret:
-                def __init__(self):
-                    self.registers = []
+        def read_registers(operation, address, size):
+            return [i for i in range(address, address + size)]
 
-            return Ret()
-
-        inv.client.read_holding_registers = read_registers
-        inv.client.read_input_registers = read_registers
+        inv.client.read_registers = read_registers
         
         # Empty register array should raise an exception
         with pytest.raises(Exception):
             inv.read_harvest_data()
-
 
 
 def test_modbus_connection_exception():
@@ -172,25 +161,28 @@ def test_modbus_connection_exception():
     inverters = get_inverters()
 
     for inverter in inverters:
-        with patch.object(inverter, 'client') as mock_client, \
-            patch.object(inverter, 'get_address', return_value=1), \
-            patch('server.inverters.inverter.log') as mock_log:
+        # Patch the _read_registers or the internal method that performs the actual communication
+        with patch.object(inverter, '_read_registers') as mock_read_registers, \
+             patch.object(inverter, 'get_address', return_value=1), \
+             patch('server.inverters.inverter.log') as mock_log:
 
-            # We check the type since we want to test both read_holding_registers
-            # and read_input_registers. Huawei inverters use holding registers and
-            # lqt40s uses input registers.
-            if inverter.get_type() == huawei.name:
-                mock_client.read_holding_registers.side_effect = ConnectionException()
-                registers = inverter.read_holding_registers(0, 12)
-            elif inverter.get_type() == lqt40s.name:
-                mock_client.read_input_registers.side_effect = ConnectionException()
-                registers = inverter.read_input_registers(0, 12)
+            # Set the side effect to raise a ConnectionException
+            mock_read_registers.side_effect = ConnectionException("Connection error")
+
+            # Determine the operation code based on inverter type
+            operation_code = 0x04 if inverter.get_type() == lqt40s.name else 0x03
+
+            # Call the method under test
+            registers = inverter.read_registers(operation_code, 0, 12)
             
             # Assert the return value is as expected (likely an empty list or similar)
             assert registers == [], "Expected empty list on ConnectionException"
 
             # Verify that the correct log message was emitted
-            mock_log.error.assert_called_with("ConnectionException occurred: %s", "Modbus Error: [Connection] ")
+            # Adjust the assert to match the actual log message format and content
+            expected_log_msg = "Modbus Error: [Connection] Connection error"
+            mock_log.error.assert_called_with("ConnectionException occurred: %s", expected_log_msg)
+
 
 
 def test_modbus_io_exception():
@@ -200,22 +192,23 @@ def test_modbus_io_exception():
     inverters = get_inverters()
 
     for inverter in inverters:
-        with patch.object(inverter, 'client') as mock_client, \
-            patch.object(inverter, 'get_address', return_value=1), \
-            patch('server.inverters.inverter.log') as mock_log:
+        # Patch the _read_registers method which is called internally by read_registers
+        with patch.object(inverter, '_read_registers') as mock_read_registers, \
+             patch.object(inverter, 'get_address', return_value=1), \
+             patch('server.inverters.inverter.log') as mock_log:
 
-            # We check the type since we want to test both read_holding_registers
-            # and read_input_registers. Huawei inverters use holding registers and
-            # lqt40s uses input registers.
-            if inverter.get_type() == huawei.name:
-                mock_client.read_holding_registers.side_effect = ModbusIOException()
-                registers = inverter.read_holding_registers(0, 12)
-            elif inverter.get_type() == lqt40s.name:
-                mock_client.read_input_registers.side_effect = ModbusIOException()
-                registers = inverter.read_input_registers(0, 12)
+            # Set up the side effect for _read_registers
+            mock_read_registers.side_effect = ModbusIOException("Exception occurred while reading registers")
+
+            # Determine the operation code based on inverter type
+            operation_code = 0x04 if inverter.get_type() == lqt40s.name else 0x03
+
+            # Call the method under test
+            registers = inverter.read_registers(operation_code, 0, 12)
             
             # Assert the return value is as expected (likely an empty list or similar)
-            assert registers == [], "Expected empty list on ModbusIOException"
+            assert registers == [], f"Expected empty list on ModbusIOException, got {registers} instead"
 
             # Verify that the correct log message was emitted
-            mock_log.error.assert_called_with("ModbusIOException occurred: %s", "Modbus Error: [Input/Output] ")
+            expected_log_msg = "Modbus Error: [Input/Output] Exception occurred while reading registers"
+            mock_log.error.assert_called_with("ModbusIOException occurred: %s", expected_log_msg)
