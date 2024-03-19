@@ -7,8 +7,8 @@ profile = {
     ProfileKey.REGISTERS: [
         {
             RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
-            RegistersKey.START_REGISTER: 4999,
-            RegistersKey.NUM_OF_REGISTERS: 110
+            RegistersKey.START_REGISTER: 4989,
+            RegistersKey.NUM_OF_REGISTERS: 120
         },
         {
             RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
