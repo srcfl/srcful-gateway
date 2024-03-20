@@ -1,11 +1,9 @@
 from server.blackboard import BlackBoard
+from .itask import ITask
 
 
-class Task:
-    """A task is a unit of work that can be scheduled for execution at a given time.
-    Tasks are executed synchronously, so they should not block.
-    Blocking operations should be performed in a separate thread. Results should
-    then be collected and processed in the task's execute method."""
+class Task(ITask):
+    """Base class for tasks that hold a time and a blackboard object"""
 
     def __init__(self, event_time: int, bb: BlackBoard):
         self.time = event_time
@@ -20,6 +18,9 @@ class Task:
         if not isinstance(other, Task):
             return self.time < other
         return self.time < other.time
+
+    def get_time(self) -> int:
+        return self.time
 
     def execute(self, event_time):
         """execute the task, return None a single Task or a list of tasks to be added to the scheduler"""

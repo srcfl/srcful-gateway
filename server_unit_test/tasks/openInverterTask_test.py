@@ -1,19 +1,23 @@
 from server.tasks.openInverterTask import OpenInverterTask
 from server.blackboard import BlackBoard
+from server.tasks.harvestFactory import HarvestFactory
 
 from unittest.mock import MagicMock
 
 
 def test_execute_invertert_added():
     bb = BlackBoard()
+    hf = HarvestFactory(bb)
+    hf.dummy()
     inverter = MagicMock()
     inverter.open.return_value = True
     task = OpenInverterTask(0, bb, inverter)
-    harvest = task.execute(0)
+    ret = task.execute(0)
 
     assert inverter in bb.inverters.lst
     assert inverter.open.called
-    assert harvest is not None
+    assert ret is None
+    assert bb.purge_tasks()[0] is not None
 
 
 def test_execute_old_inverter_terminated():

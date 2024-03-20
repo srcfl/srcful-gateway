@@ -5,12 +5,12 @@ import logging
 
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
+from server.tasks.itask import ITask
 from server.tasks.openInverterTask import OpenInverterTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.InverterTCP import InverterTCP
-
+from server.tasks.harvestFactory import HarvestFactory
 from server.bootstrap import Bootstrap
-from server.wifi.scan import WifiScanner
 
 from server.blackboard import BlackBoard
 
@@ -21,9 +21,9 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     # here we could keep track of statistics for different types of tasks
     # and adjust the delay to keep the within a certain range
 
-    def add_task(task):
+    def add_task(task: ITask):
         if task.time < bb.time_ms():
-            dt = bb.time_ms() - task.time
+            dt = bb.time_ms() - task.get_time()
             s = "task {} is in the past {} adjusting time".format(type(task), dt)
             logger.info(s)
             task.time = bb.time_ms() + 100
@@ -33,12 +33,12 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
 
     while True:
         task = tasks.get()
-        delay = (task.time - bb.time_ms()) / 1000
+        delay = (task.get_time() - bb.time_ms()) / 1000
         if delay > 0.01:
             time.sleep(delay)
 
         try:
-            new_task = task.execute(bb.time_ms())
+            new_task = task.execute(bb.time_ms()) + bb.purge_tasks()
         except Exception as e:
             logger.error("Failed to execute task: %s", e)
             new_task = None
@@ -53,6 +53,8 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: InverterTCP.Setup | None = None, bootstrap_file: str | None = None):
     bb = BlackBoard()
+    harvest_factory = HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
+    harvest_factory.dummy()
 
     logger.info("eGW version: %s", bb.get_version())
 

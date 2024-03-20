@@ -1,14 +1,17 @@
 import random
+import time
 import server.crypto.crypto as crypto
 from server.message import Message
-import time
+from server.tasks.itask import ITask
 
 
 class BlackBoard:
     """
-    Blackboard class is the subject class of the observer pattern.
+    Blackboard class is the publisher class of the observer pattern.
     It is responsible for maintaining the state of the system and notifying
     the observers when the state changes.
+    It also acts as a repository for messages, and created tasks.
+    Tasks can be added to the blackboard and will be executed by the main loop. This makes it possible for non Task objects to create tasks.
     """
 
     _inverters: "BlackBoard.Inverters"
@@ -16,6 +19,7 @@ class BlackBoard:
     _rest_server_port: int
     _rest_server_ip: str
     _messages: list[Message]
+    _tasks: list[ITask]
 
     def __init__(self):
         self._inverters = BlackBoard.Inverters()
@@ -23,6 +27,15 @@ class BlackBoard:
         self._rest_server_port = 80
         self._rest_server_ip = "localhost"
         self._messages = []
+        self._tasks = []
+
+    def add_task(self, task: ITask):
+        self._tasks.append(task)
+    
+    def purge_tasks(self):
+        tasks = self._tasks
+        self._tasks = []
+        return tasks
 
     def add_error(self, message: str) -> Message:
         return self._add_message(Message(message, Message.Type.Error, self.time_ms() // 1_000, self._get_message_id()))
@@ -36,9 +49,9 @@ class BlackBoard:
     def clear_messages(self):
         self._messages = []
     
-    def delete_message(self, id:int):
+    def delete_message(self, message_id: int):
         for m in self._messages:
-            if m.id == id:
+            if m.id == message_id:
                 self._messages.remove(m)
                 return True
         return False
@@ -64,15 +77,16 @@ class BlackBoard:
         return message
     
     def _get_message_id(self):
-        id = random.randint(0, 1000)
-        def is_unique(id):
+        message_id = random.randint(0, 1000)
+
+        def is_unique(message_id: int):
             for m in self._messages:
-                if m.id == id:
+                if m.id == message_id:
                     return False
             return True
-        while not is_unique(id):
-            id = random.randint(0, 1000)
-        return id
+        while not is_unique(message_id):
+            message_id = random.randint(0, 1000)
+        return message_id
 
     
     @property
@@ -80,7 +94,7 @@ class BlackBoard:
         return self._rest_server_port
 
     @rest_server_port.setter
-    def rest_server_port(self, port:int):
+    def rest_server_port(self, port: int):
         self._rest_server_port = port
 
     @property
@@ -88,7 +102,7 @@ class BlackBoard:
         return self._rest_server_ip
 
     @rest_server_ip.setter
-    def rest_server_ip(self, ip:str):
+    def rest_server_ip(self, ip: str):
         self._rest_server_ip = ip
 
     @property

@@ -51,7 +51,7 @@ class OpenInverterTask(Task):
                 # self.stats['inverter'] = self.inverter
                 # if(self.bootstrap != None):
                 #  self.bootstrap.appendInverter(self.inverter.getConfig())
-                return [harvest.Harvest(event_time + 10000, self.bb, self.inverter)]
+                return
             else:
                 self.inverter.terminate()
                 message = "Failed to open inverter: " + str(self.inverter.get_config())
