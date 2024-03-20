@@ -12,14 +12,14 @@ def test_post_create_inverter_tcp():
     conf = {"ip": "192.168.10.20", "port": 502, "type": "solaredge", "address": 1}
 
     handler = TCPHandler()
-    q = queue.Queue()
-    rd = RequestData(BlackBoard(), {}, {}, conf, q)
+    rd = RequestData(BlackBoard(), {}, {}, conf)
 
     handler.do_post(rd)
 
     # check that the open inverter task was created
-    assert q.qsize() == 1
-    task = q.get_nowait()
+    tasks = rd.bb.purge_tasks()
+    assert len(tasks) == 1
+    task = tasks[0]
     assert isinstance(task, OpenInverterTask)
 
     assert task.inverter.get_config()[1:] == (
@@ -45,11 +45,14 @@ def test_post_create_inverter_rtu():
     # check that the open inverter task was created
     q = queue.Queue()
 
-    rd = RequestData(BlackBoard(), {}, {}, conf, q)
+    rd = RequestData(BlackBoard(), {}, {}, conf)
 
     handler.do_post(rd)
-    assert q.qsize() == 1
-    task = q.get_nowait()
+    
+    # check that the open inverter task was created
+    tasks = rd.bb.purge_tasks()
+    assert len(tasks) == 1
+    task = tasks[0]
     assert isinstance(task, OpenInverterTask)
 
     assert task.inverter.get_config()[1:] == (

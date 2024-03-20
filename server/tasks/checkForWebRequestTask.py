@@ -18,13 +18,5 @@ class CheckForWebRequest(Task):
             t.start()
 
         self.time = 1000
-        # get all added tasks and put in list
-        tasks = [self]
-        while not self.web_server.tasks.empty():
-            tasks.append(self.web_server.tasks.get())
-
-        # ajust the time for all tasks
-        for task in tasks:
-            task.time += event_time
-
-        return tasks
+        self.time += self.bb.time_ms() + 1000
+        return [self]

@@ -22,7 +22,7 @@ def request_data():
     bb = BlackBoard()
     bb.inverters.add(MockInverter())
 
-    return RequestData(bb, {}, {}, {}, None)
+    return RequestData(bb, {}, {}, {})
 
 
 def test_inverter(request_data):

@@ -7,7 +7,7 @@ from server.blackboard import BlackBoard
 logger = logging.getLogger(__name__)
 
 def requestData(data):
-    return RequestData(BlackBoard(), {}, {}, data, None)
+    return RequestData(BlackBoard(), {}, {}, data)
 
 def test_post_root():
     handler = post_logger.Handler()

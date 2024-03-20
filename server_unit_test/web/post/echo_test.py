@@ -6,7 +6,7 @@ from server.blackboard import BlackBoard
 
 @pytest.fixture
 def request_data():
-    return RequestData(BlackBoard(), {}, {}, {"sent":"thedata"}, None)
+    return RequestData(BlackBoard(), {}, {}, {"sent": "thedata"})
 
 def test_logger(request_data):
     handler = Handler()

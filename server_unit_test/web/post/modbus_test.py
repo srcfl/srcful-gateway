@@ -28,13 +28,12 @@ def test_do_post():
         ]
     }
 
-    
-    tasks = queue.Queue()
-    rd = RequestData(bb, {}, {}, post_data, tasks)
+    rd = RequestData(bb, {}, {}, post_data)
     response_code, response_body = handler.do_post(rd)
     
-    assert tasks.qsize() == 1
-    task = tasks.get_nowait()
+    tasks = bb.purge_tasks()
+    assert len(tasks) == 1
+    task = tasks[0]
     assert isinstance(task, ModbusWriteTask)
     assert isinstance(task.commands[0], ModbusWriteTask.WriteCommand)
     assert isinstance(task.commands[1], ModbusWriteTask.PauseCommand)
@@ -42,13 +41,13 @@ def test_do_post():
 # Test error handling for missing 'commands' field
 def test_missing_commands():
     handler = Handler()
-    rd = RequestData(BlackBoard(), {}, {}, {}, queue.Queue())
+    rd = RequestData(BlackBoard(), {}, {}, {})
     response_code, response_body = handler.do_post(rd)
     assert response_code == 400
 # Test error handling for Missing inverter field
 def test_missing_inverter():
     handler = Handler()
-    rd = RequestData(BlackBoard(), {}, {}, {'commands': []}, queue.Queue())
+    rd = RequestData(BlackBoard(), {}, {}, {'commands': []})
     response_code, response_body = handler.do_post(rd)
     assert response_code == 400
 
@@ -56,12 +55,10 @@ def test_missing_inverter():
 def test_malformed_commands():
     handler = Handler()
 
-    
-
     def requestData(data):
         bb = BlackBoard()
         bb.inverters.add(Mock())
-        return RequestData(bb, {}, {}, data, queue.Queue())
+        return RequestData(bb, {}, {}, data)
 
     # Command without required 'type' field
     post_data_no_type = {'commands': [{}]}

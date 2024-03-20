@@ -42,7 +42,7 @@ def request_data():
 
     post_params = {'address': '1'}
     query_params = {'type': 'uint', 'size': '2', 'endianess': 'big'}
-    return RequestData(bb, post_params, query_params, {}, None)
+    return RequestData(bb, post_params, query_params, {})
 
 def test_HoldingHandler(request_data):
     handler = HoldingHandler()
@@ -71,7 +71,7 @@ def test_missing_address(inverter_fixture):
     bb = BlackBoard()
     bb.inverters.add(inverter_fixture)
 
-    request_data = RequestData(bb, {}, {}, {}, None)
+    request_data = RequestData(bb, {}, {}, {})
     status_code, response = handler.do_get(request_data)
     assert status_code == 400
     assert json.loads(response).get('error') == 'missing address'
@@ -79,7 +79,7 @@ def test_missing_address(inverter_fixture):
 
 def test_inverter_not_initialized():
     handler = HoldingHandler()
-    request_data = RequestData(BlackBoard(), {'address': '0'}, {}, {}, None)
+    request_data = RequestData(BlackBoard(), {'address': '0'}, {}, {})
     status_code, response = handler.do_get(request_data)
     assert status_code == 400
     assert json.loads(response).get('error') == 'inverter not initialized'

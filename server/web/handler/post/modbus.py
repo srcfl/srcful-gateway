@@ -81,9 +81,7 @@ class Handler(PostHandler):
                     return 500, json.dumps({"status": "error", "message": error})
 
             # Add ModbusTask to task queue
-            data.tasks.put(
-                ModbusWriteTask(100, data.bb, data.bb.inverters.lst[0], command_objects)
-            )
+            data.bb.add_task(ModbusWriteTask(data.bb.time_ms() + 100, data.bb, data.bb.inverters.lst[0], command_objects))
 
             return 200, json.dumps({"status": "ok"})
         except Exception as e:

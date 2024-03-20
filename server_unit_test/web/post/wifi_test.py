@@ -2,6 +2,7 @@
 from server.web.handler.post.wifi import Handler
 from server.web.handler.requestData import RequestData
 from server.blackboard import BlackBoard
+from server.tasks.openWiFiConTask import OpenWiFiConTask
 import json
 import queue
 
@@ -16,15 +17,19 @@ def test_doPost():
         "psk": "test",
     }
     tasks = queue.PriorityQueue()
-    request_data = RequestData(BlackBoard(), post_params={}, query_params={}, data=data_params, tasks=tasks)
+    request_data = RequestData(BlackBoard(), post_params={}, query_params={}, data=data_params)
 
     handler = Handler()
 
     status_code, response = handler.do_post(request_data)
 
+    tasks = request_data.bb.purge_tasks()
+    assert len(tasks) == 1
+    task = tasks[0]
+    assert isinstance(task, OpenWiFiConTask)
+
     assert status_code == 200
     assert json.loads(response) == {"status": "ok"}
-    assert tasks.qsize() == 1
 
 def test_doPost_bad_data():
     data_params = {
@@ -32,7 +37,7 @@ def test_doPost_bad_data():
         "password": "test",
     }
     tasks = queue.PriorityQueue()
-    request_data = RequestData(BlackBoard(), post_params={}, query_params={}, data=data_params, tasks=tasks)
+    request_data = RequestData(BlackBoard(), post_params={}, query_params={}, data=data_params)
 
     handler = Handler()
 

@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def request_handler_factory(bb: BlackBoard, tasks: queue.Queue):
+def request_handler_factory(bb: BlackBoard):
     class Handler(BaseHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
             self.api_get_dict = {
@@ -53,7 +53,6 @@ def request_handler_factory(bb: BlackBoard, tasks: queue.Queue):
             self.api_get = Handler.convert_keys_to_regex(self.api_get_dict)
             self.api_post = Handler.convert_keys_to_regex(self.api_post_dict)
             self.api_delete = Handler.convert_keys_to_regex(self.api_delete_dict)
-            self.tasks = tasks
             super(Handler, self).__init__(*args, **kwargs)
 
         @staticmethod
@@ -127,7 +126,7 @@ def request_handler_factory(bb: BlackBoard, tasks: queue.Queue):
             if api_handler is not None:
                 post_data = Handler.get_data(self.headers, self.rfile)
 
-                rdata = handler.RequestData(bb, params, query, post_data, tasks)
+                rdata = handler.RequestData(bb, params, query, post_data)
 
                 code, response = api_handler.do_post(rdata)
                 self.send_api_response(code, response)
@@ -147,7 +146,7 @@ def request_handler_factory(bb: BlackBoard, tasks: queue.Queue):
                 return
 
             api_handler, params = Handler.get_api_handler(path, "/api/", self.api_get)
-            rdata = handler.RequestData(bb, params, query, {}, tasks)
+            rdata = handler.RequestData(bb, params, query, {})
 
             if api_handler is not None:
                 code, response = api_handler.do_get(rdata)
@@ -181,7 +180,7 @@ def request_handler_factory(bb: BlackBoard, tasks: queue.Queue):
             if api_handler is not None:
                 post_data = Handler.get_data(self.headers, self.rfile)
 
-                rdata = handler.RequestData(bb, params, query, post_data, tasks)
+                rdata = handler.RequestData(bb, params, query, post_data)
 
                 code, response = api_handler.do_delete(rdata)
                 self.send_api_response(code, response)
@@ -218,7 +217,7 @@ class Server:
 
     def __init__(self, web_host: tuple[str, int], bb: BlackBoard):
         self.tasks = queue.Queue()
-        self._web_server = HTTPServer(web_host, request_handler_factory(bb, self.tasks))
+        self._web_server = HTTPServer(web_host, request_handler_factory(bb))
         self._web_server.socket.setblocking(False)
 
     def close(self):

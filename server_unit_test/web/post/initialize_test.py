@@ -7,7 +7,7 @@ from server.blackboard import BlackBoard
 @pytest.fixture
 def request_data():
     obj = {'wallet': 'd785ae2b8cf827413bbadf638d22eeae'}
-    return RequestData(BlackBoard(), {}, {}, obj, None)
+    return RequestData(BlackBoard(), {}, {}, obj)
 
 def test_initialize(request_data):
     handler = Handler()
