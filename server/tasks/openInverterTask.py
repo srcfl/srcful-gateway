@@ -2,7 +2,6 @@ import logging
 
 from server.blackboard import BlackBoard
 from server.inverters.inverter import Inverter
-import server.tasks.harvest as harvest
 
 from .task import Task
 

@@ -24,7 +24,7 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     def add_task(task: ITask):
         if task.time < bb.time_ms():
             dt = bb.time_ms() - task.get_time()
-            s = "task {} is in the past {} adjusting time".format(type(task), dt)
+            s = f"task {type(task)} is in the past {dt} adjusting time"
             logger.info(s)
             task.time = bb.time_ms() + 100
         tasks.put(task)
@@ -38,17 +38,22 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
             time.sleep(delay)
 
         try:
-            new_task = task.execute(bb.time_ms()) + bb.purge_tasks()
+            new_task = task.execute(bb.time_ms())
+            # convert single task to list if not already a list
+            if new_task is None:
+                new_task = []
+            elif not isinstance(new_task, list):
+                new_task = [new_task]
+            new_task = new_task + bb.purge_tasks()
         except Exception as e:
             logger.error("Failed to execute task: %s", e)
             new_task = None
 
-        if new_task is not None:
-            try:
-                for e in new_task:
-                    add_task(e)
-            except TypeError:
-                add_task(new_task)
+        try:
+            for e in new_task:
+                add_task(e)
+        except TypeError:
+            add_task(new_task)
 
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: InverterTCP.Setup | None = None, bootstrap_file: str | None = None):
