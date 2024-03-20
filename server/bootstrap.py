@@ -154,7 +154,5 @@ class Bootstrap(BootstrapSaver):
             return OpenInverterTask(
                 event_time + 1000,
                 bb,
-                SolarmanTCP(ip, serial, port, inverter_type, address, False),
+                SolarmanTCP((ip, serial, port, inverter_type, address, False)),
             )
-
-
