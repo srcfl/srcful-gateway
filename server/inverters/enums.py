@@ -12,13 +12,20 @@ class InverterKey(Enum):
     FRONIUS = "Fronius"
     FOXESS = "FoxEss"
     LQT40S = "lqt40s"
+    DEYE = "Deye"
+    DEYE_HYBRID = "Deye Hybrid"
 
 
 class ProfileKey(Enum):
     NAME = 'name'
     DISPLAY_NAME = 'display_name'
     REGISTERS = 'registers'
+    PROTOCOL = 'protocol'
 
+
+class ProtocolKey(Enum):
+    MODBUS = 'modbus'
+    SOLARMAN_V5 = 'solarmanv5'
 
 class RegistersKey(Enum):
     OPERATION = 'operation'

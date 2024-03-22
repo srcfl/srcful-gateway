@@ -8,7 +8,7 @@ import server.web.server
 from server.tasks.itask import ITask
 from server.tasks.openInverterTask import OpenInverterTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
-from server.inverters.InverterTCP import InverterTCP
+from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.bootstrap import Bootstrap
 
@@ -56,7 +56,7 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
             add_task(new_task)
 
 
-def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: InverterTCP.Setup | None = None, bootstrap_file: str | None = None):
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None):
     bb = BlackBoard()
     harvest_factory = HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
     harvest_factory.dummy()
@@ -76,7 +76,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Inve
 
     # put some initial tasks in the queue
     if inverter is not None:
-        tasks.put(OpenInverterTask(bb.start_time, bb, InverterTCP(inverter)))
+        tasks.put(OpenInverterTask(bb.start_time, bb, ModbusTCP(inverter)))
 
     for task in bootstrap.get_tasks(bb.start_time + 500, bb):
         tasks.put(task)

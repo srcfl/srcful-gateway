@@ -10,7 +10,7 @@ log.setLevel(logging.INFO)
 # create a host tuple alias
 
 
-class InverterTCP(Inverter):
+class ModbusTCP(Inverter):
 
     """
     ip: string, IP address of the inverter,
@@ -27,7 +27,7 @@ class InverterTCP(Inverter):
         super().__init__()
 
     def clone(self):
-        return InverterTCP((self.get_host(), self.get_port(),
+        return ModbusTCP((self.get_host(), self.get_port(),
                             self.get_type(), self.get_address()))
 
     def get_host(self):

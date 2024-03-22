@@ -36,8 +36,9 @@ def request_handler_factory(bb: BlackBoard):
             }
 
             self.api_post_dict = {
-                "invertertcp": handler.post.inverterTCP.Handler(),
-                "inverterrtu": handler.post.inverterRTU.Handler(),
+                "invertertcp": handler.post.modbusTCP.Handler(),
+                "inverterrtu": handler.post.modbusRTU.Handler(),
+                "invertersolarman": handler.post.modbusSolarman.Handler(),
                 "wifi": handler.post.wifi.Handler(),
                 "initialize": handler.post.initialize.Handler(),
                 "inverter/modbus": handler.post.modbus.Handler(),

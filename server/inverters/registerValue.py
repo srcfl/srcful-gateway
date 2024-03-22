@@ -74,9 +74,9 @@ class RegisterValue:
     def read_value(self, inverter: Inverter):
         """Reads the value of the register from the inverter"""
         if self.regType == RegisterValue.RegisterType.HOLDING:
-            registers = inverter.read_holding_registers(self.address, self.size)
-        else:
-            registers = inverter.read_input_registers(self.address, self.size)
+            registers = inverter.read_registers(0x03, self.address, self.size)
+        elif self.regType == RegisterValue.RegisterType.INPUT:
+            registers = inverter.read_registers(0x04, self.address, self.size)
 
         # currently we convert the raw values that are word based to bytearray
         self.raw = bytearray()

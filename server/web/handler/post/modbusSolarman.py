@@ -1,7 +1,6 @@
 import json
-from server.inverters.InverterTCP import InverterTCP
+from server.inverters.SolarmanTCP import SolarmanTCP
 from server.tasks.openInverterTask import OpenInverterTask
-
 from ..handler import PostHandler
 from ..requestData import RequestData
 
@@ -16,6 +15,7 @@ class Handler(PostHandler):
             "Open an inverter and start harvesting the data",
             required={
                 "ip": "string, ip address of the inverter",
+                "serial": "int, serial of the data logger",
                 "port": "int, port of the inverter",
                 "type": "string, type of inverter",
                 "address": "int, address of the inverter",
@@ -29,20 +29,23 @@ class Handler(PostHandler):
     def do_post(self, data: RequestData) -> tuple[int, str]:
         if (
             "ip" in data.data
+            and "serial" in data.data
             and "port" in data.data
             and "type" in data.data
+            and "address" in data.data
         ):
             try:
                 conf = (
                     data.data["ip"],
+                    int(data.data["serial"]),
                     int(data.data["port"]),
                     data.data["type"],
                     int(data.data["address"]),
                 )
-                inverter = InverterTCP(conf)
-                logger.info("Created a TCP inverter")
+                inverter = SolarmanTCP(conf)
+                logger.info("Created a SolarmanV5 inverter")
 
-                data.bb.add_task(OpenInverterTask(data.bb.time_ms() + 100, data.bb, inverter))
+                data.tasks.put(OpenInverterTask(100, data.bb, inverter))
                 return 200, json.dumps({"status": "ok"})
             except Exception as e:
                 logger.error("Failed to open inverter: %s", data.data)

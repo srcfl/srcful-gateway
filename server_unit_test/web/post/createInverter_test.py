@@ -1,5 +1,5 @@
-from server.web.handler.post.inverterTCP import Handler as TCPHandler
-from server.web.handler.post.inverterRTU import Handler as RTUHandler
+from server.web.handler.post.modbusTCP import Handler as TCPHandler
+from server.web.handler.post.modbusRTU import Handler as RTUHandler
 
 from server.web.handler.requestData import RequestData
 from server.tasks.openInverterTask import OpenInverterTask
