@@ -9,8 +9,10 @@ from .inverters.growatt import profile as growatt
 from .inverters.huawei import profile as huawei
 from .inverters.lqt40s import profile as lqt40s
 from .inverters.goodwe import profile as goodwe
+from .inverters.deye import profile as deye
+from .inverters.deye_hybrid import profile as deye_hybrid
 
-inverters = [sungrow, sungrow_hybrid, solaredge, growatt, huawei, lqt40s, goodwe]
+inverters = [sungrow, sungrow_hybrid, solaredge, growatt, huawei, lqt40s, goodwe, deye, deye_hybrid]
 
 
 class RegisterInterval:
