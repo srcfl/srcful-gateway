@@ -85,6 +85,9 @@ class Inverter:
     def get_address(self):
         """Returns the inverter's address"""
         raise NotImplementedError("Subclass must implement abstract method")
+    
+    def get_backend_type(self):
+        return self.get_type().lower()
 
     def close(self):
         self.client.close()

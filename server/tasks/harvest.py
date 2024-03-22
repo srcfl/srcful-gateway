@@ -78,7 +78,7 @@ class Harvest(Task):
     def _create_transport(self, limit: int, event_time: int):
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
             transport = HarvestTransport(
-                event_time + 100, self.bb, self.barn, self.inverter.get_type()
+                event_time + 100, self.bb, self.barn, self.inverter.get_backend_type()
             )
             self.barn = {}
             return transport
@@ -86,13 +86,13 @@ class Harvest(Task):
 
 
 class HarvestTransport(SrcfulAPICallTask):
-    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, inverter_type: str):
+    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, inverter_backend_type: str):
         super().__init__(event_time, bb)
         # self.stats['lastHarvestTransport'] = 'n/a'
         # if 'harvestTransports' not in self.stats:
         #  self.stats['harvestTransports'] = 0
         self.barn = barn
-        self.inverter_type = inverter_type.lower()
+        self.inverter_type = inverter_backend_type
 
     def _data(self):
         atecc608b.init_chip()

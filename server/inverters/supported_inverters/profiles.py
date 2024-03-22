@@ -47,7 +47,7 @@ class InverterProfiles:
 
     def get(self, name) -> InverterProfile:
         for profile in self.profiles:
-            if profile.name == name:
+            if profile.name == name.upper():
                 return profile
         return None
 

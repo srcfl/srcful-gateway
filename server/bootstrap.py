@@ -122,7 +122,7 @@ class Bootstrap(BootstrapSaver):
         if task_args[0] == "TCP":
             ip = task_args[1]
             port = int(task_args[2])
-            inverter_type = task_args[3].upper()
+            inverter_type = task_args[3]
             address = int(task_args[4])
             return OpenInverterTask(
                 event_time + 1000, 
@@ -135,7 +135,7 @@ class Bootstrap(BootstrapSaver):
             bytesize = int(task_args[3])
             parity = task_args[4]
             stopbits = float(task_args[5])
-            inverter_type = task_args[6].upper()
+            inverter_type = task_args[6]
             address = int(task_args[7])
             return OpenInverterTask(
                 event_time + 1000,
@@ -148,7 +148,7 @@ class Bootstrap(BootstrapSaver):
             ip = task_args[1]
             serial = int(task_args[2])
             port = int(task_args[3])
-            inverter_type = task_args[4].upper()
+            inverter_type = task_args[4]
             address = int(task_args[5])
 
             return OpenInverterTask(
