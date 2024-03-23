@@ -48,6 +48,7 @@ class Harvest(Task):
             self.barn[event_time] = harvest
 
             self.backoff_time = max(self.backoff_time - self.backoff_time * 0.1, self.min_backoff_time)
+            self.backoff_time = min(self.backoff_time, self.max_backoff_time)
 
         except Exception as e:
             log.debug("Handling exeption reading harvest: %s", str(e))
