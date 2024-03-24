@@ -9,20 +9,8 @@ class Task(ITask):
         self.time = event_time
         self.bb = bb
 
-    def __eq__(self, other):
-        if not isinstance(other, Task):
-            return self.time == other
-        return self.time == other.prio
-
-    def __lt__(self, other):
-        if not isinstance(other, Task):
-            return self.time < other
-        return self.time < other.time
-
     def get_time(self) -> int:
         return self.time
 
-    def execute(self, event_time):
-        """execute the task, return None a single Task or a list of tasks to be added to the scheduler"""
-        # throw a not implemented exception
-        raise NotImplementedError("Subclass must implement abstract method")
+    def adjust_time(self, new_time: int):
+        self.time = new_time

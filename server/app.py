@@ -22,11 +22,11 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     # and adjust the delay to keep the within a certain range
 
     def add_task(task: ITask):
-        if task.time < bb.time_ms():
+        if task.get_time() < bb.time_ms():
             dt = bb.time_ms() - task.get_time()
             s = f"task {type(task)} is in the past {dt} adjusting time"
             logger.info(s)
-            task.time = bb.time_ms() + 100
+            task.adjust_time(bb.time_ms() + 100)
         tasks.put(task)
 
     bb.add_info("eGW started - all is good")
@@ -38,22 +38,23 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
             time.sleep(delay)
 
         try:
-            new_task = task.execute(bb.time_ms())
-            # convert single task to list if not already a list
-            if new_task is None:
-                new_task = []
-            elif not isinstance(new_task, list):
-                new_task = [new_task]
-            new_task = new_task + bb.purge_tasks()
+            new_tasks = task.execute(bb.time_ms())            
+        except StopIteration:
+            logger.info("StopIteration received, exiting main loop")
+            break
         except Exception as e:
             logger.error("Failed to execute task: %s", e)
-            new_task = None
+            new_tasks = None
 
-        try:
-            for e in new_task:
-                add_task(e)
-        except TypeError:
-            add_task(new_task)
+        # take care of any new tasks
+        if new_tasks is None:
+            new_tasks = []
+        elif not isinstance(new_tasks, list):
+            new_tasks = [new_tasks]
+        new_tasks = new_tasks + bb.purge_tasks()
+        
+        for e in new_tasks:
+            add_task(e)
 
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None):
@@ -76,13 +77,13 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     # put some initial tasks in the queue
     if inverter is not None:
-        tasks.put(OpenInverterTask(bb.start_time, bb, ModbusTCP(inverter)))
+        tasks.put(OpenInverterTask(bb.time_ms(), bb, ModbusTCP(inverter)))
 
-    for task in bootstrap.get_tasks(bb.start_time + 500, bb):
+    for task in bootstrap.get_tasks(bb.time_ms() + 500, bb):
         tasks.put(task)
 
-    tasks.put(CheckForWebRequest(bb.start_time + 1000, bb, web_server))
-    tasks.put(ScanWiFiTask(bb.start_time + 45000, bb))
+    tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
+    tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
 
     try:
         main_loop(tasks, bb)
