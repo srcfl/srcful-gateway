@@ -13,7 +13,7 @@ profile = {
         {
             RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
             RegistersKey.START_REGISTER: 30775,
-            RegistersKey.NUM_OF_REGISTERS: 125
+            RegistersKey.NUM_OF_REGISTERS: 50
         },
         {
             RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
