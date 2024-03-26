@@ -44,14 +44,18 @@ else:
             logger.debug("network device path: %s", path)
             dev_obj = bus.get_object('org.freedesktop.NetworkManager', path)
             dev = dbus.Interface(dev_obj, "org.freedesktop.NetworkManager.Device")
-            logger.debug("network device %s", dev)
-            if dev.State == 100:  # Active connection
-                ip_obj = bus.get_object('org.freedesktop.NetworkManager', dev.Ip4Config)
-                ip = dbus.Interface(ip_obj, 'org.freedesktop.NetworkManager.IP4Config')
-                logger.debug("device ip address: %s", ip.AddressData[0]['address'])
-                if ip.AddressData[0]['address'] != '127.0.0.1':
-                    return ip.AddressData[0]['address']
-        logger.debug("No active connection found")
+            state = dev.Get('org.freedesktop.NetworkManager.Device', 'State', dbus_interface='org.freedesktop.DBus.Properties')
+            logger.debug("device state %i", state)
+            if state == 100:  # Active connection
+                ip_config_objpath = dev.Get('org.freedesktop.NetworkManager.Device', 'Ip4Config', dbus_interface='org.freedesktop.DBus.Properties')
+                if ip_config_objpath != '/':  # If there is an associated IP4Config object
+                    ip_config_obj = bus.get_object('org.freedesktop.NetworkManager', ip_config_objpath)
+                    ip_config_iface = dbus.Interface(ip_config_obj, 'org.freedesktop.NetworkManager.IP4Config')
+                    address_data = ip_config_iface.Get('org.freedesktop.NetworkManager.IP4Config', 'AddressData', dbus_interface='org.freedesktop.DBus.Properties')
+                    logger.debug("device ip address %s", address_data[0]['address'])
+                    if address_data[0]['address'] != '127.0.0.1':
+                        return address_data[0]['address']
+        print("No active connection found")
         return '0.0.0.0'
 
     def get_connection_configs():
