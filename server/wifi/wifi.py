@@ -29,6 +29,12 @@ except ImportError:
 
 else:
 
+    def is_connected():
+        bus = dbus.SystemBus()
+        nm_obj = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+        state = nm_obj.Get('org.freedesktop.NetworkManager', 'State', dbus_interface='org.freedesktop.DBus.Properties')
+        return state == 70  # 70 corresponds to "connected globally"
+
     def get_connection_configs():
         bus = dbus.SystemBus()
         proxy = bus.get_object(

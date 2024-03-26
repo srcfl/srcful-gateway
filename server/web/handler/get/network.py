@@ -1,7 +1,7 @@
 import json
 import socket
 
-from server.wifi.wifi import get_connection_configs
+from server.wifi.wifi import get_connection_configs, is_connected
 
 from ..handler import GetHandler
 from ..requestData import RequestData
@@ -29,4 +29,7 @@ class AddressHandler(GetHandler):
 
 
     def do_get(self, data: RequestData):
-        return 200, json.dumps({"ip": data.bb.rest_server_ip, "port": data.bb.rest_server_port})
+        if is_connected():
+            return 200, json.dumps({"ip": data.bb.rest_server_ip, "port": data.bb.rest_server_port})
+        else:
+            return 200, json.dumps({"ip": "no netwok", "port": 0})
