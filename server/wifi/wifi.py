@@ -41,16 +41,18 @@ else:
         nm = dbus.Interface(nm_obj, 'org.freedesktop.NetworkManager')
         devices = nm.GetDevices()
         for path in devices:
-            print(path)
+            logger.debug("network device path: %s", path)
             dev_obj = bus.get_object('org.freedesktop.NetworkManager', path)
             dev = dbus.Interface(dev_obj, "org.freedesktop.NetworkManager.Device")
-            print(dev)
+            logger.debug("network device %s", dev)
             if dev.State == 100:  # Active connection
                 ip_obj = bus.get_object('org.freedesktop.NetworkManager', dev.Ip4Config)
                 ip = dbus.Interface(ip_obj, 'org.freedesktop.NetworkManager.IP4Config')
+                logger.debug("device ip address: %s", ip.AddressData[0]['address'])
                 if ip.AddressData[0]['address'] != '127.0.0.1':
                     return ip.AddressData[0]['address']
-        return '127.0.0.1'
+        logger.debug("No active connection found")
+        return '0.0.0.0'
 
     def get_connection_configs():
         bus = dbus.SystemBus()
