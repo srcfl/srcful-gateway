@@ -34,6 +34,20 @@ else:
         nm_obj = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
         state = nm_obj.Get('org.freedesktop.NetworkManager', 'State', dbus_interface='org.freedesktop.DBus.Properties')
         return state == 70  # 70 corresponds to "connected globally"
+    
+    def get_ip_address():
+        bus = dbus.SystemBus()
+        nm_obj = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+        nm = dbus.Interface(nm_obj, 'org.freedesktop.NetworkManager')
+        devices = nm.GetDevices()
+        for path in devices:
+            dev_obj = bus.get_object('org.freedesktop.NetworkManager', path)
+            dev = dbus.Interface(dev_obj, "org.freedesktop.NetworkManager.Device")
+            if dev.State == 100:  # Active connection
+                ip_obj = bus.get_object('org.freedesktop.NetworkManager', dev.Ip4Config)
+                ip = dbus.Interface(ip_obj, 'org.freedesktop.NetworkManager.IP4Config')
+                return ip.AddressData[0]['address']
+        return '127.0.0.1'
 
     def get_connection_configs():
         bus = dbus.SystemBus()
