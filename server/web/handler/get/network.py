@@ -30,6 +30,6 @@ class AddressHandler(GetHandler):
 
     def do_get(self, data: RequestData):
         if is_connected():
-            return 200, json.dumps({"ip": get_ip_address, "port": data.bb.rest_server_port})
+            return 200, json.dumps({"ip": get_ip_address(), "port": data.bb.rest_server_port})
         else:
             return 200, json.dumps({"ip": "no netwok", "port": 0})
