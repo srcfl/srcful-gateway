@@ -34,6 +34,20 @@ def get_inverters():
         return [inv_tcp, inv_rtu]
     else:
         return [inv_tcp]
+    
+
+def test_sma_inverter():
+    """
+    Test that the SMA inverter is created correctly.
+    """
+    inv = ModbusTCP(("localhost", 8081, "SMA", 1))
+
+    assert inv.get_type() == "SMA"
+    assert inv.get_address() == 1
+
+    registers = inv.profile.get_registers()
+
+    assert len(registers) > 0
 
 
 def test_inverters_are_open():

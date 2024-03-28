@@ -113,6 +113,8 @@ class Inverter:
         # Zip the registers and values together convert them into a dictionary
         res = dict(zip(regs, vals))
 
+        log.debug("OK - Reading Harvest Data: %s", str(res))
+
         if res:
             return res
         else:
