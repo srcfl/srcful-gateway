@@ -19,9 +19,9 @@ class Handler(GetHandler):
 
     def do_get(self, data: RequestData):
         # return the json data {'serial:' crypto.serial, 'pubkey': crypto.publicKey}
-        crypto.init_chip()
+        # crypto.init_chip()
         ret = crypto.get_chip_info()
         ret["publicKey_pem"] = crypto.public_key_2_pem(crypto.get_public_key())
-        crypto.release()
+        # crypto.release()
 
         return 200, json.dumps(ret)

@@ -4,6 +4,8 @@ import time
 import logging
 import threading
 
+import server.crypto.crypto as crypto
+
 from concurrent.futures import ThreadPoolExecutor
 
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
@@ -100,8 +102,10 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     # here we could keep track of statistics for different types of tasks
     # and adjust the delay to keep the within a certain range
 
+    crypto.init_chip()
     scheduler = TaskScheduler(4, tasks, bb)
     scheduler.main_loop()
+    crypto.release()
 
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None):
