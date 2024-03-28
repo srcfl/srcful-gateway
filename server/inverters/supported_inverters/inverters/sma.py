@@ -8,8 +8,13 @@ profile = {
         {
             RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
             RegistersKey.START_REGISTER: 30000,
-            RegistersKey.NUM_OF_REGISTERS: 60
-        },       
+            RegistersKey.NUM_OF_REGISTERS: 10
+        },
+        {
+            RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
+            RegistersKey.START_REGISTER: 30051,
+            RegistersKey.NUM_OF_REGISTERS: 10
+        },
         {
             RegistersKey.OPERATION: OperationKey.READ_INPUT_REGISTERS,
             RegistersKey.START_REGISTER: 30775,
