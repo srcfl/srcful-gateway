@@ -236,6 +236,19 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     ret = t.execute(17)
     assert type(ret) is harvest.HarvestTransport
 
+def test_max_backoftime_leq_than_max():
+    registers = [{"1": 1717 + x} for x in range(10)]
+    mock_inverter = Mock()
+    mock_inverter.read_harvest_data.return_value = registers[0]
+    mock_inverter.is_terminated.return_value = False
+    
+    mock_bb = Mock()
+    mock_bb.time_ms.return_value = 999999999999999999
+
+    t = harvest.Harvest(0, mock_bb, mock_inverter)
+
+    t.execute(17)  # this will cause a really long elapsed time
+    assert t.backoff_time <= t.max_backoff_time
 
 
 @pytest.fixture
