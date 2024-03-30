@@ -1,3 +1,6 @@
+import logging
+log = logging.getLogger(__name__)
+
 try:
     # https://github.com/MicrochipTech/cryptoauthlib/blob/79013219556263bd4a3a43678a5e1d0faddba5ba/python/cryptoauthlib/atcab.py#L1
     from cryptoauthlib import (
@@ -28,8 +31,7 @@ except Exception:
     from .hazmat_mock import default_backend
     from .hazmat_mock import hashes
 
-    import logging
-    log = logging.getLogger(__name__)
+
     log.info("Using mock cryptoauthlib and hazmat")
 
 
@@ -40,9 +42,10 @@ import threading
 
 ATCA_SUCCESS = 0x00
 
+lock = threading.Lock()
 
 def init_chip() -> bool:
-    threading.Lock()
+    lock.acquire()
     # this is for raspberry pi should probably be checked better
     cfg = cfg_ateccx08a_i2c_default()
     cfg.cfg.atcai2c.bus = 1  # raspberry pi
@@ -56,7 +59,7 @@ def init_chip() -> bool:
 
 def release() -> bool:
     ret = atcab_release()
-    threading.RLock()
+    lock.release()
     return ret == ATCA_SUCCESS
 
 def get_device_name():
