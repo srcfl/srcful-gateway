@@ -60,7 +60,7 @@ class Bootstrap(BootstrapSaver):
         # check if the setup already exists
         for task in self.get_tasks(0, None):
             if (
-                isinstance(task, OpenInverterTask)
+                isinstance(task, OpenInverterPerpetualTask)
                 and task.inverter.get_config() == inverter_args
             ):
                 return

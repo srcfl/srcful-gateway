@@ -17,9 +17,13 @@ class OpenInverterPerpetualTask(Task):
         
         # has an inverter been opened?
         if len(self.bb.inverters.lst) > 0 and self.bb.inverters.lst[0].is_open():
+            self.bb.inverters.remove(self.inverter)
+            self.inverter.terminate()
             return
 
         try:
+            logger.info("Inverter terminated: %s", self.inverter.is_terminated())
+
             if self.inverter.open(reconnect_delay=0, retries=3, timeout=5, reconnect_delay_max=0):
                 # terminate and remove all inverters from the blackboard
                 for i in self.bb.inverters.lst:
@@ -31,8 +35,7 @@ class OpenInverterPerpetualTask(Task):
 
                 return
             else:
-                self.inverter.terminate()
-                message = "Failed to open inverter retry in 5 minutes: " + str(self.inverter.get_config())
+                message = "Failed to open inverter, retry in 5 minutes: " + str(self.inverter.get_config())
                 logger.info(message)
                 self.bb.add_error(message)
                 self.time = event_time + 60000 * 5
