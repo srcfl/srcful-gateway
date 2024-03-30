@@ -3,7 +3,7 @@ import logging
 import requests
 
 from server.inverters.inverter import Inverter
-from server.tasks.openInverterTask import OpenInverterTask
+from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
 import server.crypto.crypto as atecc608b
 
@@ -61,7 +61,7 @@ class Harvest(Task):
             if self.backoff_time >= self.max_backoff_time:
                 log.debug("Max timeout reached terminating inverter and issuing new reopen in 30 sec")
                 self.inverter.terminate()
-                open_inverter = OpenInverterTask(event_time + 30000, self.bb, self.inverter.clone())
+                open_inverter = OpenInverterPerpetualTask(event_time + 30000, self.bb, self.inverter.clone())
                 self.time = event_time + 10000
                 # we return self so that in the next execute the last harvest will be transported
                 return [self, open_inverter]
