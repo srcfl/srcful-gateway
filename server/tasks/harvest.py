@@ -40,6 +40,7 @@ class Harvest(Task):
 
             elapsed_time_ms = end_time - start_time
             log.debug("Harvest took %s ms", elapsed_time_ms)
+            # log.debug("Harvest: %s", harvest)
 
             self.min_backoff_time = max(elapsed_time_ms * 2, 1000)
 

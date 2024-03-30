@@ -36,11 +36,13 @@ except Exception:
 from base64 import urlsafe_b64encode
 import json
 import base64
+import threading
 
 ATCA_SUCCESS = 0x00
 
 
 def init_chip() -> bool:
+    threading.Lock()
     # this is for raspberry pi should probably be checked better
     cfg = cfg_ateccx08a_i2c_default()
     cfg.cfg.atcai2c.bus = 1  # raspberry pi
@@ -53,8 +55,9 @@ def init_chip() -> bool:
 
 
 def release() -> bool:
-    return atcab_release() == ATCA_SUCCESS
-
+    ret = atcab_release()
+    threading.RLock()
+    return ret == ATCA_SUCCESS
 
 def get_device_name():
     info = bytearray(4)

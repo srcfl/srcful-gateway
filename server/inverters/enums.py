@@ -14,6 +14,7 @@ class InverterKey(Enum):
     LQT40S = "lqt40s"
     DEYE = "Deye"
     DEYE_HYBRID = "Deye Hybrid"
+    SMA = "SMA"
 
 
 class ProfileKey(Enum):
