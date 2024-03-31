@@ -35,7 +35,7 @@ class TaskScheduler:
             self.tasks.put(initial_tasks.get())
 
     
-    def add_task(self, task):
+    def add_task(self, task: ITask):
         with self.new_tasks_condition:
 
             if task.get_time() <= self.bb.time_ms():
@@ -48,9 +48,8 @@ class TaskScheduler:
     def stop(self):
         self.stop_event.set()
 
-    def worker(self, task):
+    def worker(self, task: ITask):
         try:
-            logger.info("running task: %s", task)
             new_tasks = task.execute(self.bb.time_ms())
             if new_tasks is None:
                 new_tasks = []
@@ -96,11 +95,7 @@ class TaskScheduler:
                     self.active_threads += 1
 
 
-
 def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
-    # here we could keep track of statistics for different types of tasks
-    # and adjust the delay to keep the within a certain range
-
     scheduler = TaskScheduler(4, tasks, bb)
     scheduler.main_loop()
 
@@ -131,7 +126,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         tasks.put(task)
 
     tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
-    #tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
+    tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
 
     try:
         main_loop(tasks, bb)
