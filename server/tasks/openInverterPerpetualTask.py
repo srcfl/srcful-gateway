@@ -22,7 +22,7 @@ class OpenInverterPerpetualTask(Task):
             return
 
         try:
-            logger.info("Inverter terminated: %s", self.inverter.is_terminated())
+            
 
             if self.inverter.open(reconnect_delay=0, retries=3, timeout=5, reconnect_delay_max=0):
                 # terminate and remove all inverters from the blackboard
@@ -35,6 +35,7 @@ class OpenInverterPerpetualTask(Task):
 
                 return
             else:
+                # possibly we should create a new inverter object. We have previously had trouble with reconnecting in the Harvester
                 message = "Failed to open inverter, retry in 5 minutes: " + str(self.inverter.get_config())
                 logger.info(message)
                 self.bb.add_error(message)
