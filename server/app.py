@@ -50,6 +50,7 @@ class TaskScheduler:
 
     def worker(self, task):
         try:
+            logger.info("running task: %s", task)
             new_tasks = task.execute(self.bb.time_ms())
             if new_tasks is None:
                 new_tasks = []
@@ -130,7 +131,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         tasks.put(task)
 
     tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
-    tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
+    #tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
 
     try:
         main_loop(tasks, bb)

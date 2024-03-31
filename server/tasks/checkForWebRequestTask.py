@@ -5,6 +5,10 @@ from server.blackboard import BlackBoard
 
 from .task import Task
 
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 class CheckForWebRequest(Task):
     def __init__(self, event_time: int, bb: BlackBoard, web_server: Server):
@@ -12,10 +16,14 @@ class CheckForWebRequest(Task):
         self.web_server = web_server
 
     def execute(self, event_time):
-        while self.web_server.request_queue_size() > 0:
+        
+        if self.web_server.request_pending():
+            logger.info('request received')
             # launch a new thread to handle the request
             t = Thread(target=self.web_server.handle_request)
             t.start()
+        else:
+            logger.info('no request received')
 
         self.time = self.bb.time_ms() + 250
         return [self]

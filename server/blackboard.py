@@ -4,6 +4,10 @@ import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class BlackBoard:
     """
@@ -30,9 +34,11 @@ class BlackBoard:
         self._tasks = []
 
     def add_task(self, task: ITask):
+        logger.info("added task: %s", task)
         self._tasks.append(task)
     
     def purge_tasks(self):
+        logger.info('purged tasks: %s', self._tasks)
         tasks = self._tasks
         self._tasks = []
         return tasks

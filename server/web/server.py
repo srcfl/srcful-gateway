@@ -1,6 +1,6 @@
 import re
 import json
-import queue
+import select
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 
@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 def request_handler_factory(bb: BlackBoard):
     class Handler(BaseHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
+
+            logger.info("initializing a request handler")
+
             self.api_get_dict = {
                 "crypto": handler.get.crypto.Handler(),
                 "hello": handler.get.hello.Handler(),
@@ -212,24 +215,29 @@ def request_handler_factory(bb: BlackBoard):
 
     return Handler
 
-
 class Server:
     _web_server: HTTPServer = None
 
     def __init__(self, web_host: tuple[str, int], bb: BlackBoard):
-        self.tasks = queue.Queue()
         self._web_server = HTTPServer(web_host, request_handler_factory(bb))
-        self._web_server.socket.setblocking(False)
+        
+        self._web_server.timeout = 0.1
+        #self._web_server.socket.setblocking(False)
 
     def close(self):
         if self._web_server:
             self._web_server.server_close()
             self._web_server = None
 
+    def request_pending(self) -> bool:
+        ready_to_read, _, _ = select.select([self._web_server.socket], [], [], 0)
+        return ready_to_read
+
     def request_queue_size(self) -> int:
         return self._web_server.request_queue_size
 
     def handle_request(self):
+        #logger.info("handling request")
         self._web_server.handle_request()
 
     def __del__(self):
