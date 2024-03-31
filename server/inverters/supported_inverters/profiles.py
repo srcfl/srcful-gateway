@@ -12,6 +12,7 @@ from .inverters.goodwe import profile as goodwe
 from .inverters.deye import profile as deye
 from .inverters.deye_hybrid import profile as deye_hybrid
 from .inverters.sma import profile as sma
+from .inverters.fronius import profile as fronius
 
 inverters = [sungrow, 
              sungrow_hybrid, 
@@ -22,7 +23,8 @@ inverters = [sungrow,
              goodwe, 
              deye, 
              deye_hybrid,
-             sma]
+             sma,
+             fronius]
 
 
 class RegisterInterval:
