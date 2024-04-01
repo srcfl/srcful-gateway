@@ -1,3 +1,8 @@
+from base64 import urlsafe_b64encode
+import json
+import base64
+import threading
+
 import logging
 log = logging.getLogger(__name__)
 
@@ -31,18 +36,13 @@ except Exception:
     from .hazmat_mock import default_backend
     from .hazmat_mock import hashes
 
-
     log.info("Using mock cryptoauthlib and hazmat")
 
-
-from base64 import urlsafe_b64encode
-import json
-import base64
-import threading
 
 ATCA_SUCCESS = 0x00
 
 lock = threading.Lock()
+
 
 def init_chip() -> bool:
     lock.acquire()
@@ -61,6 +61,7 @@ def release() -> bool:
     ret = atcab_release()
     lock.release()
     return ret == ATCA_SUCCESS
+
 
 def get_device_name():
     info = bytearray(4)
