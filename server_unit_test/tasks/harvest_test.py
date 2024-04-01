@@ -266,21 +266,19 @@ def mock_release():
     pass
 
 
-@patch("server.crypto.crypto.init_chip")
-@patch("server.crypto.crypto.build_jwt")
-@patch("server.crypto.crypto.release")
-def test_data_harvest_transport_jwt(mock_release, mock_build_jwt, mock_init_chip):
+@patch("server.crypto.crypto.Chip", autospec=True)
+def test_data_harvest_transport_jwt(mock_chip_class):
     barn = {"test": "test"}
     inverter_type = "test"
-    mock_build_jwt.return_value = {str(barn), inverter_type}
+    
+    mock_chip_instance = mock_chip_class.return_value.__enter__.return_value
+    mock_chip_instance.build_jwt.return_value = {str(barn), inverter_type}
 
     instance = harvest.HarvestTransport(0, {}, barn, inverter_type)
-    instance._data()
+    jwt = instance._data()
 
-    mock_init_chip.assert_called_once()
-    mock_build_jwt.assert_called_once_with(instance.barn, instance.inverter_type)
-    mock_release.assert_called_once()
-
+    mock_chip_instance.build_jwt.assert_called_once_with(instance.barn, instance.inverter_type)
+    assert jwt == {str(barn), inverter_type}
 
 def test_on_200():
     # just make the call for now

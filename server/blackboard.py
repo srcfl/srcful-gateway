@@ -121,12 +121,9 @@ class BlackBoard:
         return "0.8.3"
 
     def get_chip_info(self):
-        crypto.init_chip()
-
-        device_name = crypto.get_device_name()
-        serial_number = crypto.get_serial_number().hex()
-
-        crypto.release()
+        with crypto.Chip() as chip:
+            device_name = chip.get_device_name()
+            serial_number = chip.get_serial_number().hex()
 
         return "device: " + device_name + " serial: " + serial_number
 

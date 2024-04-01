@@ -1,7 +1,7 @@
 import logging
 import requests
 
-import server.crypto.crypto as atecc608b
+import server.crypto.crypto as crypto
 from server.blackboard import BlackBoard
 
 from .srcfulAPICallTask import SrcfulAPICallTask
@@ -20,13 +20,12 @@ class InitializeTask(SrcfulAPICallTask):
         self.dry_run = dry_run
 
     def _json(self):
-        atecc608b.init_chip()
-        serial = atecc608b.get_serial_number().hex()
+        with crypto.Chip() as chip:
+            serial = chip.get_serial_number().hex()
 
-        id_and_wallet = serial + ":" + self.wallet
-        sign = atecc608b.get_signature(id_and_wallet).hex()
-        atecc608b.release()
-
+            id_and_wallet = serial + ":" + self.wallet
+            sign = chip.get_signature(id_and_wallet).hex()
+        
         m = """
     mutation {
       gatewayInception {

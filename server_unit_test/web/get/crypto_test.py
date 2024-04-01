@@ -1,5 +1,4 @@
 from unittest.mock import patch
-from server.crypto import crypto
 import server.web.handler.get.crypto as get_crypto
 import pytest
 import json
@@ -17,26 +16,29 @@ def mock_getChipInfo(data):
 
 @pytest.fixture
 def mock_release():
-  pass
+    pass
 
 
-@patch('server.crypto.crypto.init_chip')
-@patch('server.crypto.crypto.get_chip_info')
-@patch('server.crypto.crypto.get_public_key')
-@patch('server.crypto.crypto.release')
-def test_get(mock_release, mock_getPublicKey, mock_getChipInfo, mock_initChip):
-  handler = get_crypto.Handler()
-  public_key = bytearray(64)
-  chipInfo = {'deviceName': 'test_chip',
-              'serialNumber': b'deadbeef'.hex(), 'publicKey': public_key.hex()}
+@patch("server.crypto.crypto.Chip", autospec=True)
+def test_get(mock_chip_class):
+    handler = get_crypto.Handler()
 
-  mock_getChipInfo.return_value = chipInfo
-  mock_getPublicKey.return_value = public_key
+    public_key = bytearray(64)
+    chip_info = {
+        "deviceName": "test_chip",
+        "serialNumber": b"deadbeef".hex(),
+        "publicKey": public_key.hex(),
+    }
 
-  result = handler.do_get(None)
-  mock_initChip.assert_called_once()
-  mock_getChipInfo.assert_called_once_with()
-  mock_release.assert_called_once()
-  chipInfo['publicKey_pem'] = crypto.public_key_2_pem(public_key)
-  assert result[0] == 200
-  assert result[1] == json.dumps(chipInfo)
+    mock_chip_instance = mock_chip_class.return_value.__enter__.return_value
+    mock_chip_instance.get_chip_info.return_value = chip_info
+    mock_chip_instance.get_public_key.return_value = public_key
+    mock_chip_instance.public_key_2_pem.return_value = "test_pem"
+
+    result = handler.do_get(None)
+
+    assert mock_chip_instance.get_chip_info.called
+    assert mock_chip_instance.get_public_key.called
+    chip_info["publicKey_pem"] = "test_pem"
+    assert result[0] == 200
+    assert result[1] == json.dumps(chip_info)

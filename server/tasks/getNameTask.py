@@ -1,6 +1,6 @@
 import requests
 
-import server.crypto.crypto as atecc608b
+import server.crypto.crypto as crypto
 from server.blackboard import BlackBoard
 
 from .srcfulAPICallTask import SrcfulAPICallTask
@@ -15,9 +15,8 @@ class GetNameTask(SrcfulAPICallTask):
         self.post_url = "https://api.srcful.dev/"
 
     def _json(self):
-        atecc608b.init_chip()
-        serial = atecc608b.get_serial_number().hex()
-        atecc608b.release()
+        with crypto.Chip() as chip:
+          serial = chip.get_serial_number().hex()
 
         q = """{
         gatewayConfiguration {

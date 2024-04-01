@@ -5,7 +5,7 @@ import requests
 from server.inverters.inverter import Inverter
 from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
-import server.crypto.crypto as atecc608b
+import server.crypto.crypto as crypto
 
 from .task import Task
 
@@ -97,9 +97,9 @@ class HarvestTransport(SrcfulAPICallTask):
         self.inverter_type = inverter_backend_type
 
     def _data(self):
-        atecc608b.init_chip()
-        jwt = atecc608b.build_jwt(self.barn, self.inverter_type)
-        atecc608b.release()
+        with crypto.Chip() as chip:
+            jwt = chip.build_jwt(self.barn, self.inverter_type)
+        
         return jwt
 
     def _on_200(self, reply):
