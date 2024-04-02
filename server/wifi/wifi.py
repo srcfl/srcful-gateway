@@ -27,6 +27,12 @@ except ImportError:
         def connect(self):
             pass
 
+    def is_connected():
+        return True
+    
+    def get_ip_address():
+        return '0.0.0.0'
+
 else:
 
     def is_connected():
