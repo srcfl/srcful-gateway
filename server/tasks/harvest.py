@@ -3,9 +3,9 @@ import logging
 import requests
 
 from server.inverters.inverter import Inverter
-from server.tasks.openInverterTask import OpenInverterTask
+from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
-import server.crypto.crypto as atecc608b
+import server.crypto.crypto as crypto
 
 from .task import Task
 
@@ -40,6 +40,7 @@ class Harvest(Task):
 
             elapsed_time_ms = end_time - start_time
             log.debug("Harvest took %s ms", elapsed_time_ms)
+            # log.debug("Harvest: %s", harvest)
 
             self.min_backoff_time = max(elapsed_time_ms * 2, 1000)
 
@@ -48,6 +49,7 @@ class Harvest(Task):
             self.barn[event_time] = harvest
 
             self.backoff_time = max(self.backoff_time - self.backoff_time * 0.1, self.min_backoff_time)
+            self.backoff_time = min(self.backoff_time, self.max_backoff_time)
 
         except Exception as e:
             log.debug("Handling exeption reading harvest: %s", str(e))
@@ -59,7 +61,7 @@ class Harvest(Task):
             if self.backoff_time >= self.max_backoff_time:
                 log.debug("Max timeout reached terminating inverter and issuing new reopen in 30 sec")
                 self.inverter.terminate()
-                open_inverter = OpenInverterTask(event_time + 30000, self.bb, self.inverter.clone())
+                open_inverter = OpenInverterPerpetualTask(event_time + 30000, self.bb, self.inverter.clone())
                 self.time = event_time + 10000
                 # we return self so that in the next execute the last harvest will be transported
                 return [self, open_inverter]
@@ -95,9 +97,9 @@ class HarvestTransport(SrcfulAPICallTask):
         self.inverter_type = inverter_backend_type
 
     def _data(self):
-        atecc608b.init_chip()
-        jwt = atecc608b.build_jwt(self.barn, self.inverter_type)
-        atecc608b.release()
+        with crypto.Chip() as chip:
+            jwt = chip.build_jwt(self.barn, self.inverter_type)
+        
         return jwt
 
     def _on_200(self, reply):

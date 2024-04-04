@@ -27,7 +27,42 @@ except ImportError:
         def connect(self):
             pass
 
+    def is_connected():
+        return True
+    
+    def get_ip_address():
+        return '0.0.0.0'
+
 else:
+
+    def is_connected():
+        bus = dbus.SystemBus()
+        nm_obj = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+        state = nm_obj.Get('org.freedesktop.NetworkManager', 'State', dbus_interface='org.freedesktop.DBus.Properties')
+        return state == 70  # 70 corresponds to "connected globally"
+    
+    def get_ip_address():
+        bus = dbus.SystemBus()
+        nm_obj = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+        nm = dbus.Interface(nm_obj, 'org.freedesktop.NetworkManager')
+        devices = nm.GetDevices()
+        for path in devices:
+            logger.debug("network device path: %s", path)
+            dev_obj = bus.get_object('org.freedesktop.NetworkManager', path)
+            dev = dbus.Interface(dev_obj, "org.freedesktop.NetworkManager.Device")
+            state = dev.Get('org.freedesktop.NetworkManager.Device', 'State', dbus_interface='org.freedesktop.DBus.Properties')
+            logger.debug("device state %i", state)
+            if state == 100:  # Active connection
+                ip_config_objpath = dev.Get('org.freedesktop.NetworkManager.Device', 'Ip4Config', dbus_interface='org.freedesktop.DBus.Properties')
+                if ip_config_objpath != '/':  # If there is an associated IP4Config object
+                    ip_config_obj = bus.get_object('org.freedesktop.NetworkManager', ip_config_objpath)
+                    ip_config_iface = dbus.Interface(ip_config_obj, 'org.freedesktop.NetworkManager.IP4Config')
+                    address_data = ip_config_iface.Get('org.freedesktop.NetworkManager.IP4Config', 'AddressData', dbus_interface='org.freedesktop.DBus.Properties')
+                    logger.debug("device ip address %s", address_data[0]['address'])
+                    if address_data[0]['address'] != '127.0.0.1':
+                        return address_data[0]['address']
+        print("No active connection found")
+        return '0.0.0.0'
 
     def get_connection_configs():
         bus = dbus.SystemBus()

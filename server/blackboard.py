@@ -4,6 +4,10 @@ import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class BlackBoard:
     """
@@ -114,20 +118,17 @@ class BlackBoard:
         return self._start_time
 
     def get_version(self) -> str:
-        return "0.8.0"
+        return "0.8.4"
 
     def get_chip_info(self):
-        crypto.init_chip()
-
-        device_name = crypto.get_device_name()
-        serial_number = crypto.get_serial_number().hex()
-
-        crypto.release()
+        with crypto.Chip() as chip:
+            device_name = chip.get_device_name()
+            serial_number = chip.get_serial_number().hex()
 
         return "device: " + device_name + " serial: " + serial_number
 
     def time_ms(self):
-        return time.time_ns() // 1_000_000
+        return time.monotonic_ns() // 1_000_000
 
     class Inverters:
         """Observable list of inverters"""

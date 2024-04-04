@@ -18,18 +18,12 @@ def test_executeTask():
 
 
 def test_make_the_call_with_task():
-    # mock atecc608b.base64UrlEncode(atecc608b.getSignature(idAndWallet))
+    t = InitializeTask(0, {}, "aaa", True)
 
-    with patch("server.tasks.initializeTask.atecc608b") as mock_atecc608b:
-        mock_atecc608b.get_serial_number.return_value = b"deadbeef"
-        mock_atecc608b.get_signature.return_value = b"123456789abcdef"
+    t.execute_and_wait()
 
-        t = InitializeTask(0, {}, "aaa", True)
-
-        t.execute_and_wait()
-
-        assert t.reply.status_code == 200
-        assert t.is_initialized is False
+    assert t.reply.status_code == 200
+    assert t.is_initialized is False
 
 
 def test_makeTheCall():

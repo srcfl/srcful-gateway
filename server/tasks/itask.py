@@ -9,14 +9,24 @@ class ITask:
 
     def __eq__(self, other):
         """Override the default Equals behavior. Should return True if the time of the task is equal to the other task or time"""
-        raise NotImplementedError("Subclass must implement abstract method")
+        if isinstance(other, ITask):
+            return self.get_time() == other.get_time()
+        else:
+            raise TypeError(f"Unsupported comparison between instances of 'ITask' and '{other.__class__.__name__}'.")
 
     def __lt__(self, other):
         """Override the default Less than behavior. Should return True if the time of the task is less than the other task or time"""
-        raise NotImplementedError("Subclass must implement abstract method")
+        if isinstance(other, ITask):
+            return self.get_time() < other.get_time()
+        else:
+            raise TypeError(f"Unsupported comparison between instances of 'ITask' and '{other.__class__.__name__}'.")
     
     def get_time(self) -> int:
         """Return the time of the task in milliseconds"""
+        raise NotImplementedError("Subclass must implement abstract method")
+    
+    def adjust_time(self, new_time: int):
+        """Adjust the time of the task to the new time"""
         raise NotImplementedError("Subclass must implement abstract method")
 
     def execute(self, event_time):

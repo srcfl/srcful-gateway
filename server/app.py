@@ -2,6 +2,9 @@ import queue
 import sys
 import time
 import logging
+import threading
+
+from concurrent.futures import ThreadPoolExecutor
 
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
@@ -12,48 +15,89 @@ from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.bootstrap import Bootstrap
 
+
 from server.blackboard import BlackBoard
 
 logger = logging.getLogger(__name__)
 
 
-def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
-    # here we could keep track of statistics for different types of tasks
-    # and adjust the delay to keep the within a certain range
+class TaskScheduler:
 
-    def add_task(task: ITask):
-        if task.time < bb.time_ms():
-            dt = bb.time_ms() - task.get_time()
-            s = f"task {type(task)} is in the past {dt} adjusting time"
-            logger.info(s)
-            task.time = bb.time_ms() + 100
-        tasks.put(task)
+    def __init__(self, max_workers, initial_tasks, bb):
+        self.bb = bb
+        self.executor = ThreadPoolExecutor(max_workers=max_workers)
+        self.tasks = queue.PriorityQueue()
+        self.active_threads = 0
+        self.new_tasks_condition = threading.Condition()
+        self.stop_event = threading.Event()
 
-    bb.add_info("eGW started - all is good")
+        while initial_tasks.qsize() > 0:
+            self.tasks.put(initial_tasks.get())
 
-    while True:
-        task = tasks.get()
-        delay = (task.get_time() - bb.time_ms()) / 1000
-        if delay > 0.01:
-            time.sleep(delay)
+    
+    def add_task(self, task: ITask):
+        with self.new_tasks_condition:
 
+            if task.get_time() <= self.bb.time_ms():
+                logger.warning("Task (%s) is in the past by %d ms, adjusting time to now", task, self.bb.time_ms() - task.get_time())
+                task.adjust_time(self.bb.time_ms() + 100)
+
+            self.tasks.put(task)
+            self.new_tasks_condition.notify()
+
+    def stop(self):
+        self.stop_event.set()
+
+    def worker(self, task: ITask):
         try:
-            new_task = task.execute(bb.time_ms())
-            # convert single task to list if not already a list
-            if new_task is None:
-                new_task = []
-            elif not isinstance(new_task, list):
-                new_task = [new_task]
-            new_task = new_task + bb.purge_tasks()
+            new_tasks = task.execute(self.bb.time_ms())
+            if new_tasks is None:
+                new_tasks = []
+        except StopIteration:
+            logger.info("StopIteration received, stopping TaskScheduler")
+            self.stop()
+            new_tasks = None
         except Exception as e:
-            logger.error("Failed to execute task: %s", e)
-            new_task = None
+            logging.error(f"Failed to execute task {task}: {e}")
+            new_tasks = None
+            
+        if new_tasks is not None:
+            if not isinstance(new_tasks, list):
+                new_tasks = [new_tasks]
+            new_tasks = new_tasks + self.bb.purge_tasks()
+            for new_task in new_tasks:
+                self.add_task(new_task)
+        
+        with self.new_tasks_condition:
+            self.active_threads -= 1
+            self.new_tasks_condition.notify()
 
-        try:
-            for e in new_task:
-                add_task(e)
-        except TypeError:
-            add_task(new_task)
+    def main_loop(self):
+        while not self.stop_event.is_set():
+            with self.new_tasks_condition:
+                while (self.active_threads >= self.executor._max_workers) or self.tasks.empty() or self.tasks.queue[0].get_time() > self.bb.time_ms():
+                    if self.stop_event.is_set():
+                        break
+
+                    if not self.tasks.empty():
+                        # wake the loop up gain when the next task is due (note that it may wake up before that if a new task is added)
+                        delay = max(0, (self.tasks.queue[0].get_time() - self.bb.time_ms()) / 1000)
+                        self.new_tasks_condition.wait(delay)
+                    else:
+                        self.new_tasks_condition.wait()
+
+                if self.stop_event.is_set():
+                    break
+                
+                if not self.tasks.empty() and self.tasks.queue[0].get_time() <= self.bb.time_ms():
+                    task = self.tasks.get()
+                    self.executor.submit(self.worker, task)
+                    self.active_threads += 1
+
+
+def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
+    scheduler = TaskScheduler(4, tasks, bb)
+    scheduler.main_loop()
 
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None):
@@ -76,13 +120,13 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     # put some initial tasks in the queue
     if inverter is not None:
-        tasks.put(OpenInverterTask(bb.start_time, bb, ModbusTCP(inverter)))
+        tasks.put(OpenInverterTask(bb.time_ms(), bb, ModbusTCP(inverter)))
 
-    for task in bootstrap.get_tasks(bb.start_time + 500, bb):
+    for task in bootstrap.get_tasks(bb.time_ms() + 500, bb):
         tasks.put(task)
 
-    tasks.put(CheckForWebRequest(bb.start_time + 1000, bb, web_server))
-    tasks.put(ScanWiFiTask(bb.start_time + 45000, bb))
+    tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
+    tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
 
     try:
         main_loop(tasks, bb)

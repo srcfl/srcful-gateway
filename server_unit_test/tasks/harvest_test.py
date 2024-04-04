@@ -1,5 +1,5 @@
 import server.tasks.harvest as harvest
-import server.tasks.openInverterTask as oit
+import server.tasks.openInverterPerpetualTask as oit
 from unittest.mock import Mock, patch
 import pytest
 
@@ -217,8 +217,8 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     # the tasks returned should be t and the open inverter task
     ret = t.execute(17)
     assert len(ret) == 2
-    oit_ix = 0 if type(ret[0]) is oit.OpenInverterTask else 1
-    assert type(ret[oit_ix]) is oit.OpenInverterTask
+    oit_ix = 0 if type(ret[0]) is oit.OpenInverterPerpetualTask else 1
+    assert type(ret[oit_ix]) is oit.OpenInverterPerpetualTask
     assert ret[(oit_ix + 1) % 2] is t
 
     # make sure the open inverter task has a cloned inverter
@@ -236,6 +236,19 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     ret = t.execute(17)
     assert type(ret) is harvest.HarvestTransport
 
+def test_max_backoftime_leq_than_max():
+    registers = [{"1": 1717 + x} for x in range(10)]
+    mock_inverter = Mock()
+    mock_inverter.read_harvest_data.return_value = registers[0]
+    mock_inverter.is_terminated.return_value = False
+    
+    mock_bb = Mock()
+    mock_bb.time_ms.return_value = 999999999999999999
+
+    t = harvest.Harvest(0, mock_bb, mock_inverter)
+
+    t.execute(17)  # this will cause a really long elapsed time
+    assert t.backoff_time <= t.max_backoff_time
 
 
 @pytest.fixture
@@ -253,21 +266,19 @@ def mock_release():
     pass
 
 
-@patch("server.crypto.crypto.init_chip")
-@patch("server.crypto.crypto.build_jwt")
-@patch("server.crypto.crypto.release")
-def test_data_harvest_transport_jwt(mock_release, mock_build_jwt, mock_init_chip):
+@patch("server.crypto.crypto.Chip", autospec=True)
+def test_data_harvest_transport_jwt(mock_chip_class):
     barn = {"test": "test"}
     inverter_type = "test"
-    mock_build_jwt.return_value = {str(barn), inverter_type}
+    
+    mock_chip_instance = mock_chip_class.return_value.__enter__.return_value
+    mock_chip_instance.build_jwt.return_value = {str(barn), inverter_type}
 
     instance = harvest.HarvestTransport(0, {}, barn, inverter_type)
-    instance._data()
+    jwt = instance._data()
 
-    mock_init_chip.assert_called_once()
-    mock_build_jwt.assert_called_once_with(instance.barn, instance.inverter_type)
-    mock_release.assert_called_once()
-
+    mock_chip_instance.build_jwt.assert_called_once_with(instance.barn, instance.inverter_type)
+    assert jwt == {str(barn), inverter_type}
 
 def test_on_200():
     # just make the call for now

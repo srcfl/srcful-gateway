@@ -1,5 +1,5 @@
 cryptoauthlib == 20230326
-cryptography == 41.0.7
+cryptography == 42.0.5
 pymodbus == 3.6.3
 requests == 2.31.0
 typing-extensions == 4.9.0
