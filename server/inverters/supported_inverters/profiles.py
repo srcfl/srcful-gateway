@@ -38,6 +38,7 @@ class InverterProfile:
     def __init__(self, inverter_profile):
         self.name = inverter_profile[ProfileKey.NAME]
         self.display_name = inverter_profile[ProfileKey.DISPLAY_NAME]
+        self.protocol = inverter_profile[ProfileKey.PROTOCOL]
 
         self.registers = []
 
@@ -65,5 +66,5 @@ class InverterProfiles:
                 return profile
         return None
 
-    def get_supported_inverters(self) -> typing.List[str]:
-        return [(profile.name, profile.display_name) for profile in self.profiles]
+    def get_supported_inverters(self) -> typing.List[InverterProfile]:
+        return [profile for profile in self.profiles]

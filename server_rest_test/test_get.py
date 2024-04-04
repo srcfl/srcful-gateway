@@ -198,12 +198,23 @@ def test_supported():
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
-    
-    assert ['SOLAREDGE', 'SolarEdge'] in response.json()['inverters']
-    assert ['SUNGROW', 'Sungrow'] in response.json()['inverters']
-    assert ['GROWATT', 'Growatt'] in response.json()['inverters']
-    assert ['HUAWEI', 'Huawei'] in response.json()['inverters']
-    assert ['GOODWE', 'Goodwe'] in response.json()['inverters']
+
+    solaredge = {'dname': 'Sungrow', 'name': 'SUNGROW', 'proto': 'mb'}
+    sungrow = {'dname': 'Sungrow Hybrid', 'name': 'SUNGROW_HYBRID', 'proto': 'mb'}
+    solis = {'dname': 'SolarEdge', 'name': 'SOLAREDGE', 'proto': 'mb'}
+    fronius = {'dname': 'Growatt', 'name': 'GROWATT', 'proto': 'mb'}
+    huawei = {'dname': 'Huawei', 'name': 'HUAWEI', 'proto': 'mb'}
+    goodwe = {'dname': 'lqt40s', 'name': 'LQT40S', 'proto': 'mb'}
+    growatt = {'dname': 'Goodwe', 'name': 'GOODWE', 'proto': 'mb'}
+    deye = {'dname': 'Deye', 'name': 'DEYE', 'proto': 'sol'}
+    deye_hybrid = {'dname': 'Deye Hybrid', 'name': 'DEYE_HYBRID', 'proto': 'sol'}
+    sma = {'dname': 'SMA', 'name': 'SMA', 'proto': 'mb'}
+    lqt40s = {'dname': 'Fronius', 'name': 'FRONIUS', 'proto': 'mb'}
+
+    inverters = [solaredge, sungrow, solis, fronius, huawei, goodwe, growatt, deye, deye_hybrid, sma, lqt40s]
+
+    for inverter in inverters:
+        assert inverter in response.json()['inverters']
 
 
 def get_notification_list():
