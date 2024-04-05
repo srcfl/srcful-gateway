@@ -128,7 +128,7 @@ class BlackBoard:
         return "device: " + device_name + " serial: " + serial_number
 
     def time_ms(self):
-        return time.monotonic_ns() // 1_000_000
+        return time.time_ns() // 1_000_000
 
     class Inverters:
         """Observable list of inverters"""
