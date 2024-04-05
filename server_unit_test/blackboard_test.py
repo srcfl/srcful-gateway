@@ -2,6 +2,7 @@ from server.blackboard import BlackBoard
 from unittest.mock import MagicMock
 from server.message import Message
 import pytest
+import time
 
 
 def test_blackboard():
@@ -107,3 +108,19 @@ def test_message_list_limit(message_container):
         message_container.add_error(f"Overflow message {i}")
     messages = message_container.messages
     assert len(messages) <= 10
+
+def test_time_ms():
+    bb = BlackBoard()
+    # the time must be an UTC time that corresponds to the current time
+    assert bb.time_ms() <= int(time.time() * 1000)
+
+def test_elapsed_time():
+    start_time = time.time_ns() // 1_000_000
+    bb = BlackBoard()
+
+    time.sleep(0.2)
+    end_time = time.time_ns() // 1_000_000
+
+    diff = bb.elapsed_time - (end_time - start_time)  
+    
+    assert diff >= 0 and diff < 2

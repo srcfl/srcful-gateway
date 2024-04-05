@@ -27,7 +27,7 @@ class BlackBoard:
 
     def __init__(self):
         self._inverters = BlackBoard.Inverters()
-        self._start_time = self.time_ms()
+        self._start_time = time.monotonic_ns()
         self._rest_server_port = 80
         self._rest_server_ip = "localhost"
         self._messages = []
@@ -114,8 +114,8 @@ class BlackBoard:
         return self._inverters
 
     @property
-    def start_time(self):
-        return self._start_time
+    def elapsed_time(self):
+        return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
         return "0.8.4"

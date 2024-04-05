@@ -15,5 +15,5 @@ class Handler(GetHandler):
 
     def do_get(self, data: RequestData):
         return 200, json.dumps(
-            {"msek": data.bb.time_ms() - data.bb.start_time}
+            {"msek": data.bb.elapsed_time}
         )

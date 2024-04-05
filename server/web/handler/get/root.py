@@ -12,7 +12,7 @@ class Handler(GetHandler):
 
         ret += f"<p>chipInfo: {data.bb.get_chip_info()} (This should not be all zeros)</p>"
 
-        elapsed_time = data.bb.time_ms() - data.bb.start_time
+        elapsed_time = data.bb.elapsed_time
 
         # convert elapsedTime to days, hours, minutes, seconds in a tuple
         days, remainder = divmod(elapsed_time // 1000, 60 * 60 * 24)
