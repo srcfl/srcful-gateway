@@ -6,11 +6,10 @@ from server.inverters.ModbusRTU import ModbusRTU
 from server.inverters.supported_inverters.profiles import InverterProfiles
 from pymodbus.exceptions import ModbusException, ModbusIOException, ConnectionException
 
-from server.inverters.enums import InverterKey
 
 profiles = InverterProfiles()
-huawei = profiles.get(InverterKey.HUAWEI.name)
-lqt40s = profiles.get(InverterKey.LQT40S.name)
+huawei = profiles.get('huawei')
+lqt40s = profiles.get('lqt40s')
 
 
 def get_inverters():
@@ -18,7 +17,7 @@ def get_inverters():
     Returns a list of two inverters, one TCP and one RTU.
     """
 
-    inv_tcp = ModbusTCP(("localhost", 8081, huawei.name, 1))
+    inv_tcp = ModbusTCP(("localhost", 8081, "HUAWEI" , 1))
 
     # We open to make the client attribute available, then
     # we mock the socket attribute to make the is_open() method return True.
@@ -27,7 +26,7 @@ def get_inverters():
     inv_tcp.client.socket = MagicMock()
 
     if sys.platform != "win32":
-        inv_rtu = ModbusRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, lqt40s.name, 1))
+        inv_rtu = ModbusRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, "LQT40S", 1))
         inv_rtu.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
         inv_rtu.client.socket = MagicMock()
 
@@ -82,11 +81,11 @@ def test_get_tcp_config():
     """
     Test that the get_config_dict() method returns the correct dictionary.
     """
-    inv = ModbusTCP(("localhost", 8081, huawei.name, 1))
+    inv = ModbusTCP(("localhost", 8081, "HUAWEI", 1))
 
     assert inv.get_config_dict() == {
         "connection": "TCP",
-        "type": huawei.name,
+        "type": "HUAWEI",
         "address": 1,
         "host": "localhost",
         "port": 8081,
@@ -97,11 +96,11 @@ def test_get_rt_config():
     """
     Test that the get_config_dict() method returns the correct dictionary.
     """
-    inv = ModbusRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, lqt40s.name, 1))
+    inv = ModbusRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, "LQT40S", 1))
 
     assert inv.get_config_dict() == { 
         "connection": "RTU",
-        "type": lqt40s.name,
+        "type": "LQT40S",
         "address": 1,
         "host": "/dev/ttyUSB0",
         "baudrate": 9600,
@@ -188,7 +187,7 @@ def test_modbus_connection_exception():
             mock_read_registers.side_effect = ConnectionException("Connection error")
 
             # Determine the operation code based on inverter type
-            operation_code = 0x04 if inverter.get_type() == lqt40s.name else 0x03
+            operation_code = 0x04 if inverter.get_type() == "LQT40S" else 0x03
 
             # Call the method under test
             registers = inverter.read_registers(operation_code, 0, 12)
@@ -219,7 +218,7 @@ def test_modbus_io_exception():
             mock_read_registers.side_effect = ModbusIOException("Exception occurred while reading registers")
 
             # Determine the operation code based on inverter type
-            operation_code = 0x04 if inverter.get_type() == lqt40s.name else 0x03
+            operation_code = 0x04 if inverter.get_type() == "LQT40S" else 0x03
 
             # Call the method under test
             registers = inverter.read_registers(operation_code, 0, 12)

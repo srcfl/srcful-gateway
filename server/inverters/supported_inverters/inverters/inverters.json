@@ -1,0 +1,382 @@
+{
+  "inverters": {
+    "0": {
+      "name": "huawei",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "Huawei",
+      "protocol": "modbus",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 3,
+          "start_register": 30000,
+          "num_of_registers": 125
+        },
+        {
+          "fcode": 3,
+          "start_register": 32000,
+          "num_of_registers": 125
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 3,
+          "start_register": 32085,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 3,
+          "start_register": 32064,
+          "num_of_registers": 2
+        }
+      ]
+    },
+    "1": {
+      "name": "solaredge",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "SolarEdge",
+      "protocol": "modbus",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 3,
+          "start_register": 40000,
+          "num_of_registers": 69
+        },
+        {
+          "fcode": 3,
+          "start_register": 40069,
+          "num_of_registers": 33
+        },
+        {
+          "fcode": 3,
+          "start_register": 40106,
+          "num_of_registers": 3
+        },
+        {
+          "fcode": 3,
+          "start_register": 40121,
+          "num_of_registers": 70
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 3,
+          "start_register": 40085,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 3,
+          "start_register": 40100,
+          "num_of_registers": 1
+        }
+      ]
+    },
+    "2": {
+      "name": "sungrow",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "Sungrow",
+      "protocol": "modbus",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 4,
+          "start_register": 4989,
+          "num_of_registers": 120
+        },
+        {
+          "fcode": 4,
+          "start_register": 5112,
+          "num_of_registers": 50
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 4,
+          "start_register": 5035,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 4,
+          "start_register": 5016,
+          "num_of_registers": 2
+        }
+      ]
+    },
+    "3": {
+      "name": "sungrow_hybrid",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "Sungrow Hybrid",
+      "protocol": "modbus",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 4,
+          "start_register": 4989,
+          "num_of_registers": 120
+        },
+        {
+          "fcode": 4,
+          "start_register": 5112,
+          "num_of_registers": 50
+        },
+        {
+          "fcode": 4,
+          "start_register": 13000,
+          "num_of_registers": 50
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 4,
+          "start_register": 5035,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 4,
+          "start_register": 5016,
+          "num_of_registers": 2
+        }
+      ]
+    },
+    "4": {
+      "name": "sma",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "SMA",
+      "protocol": "modbus",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 4,
+          "start_register": 30000,
+          "num_of_registers": 10
+        },
+        {
+          "fcode": 4,
+          "start_register": 30051,
+          "num_of_registers": 10
+        },
+        {
+          "fcode": 4,
+          "start_register": 30775,
+          "num_of_registers": 50
+        },
+        {
+          "fcode": 4,
+          "start_register": 31085,
+          "num_of_registers": 2
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 4,
+          "start_register": 30803,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 30775,
+          "num_of_registers": 2
+        }
+      ]
+    },
+    "5": {
+      "name": "fronius",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Primo/Gen24 Plus",
+      "display_name": "Fronius",
+      "protocol": "modbus",
+      "description": "Fronius inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 3,
+          "start_register": 40000,
+          "num_of_registers": 125
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 3,
+          "start_register": 40093,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 3,
+          "start_register": 40107,
+          "num_of_registers": 2
+        }
+      ]
+    },
+    "6": {
+      "name": "deye",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "Deye",
+      "protocol": "solarman",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 4,
+          "start_register": 3,
+          "num_of_registers": 86
+        },
+        {
+          "fcode": 4,
+          "start_register": 514,
+          "num_of_registers": 125
+        },
+        {
+          "fcode": 4,
+          "start_register": 644,
+          "num_of_registers": 50
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 4,
+          "start_register": 608,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 4,
+          "start_register": 608,
+          "num_of_registers": 2
+        }
+      ]
+    },
+    "7": {
+      "name": "deye_hybrid",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "Deye Hybrid",
+      "protocol": "solarman",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 4,
+          "start_register": 3,
+          "num_of_registers": 86
+        },
+        {
+          "fcode": 4,
+          "start_register": 514,
+          "num_of_registers": 125
+        },
+        {
+          "fcode": 4,
+          "start_register": 644,
+          "num_of_registers": 50
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 4,
+          "start_register": 608,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 4,
+          "start_register": 608,
+          "num_of_registers": 2
+        }
+      ]
+    },
+    "8": {
+      "name": "growatt",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "Growatt",
+      "protocol": "modbus",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 4,
+          "start_register": 0,
+          "num_of_registers": 92
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 4,
+          "start_register": 36,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 4,
+          "start_register": 36,
+          "num_of_registers": 1
+        }
+      ]
+    },
+    "9": {
+      "name": "goodwe",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "GoodWe",
+      "protocol": "modbus",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 3,
+          "start_register": 1280,
+          "num_of_registers": 68
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 3,
+          "start_register": 1304,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 3,
+          "start_register": 1323,
+          "num_of_registers": 1
+        }
+      ]
+    },
+    "10": {
+      "name": "lqt40s",
+      "version": "1.0",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "LQT40S",
+      "protocol": "modbus",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 3,
+          "start_register": 0,
+          "num_of_registers": 2
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 3,
+          "start_register": 0,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 3,
+          "start_register": 0,
+          "num_of_registers": 2
+        }
+      ]
+    }
+  }
+}

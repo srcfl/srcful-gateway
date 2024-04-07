@@ -98,9 +98,9 @@ class Inverter:
 
         regs = []
         vals = []
-
+        
         for entry in self.profile.get_registers():
-            operation = entry.operation.value
+            operation = entry.operation
             scan_start = entry.start_register
             scan_range = entry.offset
 
