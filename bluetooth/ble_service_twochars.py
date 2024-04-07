@@ -92,6 +92,9 @@ def request_get(path: str, offset: int) -> bytes:
 def request_post(path: str, content: str, offset: int) -> bytes:
     return handle_response(path, "POST", requests.post(API_URL + path, data=content, timeout=REQUEST_TIMEOUT), offset)
 
+def request_delete(path: str, content: str, offset: int) -> bytes:
+    return handle_response(path, "DELETE", requests.delete(API_URL + path, data=content, timeout=REQUEST_TIMEOUT), offset)
+
 
 def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
     characteristic.value = value
@@ -106,12 +109,13 @@ def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **
         logger.debug("Header: %s", header)
         logger.debug("Content: %s", content)
 
-        if header["method"] == "GET" or header["method"] == "POST":
-            response = (
-                request_get(header["path"], header["Offset"])
-                if header["method"] == "GET"
-                else request_post(header["path"], content, header["Offset"])
-            )
+        if header["method"] == "GET" or header["method"] == "POST" or header["method"] == "DELETE":
+            if header["method"] == "GET":
+                response = request_get(header["path"], header["Offset"])
+            elif header["method"] == "POST":
+                response = request_post(header["path"], content, header["Offset"])
+            else:
+                response = request_delete(header["path"], content, header["Offset"])
             response_char = SERVER.get_characteristic(RESPONSE_CHAR)
             response_char.value = response
             logger.debug("Char value set to %s", response_char.value)
