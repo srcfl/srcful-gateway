@@ -1,6 +1,6 @@
 {
-  "inverters": {
-    "0": {
+  "inverters": [
+    {
       "name": "huawei",
       "version": "1.0",
       "verbose_always": false,
@@ -33,7 +33,7 @@
         }
       ]
     },
-    "1": {
+    {
       "name": "solaredge",
       "version": "1.0",
       "verbose_always": false,
@@ -76,7 +76,7 @@
         }
       ]
     },
-    "2": {
+    {
       "name": "sungrow",
       "version": "1.0",
       "verbose_always": false,
@@ -109,7 +109,7 @@
         }
       ]
     },
-    "3": {
+    {
       "name": "sungrow_hybrid",
       "version": "1.0",
       "verbose_always": false,
@@ -147,7 +147,7 @@
         }
       ]
     },
-    "4": {
+    {
       "name": "sma",
       "version": "1.0",
       "verbose_always": false,
@@ -190,7 +190,7 @@
         }
       ]
     },
-    "5": {
+    {
       "name": "fronius",
       "version": "1.0",
       "verbose_always": false,
@@ -218,7 +218,7 @@
         }
       ]
     },
-    "6": {
+    {
       "name": "deye",
       "version": "1.0",
       "verbose_always": false,
@@ -256,7 +256,7 @@
         }
       ]
     },
-    "7": {
+    {
       "name": "deye_hybrid",
       "version": "1.0",
       "verbose_always": false,
@@ -294,7 +294,7 @@
         }
       ]
     },
-    "8": {
+    {
       "name": "growatt",
       "version": "1.0",
       "verbose_always": false,
@@ -322,7 +322,7 @@
         }
       ]
     },
-    "9": {
+    {
       "name": "goodwe",
       "version": "1.0",
       "verbose_always": false,
@@ -350,7 +350,7 @@
         }
       ]
     },
-    "10": {
+    {
       "name": "lqt40s",
       "version": "1.0",
       "verbose_always": false,
@@ -378,5 +378,5 @@
         }
       ]
     }
-  }
+  ]
 }

@@ -10,7 +10,8 @@ inverters = []
 with open("server/inverters/supported_inverters/inverters/inverters.json") as f:
     data = json.load(f)
     for d in data["inverters"]:
-        inverters.append(data["inverters"][d])
+        print(d)
+        inverters.append(d)
 
 
 class RegisterInterval:
@@ -23,6 +24,7 @@ class RegisterInterval:
 class InverterProfile:
     def __init__(self, inverter_profile):
         inverter_profile = json.loads(json.dumps(inverter_profile))
+
         self.name = inverter_profile[ProfileKey.NAME.value]
         self.display_name = inverter_profile[ProfileKey.DISPLAY_NAME.value]
         self.protocol = inverter_profile[ProfileKey.PROTOCOL.value]
@@ -59,7 +61,7 @@ class InverterProfiles:
 
     def get(self, name) -> InverterProfile:
         for profile in self.profiles:
-            if profile.name.upper() == name.upper():
+            if profile.name.lower() == name.lower():
                 return profile
         return None
 
