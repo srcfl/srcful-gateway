@@ -1,27 +1,16 @@
 from enum import Enum
 
-class InverterKey(Enum):
-    HUAWEI = 'Huawei'
-    SUNGROW = 'Sungrow'
-    SUNGROW_HYBRID = 'Sungrow Hybrid'
-    GOODWE = 'Goodwe'
-    SOLAREDGE = "SolarEdge"
-    FERROAMP = "FerroAmp"
-    SOLIS = "Solis"
-    GROWATT = "Growatt"
-    FRONIUS = "Fronius"
-    FOXESS = "FoxEss"
-    LQT40S = "lqt40s"
-    DEYE = "Deye"
-    DEYE_HYBRID = "Deye Hybrid"
-    SMA = "SMA"
-
 
 class ProfileKey(Enum):
     NAME = 'name'
+    VERSION = 'version'
+    VERBOSE_ALWAYS = 'verbose_always'
+    MODEL_GROUP = 'model_group'
     DISPLAY_NAME = 'display_name'
-    REGISTERS = 'registers'
     PROTOCOL = 'protocol'
+    DESCRIPTION = 'description'
+    REGISTERS_VERBOSE = 'registers_verbose'
+    REGISTERS = 'registers'
 
 
 class ProtocolKey(Enum):
@@ -29,7 +18,7 @@ class ProtocolKey(Enum):
     SOLARMAN_V5 = 'solarmanv5'
 
 class RegistersKey(Enum):
-    OPERATION = 'operation'
+    FCODE = 'fcode'
     START_REGISTER = 'start_register'
     NUM_OF_REGISTERS = 'num_of_registers'
 

@@ -199,17 +199,17 @@ def test_supported():
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
 
-    solaredge = {'dname': 'SolarEdge', 'name': 'SOLAREDGE', 'proto': 'mb'}
-    sungrow = {'dname': 'Sungrow', 'name': 'SUNGROW', 'proto': 'mb'}
-    sungrow_hybrid = {'dname': 'Sungrow Hybrid', 'name': 'SUNGROW_HYBRID', 'proto': 'mb'}
-    fronius = {'dname': 'Fronius', 'name': 'FRONIUS', 'proto': 'mb'}
-    huawei = {'dname': 'Huawei', 'name': 'HUAWEI', 'proto': 'mb'}
-    goodwe = {'dname': 'Goodwe', 'name': 'GOODWE', 'proto': 'mb'}
-    growatt = {'dname': 'Growatt', 'name': 'GROWATT', 'proto': 'mb'}
-    deye = {'dname': 'Deye', 'name': 'DEYE', 'proto': 'sol'}
-    deye_hybrid = {'dname': 'Deye Hybrid', 'name': 'DEYE_HYBRID', 'proto': 'sol'}
-    sma = {'dname': 'SMA', 'name': 'SMA', 'proto': 'mb'}
-    lqt40s = {'dname': 'lqt40s', 'name': 'LQT40S', 'proto': 'mb'}
+    solaredge = {'name': 'solaredge', 'dname': 'SolarEdge', 'proto': 'mb'}
+    sungrow = {'name': 'sungrow', 'dname': 'Sungrow', 'proto': 'mb'}
+    sungrow_hybrid = {'name': 'sungrow_hybrid', 'dname': 'Sungrow Hybrid', 'proto': 'mb'}
+    fronius = {'name': 'fronius', 'dname': 'Fronius', 'proto': 'mb'}
+    huawei = {'name': 'huawei', 'dname': 'Huawei', 'proto': 'mb'}
+    goodwe = {'name': 'goodwe', 'dname': 'GoodWe', 'proto': 'mb'}
+    growatt = {'name': 'growatt', 'dname': 'Growatt', 'proto': 'mb'}
+    deye = {'name': 'deye', 'dname': 'Deye', 'proto': 'sol'}
+    deye_hybrid = {'name': 'deye_hybrid', 'dname': 'Deye Hybrid', 'proto': 'sol'}
+    sma = {'name': 'sma', 'dname': 'SMA', 'proto': 'mb'}
+    lqt40s = {'name': 'lqt40s', 'dname': 'LQT40S', 'proto': 'mb'}
 
     inverters = [solaredge, sungrow, sungrow_hybrid, fronius, huawei, goodwe, growatt, deye, deye_hybrid, sma, lqt40s]
 
