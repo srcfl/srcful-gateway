@@ -26,8 +26,12 @@ class InverterProfile:
         inverter_profile = json.loads(json.dumps(inverter_profile))
 
         self.name = inverter_profile[ProfileKey.NAME.value]
+        self.version = inverter_profile[ProfileKey.VERSION.value]
+        self.verbose_always = inverter_profile[ProfileKey.VERBOSE_ALWAYS.value]
+        self.model_group = inverter_profile[ProfileKey.MODEL_GROUP.value]
         self.display_name = inverter_profile[ProfileKey.DISPLAY_NAME.value]
         self.protocol = inverter_profile[ProfileKey.PROTOCOL.value]
+        self.description = inverter_profile[ProfileKey.DESCRIPTION.value]
 
         self.registers_verbose = []
         self.registers = []
@@ -48,8 +52,12 @@ class InverterProfile:
                                  register_interval[RegistersKey.NUM_OF_REGISTERS.value])
             )
 
-    def get_registers(self) -> typing.List[RegisterInterval]:
+    def get_registers_verbose(self) -> typing.List[RegisterInterval]:
         return self.registers_verbose
+    
+    def get_registers(self) -> typing.List[RegisterInterval]:
+        return self.registers
+
 
 
 class InverterProfiles:

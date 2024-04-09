@@ -3,10 +3,14 @@ from enum import Enum
 
 class ProfileKey(Enum):
     NAME = 'name'
+    VERSION = 'version'
+    VERBOSE_ALWAYS = 'verbose_always'
+    MODEL_GROUP = 'model_group'
     DISPLAY_NAME = 'display_name'
+    PROTOCOL = 'protocol'
+    DESCRIPTION = 'description'
     REGISTERS_VERBOSE = 'registers_verbose'
     REGISTERS = 'registers'
-    PROTOCOL = 'protocol'
 
 
 class ProtocolKey(Enum):

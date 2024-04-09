@@ -92,14 +92,21 @@ class Inverter:
     def close(self):
         self.client.close()
 
-    def read_harvest_data(self):
+    def read_harvest_data(self, verbose=False):
         if self.is_terminated():
             raise Exception("readHarvestData() - inverter is terminated")
 
         regs = []
         vals = []
+
+        registers = []
+
+        if verbose:
+            registers = self.profile.get_registers_verbose()
+        else:
+            registers = self.profile.get_registers()
         
-        for entry in self.profile.get_registers():
+        for entry in registers:
             operation = entry.operation
             scan_start = entry.start_register
             scan_range = entry.offset

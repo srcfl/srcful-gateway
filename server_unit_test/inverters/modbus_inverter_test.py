@@ -44,7 +44,7 @@ def test_sma_inverter():
     assert inv.get_type() == "SMA"
     assert inv.get_address() == 1
 
-    registers = inv.profile.get_registers()
+    registers = inv.profile.get_registers_verbose()
 
     assert len(registers) > 0
 
