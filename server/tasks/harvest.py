@@ -35,10 +35,8 @@ class Harvest(Task):
             log.info("Inverter is terminated make the final transport if there is anything in the barn")
             return self._create_transport(1, event_time=event_time)
         try:
-            if len(self.barn) == 0:
-                harvest = self.inverter.read_harvest_data(verbose=True)
-            else:
-                harvest = self.inverter.read_harvest_data()
+            is_verbose = len(self.barn) or self.inverter.profile.verbose_always
+            harvest = self.inverter.read_harvest_data(verbose=is_verbose)
 
             end_time = self.bb.time_ms()
 

@@ -92,7 +92,7 @@ class Inverter:
     def close(self):
         self.client.close()
 
-    def read_harvest_data(self, verbose=False):
+    def read_harvest_data(self, force_verbose=False):
         if self.is_terminated():
             raise Exception("readHarvestData() - inverter is terminated")
 
@@ -101,7 +101,7 @@ class Inverter:
 
         registers = []
 
-        if verbose:
+        if force_verbose or self.profile.verbose_always:
             registers = self.profile.get_registers_verbose()
         else:
             registers = self.profile.get_registers()
