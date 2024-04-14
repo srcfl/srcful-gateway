@@ -2,29 +2,16 @@
 # Then add the new inverter to the inverters list and it will be supported by the gateway (PoS)
 import typing
 from ..enums import ProfileKey, RegistersKey, OperationKey
-from .inverters.sungrow import profile as sungrow
-from .inverters.sungrow_hybrid import profile as sungrow_hybrid
-from .inverters.solaredge import profile as solaredge
-from .inverters.growatt import profile as growatt
-from .inverters.huawei import profile as huawei
-from .inverters.lqt40s import profile as lqt40s
-from .inverters.goodwe import profile as goodwe
-from .inverters.deye import profile as deye
-from .inverters.deye_hybrid import profile as deye_hybrid
-from .inverters.sma import profile as sma
-from .inverters.fronius import profile as fronius
+import json
 
-inverters = [sungrow, 
-             sungrow_hybrid, 
-             solaredge, 
-             growatt, 
-             huawei, 
-             lqt40s, 
-             goodwe, 
-             deye, 
-             deye_hybrid,
-             sma,
-             fronius]
+inverters = []
+
+# Load all inverters
+with open("server/inverters/supported_inverters/inverters/inverters.json") as f:
+    data = json.load(f)
+    for d in data["inverters"]:
+        print(d)
+        inverters.append(d)
 
 
 class RegisterInterval:
@@ -36,21 +23,41 @@ class RegisterInterval:
 
 class InverterProfile:
     def __init__(self, inverter_profile):
-        self.name = inverter_profile[ProfileKey.NAME]
-        self.display_name = inverter_profile[ProfileKey.DISPLAY_NAME]
-        self.protocol = inverter_profile[ProfileKey.PROTOCOL]
+        inverter_profile = json.loads(json.dumps(inverter_profile))
 
+        self.name = inverter_profile[ProfileKey.NAME.value]
+        self.version = inverter_profile[ProfileKey.VERSION.value]
+        self.verbose_always = inverter_profile[ProfileKey.VERBOSE_ALWAYS.value]
+        self.model_group = inverter_profile[ProfileKey.MODEL_GROUP.value]
+        self.display_name = inverter_profile[ProfileKey.DISPLAY_NAME.value]
+        self.protocol = inverter_profile[ProfileKey.PROTOCOL.value]
+        self.description = inverter_profile[ProfileKey.DESCRIPTION.value]
+
+        self.registers_verbose = []
         self.registers = []
 
-        for register_intervall in inverter_profile[ProfileKey.REGISTERS]:
-            self.registers.append(
-                RegisterInterval(register_intervall[RegistersKey.OPERATION],
-                                 register_intervall[RegistersKey.START_REGISTER],
-                                 register_intervall[RegistersKey.NUM_OF_REGISTERS])
+        for register_interval in inverter_profile[ProfileKey.REGISTERS_VERBOSE.value]:
+            self.registers_verbose.append(
+                RegisterInterval(
+                    register_interval[RegistersKey.FCODE.value],
+                    register_interval[RegistersKey.START_REGISTER.value],
+                    register_interval[RegistersKey.NUM_OF_REGISTERS.value]
+                )
             )
 
+        for register_interval in inverter_profile[ProfileKey.REGISTERS.value]:
+            self.registers.append(
+                RegisterInterval(register_interval[RegistersKey.FCODE.value],
+                                 register_interval[RegistersKey.START_REGISTER.value],
+                                 register_interval[RegistersKey.NUM_OF_REGISTERS.value])
+            )
+
+    def get_registers_verbose(self) -> typing.List[RegisterInterval]:
+        return self.registers_verbose
+    
     def get_registers(self) -> typing.List[RegisterInterval]:
         return self.registers
+
 
 
 class InverterProfiles:
@@ -62,7 +69,7 @@ class InverterProfiles:
 
     def get(self, name) -> InverterProfile:
         for profile in self.profiles:
-            if profile.name == name.upper():
+            if profile.name.lower() == name.lower():
                 return profile
         return None
 
