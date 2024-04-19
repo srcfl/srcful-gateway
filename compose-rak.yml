@@ -1,7 +1,6 @@
-version: '2.4'
+version: "2.4"
 
 services:
-
   web:
     ports:
       - "80:5000"
