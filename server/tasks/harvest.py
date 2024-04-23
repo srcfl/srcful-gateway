@@ -40,10 +40,10 @@ class Harvest(Task):
             end_time = self.bb.time_ms()
 
             elapsed_time_ms = end_time - start_time
-            log.debug("Harvest took %s ms", elapsed_time_ms)
+            #log.debug("Harvest took %s ms", elapsed_time_ms)
             # log.debug("Harvest: %s", harvest)
 
-            self.min_backoff_time = max(elapsed_time_ms * 2, 1000)
+            self.min_bgitackoff_time = max(elapsed_time_ms * 2, 1000)
 
             # self.stats['lastHarvest'] = harvest
             # self.stats['harvests'] += 1
@@ -134,7 +134,7 @@ class HarvestTransportTimedSignature(HarvestTransport):
 
         jwt = crypto.Chip.jwtlify(HarvestTransportTimedSignature._header) + "." + crypto.Chip.jwtlify(self.barn) + "." + HarvestTransportTimedSignature._signature_base64
 
-        log.debug("JWT: %s", jwt)
+        # log.debug("JWT: %s", jwt)
 
         return jwt
     
