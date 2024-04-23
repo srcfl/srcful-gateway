@@ -46,6 +46,17 @@ def test_sign_throws_error():
                     chip.get_signature("Hello World!")
                 assert excinfo.value.code == 1
 
+def test_error_recovery():
+    with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):    
+        with crypto.Chip() as chip:
+            with patch('server.crypto.crypto.atcab_sign', return_value=1):
+                with pytest.raises(crypto.Chip.Error) as excinfo:
+                    chip.get_signature("Hello World!")
+                assert excinfo.value.code == 1
+            with patch('server.crypto.crypto.atcab_sign', return_value=crypto.ATCA_SUCCESS):
+                sign = chip.get_signature("Hello World!")
+    assert len(sign) == 64
+
 def test_get_pubkey_throws_error():
     with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
         with patch('server.crypto.crypto.atcab_get_pubkey', return_value=1):
