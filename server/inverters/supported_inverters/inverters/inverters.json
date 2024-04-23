@@ -191,11 +191,11 @@
       ]
     },
     {
-      "name": "fronius_float",
+      "name": "fronius",
       "version": "0.1",
       "verbose_always": false,
       "model_group": "Primo/Gen24 Plus",
-      "display_name": "Fronius (Float)",
+      "display_name": "Fronius",
       "protocol": "modbus",
       "description": "Fronius inverter profile...",
       "registers_verbose": [
@@ -219,11 +219,11 @@
       ]
     },
     {
-      "name": "fronius_int_sf",
+      "name": "fronius_sunspec",
       "version": "0.1",
       "verbose_always": false,
       "model_group": "Primo/Gen24 Plus",
-      "display_name": "Fronius (Int+SF)",
+      "display_name": "Fronius (SunSpec)",
       "protocol": "modbus",
       "description": "Fronius inverter profile...",
       "registers_verbose": [
