@@ -43,7 +43,7 @@ class Harvest(Task):
             #log.debug("Harvest took %s ms", elapsed_time_ms)
             # log.debug("Harvest: %s", harvest)
 
-            self.min_bgitackoff_time = max(elapsed_time_ms * 2, 1000)
+            self.min_backoff_time = max(elapsed_time_ms * 2, 1000)
 
             # self.stats['lastHarvest'] = harvest
             # self.stats['harvests'] += 1
