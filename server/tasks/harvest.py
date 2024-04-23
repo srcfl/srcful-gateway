@@ -80,9 +80,7 @@ class Harvest(Task):
 
     def _create_transport(self, limit: int, event_time: int):
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
-            transport = HarvestTransport(
-                event_time + 100, self.bb, self.barn, self.inverter.get_backend_type()
-            )
+            transport = LocalHarvestTransportTimedSignature(event_time + 100, self.bb, self.barn, self.inverter.get_backend_type())
             self.barn = {}
             return transport
         return None
