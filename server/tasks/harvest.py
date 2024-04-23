@@ -150,12 +150,13 @@ class LocalHarvestTransportTimedSignature(HarvestTransportTimedSignature):
     def _create_header(self):
         log.info("Creating New Header...")
         super()._create_header()
-        log.info("Created New Header: %s", HarvestTransportTimedSignature._header)
-        log.info("Created New Signature: %s", HarvestTransportTimedSignature._signature_base64)
+        log.debug("Created New Header: %s", HarvestTransportTimedSignature._header)
+        log.debug("Created New Signature: %s", HarvestTransportTimedSignature._signature_base64)
 
     def execute(self, event_time):
         try:
             jwt = self._data()
+            log.debug("No sending in local harvest burning that barn!")
             #log.info("JWT: %s", jwt)
         except crypto.Chip.Error as e:
             log.error("Error creating JWT: %s", e)
