@@ -12,7 +12,7 @@ try:
         atcab_init,
         cfg_ateccx08a_i2c_default,
         atcab_info,
-        get_device_name as actab_get_device_name,
+        get_device_name as atcab_get_device_name,
         atcab_release,
         atcab_sign,
         atcab_read_serial_number,
@@ -27,7 +27,7 @@ except Exception:
         atcab_init,
         cfg_ateccx08a_i2c_default,
         atcab_info,
-        get_device_name as actab_get_device_name,
+        get_device_name as atcab_get_device_name,
         atcab_release,
         atcab_sign,
         atcab_read_serial_number,
@@ -42,14 +42,22 @@ except Exception:
 ATCA_SUCCESS = 0x00
 
 
-
 class Chip:
     _lock = threading.Lock()
     _lock_count = 0
 
+    class Error(Exception):
+        def __init__(self, code, message):
+            self.code = code
+            self.message = message
+            super().__init__(self.message)
+
+        def __str__(self) -> str:
+            return super().__str__() + f"cryptauthlib error code: {self.code}"
+
     def __enter__(self):
         """Prepare the chip. Automatically run at the start of `with` block."""
-        #if not self.init_chip():
+        # if not self.init_chip():
         #    raise RuntimeError("Could not initialize chip!")
         self._init_chip()
         return self  # or return anything you want
@@ -57,7 +65,7 @@ class Chip:
     def __exit__(self, type, value, traceback):
         """Clean up the chip. Automatically run at the end of `with` block."""
         self._release()
-        #if not self._release():
+        # if not self._release():
         #    logging.error("Failed to release chip!")
 
     def _init_chip(self) -> bool:
@@ -77,8 +85,14 @@ class Chip:
 
         if atcab_init(cfg) != ATCA_SUCCESS:
             cfg.cfg.atcai2c.address = int("c0", 16)
-            return atcab_init(cfg) == ATCA_SUCCESS
+            code = atcab_init(cfg)
+            self._throw_on_error(code, "Failed to initialize chip")
         return True
+    
+    def _throw_on_error(self, code: int, message: str):
+        if code != ATCA_SUCCESS:
+            self._lock.release()
+            raise Chip.Error(code, message)
 
     def _release(self) -> bool:
         ret = atcab_release()
@@ -96,12 +110,12 @@ class Chip:
         self.ensure_chip_initialized()
         info = bytearray(4)
         atcab_info(info)
-        return actab_get_device_name(info)
+        return atcab_get_device_name(info)
 
     def get_serial_number(self):
         self.ensure_chip_initialized()
         serial_number = bytearray(12)
-        atcab_read_serial_number(serial_number)
+        self._throw_on_error(atcab_read_serial_number(serial_number), "Failed to read serial number")
         return serial_number
 
     def public_key_2_pem(self, public_key: bytearray) -> str:
@@ -112,7 +126,7 @@ class Chip:
     def get_public_key(self):
         self.ensure_chip_initialized()
         public_key = bytearray(64)
-        atcab_get_pubkey(0, public_key)
+        self._throw_on_error(atcab_get_pubkey(0, public_key), "Failed to get public key")
 
         return public_key
 
@@ -141,7 +155,7 @@ class Chip:
         message = digest.finalize()
 
         signature = bytearray(64)
-        atcab_sign(0, message, signature)
+        self._throw_on_error(atcab_sign(0, message, signature), "Failed to sign message")
 
         return signature
 
@@ -155,9 +169,9 @@ class Chip:
 
     def build_jwt(self, data_2_sign, inverter_model):
         self.ensure_chip_initialized()
-        header_base64 =Chip.jwtlify(self.build_header(inverter_model))
+        header_base64 = Chip.jwtlify(self.build_header(inverter_model))
 
-        payload_base64 =Chip.jwtlify(data_2_sign)
+        payload_base64 = Chip.jwtlify(data_2_sign)
         header_and_payload = header_base64 + "." + payload_base64
 
         signature = self.get_signature(header_and_payload)

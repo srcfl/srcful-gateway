@@ -142,3 +142,16 @@ class HarvestTransportTimedSignature(HarvestTransport):
     
     def _time_to_renew_header(self):
         return HarvestTransportTimedSignature._header is None or self._header["valid_until"] < self.bb.time_ms() + 60000 * 15   # 15 minutes before the header expires
+    
+class LocalHarvestTransportTimedSignature(HarvestTransportTimedSignature):
+
+    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, inverter_backend_type: str):
+        super().__init__(event_time, bb, barn, inverter_backend_type)
+
+    def execute(self, event_time):
+        try:
+            jwt = self._data()
+            log.info("JWT: %s", jwt)
+        except crypto.Chip.Error as e:
+            log.error("Error creating JWT: %s", e)
+            return 0
