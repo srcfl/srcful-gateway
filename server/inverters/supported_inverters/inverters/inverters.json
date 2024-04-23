@@ -4,7 +4,7 @@
       "name": "huawei",
       "version": "1.0",
       "verbose_always": false,
-      "model_group": "Model X/Y",
+      "model_group": "Model X/Y", 
       "display_name": "Huawei",
       "protocol": "modbus",
       "description": "Another inverter profile...",
