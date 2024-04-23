@@ -146,10 +146,17 @@ class LocalHarvestTransportTimedSignature(HarvestTransportTimedSignature):
     def __init__(self, event_time: int, bb: BlackBoard, barn: dict, inverter_backend_type: str):
         super().__init__(event_time, bb, barn, inverter_backend_type)
 
+
+    def _create_header(self):
+        log.info("Creating New Header...")
+        super()._create_header()
+        log.info("Created New Header: %s", HarvestTransportTimedSignature._header)
+        log.info("Created New Signature: %s", HarvestTransportTimedSignature._signature_base64)
+
     def execute(self, event_time):
         try:
             jwt = self._data()
-            log.info("JWT: %s", jwt)
+            #log.info("JWT: %s", jwt)
         except crypto.Chip.Error as e:
             log.error("Error creating JWT: %s", e)
             return 0
