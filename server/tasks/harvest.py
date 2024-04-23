@@ -6,6 +6,7 @@ from server.inverters.inverter import Inverter
 from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
 import server.crypto.crypto as crypto
+import json
 
 from .task import Task
 
@@ -87,6 +88,7 @@ class Harvest(Task):
         return None
 
 
+
 class HarvestTransport(SrcfulAPICallTask):
     def __init__(self, event_time: int, bb: BlackBoard, barn: dict, inverter_backend_type: str):
         super().__init__(event_time, bb)
@@ -109,3 +111,34 @@ class HarvestTransport(SrcfulAPICallTask):
     def _on_error(self, reply: requests.Response):
         log.warning("Error in harvest transport: %s", str(reply))
         return 0
+    
+
+class HarvestTransportTimedSignature(HarvestTransport):
+
+    # header and signature are class variables
+    _header = None
+    _signature_base64 = None
+
+    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, inverter_backend_type: str):
+        super().__init__(event_time, bb, barn, inverter_backend_type)
+
+    def _create_header(self):
+        with crypto.Chip() as chip:
+            HarvestTransportTimedSignature._header = chip.build_header(self.inverter_type)
+            HarvestTransportTimedSignature._header["valid_until"] = self.bb.time_ms() + 60000 * 45  # 45 minutes from now is the time to live
+
+            HarvestTransportTimedSignature._signature_base64 = chip.get_signature(crypto.Chip.jwtlify(HarvestTransportTimedSignature._header))
+            HarvestTransportTimedSignature._signature_base64 = crypto.Chip.base64_url_encode(HarvestTransportTimedSignature._signature_base64).decode("utf-8")
+            
+    def _data(self):
+        if self._time_to_renew_header():
+            self._create_header()
+
+        jwt = crypto.Chip.jwtlify(HarvestTransportTimedSignature._header) + "." + crypto.Chip.jwtlify(self.barn) + "." + HarvestTransportTimedSignature._signature_base64
+
+        log.debug("JWT: %s", jwt)
+
+        return jwt
+    
+    def _time_to_renew_header(self):
+        return HarvestTransportTimedSignature._header is None or self._header["valid_until"] < self.bb.time_ms() + 60000 * 15   # 15 minutes before the header expires

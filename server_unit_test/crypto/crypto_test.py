@@ -72,3 +72,14 @@ def test_get_jwt():
     assert jwt is not None
     assert len(jwt) > 0
     assert jwt.count('.') == 2
+
+def test_base64_url_encode():
+    data = 'Hello World'.encode('utf-8')
+    encoded = crypto.Chip.base64_url_encode(data)
+    assert encoded.decode('utf-8') == "SGVsbG8gV29ybGQ"
+    assert len(encoded) > 0
+
+def test_jwtlify():
+    data = {'message': 'Hello World'}
+    encoded = crypto.Chip.jwtlify(data)
+    assert encoded == "eyJtZXNzYWdlIjogIkhlbGxvIFdvcmxkIn0"

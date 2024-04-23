@@ -145,23 +145,23 @@ class Chip:
 
         return signature
 
-    def base64_url_encode(self, data):
+    @staticmethod
+    def base64_url_encode(data):
         return urlsafe_b64encode(data).rstrip(b"=")
+    
+    @staticmethod
+    def jwtlify(data):
+        return Chip.base64_url_encode(json.dumps(data).encode("utf-8")).decode("utf-8")
 
     def build_jwt(self, data_2_sign, inverter_model):
         self.ensure_chip_initialized()
-        header = self.build_header(inverter_model)
+        header_base64 =Chip.jwtlify(self.build_header(inverter_model))
 
-        header_json = json.dumps(header).encode("utf-8")
-        header_base64 = self.base64_url_encode(header_json).decode("utf-8")
-
-        payload_json = json.dumps(data_2_sign).encode("utf-8")
-        payload_base64 = self.base64_url_encode(payload_json).decode("utf-8")
-
+        payload_base64 =Chip.jwtlify(data_2_sign)
         header_and_payload = header_base64 + "." + payload_base64
 
         signature = self.get_signature(header_and_payload)
 
-        signature_base64 = self.base64_url_encode(signature).decode("utf-8")
+        signature_base64 = Chip.base64_url_encode(signature).decode("utf-8")
 
         return header_and_payload + "." + signature_base64
