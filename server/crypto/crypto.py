@@ -59,7 +59,11 @@ class Chip:
         """Prepare the chip. Automatically run at the start of `with` block."""
         # if not self.init_chip():
         #    raise RuntimeError("Could not initialize chip!")
-        self._init_chip()
+        try:
+            self._init_chip()
+        except Exception as e:
+            self._lock.release()
+            raise e
         return self  # or return anything you want
 
     def __exit__(self, type, value, traceback):
@@ -85,13 +89,13 @@ class Chip:
 
         if atcab_init(cfg) != ATCA_SUCCESS:
             cfg.cfg.atcai2c.address = int("c0", 16)
-            code = atcab_init(cfg)
-            self._throw_on_error(code, "Failed to initialize chip")
+            self._throw_on_error(atcab_init(cfg), "Failed to initialize chip")
         return True
     
     def _throw_on_error(self, code: int, message: str):
         if code != ATCA_SUCCESS:
-            self._lock.release()
+            # we do not want to release as there may caught exceptions
+            # self._lock.release()
             raise Chip.Error(code, message)
 
     def _release(self) -> bool:

@@ -1,5 +1,6 @@
 from server.crypto import crypto
 import base64
+import pytest
 
 from unittest.mock import patch
 
@@ -29,6 +30,37 @@ def test_get_header_format():
                     assert "opr" in header
                     assert "device" in header
 
+
+def test_init_throws_error():
+    with patch('server.crypto.crypto.atcab_init', return_value=1):
+        with pytest.raises(crypto.Chip.Error) as excinfo:
+            with crypto.Chip() as chip:
+                pass
+        assert excinfo.value.code == 1
+
+def test_sign_throws_error():
+    with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
+        with patch('server.crypto.crypto.atcab_sign', return_value=1):
+            with crypto.Chip() as chip:
+                with pytest.raises(crypto.Chip.Error) as excinfo:
+                    chip.get_signature("Hello World!")
+                assert excinfo.value.code == 1
+
+def test_get_pubkey_throws_error():
+    with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
+        with patch('server.crypto.crypto.atcab_get_pubkey', return_value=1):
+            with crypto.Chip() as chip:
+                with pytest.raises(crypto.Chip.Error) as excinfo:
+                    chip.get_public_key()
+                assert excinfo.value.code == 1
+
+def test_serial_number_throws_error():
+    with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
+        with patch('server.crypto.crypto.atcab_read_serial_number', return_value=1):
+            with crypto.Chip() as chip:
+                with pytest.raises(crypto.Chip.Error) as excinfo:
+                    chip.get_serial_number()
+                assert excinfo.value.code == 1
 
 def test_build_header_contents():
     with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
