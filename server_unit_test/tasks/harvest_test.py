@@ -7,7 +7,7 @@ from server.blackboard import BlackBoard
 
 
 def test_create_harvest():
-    t = harvest.Harvest(0, BlackBoard(), None)
+    t = harvest.Harvest(0, BlackBoard(), None,  harvest.DefaultHarvestTransportFactory())
     assert t is not None
 
 
@@ -20,7 +20,7 @@ def test_inverter_terminated():
     mock_inverter = Mock()
     mock_inverter.is_terminated.return_value = True
 
-    t = harvest.Harvest(0, BlackBoard(), mock_inverter)
+    t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvest.DefaultHarvestTransportFactory())
     ret = t.execute(17)
     assert ret is None
 
@@ -31,7 +31,7 @@ def test_execute_harvest():
     mock_inverter.read_harvest_data.return_value = registers
     mock_inverter.is_terminated.return_value = False
 
-    t = harvest.Harvest(0, BlackBoard(), mock_inverter)
+    t = harvest.Harvest(0, BlackBoard(), mock_inverter,  harvest.DefaultHarvestTransportFactory())
     ret = t.execute(17)
     assert ret is t
     assert t.barn[17] == registers
@@ -44,7 +44,7 @@ def test_execute_harvest_x10():
     # the 10th time we should get a list of 2 tasks back
     mock_inverter = Mock()
     registers = [{"1": 1717 + x} for x in range(10)]
-    t = harvest.Harvest(0, BlackBoard(), mock_inverter)
+    t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvest.DefaultHarvestTransportFactory())
     mock_inverter.is_terminated.return_value = False
 
     for i in range(9):
@@ -82,7 +82,7 @@ def test_adaptive_backoff():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter)
+    t = harvest.Harvest(0, mock_bb, mock_inverter,  harvest.DefaultHarvestTransportFactory())
     t.execute(17)
 
     assert t.backoff_time == 1966
@@ -118,7 +118,7 @@ def test_adaptive_poll():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter)
+    t = harvest.Harvest(0, mock_bb, mock_inverter, harvest.DefaultHarvestTransportFactory())
     t.execute(17)
 
     assert t.backoff_time == 1966
@@ -143,7 +143,7 @@ def test_execute_harvest_no_transport():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter)
+    t = harvest.Harvest(0, mock_bb, mock_inverter,  harvest.DefaultHarvestTransportFactory())
 
     for i in range(len(registers)):
         mock_inverter.read_harvest_data.return_value = registers[i]
@@ -168,7 +168,7 @@ def test_execute_harvest_incremental_backoff_increasing():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter)
+    t = harvest.Harvest(0, mock_bb, mock_inverter,  harvest.DefaultHarvestTransportFactory())
 
     while t.backoff_time < t.max_backoff_time:
         old_time = t.backoff_time
@@ -188,7 +188,7 @@ def test_execute_harvest_incremental_backoff_reset():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter)
+    t = harvest.Harvest(0, mock_bb, mock_inverter, harvest.DefaultHarvestTransportFactory())
 
     while t.backoff_time < t.max_backoff_time:
         ret = t.execute(17)
@@ -208,7 +208,7 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter)
+    t = harvest.Harvest(0, mock_bb, mock_inverter, harvest.DefaultHarvestTransportFactory())
 
     while t.backoff_time < t.max_backoff_time:
         ret = t.execute(17)
@@ -245,7 +245,7 @@ def test_max_backoftime_leq_than_max():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 999999999999999999
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter)
+    t = harvest.Harvest(0, mock_bb, mock_inverter, harvest.DefaultHarvestTransportFactory())
 
     t.execute(17)  # this will cause a really long elapsed time
     assert t.backoff_time <= t.max_backoff_time

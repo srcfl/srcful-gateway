@@ -15,8 +15,17 @@ from .srcfulAPICallTask import SrcfulAPICallTask
 log = logging.getLogger(__name__)
 
 
+class IHarvestTransport(SrcfulAPICallTask):
+    pass
+
+
+class ITransportFactory:
+    def __call__(self, event_time: int, bb: BlackBoard, inverter: Inverter, barn: dict) -> IHarvestTransport:
+        pass
+
+
 class Harvest(Task):
-    def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter):
+    def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter, transport_factory: ITransportFactory):
         super().__init__(event_time, bb)
         self.inverter = inverter
         # self.stats['lastHarvest'] = 'n/a'
@@ -26,6 +35,7 @@ class Harvest(Task):
         # incremental backoff stuff
         self.backoff_time = self.min_backoff_time  # start with a 1-second backoff
         self.max_backoff_time = 256000  # max ~4.3-minute backoff
+        self.transport_factory = transport_factory
 
     def execute(self, event_time) -> Task | list[Task]:
 
@@ -80,14 +90,13 @@ class Harvest(Task):
 
     def _create_transport(self, limit: int, event_time: int):
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
-            transport = LocalHarvestTransportTimedSignature(event_time + 100, self.bb, self.barn, self.inverter.get_backend_type())
+            transport = self.transport_factory(event_time + 100, self.bb, self.barn, self.inverter)
             self.barn = {}
             return transport
         return None
 
 
-
-class HarvestTransport(SrcfulAPICallTask):
+class HarvestTransport(IHarvestTransport):
     def __init__(self, event_time: int, bb: BlackBoard, barn: dict, inverter_backend_type: str):
         super().__init__(event_time, bb)
         # self.stats['lastHarvestTransport'] = 'n/a'
@@ -161,3 +170,15 @@ class LocalHarvestTransportTimedSignature(HarvestTransportTimedSignature):
         except crypto.Chip.Error as e:
             log.error("Error creating JWT: %s", e)
             return 0
+
+class DefaultHarvestTransportFactory(ITransportFactory):
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, inverter: Inverter) -> HarvestTransport:
+        return HarvestTransport(event_time, bb, barn, inverter.get_backend_type())
+    
+class TimedSignatureHarvestTransportFactory(ITransportFactory):
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, inverter: Inverter) -> HarvestTransport:
+        return HarvestTransportTimedSignature(event_time, bb, barn, inverter.get_backend_type())
+    
+class LocalTimedSignatureHarvestTransportFactory(ITransportFactory):
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, inverter: Inverter) -> HarvestTransport:
+        return LocalHarvestTransportTimedSignature(event_time, bb, barn, inverter.get_backend_type())
