@@ -1,4 +1,5 @@
 import server.tasks.harvest as harvest
+import server.tasks.harvestTransport as harvestTransport
 import server.tasks.openInverterPerpetualTask as oit
 from unittest.mock import Mock, patch
 import pytest
@@ -7,12 +8,12 @@ from server.blackboard import BlackBoard
 
 
 def test_create_harvest():
-    t = harvest.Harvest(0, BlackBoard(), None,  harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, BlackBoard(), None,  harvestTransport.DefaultHarvestTransportFactory())
     assert t is not None
 
 
 def test_create_harvest_transport():
-    t = harvest.HarvestTransport(0, BlackBoard(), {}, "huawei")
+    t = harvestTransport.HarvestTransport(0, BlackBoard(), {}, "huawei")
     assert t is not None
 
 
@@ -20,7 +21,7 @@ def test_inverter_terminated():
     mock_inverter = Mock()
     mock_inverter.is_terminated.return_value = True
 
-    t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
     assert ret is None
 
@@ -31,7 +32,7 @@ def test_execute_harvest():
     mock_inverter.read_harvest_data.return_value = registers
     mock_inverter.is_terminated.return_value = False
 
-    t = harvest.Harvest(0, BlackBoard(), mock_inverter,  harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, BlackBoard(), mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
     assert ret is t
     assert t.barn[17] == registers
@@ -44,7 +45,7 @@ def test_execute_harvest_x10():
     # the 10th time we should get a list of 2 tasks back
     mock_inverter = Mock()
     registers = [{"1": 1717 + x} for x in range(10)]
-    t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     mock_inverter.is_terminated.return_value = False
 
     for i in range(9):
@@ -82,7 +83,7 @@ def test_adaptive_backoff():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter,  harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, mock_bb, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     t.execute(17)
 
     assert t.backoff_time == 1966
@@ -118,7 +119,7 @@ def test_adaptive_poll():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter, harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     t.execute(17)
 
     assert t.backoff_time == 1966
@@ -143,7 +144,7 @@ def test_execute_harvest_no_transport():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter,  harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, mock_bb, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
 
     for i in range(len(registers)):
         mock_inverter.read_harvest_data.return_value = registers[i]
@@ -152,9 +153,9 @@ def test_execute_harvest_no_transport():
     # we should now have issued a transport and the barn should be empty
     assert len(tasks) == 2
 
-    transport = tasks[0] if type(tasks[0]) is harvest.HarvestTransport else tasks[1]
+    transport = tasks[0] if type(tasks[0]) is harvestTransport.HarvestTransport else tasks[1]
 
-    assert type(transport) is harvest.HarvestTransport
+    assert type(transport) is harvestTransport.HarvestTransport
 
     assert len(t.barn) == 0
     assert len(transport.barn) == 10
@@ -168,7 +169,7 @@ def test_execute_harvest_incremental_backoff_increasing():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter,  harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, mock_bb, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
 
     while t.backoff_time < t.max_backoff_time:
         old_time = t.backoff_time
@@ -188,7 +189,7 @@ def test_execute_harvest_incremental_backoff_reset():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter, harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
 
     while t.backoff_time < t.max_backoff_time:
         ret = t.execute(17)
@@ -208,7 +209,7 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter, harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
 
     while t.backoff_time < t.max_backoff_time:
         ret = t.execute(17)
@@ -234,7 +235,7 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     # Test that the execute method returns a HarvestTransport object when the has some data
     t.barn[17] = {"1": 1717}
     ret = t.execute(17)
-    assert type(ret) is harvest.HarvestTransport
+    assert type(ret) is harvestTransport.HarvestTransport
 
 def test_max_backoftime_leq_than_max():
     registers = [{"1": 1717 + x} for x in range(10)]
@@ -245,7 +246,7 @@ def test_max_backoftime_leq_than_max():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 999999999999999999
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter, harvest.DefaultHarvestTransportFactory())
+    t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
 
     t.execute(17)  # this will cause a really long elapsed time
     assert t.backoff_time <= t.max_backoff_time
@@ -274,7 +275,7 @@ def test_data_harvest_transport_jwt(mock_chip_class):
     mock_chip_instance = mock_chip_class.return_value.__enter__.return_value
     mock_chip_instance.build_jwt.return_value = {str(barn), inverter_type}
 
-    instance = harvest.HarvestTransport(0, {}, barn, inverter_type)
+    instance = harvestTransport.HarvestTransport(0, {}, barn, inverter_type)
     jwt = instance._data()
 
     mock_chip_instance.build_jwt.assert_called_once_with(instance.barn, instance.inverter_type)
@@ -284,12 +285,12 @@ def test_on_200():
     # just make the call for now
     response = Mock()
 
-    instance = harvest.HarvestTransport(0, {}, {}, "huawei")
+    instance = harvestTransport.HarvestTransport(0, {}, {}, "huawei")
     instance._on_200(response)
 
 
 def test_on_error():
     # just make the call for now
     response = Mock()
-    instance = harvest.HarvestTransport(0, {}, {}, "huawei")
+    instance = harvestTransport.HarvestTransport(0, {}, {}, "huawei")
     instance._on_error(response)

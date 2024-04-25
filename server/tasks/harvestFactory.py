@@ -1,5 +1,6 @@
 from server.blackboard import BlackBoard
-from .harvest import Harvest, DefaultHarvestTransportFactory
+from .harvest import Harvest
+from .harvestTransport import DefaultHarvestTransportFactory
 
 
 class HarvestFactory:
