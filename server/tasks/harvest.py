@@ -1,21 +1,18 @@
 
 import logging
-import requests
 
 from server.inverters.inverter import Inverter
 from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
-import server.crypto.crypto as crypto
 
 from .task import Task
-
-from .srcfulAPICallTask import SrcfulAPICallTask
+from .harvestTransport import ITransportFactory
 
 log = logging.getLogger(__name__)
 
 
 class Harvest(Task):
-    def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter):
+    def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter, transport_factory: ITransportFactory):
         super().__init__(event_time, bb)
         self.inverter = inverter
         # self.stats['lastHarvest'] = 'n/a'
@@ -25,6 +22,7 @@ class Harvest(Task):
         # incremental backoff stuff
         self.backoff_time = self.min_backoff_time  # start with a 1-second backoff
         self.max_backoff_time = 256000  # max ~4.3-minute backoff
+        self.transport_factory = transport_factory
 
     def execute(self, event_time) -> Task | list[Task]:
 
@@ -79,33 +77,7 @@ class Harvest(Task):
 
     def _create_transport(self, limit: int, event_time: int):
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
-            transport = HarvestTransport(
-                event_time + 100, self.bb, self.barn, self.inverter.get_backend_type()
-            )
+            transport = self.transport_factory(event_time + 100, self.bb, self.barn, self.inverter)
             self.barn = {}
             return transport
         return None
-
-
-class HarvestTransport(SrcfulAPICallTask):
-    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, inverter_backend_type: str):
-        super().__init__(event_time, bb)
-        # self.stats['lastHarvestTransport'] = 'n/a'
-        # if 'harvestTransports' not in self.stats:
-        #  self.stats['harvestTransports'] = 0
-        self.barn = barn
-        self.inverter_type = inverter_backend_type
-
-    def _data(self):
-        with crypto.Chip() as chip:
-            jwt = chip.build_jwt(self.barn, self.inverter_type)
-        
-        return jwt
-
-    def _on_200(self, reply):
-        log.info("Response: %s", reply)
-        # self.stats['harvestTransports'] += 1
-
-    def _on_error(self, reply: requests.Response):
-        log.warning("Error in harvest transport: %s", str(reply))
-        return 0

@@ -115,11 +115,11 @@ def test_time_ms():
     assert bb.time_ms() <= int(time.time() * 1000)
 
 def test_elapsed_time():
-    start_time = time.time_ns() // 1_000_000
+    start_time = time.monotonic_ns() // 1_000_000
     bb = BlackBoard()
 
     time.sleep(0.2)
-    end_time = time.time_ns() // 1_000_000
+    end_time = time.monotonic_ns() // 1_000_000
 
     diff = bb.elapsed_time - (end_time - start_time)  
     
