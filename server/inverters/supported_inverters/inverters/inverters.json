@@ -2,9 +2,9 @@
   "inverters": [
     {
       "name": "huawei",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
-      "model_group": "Model X/Y",
+      "model_group": "SUN2000",
       "display_name": "Huawei",
       "protocol": "modbus",
       "description": "Another inverter profile...",
@@ -35,10 +35,10 @@
     },
     {
       "name": "solaredge",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
       "model_group": "Model X/Y",
-      "display_name": "SolarEdge",
+      "display_name": "SE",
       "protocol": "modbus",
       "description": "Another inverter profile...",
       "registers_verbose": [
@@ -67,20 +67,20 @@
         {
           "fcode": 3,
           "start_register": 40085,
-          "num_of_registers": 1
+          "num_of_registers": 2
         },
         {
           "fcode": 3,
           "start_register": 40100,
-          "num_of_registers": 1
+          "num_of_registers": 2
         }
       ]
     },
     {
       "name": "sungrow",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
-      "model_group": "Model X/Y",
+      "model_group": "SG",
       "display_name": "Sungrow",
       "protocol": "modbus",
       "description": "Another inverter profile...",
@@ -111,9 +111,9 @@
     },
     {
       "name": "sungrow_hybrid",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
-      "model_group": "Model X/Y",
+      "model_group": "SH",
       "display_name": "Sungrow Hybrid",
       "protocol": "modbus",
       "description": "Another inverter profile...",
@@ -149,7 +149,7 @@
     },
     {
       "name": "sma",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
       "model_group": "Model X/Y",
       "display_name": "SMA",
@@ -192,7 +192,7 @@
     },
     {
       "name": "fronius",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
       "model_group": "Primo/Gen24 Plus",
       "display_name": "Fronius",
@@ -219,8 +219,36 @@
       ]
     },
     {
+      "name": "fronius_sunspec",
+      "version": "0.1",
+      "verbose_always": false,
+      "model_group": "Primo/Gen24 Plus",
+      "display_name": "Fronius (SunSpec)",
+      "protocol": "modbus",
+      "description": "Fronius inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 3,
+          "start_register": 40000,
+          "num_of_registers": 125
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 3,
+          "start_register": 40085,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 3,
+          "start_register": 40100,
+          "num_of_registers": 2
+        }
+      ]
+    },
+    {
       "name": "deye",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
       "model_group": "Model X/Y",
       "display_name": "Deye",
@@ -258,7 +286,7 @@
     },
     {
       "name": "deye_hybrid",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
       "model_group": "Model X/Y",
       "display_name": "Deye Hybrid",
@@ -296,7 +324,7 @@
     },
     {
       "name": "growatt",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
       "model_group": "Model X/Y",
       "display_name": "Growatt",
@@ -324,7 +352,7 @@
     },
     {
       "name": "goodwe",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
       "model_group": "Model X/Y",
       "display_name": "GoodWe",
@@ -352,7 +380,7 @@
     },
     {
       "name": "lqt40s",
-      "version": "1.0",
+      "version": "0.1",
       "verbose_always": false,
       "model_group": "Model X/Y",
       "display_name": "LQT40S",
