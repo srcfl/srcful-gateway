@@ -37,8 +37,8 @@
       "name": "solaredge",
       "version": "0.1",
       "verbose_always": false,
-      "model_group": "Model X/Y",
-      "display_name": "SE",
+      "model_group": "SE",
+      "display_name": "SolarEdge",
       "protocol": "modbus",
       "description": "Another inverter profile...",
       "registers_verbose": [
