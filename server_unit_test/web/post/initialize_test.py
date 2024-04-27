@@ -18,9 +18,9 @@ def test_initialize(request_data):
     with patch("server.crypto.crypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
         with patch("server.crypto.crypto.atcab_read_serial_number", return_value=crypto.ATCA_SUCCESS):
             with patch("server.crypto.crypto.atcab_sign", return_value=crypto.ATCA_SUCCESS):
-
-                handler = Handler()
-                status_code, response = handler.do_post(request_data)  
+                with patch("server.crypto.crypto.atcab_get_pubkey", return_value=crypto.ATCA_SUCCESS):
+                    handler = Handler()
+                    status_code, response = handler.do_post(request_data)  
 
     assert status_code == 200
     response = json.loads(response)

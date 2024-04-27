@@ -22,8 +22,9 @@ class InitializeTask(SrcfulAPICallTask):
     def _json(self):
         with crypto.Chip() as chip:
             serial = chip.get_serial_number().hex()
+            pub_key = chip.get_public_key().hex()
 
-            id_and_wallet = serial + ":" + self.wallet
+            id_and_wallet = serial + ":" + self.wallet + ":" + pub_key
             sign = chip.get_signature(id_and_wallet).hex()
         
         m = """

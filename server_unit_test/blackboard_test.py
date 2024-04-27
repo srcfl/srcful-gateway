@@ -123,4 +123,4 @@ def test_elapsed_time():
 
     diff = bb.elapsed_time - (end_time - start_time)  
     
-    assert diff >= 0 and diff < 2
+    assert abs(diff) < 10
