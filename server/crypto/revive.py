@@ -81,5 +81,5 @@ def run():
 
 if __name__ == "__main__":
     ret = run()
-    print(f"final return value 0 == success: {ret}")
+    print(f"final return value (0 == success): {ret}")
     sys.exit(ret)

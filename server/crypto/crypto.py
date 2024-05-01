@@ -53,7 +53,7 @@ class Chip:
             super().__init__(self.message)
 
         def __str__(self) -> str:
-            return super().__str__() + f"cryptauthlib error code: {self.code}"
+            return super().__str__() + f" cryptauthlib error code: {self.code}"
 
     def __enter__(self):
         """Prepare the chip. Automatically run at the start of `with` block."""
@@ -85,11 +85,11 @@ class Chip:
         # this is for raspberry pi should probably be checked better
         cfg = cfg_ateccx08a_i2c_default()
         cfg.cfg.atcai2c.bus = 1  # raspberry pi
-        cfg.cfg.atcai2c.address = int("6a", 16)
+        cfg.cfg.atcai2c.address = 0x6a
 
         if atcab_init(cfg) != ATCA_SUCCESS:
-            cfg.cfg.atcai2c.address = int("c0", 16)
-            self._throw_on_error(atcab_init(cfg), "Failed to initialize chip")
+            cfg.cfg.atcai2c.address = 0xc0
+            self._throw_on_error(atcab_init(cfg), "Failed to initialize chip.")
         return True
     
     def _throw_on_error(self, code: int, message: str):

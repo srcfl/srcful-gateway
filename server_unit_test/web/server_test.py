@@ -117,6 +117,49 @@ def test_handler_get_root(mock_setup, mock_handle, mock_finish):
     v = h.wfile.getvalue().decode("utf-8")
     assert "<html>" in v
 
+@patch.object(BaseHTTPRequestHandler, "finish")
+@patch.object(BaseHTTPRequestHandler, "handle")
+@patch.object(BaseHTTPRequestHandler, "setup")
+def test_handler_get_returns_exception(mock_setup, mock_handle, mock_finish):
+    # test that exceptions are handled and retuns an exception message
+    h = request_handler_factory(BlackBoard())(None, None, None)
+
+    # we need to mock the base class methods
+    h.path = "/api/crypto"
+    h.send_response = lambda x: None
+    h.send_header = lambda x, y: None
+    h.end_headers = lambda: None
+    h.wfile = BytesIO()
+
+    with patch("server.crypto.crypto.atcab_init", side_effect=Exception("test")):
+        h.do_GET()
+    v = h.wfile.getvalue().decode("utf-8")
+    assert "test" in v
+    assert "exception" in v
+
+@patch.object(BaseHTTPRequestHandler, "finish")
+@patch.object(BaseHTTPRequestHandler, "handle")
+@patch.object(BaseHTTPRequestHandler, "setup")
+def test_hanler_post_returns_exception(mock_setup, mock_handle, mock_finish):
+    h = request_handler_factory(BlackBoard())(None, None, None)
+
+    # we need to mock the base class methods
+    h.path = "/api/echo"
+    h.send_response = lambda x: None
+    h.send_header = lambda x, y: None
+    h.end_headers = lambda: None
+    h.headers = {"Content-Length": 0}
+    h.wfile = BytesIO()
+    h.rfile = BytesIO()
+
+    with patch("server.web.handler.post.echo.Handler.do_post", side_effect=Exception("test")):
+        h.do_POST()
+    v = h.wfile.getvalue().decode("utf-8")
+    assert "test" in v
+    assert "exception" in v
+
+
+
 
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")

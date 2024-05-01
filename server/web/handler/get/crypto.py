@@ -54,4 +54,4 @@ class ReviveHandler(GetHandler):
         # we execute the revive command as a separate process and collect the output
         
         
-        return 200, json.dumps({"status": "success"})
+        return 200, json.dumps({"status": run_revive_script()})
