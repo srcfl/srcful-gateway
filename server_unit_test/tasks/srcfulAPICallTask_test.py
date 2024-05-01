@@ -129,6 +129,29 @@ def test_execute_handles_request_exception():
         assert result.reply.status_code == None
         assert result.time == 1000
 
+def test_execute_handles_exception():
+    # Arrange
+    mock_data = {"foo": "bar"}
+    mock_on_error = Mock(return_value=1000)
+    task = ConcreteSUT(0, {})
+
+    # Set the task's _data method to return our mock data
+    task._data = Mock(return_value=mock_data, side_effect=Exception("test"))
+
+    # Set the task's _onError method to our mock method
+    task._on_error = mock_on_error
+
+    # Act
+    result = task.execute(0)
+    result.t.join()
+
+    # Assert
+    # execute again as replies are handled in the next call
+    task.execute(0)
+    mock_on_error.assert_called_once()
+    assert result.reply.status_code == None
+    assert result.time == 1000
+
 
 def test_json_returns_none_by_default():
     assert ConcreteSUT(0, {})._json() is None

@@ -70,6 +70,9 @@ class SrcfulAPICallTask(Task, ABC):
             except requests.exceptions.RequestException as e:
                 log.exception(e)
                 self.reply = requests.Response()
+            except Exception as e:
+                log.exception(e)
+                self.reply = requests.Response()
 
         if self.t is None:
             self.t = Thread(target=post)

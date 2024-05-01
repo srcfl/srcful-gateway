@@ -23,8 +23,9 @@ def test_make_the_call_with_task():
     with patch("server.crypto.crypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
         with patch("server.crypto.crypto.atcab_read_serial_number", return_value=crypto.ATCA_SUCCESS):
             with patch("server.crypto.crypto.atcab_sign", return_value=crypto.ATCA_SUCCESS):
-                t = InitializeTask(0, {}, "aaa", True)
-                t.execute_and_wait()
+                with patch("server.crypto.crypto.atcab_get_pubkey", return_value=crypto.ATCA_SUCCESS):
+                  t = InitializeTask(0, {}, "aaa", True)
+                  t.execute_and_wait()
 
     assert t.reply.status_code == 200
     assert t.is_initialized is False
@@ -48,6 +49,6 @@ def _internalJsonQuery():
       }
     }"""
 
-    m = m.replace("$var_idAndWallet", "aa:bb")
+    m = m.replace("$var_idAndWallet", "aa:bb:cc")
     m = m.replace("$var_sign", "123456789abcdef")
     return {"query": m}
