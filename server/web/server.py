@@ -20,6 +20,7 @@ def request_handler_factory(bb: BlackBoard):
 
             self.api_get_dict = {
                 "crypto": handler.get.crypto.Handler(),
+                "cypto/revive": handler.get.crypto.ReviveHandler(),
                 "hello": handler.get.hello.Handler(),
                 "name": handler.get.name.Handler(),
                 "logger": handler.get.logger.Handler(),
