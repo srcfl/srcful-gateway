@@ -67,12 +67,13 @@ def init_chip(address: int):
 def run():
     ret = 1
 
-    # we test type A chip first
-    if init_chip(0xc0) == 0:
+    # we test type B chip first
+    if init_chip(0x6a) == 0:
         ret = poke()
         atcab_release()
 
-    elif init_chip(0x6a) == 0:
+    sleep()
+    if init_chip(0xc0) == 0:
         ret = poke()
         atcab_release()
 
