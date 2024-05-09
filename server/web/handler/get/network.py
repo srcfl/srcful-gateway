@@ -5,7 +5,7 @@ from server.wifi.wifi import get_connection_configs, is_connected, get_ip_addres
 from ..handler import GetHandler
 from ..requestData import RequestData
 
-COMMON_INVERTER_PORTS = [502, 1502, 8877]
+COMMON_INVERTER_PORTS = [502, 1502, 8899, 48899]
 
 class NetworkHandler(GetHandler):
     def schema(self):
