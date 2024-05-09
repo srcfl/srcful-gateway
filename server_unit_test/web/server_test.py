@@ -5,6 +5,8 @@ from http.server import BaseHTTPRequestHandler
 import pytest
 import json
 
+import server.crypto.crypto as crypto
+
 from server.blackboard import BlackBoard
 
 from http.server import HTTPServer
@@ -109,7 +111,9 @@ def test_handler_get_root(mock_setup, mock_handle, mock_finish):
     h.end_headers = lambda: None
     h.wfile = BytesIO()
 
-    h.do_GET()
+    with patch("server.crypto.crypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
+        with patch("server.crypto.crypto.atcab_read_serial_number", return_value=crypto.ATCA_SUCCESS):
+            h.do_GET()
     v = h.wfile.getvalue().decode("utf-8")
     assert "<html>" in v
 
