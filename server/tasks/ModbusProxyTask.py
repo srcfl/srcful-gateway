@@ -45,7 +45,7 @@ class ModbusProxyTask(Task):
                 self.client_to_device[client_socket] = b''
             elif s is self.device_socket:
                 try:
-                    data = s.recv(1024)
+                    data = self._read_modbus(s)
                     if data:
                         log.debug(f"Forwarding data from device to client: {data.hex()}")
                         for client_socket, client_data in self.client_to_device.items():
@@ -57,7 +57,7 @@ class ModbusProxyTask(Task):
                     log.error(f"Error receiving data from device: {e}")
             else:
                 try:
-                    data = s.recv(1024)
+                    data = self._read_modbus(s)
                     if data:
                         log.debug(f"Forwarding data from client to target device: {data.hex()}")
                         self.device_socket.send(data)
@@ -73,6 +73,16 @@ class ModbusProxyTask(Task):
         self.adjust_time(event_time + 25)
         return self
 
+    def _read_modbus(self, s):
+        header = s.recv(6)
+        if len(header) < 6:
+            return None
+        size = int.from_bytes(header[4:], "big")
+        transaction_id = int.from_bytes(header[:2], "big")
+        log.debug(f"Reading {size} bytes from {s}")
+        reply = header + s.recv(size)
+        return reply
+
     def _close_socket(self, s):
         log.debug(f"Closing socket {s}")
         if s in self.inputs:
@@ -82,3 +92,6 @@ class ModbusProxyTask(Task):
         if s in self.client_to_device:
             del self.client_to_device[s]
         s.close()
+
+        # 007b 00000007 01030406a3b229
+        # 007c 00000006 01039ca40002
