@@ -15,6 +15,8 @@ from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.bootstrap import Bootstrap
 
+from server.tasks.ModbusProxyTask import ModbusProxyTask
+
 
 from server.blackboard import BlackBoard
 
@@ -121,6 +123,9 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     # put some initial tasks in the queue
     if inverter is not None:
         tasks.put(OpenInverterTask(bb.time_ms(), bb, ModbusTCP(inverter)))
+
+    # tmp we should now be able to connect to localhost...
+    tasks.put(ModbusProxyTask(bb.time_ms(), bb, "localhost", 1502, "35.198.102.58", 502))
 
     for task in bootstrap.get_tasks(bb.time_ms() + 500, bb):
         tasks.put(task)
