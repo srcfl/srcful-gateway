@@ -47,11 +47,11 @@ def get_info():
 
 def poke():
     """poke the chip to make it work log the pubkey and info"""
-    #sleep()
-    #get_pubkey()
-    #sleep()
-    #get_info()
-    sleep()
+    # sleep()
+    # get_pubkey()
+    # sleep()
+    # get_info()
+    # sleep()
     return get_pubkey()
 
 
