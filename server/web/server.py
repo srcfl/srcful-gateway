@@ -26,6 +26,7 @@ def request_handler_factory(bb: BlackBoard):
                 "inverter": handler.get.inverter.Handler(),
                 "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
                 "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
+                "inverter/modbus/scan": handler.get.network.ModbusScanHandler(),
                 "inverter/supported": handler.get.supported.Handler(),
                 "network": handler.get.network.NetworkHandler(),
                 "network/address": handler.get.network.AddressHandler(),

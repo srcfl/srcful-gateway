@@ -11,7 +11,10 @@ RUN apk update
 RUN apk add --no-cache make
 RUN apk add --no-cache gcc musl-dev linux-headers cmake libffi-dev
 RUN apk add curl jq
-
+# Install nmap
+RUN apk update && \
+    apk add --no-cache nmap
+    
 # Install necessary packages
 RUN apk add --no-cache dbus dbus-dev glib-dev dbus-glib
 
