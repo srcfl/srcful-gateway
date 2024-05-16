@@ -2,8 +2,7 @@ import logging
 import socket
 import select
 from server.blackboard import BlackBoard
-from .task import Task
-import time
+from ..tasks.task import Task
 
 logging.basicConfig()
 log = logging.getLogger()

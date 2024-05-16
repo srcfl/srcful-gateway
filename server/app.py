@@ -3,6 +3,7 @@ import sys
 import time
 import logging
 import threading
+import server.modbus_proxy as modbus_proxy
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -125,7 +126,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         tasks.put(OpenInverterTask(bb.time_ms(), bb, ModbusTCP(inverter)))
 
     # tmp we should now be able to connect to localhost...
-    tasks.put(ModbusProxyTask(bb.time_ms(), bb, "localhost", 1502, "35.198.102.58", 502))
+    # tasks.put(ModbusProxyTask(bb.time_ms(), bb, "localhost", 1502, "35.198.102.58", 502))
+    modbus_proxy.ThreadedServer("localhost", 1502, "35.198.102.58", 502)
 
     for task in bootstrap.get_tasks(bb.time_ms() + 500, bb):
         tasks.put(task)
