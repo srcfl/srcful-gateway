@@ -20,12 +20,14 @@ def request_handler_factory(bb: BlackBoard):
 
             self.api_get_dict = {
                 "crypto": handler.get.crypto.Handler(),
+                "crypto/revive": handler.get.crypto.ReviveHandler(),
                 "hello": handler.get.hello.Handler(),
                 "name": handler.get.name.Handler(),
                 "logger": handler.get.logger.Handler(),
                 "inverter": handler.get.inverter.Handler(),
                 "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
                 "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
+                "inverter/modbus/scan": handler.get.network.ModbusScanHandler(),
                 "inverter/supported": handler.get.supported.Handler(),
                 "network": handler.get.network.NetworkHandler(),
                 "network/address": handler.get.network.AddressHandler(),
@@ -132,7 +134,13 @@ def request_handler_factory(bb: BlackBoard):
 
                 rdata = handler.RequestData(bb, params, query, post_data)
 
-                code, response = api_handler.do_post(rdata)
+                try:
+                    code, response = api_handler.do_post(rdata)
+                except Exception as e:
+                    logger.exception("Exception in POST handler: %s", e)
+                    code = 500
+                    response = json.dumps({"exception": str(e), "endpoint": path})
+                
                 self.send_api_response(code, response)
                 return
             else:
@@ -153,7 +161,12 @@ def request_handler_factory(bb: BlackBoard):
             rdata = handler.RequestData(bb, params, query, {})
 
             if api_handler is not None:
-                code, response = api_handler.do_get(rdata)
+                try:
+                    code, response = api_handler.do_get(rdata)
+                except Exception as e:
+                    logger.exception("Exception in GET handler: %s", e)
+                    code = 500
+                    response = json.dumps({"exception": str(e), "endpoint": path})
                 self.send_api_response(code, response)
             else:
                 # check if we have a post handler

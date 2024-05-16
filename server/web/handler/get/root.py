@@ -1,6 +1,7 @@
 
-from ..handler import GetHandler
+import server.crypto.crypto as crypto
 
+from ..handler import GetHandler
 from ..requestData import RequestData
 
 
@@ -10,7 +11,10 @@ class Handler(GetHandler):
         ret += "<body>"
         ret += f"<h1>Srcful Energy Gateway {data.bb.get_version()}</h1>"
 
-        ret += f"<p>chipInfo: {data.bb.get_chip_info()} (This should not be all zeros)</p>"
+        try:
+            ret += f"<p>ChipInfo: {data.bb.get_chip_info()} (This should not be all zeros)</p>"
+        except crypto.Chip.Error as e:
+            ret += f"<p>ChipInfo gave Exception: {str(e)}</p>"
 
         elapsed_time = data.bb.elapsed_time
 
