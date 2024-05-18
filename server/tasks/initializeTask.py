@@ -48,6 +48,7 @@ class InitializeTask(SrcfulAPICallTask):
             )
 
         log.info("Preparing intialization of wallet %s with sn %s", self.wallet, serial)
+        log.debug("Query: %s", m)
 
         return {"query": m}
 
@@ -58,12 +59,9 @@ class InitializeTask(SrcfulAPICallTask):
             and reply.json()["data"]["gatewayInception"]["initialize"]["initialized"]
             is not None
         ):
-            self.is_initialized = reply.json()["data"]["gatewayInception"][
-                "initialize"
-            ]["initialized"]
-        self.is_initialized = reply.json()["data"]["gatewayInception"]["initialize"][
-            "initialized"
-        ]
+            self.is_initialized = reply.json()["data"]["gatewayInception"]["initialize"]["initialized"]
+        else:
+            self.is_initialized = False
 
     def _on_error(self, reply: requests.Response) -> int:
         log.warning("Failed to initialize wallet %s", self.wallet)
