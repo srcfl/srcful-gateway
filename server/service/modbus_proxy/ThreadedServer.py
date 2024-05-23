@@ -38,6 +38,7 @@ class ThreadedServer(threading.Thread):
             # Setup single persistent connection to the target device
             self.device_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.device_socket.connect((self.target_host, self.target_port))
+            time.sleep(1.0)  # Wait for the connection to establish
 
             # Start handling requests in separate thread
             process_thread = threading.Thread(target=self._process_requests, daemon=True)
@@ -96,7 +97,7 @@ class ThreadedServer(threading.Thread):
                 elif not self.normal_priority_queue.empty():
                     client_socket, data, transaction_id = self.normal_priority_queue.get_nowait()
                 else:
-                    time.sleep(0.01)
+                    time.sleep(0.001)
                     continue
 
                 log.debug("Processing request with transaction ID: %s", transaction_id)
@@ -104,7 +105,7 @@ class ThreadedServer(threading.Thread):
                 self.device_socket.send(data)
                 self._handle_device_response(transaction_id)
             except queue.Empty:
-                time.sleep(0.01)
+                time.sleep(0.001)
             except Exception as e:
                 log.error("Error processing request: %s", e)
 
