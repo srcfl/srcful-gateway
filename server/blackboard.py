@@ -3,6 +3,7 @@ import time
 import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
+import server.service as service
 
 import logging
 
@@ -24,6 +25,7 @@ class BlackBoard:
     _rest_server_ip: str
     _messages: list[Message]
     _tasks: list[ITask]
+    _services: dict[str, service.Definition]
 
     def __init__(self):
         self._inverters = BlackBoard.Inverters()
@@ -32,6 +34,7 @@ class BlackBoard:
         self._rest_server_ip = "localhost"
         self._messages = []
         self._tasks = []
+        self._services = {}
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -91,6 +94,9 @@ class BlackBoard:
         while not is_unique(message_id):
             message_id = random.randint(0, 1000)
         return message_id
+    
+    def add_service(self, name: str, service_def: service.Definition):
+        self._services[name] = service_def
 
     
     @property
@@ -118,7 +124,7 @@ class BlackBoard:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.9.1"
+        return "0.10.1"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:

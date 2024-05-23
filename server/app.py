@@ -3,10 +3,11 @@ import sys
 import time
 import logging
 import threading
-import server.modbus_proxy as modbus_proxy
 
 from concurrent.futures import ThreadPoolExecutor
 
+import server.service
+import server.service.Definition
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
 from server.tasks.itask import ITask
@@ -15,8 +16,6 @@ from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.bootstrap import Bootstrap
-
-from server.tasks.ModbusProxyTask import ModbusProxyTask
 
 
 from server.blackboard import BlackBoard
@@ -115,6 +114,13 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     web_server = server.web.server.Server(web_host, bb)
     logger.info("Server started http://%s:%s", web_host[0], web_host[1])
 
+    # tmp we should now be able to connect to localhost...
+    # tasks.put(ModbusProxyTask(bb.time_ms(), bb, "localhost", 1502, "35.198.102.58", 502))
+    # modbus_proxy.ThreadedServer("localhost", 1502, "35.198.102.58", 502)
+    modbus_proxy = server.service.Definition.create("./server/service/modbus_proxy/RestServer.py", 5028)
+    modbus_proxy.spawn()
+    bb.add_service("modbus_proxy", modbus_proxy)
+
     tasks = queue.PriorityQueue()
 
     bootstrap = Bootstrap(bootstrap_file)
@@ -125,9 +131,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     if inverter is not None:
         tasks.put(OpenInverterTask(bb.time_ms(), bb, ModbusTCP(inverter)))
 
-    # tmp we should now be able to connect to localhost...
-    # tasks.put(ModbusProxyTask(bb.time_ms(), bb, "localhost", 1502, "35.198.102.58", 502))
-    modbus_proxy.ThreadedServer("localhost", 1502, "35.198.102.58", 502)
+
 
     for task in bootstrap.get_tasks(bb.time_ms() + 500, bb):
         tasks.put(task)
@@ -143,6 +147,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         logger.exception("Unexpected error: %s", sys.exc_info()[0])
         logger.exception("Exception: %s", e)
     finally:
+        modbus_proxy.terminate()
         for i in bb.inverters.lst:
             i.close()
         web_server.close()

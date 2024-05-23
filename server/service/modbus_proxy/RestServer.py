@@ -33,6 +33,7 @@ def stop_proxy():
     global proxy_server
     if proxy_server is not None:
         proxy_server.shutdown()
+        proxy_server.join()
         proxy_server = None
         return jsonify({"status": "Proxy stopped"}), 200
     else:
@@ -49,6 +50,6 @@ def status():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    app.run(host='0.0.0.0', port=5028)
     if proxy_server is not None:
         proxy_server.shutdown()

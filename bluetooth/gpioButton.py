@@ -9,7 +9,7 @@ logger = logging.getLogger(name=__name__)
 # How often to check for button presses
 MONITOR_CHECK_INTERVAL_SECONDS = 0.05
 # Timeframe for double click in seconds
-DOUBLE_CLICK_TIMEFRAME_SECONDS = 0.5
+DOUBLE_CLICK_TIMEFRAME_SECONDS = 0.75
 
 
 class GpioButton:

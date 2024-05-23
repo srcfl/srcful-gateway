@@ -1,8 +1,11 @@
 from .inverters.inverter import Inverter
-from .inverters.ModbusTCP import ModbusTCP
+from .inverters.ModbusProxyTCP import ModbusProxyTCP
 from .inverters.ModbusRTU import ModbusRTU
 from .inverters.SolarmanTCP import SolarmanTCP
 from .tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
+from .blackboard import BlackBoard
+
+import requests
 
 import os
 
@@ -78,8 +81,8 @@ class Bootstrap(BootstrapSaver):
             with open(self.filename, "r") as f:
                 logger.info("Reading bootstrap file: %s", self.filename)
                 lines = f.readlines()
-        except Exception as e:
-            logger.error("Failed to read file: {}".format(self.filename))
+        except Exception:
+            logger.error("Failed to read file: %s", self.filename)
             return self.tasks
 
         return self._process_lines(lines, event_time, stats)
@@ -117,17 +120,34 @@ class Bootstrap(BootstrapSaver):
             logger.error("Unknown task: {} in file {}".format(task_name, self.filename))
             return None
 
-    def _create_open_inverter_task(self, task_args: list, event_time, bb):
+    def _create_open_inverter_task(self, task_args: list, event_time, bb: BlackBoard):
         # check the number of arguments
         if task_args[0] == "TCP":
             ip = task_args[1]
             port = int(task_args[2])
             inverter_type = task_args[3]
             address = int(task_args[4])
+
+            service_port = bb._services["modbus_proxy"].port if bb is not None else 5028
+
+            def connect():
+                # issue the rest request to the port of the modbus service
+                args = {
+                    "listen_port": 5020,
+                    "target_port": int(port),
+                    "target_host": ip
+                }
+                response = requests.post(f"http://localhost:{service_port}/api/proxy/start", json=args, timeout=20) 
+                if response.status_code != 200:
+                    raise Exception("Failed to start proxy: %s", response.text)
+
+            inverter = ModbusProxyTCP((ip, port, inverter_type, address), 5020, connect)
+            logger.info("Created a TCP inverter")
+
             return OpenInverterPerpetualTask(
                 event_time + 1000, 
                 bb, 
-                ModbusTCP((ip, port, inverter_type, address))
+                inverter
             )
         elif task_args[0] == "RTU":
             port = task_args[1]

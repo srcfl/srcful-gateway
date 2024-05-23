@@ -170,6 +170,7 @@ def test_handler_get_do_get(mock_setup, mock_handle, mock_finish):
     for handler in h.api_get.values():
         assert hasattr(handler, "do_get")
         assert hasattr(handler, "schema")
+        assert handler.schema() is not None
         try:
             json.dumps(handler.schema())
         except Exception:
@@ -185,6 +186,7 @@ def test_handler_get_do_post(mock_setup, mock_handle, mock_finish):
     for handler in h.api_post.values():
         assert hasattr(handler, "do_post")
         assert hasattr(handler, "schema")
+        assert handler.schema() is not None
         try:
             json.dumps(handler.schema())
         except Exception:
@@ -200,6 +202,7 @@ def test_handler_get_do_delete(mock_setup, mock_handle, mock_finish):
     for handler in h.api_delete.values():
         assert hasattr(handler, "do_delete")
         assert hasattr(handler, "schema")
+        assert handler.schema() is not None
         try:
             json.dumps(handler.schema())
         except Exception:

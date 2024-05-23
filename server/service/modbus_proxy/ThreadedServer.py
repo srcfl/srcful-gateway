@@ -6,7 +6,7 @@ import time
 
 logging.basicConfig()
 log = logging.getLogger()
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 class ThreadedServer(threading.Thread):
@@ -75,17 +75,17 @@ class ThreadedServer(threading.Thread):
                 if data:
                     transaction_id = int.from_bytes(data[0:2], byteorder='big')
                     if client_address[0] == '127.0.0.1':
-                        log.debug(f"Enqueueing high priority data from client {client_address}: {data.hex()}")
+                        log.debug("Enqueueing high priority data from client %s : %s", client_address, data.hex())
                         self.high_priority_queue.put((client_socket, data, transaction_id))
                     else:
-                        log.debug(f"Enqueueing normal priority data from client {client_address}: {data.hex()}")
+                        log.debug("Enqueueing normal priority data from client %s : %s", client_address, data.hex())
                         self.normal_priority_queue.put((client_socket, data, transaction_id))
                 else:
-                    log.debug(f"Connection closed by client {client_address}")
+                    log.debug("Connection closed by client %s", client_address)
                     self._close_socket(client_socket)
                     break
         except Exception as e:
-            log.error(f"Error handling client {client_address}: {e}")
+            log.error("Error handling client %s : %s", client_address, e)
             self._close_socket(client_socket)
 
     def _process_requests(self):
@@ -99,32 +99,32 @@ class ThreadedServer(threading.Thread):
                     time.sleep(0.01)
                     continue
 
-                log.debug(f"Processing request with transaction ID {transaction_id}")
+                log.debug("Processing request with transaction ID: %s", transaction_id)
                 self.trans_to_client[transaction_id] = client_socket
                 self.device_socket.send(data)
                 self._handle_device_response(transaction_id)
             except queue.Empty:
                 time.sleep(0.01)
             except Exception as e:
-                log.error(f"Error processing request: {e}")
+                log.error("Error processing request: %s", e)
 
     def _handle_device_response(self, transaction_id):
         try:
             data = self.device_socket.recv(1024)
             if data:
-                log.debug(f"Received data from device: {data.hex()}")
+                log.debug("Received data from device: %s", data.hex())
                 tid = int.from_bytes(data[0:2], byteorder='big')
                 client_socket = self.trans_to_client.pop(tid, None)
                 if client_socket:
-                    log.debug(f"Sending response to client {client_socket.getpeername()[0]}: {data.hex()}")
+                    log.debug("Sending response to client %s : %s", client_socket.getpeername()[0], data.hex())
                     client_socket.send(data)
                 else:
-                    log.error(f"No client mapped to transaction ID {tid}")
+                    log.error("No client mapped to transaction ID %s", tid)
         except Exception as e:
-            log.error(f"Error handling device response for transaction ID {transaction_id}: {e}")
+            log.error("Error handling device response for transaction ID %s: %s", transaction_id, e)
 
     def _close_socket(self, s):
-        log.debug(f"Closing socket {s}")
+        log.debug("Closing socket %s", s)
         try:
             s.shutdown(socket.SHUT_RDWR)
         except OSError:

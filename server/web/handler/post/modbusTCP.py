@@ -1,10 +1,12 @@
 import json
-from server.inverters.ModbusTCP import ModbusTCP
+from server.inverters.ModbusProxyTCP import ModbusProxyTCP
 
 from server.tasks.openInverterTask import OpenInverterTask
 
 from ..handler import PostHandler
 from ..requestData import RequestData
+
+import requests
 
 import logging
 
@@ -40,7 +42,20 @@ class Handler(PostHandler):
                     data.data["type"],
                     int(data.data["address"]),
                 )
-                inverter = ModbusTCP(conf)
+                service_port = data.bb._services["modbus_proxy"].port
+                
+                def connect():
+                    # issue the rest request to the port of the modbus service
+                    args = {
+                        "listen_port": 5020,
+                        "target_port": int(data.data["port"]),
+                        "target_host": data.data["ip"]
+                    }
+                    response = requests.post(f"http://localhost:{service_port}/api/proxy/start", json=args, timeout=20) 
+                    if response.status_code != 200:
+                        raise Exception("Failed to start proxy: %s", response.text)
+
+                inverter = ModbusProxyTCP(conf, 5020, connect)
                 logger.info("Created a TCP inverter")
 
                 data.bb.add_task(OpenInverterTask(data.bb.time_ms() + 100, data.bb, inverter))

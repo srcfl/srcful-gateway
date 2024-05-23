@@ -22,9 +22,10 @@ class InitializeTask(SrcfulAPICallTask):
     def _json(self):
         with crypto.Chip() as chip:
             serial = chip.get_serial_number().hex()
-            pub_key = chip.get_public_key().hex()
+            #pub_key = chip.get_public_key().hex()
 
-            id_and_wallet = serial + ":" + self.wallet + ":" + pub_key
+            #id_and_wallet = serial + ":" + self.wallet + ":" + pub_key
+            id_and_wallet = serial + ":" + self.wallet
             sign = chip.get_signature(id_and_wallet).hex()
         
         m = """
@@ -47,6 +48,7 @@ class InitializeTask(SrcfulAPICallTask):
             )
 
         log.info("Preparing intialization of wallet %s with sn %s", self.wallet, serial)
+        log.debug("Query: %s", m)
 
         return {"query": m}
 
@@ -57,12 +59,9 @@ class InitializeTask(SrcfulAPICallTask):
             and reply.json()["data"]["gatewayInception"]["initialize"]["initialized"]
             is not None
         ):
-            self.is_initialized = reply.json()["data"]["gatewayInception"][
-                "initialize"
-            ]["initialized"]
-        self.is_initialized = reply.json()["data"]["gatewayInception"]["initialize"][
-            "initialized"
-        ]
+            self.is_initialized = reply.json()["data"]["gatewayInception"]["initialize"]["initialized"]
+        else:
+            self.is_initialized = False
 
     def _on_error(self, reply: requests.Response) -> int:
         log.warning("Failed to initialize wallet %s", self.wallet)

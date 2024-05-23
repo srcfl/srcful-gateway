@@ -27,7 +27,6 @@ class ReadFreq(Task):
         self.time = event_time + 100
         return self
 
-
 class OpenInverterTask(Task):
     def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter):
         super().__init__(event_time, bb)
