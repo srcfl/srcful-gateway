@@ -16,16 +16,16 @@ def run_revive_script():
 
     # Run the command as a subprocess and capture the output
     result = subprocess.run(command, capture_output=True, text=True, check=False)    # Check if the subprocess executed successfully
-    log.debug("Revive Script output: %S", result.stdout)
+    log.debug("Revive Script output: %s", result.stdout)
     if result.returncode != 0:
-        log.error("Revive Script Error:", result.stderr)
+        log.error("Revive Script Error: %s", result.stderr)
 
     return result.stdout
 
 
 class Handler(GetHandler):
     def schema(self) -> dict:
-        self.create_schema(
+        return self.create_schema(
             "Get crypo chip information",
             returns={
                 "device": "string, device name",
@@ -45,7 +45,7 @@ class Handler(GetHandler):
     
 class ReviveHandler(GetHandler):
     def schema(self) -> dict:
-        self.create_schema(
+        return self.create_schema(
             "Revive the crypto chip, this command takes aproximately 10 seconds to execute.",
             returns={"status": "string, status of the revival"}
         )
