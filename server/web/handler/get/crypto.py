@@ -42,7 +42,8 @@ class Handler(GetHandler):
             ret["publicKey_pem"] = chip.public_key_2_pem(chip.get_public_key())
         
         return 200, json.dumps(ret)
-    
+
+
 class ReviveHandler(GetHandler):
     def schema(self) -> dict:
         return self.create_schema(
@@ -52,6 +53,5 @@ class ReviveHandler(GetHandler):
 
     def do_get(self, data: RequestData):
         # we execute the revive command as a separate process and collect the output
-        
         
         return 200, json.dumps({"status": run_revive_script()})
