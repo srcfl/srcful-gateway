@@ -124,3 +124,14 @@ def test_elapsed_time():
     diff = bb.elapsed_time - (end_time - start_time)  
     
     assert abs(diff) < 10
+
+
+def test_chip_death_count():
+    bb = BlackBoard()
+    assert bb.chip_death_count == 0
+    bb.increment_chip_death_count()
+    assert bb.chip_death_count == 1
+    bb.increment_chip_death_count()
+    assert bb.chip_death_count == 2
+    bb.reset_chip_death_count()
+    assert bb.chip_death_count == 0

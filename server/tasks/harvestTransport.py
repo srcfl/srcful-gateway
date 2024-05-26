@@ -30,7 +30,13 @@ class HarvestTransport(IHarvestTransport):
 
     def _data(self):
         with crypto.Chip() as chip:
-            jwt = chip.build_jwt(self.barn, self.inverter_type)
+            try:
+                jwt = chip.build_jwt(self.barn, self.inverter_type)
+            except crypto.Chip.Error as e:
+                log.error("Error creating JWT: %s", e)
+                self.bb.increment_chip_death_count()
+                log.info("Incrementing chip death count to: %i ", self.bb.chip_death_count)
+                raise e
         
         return jwt
 

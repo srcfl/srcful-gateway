@@ -31,7 +31,8 @@ class Handler(GetHandler):
                 "device": "string, device name",
                 "serialNumber": "string, serial number",
                 "publikKey": "string, public key",
-                "publicKey_pem": "string, public key in pem format",
+                "chipDeathCount": "int, number of times the chip has died"
+                
             }
         )
 
@@ -39,8 +40,7 @@ class Handler(GetHandler):
         # return the json data {'serial:' crypto.serial, 'pubkey': crypto.publicKey}
         with crypto.Chip() as chip:
             ret = chip.get_chip_info()
-            ret["publicKey_pem"] = chip.public_key_2_pem(chip.get_public_key())
-        
+            ret['chipDeathCount'] = data.bb.chip_death_count
         return 200, json.dumps(ret)
 
 

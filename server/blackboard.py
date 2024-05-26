@@ -24,6 +24,7 @@ class BlackBoard:
     _rest_server_ip: str
     _messages: list[Message]
     _tasks: list[ITask]
+    _chip_death_count: int
 
     def __init__(self):
         self._inverters = BlackBoard.Inverters()
@@ -32,6 +33,7 @@ class BlackBoard:
         self._rest_server_ip = "localhost"
         self._messages = []
         self._tasks = []
+        self._chip_death_count = 0
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -77,9 +79,9 @@ class BlackBoard:
         self._messages.append(message)
         if len(self._messages) > 10:
             self._messages.pop(0)
-        
+
         return message
-    
+
     def _get_message_id(self):
         message_id = random.randint(0, 1000)
 
@@ -92,7 +94,16 @@ class BlackBoard:
             message_id = random.randint(0, 1000)
         return message_id
 
-    
+    @property
+    def chip_death_count(self):
+        return self._chip_death_count
+
+    def increment_chip_death_count(self):
+        self._chip_death_count += 1
+
+    def reset_chip_death_count(self):
+        self._chip_death_count = 0
+
     @property
     def rest_server_port(self):
         return self._rest_server_port

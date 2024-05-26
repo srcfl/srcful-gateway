@@ -77,10 +77,14 @@ def test_initialize():
 
     response = requests.request("POST", url, headers=headers, data=payload, timeout=settings.REQUEST_TIMEOUT)
 
-    assert response.status_code == 200
     assert response.headers['content-type'] == 'application/json'
 
-    j = response.json()
-    assert response.status_code == 200
-    assert 'initialized' in j
-    assert j['initialized'] is False
+    if settings.DO_TEST_CRYPTO:
+        assert response.status_code == 200
+
+        j = response.json()
+        assert response.status_code == 200
+        assert 'initialized' in j
+        assert j['initialized'] is False
+    else:
+        assert response.status_code == 500

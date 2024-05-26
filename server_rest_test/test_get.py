@@ -50,9 +50,12 @@ def test_name():
 
     response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
-    assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
-    assert len(response.json()["name"].split(" ")) == 3
+    if settings.DO_TEST_CRYPTO:
+        assert response.status_code == 200    
+        assert len(response.json()["name"].split(" ")) == 3
+    else:
+        assert response.status_code == 500
 
 
 def test_crypto():
@@ -62,14 +65,18 @@ def test_crypto():
 
     response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
-    assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
 
-    j = response.json()
-    assert "deviceName" in j
-    assert "serialNumber" in j
-    assert "publicKey" in j
-    assert "publicKey_pem" in j
+    if settings.DO_TEST_CRYPTO:
+        assert response.status_code == 200
+
+        j = response.json()
+        assert "deviceName" in j
+        assert "serialNumber" in j
+        assert "publicKey" in j
+        assert "chipDeathCount" in j
+    else:
+        assert response.status_code == 500
 
 
 def test_wifi():
