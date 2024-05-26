@@ -15,8 +15,11 @@ class GetNameTask(SrcfulAPICallTask):
         self.post_url = "https://api.srcful.dev/"
 
     def _json(self):
-        with crypto.Chip() as chip:
-            serial = chip.get_serial_number().hex()
+        try:
+            with crypto.Chip() as chip:
+                serial = chip.get_serial_number().hex()
+        except crypto.Chip.Error:
+            serial = "0000000000000000"
 
         q = """{
         gatewayConfiguration {
