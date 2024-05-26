@@ -39,7 +39,7 @@ class ModbusScanHandler(GetHandler):
         return self.create_schema(
             "Scans the network for modbus devices",
             required={"ports": "string, containing a comma separated list of ports to scan for modbus devices."},
-            returns={"devices": "a list of JSON Objects, each containing the host and port of a modbus device."}
+            returns={"devices": "a list of JSON Objects: {'host': host ip, 'port': host port}."}
         )
 
     def do_get(self, data: RequestData):
@@ -81,5 +81,5 @@ class ModbusScanHandler(GetHandler):
                     }
                     modbus_devices.append(device)
     
-        return 200, json.dumps(modbus_devices)
+        return 200, json.dumps({"devices":modbus_devices})
 
