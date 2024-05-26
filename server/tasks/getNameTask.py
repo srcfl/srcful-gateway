@@ -16,7 +16,7 @@ class GetNameTask(SrcfulAPICallTask):
 
     def _json(self):
         with crypto.Chip() as chip:
-          serial = chip.get_serial_number().hex()
+            serial = chip.get_serial_number().hex()
 
         q = """{
         gatewayConfiguration {
