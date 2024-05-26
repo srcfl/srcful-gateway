@@ -20,6 +20,8 @@ class ITransportFactory:
 
 
 class HarvestTransport(IHarvestTransport):
+    do_increase_chip_death_count = True  # prevents excessive incrementing of chip death count
+
     def __init__(self, event_time: int, bb: BlackBoard, barn: dict, inverter_backend_type: str):
         super().__init__(event_time, bb)
         # self.stats['lastHarvestTransport'] = 'n/a'
@@ -32,9 +34,12 @@ class HarvestTransport(IHarvestTransport):
         with crypto.Chip() as chip:
             try:
                 jwt = chip.build_jwt(self.barn, self.inverter_type)
+                HarvestTransport.do_increase_chip_death_count = True
             except crypto.Chip.Error as e:
                 log.error("Error creating JWT: %s", e)
-                self.bb.increment_chip_death_count()
+                if HarvestTransport.do_increase_chip_death_count:
+                    self.bb.increment_chip_death_count()
+                    HarvestTransport.do_increase_chip_death_count = False
                 log.info("Incrementing chip death count to: %i ", self.bb.chip_death_count)
                 raise e
         
