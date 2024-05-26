@@ -12,7 +12,6 @@ def test_get(mock_task):
             self.name = "test_name"
             self.reply = Mock()
             self.reply.status = 200
-            self.t = Mock()
 
             assert hasattr(GetNameTask(0, None), "reply")
 
@@ -41,7 +40,6 @@ def test_get_notfound(mock_task):
         def __init__(self):
             self.name = None
             self.reply = MockResponse()
-            self.t = Mock()
 
             assert hasattr(GetNameTask(0, None), "reply")
 

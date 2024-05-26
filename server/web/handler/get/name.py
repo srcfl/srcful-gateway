@@ -19,8 +19,6 @@ class Handler(GetHandler):
         # the task queue execution - afaik :P
         t = GetNameTask(0, {})
         t.execute(0)
-        t.t.join()
-        t.execute(0)
 
         if t.name is None:
             return t.reply.status, json.dumps({"body": t.reply.body})
