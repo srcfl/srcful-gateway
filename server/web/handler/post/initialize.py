@@ -28,7 +28,7 @@ class Handler(PostHandler):
             dry_run = not ("dry_run" not in data.data or not data.data["dry_run"])
 
             t = InitializeTask(0, {}, data.data["wallet"], dry_run)
-            t.execute_and_wait()
+            t.execute(0)
 
             if t.is_initialized is None:
                 return t.reply.status, json.dumps({"body": t.reply.body})

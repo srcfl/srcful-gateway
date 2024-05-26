@@ -21,7 +21,6 @@ def arg_2_str(arg):
 class SrcfulAPICallTask(Task, ABC):
     def __init__(self, event_time: int, bb: BlackBoard):
         super().__init__(event_time, bb)
-        self.t = None
         self.reply = None
         self.post_url = "https://testnet.srcful.dev/gw/data/"
 
@@ -42,57 +41,39 @@ class SrcfulAPICallTask(Task, ABC):
         """return 0 to stop retrying,
         otherwise return the number of milliseconds to wait before retrying"""
 
-    def execute_and_wait(self):
-        """execute the task and block until finished"""
-        self.execute(0)
-        self.t.join()
-        self.execute(0)
-
     def execute(self, event_time):
 
         # this is the function that will be executed in the thread
         def post():
-            log.debug("post")
-            try:
-                # pylint: disable=assignment-from-none
-                data = self._data()
-                if data is not None:
-                    log.debug("%s %s", self.post_url, arg_2_str(data))
-                    self.reply = requests.post(self.post_url, data=data, timeout=5)
-                else:
-                    json = self._json()
-                    if json is not None:
-                        log.debug("%s %s", self.post_url, arg_2_str(json))
-                        self.reply = requests.post(self.post_url, json=json, timeout=5)
-                    else:
-                        log.debug("%s %s", self.post_url, "no data or json")
-                        self.reply = requests.post(self.post_url, timeout=5)
-            except requests.exceptions.RequestException as e:
-                log.exception(e)
-                self.reply = requests.Response()
-            except Exception as e:
-                log.exception(e)
-                self.reply = requests.Response()
-
-        if self.t is None:
-            self.t = Thread(target=post)
-            self.t.start()
-            self.time = event_time + 1000
-            log.debug("Started post thread")
-            return self
-        elif self.t.is_alive() is False:
-            self.t = None
-            if self.reply.status_code == 200:
-                log.debug("Thead is finished: calling _on200")
-                self._on_200(self.reply)
+            # pylint: disable=assignment-from-none
+            data = self._data()
+            if data is not None:
+                log.debug("%s %s", self.post_url, arg_2_str(data))
+                return requests.post(self.post_url, data=data, timeout=5)
             else:
-                log.debug("Thead is finished: calling _onError")
-                retry_delay = self._on_error(self.reply)
+                json = self._json()
+                if json is not None:
+                    log.debug("%s %s", self.post_url, arg_2_str(json))
+                    return requests.post(self.post_url, json=json, timeout=5)
+                else:
+                    log.debug("%s %s", self.post_url, "no data or json")
+                    return requests.post(self.post_url, timeout=5)
+
+        try:
+            response = post()
+            self.reply = response
+            if self.reply.status_code == 200:
+                self._on_200(response)
+            else:
+                retry_delay = self._on_error(response)
                 if retry_delay > 0:
                     self.time = event_time + retry_delay
                     return self
-        else:
-            # wait some more
-            log.debug("Waiting for reply")
-            self.time = event_time + 1000
-            return self
+                
+        except Exception as e:
+            self.reply = requests.Response()
+            retry_delay = self._on_error(self.reply)
+            if retry_delay > 0:
+                self.time = event_time + retry_delay
+                return self
+            log.exception(e)

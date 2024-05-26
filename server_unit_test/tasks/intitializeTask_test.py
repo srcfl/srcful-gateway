@@ -12,8 +12,6 @@ def test_executeTask():
     assert t.is_initialized == None
     t._json = Mock(return_value=_internalJsonQuery())
     t.execute(0)
-    t.t.join()
-    t.execute(0)
     assert t._json.called
     assert t.is_initialized == False
 
@@ -25,7 +23,7 @@ def test_make_the_call_with_task():
             with patch("server.crypto.crypto.atcab_sign", return_value=crypto.ATCA_SUCCESS):
                 with patch("server.crypto.crypto.atcab_get_pubkey", return_value=crypto.ATCA_SUCCESS):
                   t = InitializeTask(0, {}, "aaa", True)
-                  t.execute_and_wait()
+                  t.execute(0)
 
     assert t.reply.status_code == 200
     assert t.is_initialized is False

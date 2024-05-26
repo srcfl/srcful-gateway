@@ -36,13 +36,10 @@ def test_execute_calls_post_and_handles_200_response():
         task.execute(0)
 
         # wait for the thread to finish
-        task.t.join()
         mock_post.assert_called_once_with(
             "https://testnet.srcful.dev/gw/data/", data=mock_data, timeout=5
         )
 
-        # execute again as replies are handled in the next call
-        task.execute(0)
         mock_on200.assert_called_once_with(mock_response)
 
 
@@ -50,7 +47,7 @@ def test_execute_calls_post_and_handles_post_request_exception():
     # should answer with an empty response
     mock_data = {"foo": "bar"}
     mock_response = requests.Response()
-    mock_onError = Mock(return_value=0)
+    mock_on_error = Mock(return_value=0)
     task = ConcreteSUT(0, {})
 
     # Mock the requests module so we can intercept the post() call
@@ -59,24 +56,19 @@ def test_execute_calls_post_and_handles_post_request_exception():
     ) as mock_post:
         mock_post.return_value = mock_response
         task._data = Mock(return_value=mock_data)
-        task._on_error = mock_onError
+        task._on_error = mock_on_error
 
         task.execute(0)
 
         # wait for the thread to finish
-        task.t.join()
         mock_post.assert_called_once_with(
             "https://testnet.srcful.dev/gw/data/", data=mock_data, timeout=5
         )
 
-        # execute again as replies are handled in the next call
-
-        task.execute(0)
-
         # check that onError was called with a requests.Response object
-        assert mock_onError.call_args[0][0].status_code == None
+        assert mock_on_error.call_args[0][0].status_code == None
 
-        mock_onError.assert_called_once()
+        mock_on_error.assert_called_once()
 
 
 def test_execute_calls_post_and_handles_non_200_response():
@@ -97,8 +89,6 @@ def test_execute_calls_post_and_handles_non_200_response():
             "https://testnet.srcful.dev/gw/data/", data=mock_data, timeout=5
         )
 
-        # execute again as replies are handled in the next call
-        task.execute(0)
         mock_on_error.assert_called_once_with(mock_response)
 
         assert result.time == 1000
@@ -120,11 +110,8 @@ def test_execute_handles_request_exception():
 
         # Act
         result = task.execute(0)
-        result.t.join()
 
         # Assert
-        # execute again as replies are handled in the next call
-        task.execute(0)
         mock_on_error.assert_called_once()
         assert result.reply.status_code == None
         assert result.time == 1000
@@ -142,15 +129,13 @@ def test_execute_handles_exception():
     task._on_error = mock_on_error
 
     # Act
-    result = task.execute(0)
-    result.t.join()
+    res = task.execute(0)
 
     # Assert
-    # execute again as replies are handled in the next call
-    task.execute(0)
+    assert res == task
     mock_on_error.assert_called_once()
-    assert result.reply.status_code == None
-    assert result.time == 1000
+    assert task.reply.status_code == None
+    assert task.time == 1000
 
 
 def test_json_returns_none_by_default():

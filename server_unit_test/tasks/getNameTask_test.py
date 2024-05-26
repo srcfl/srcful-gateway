@@ -20,8 +20,6 @@ def test_make_the_call_with_execute():
         with patch('server.crypto.crypto.atcab_read_serial_number', return_value=crypto.ATCA_SUCCESS):
             t = GetNameTask(0, {})
             t.execute(0)
-            t.t.join()
-            t.execute(0)
     assert t.name is not None
 
 
