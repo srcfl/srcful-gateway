@@ -26,8 +26,6 @@ class AddressHandler(GetHandler):
                      "port": "int, containing the port of the REST server."}
         )
 
-
-
     def do_get(self, data: RequestData):
         if is_connected():
             return 200, json.dumps({"ip": get_ip_address(), "port": data.bb.rest_server_port})
@@ -40,6 +38,7 @@ class ModbusScanHandler(GetHandler):
     def schema(self):
         return self.create_schema(
             "Scans the network for modbus devices",
+            required={"ports": "string, containing a comma separated list of ports to scan for modbus devices."},
             returns={"devices": "a list of JSON Objects, each containing the host and port of a modbus device."}
         )
 
