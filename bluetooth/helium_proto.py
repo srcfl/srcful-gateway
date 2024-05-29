@@ -11,6 +11,8 @@ from typing import Any, Union
 
 import protos.wifi_services_pb2 as wifi_services_pb2
 import protos.add_gateway_pb2 as add_gateway_pb2
+import protos.wifi_connect_pb2 as wifi_connect_pb2
+import protos.diagnostics_pb2 as diagnostics_pb2
 
 from bless import (  # type: ignore
     BlessServer,
@@ -41,7 +43,12 @@ ethernet_online = 'e5866bd6-0288-4476-98ca-ef7da6b4d289'
 
 assert_location = 'd435f5de-01a4-4e7d-84ba-dfd347f60275'
 add_gatway = 'df3b16ca-c985-4da2-a6d2-9b9b9abdb858'
-wifi_connect = '398168aa-0111-4ec0-b1fa-171671270608'    
+wifi_connect = '398168aa-0111-4ec0-b1fa-171671270608'
+
+
+WIFI_CONNECTING = "connecting"
+WIFI_CONNECTED = "connected"
+WIFI_ERROR = "error"
 
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
@@ -49,13 +56,23 @@ def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray
     return characteristic.value
 
 
-def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
+async def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
     if characteristic.uuid == add_gatway:
         add_gw_details = add_gateway_pb2.add_gateway_v1()
         add_gw_details.ParseFromString(bytes(value))
 
         print(f"add gateway owner {add_gw_details.owner}, fee {add_gw_details.fee} ")
         print(f"amount {add_gw_details.amount}, payer {add_gw_details.payer}")
+    elif characteristic.uuid == wifi_connect:
+        wifi_connect_details = wifi_connect_pb2.wifi_connect_v1()
+        wifi_connect_details.ParseFromString(bytes(value))
+
+        print(f"wifi connect ssid {wifi_connect_details.service}, password {wifi_connect_details.password}")
+        characteristic.value = bytes(WIFI_CONNECTING, "utf-8")
+
+        # wait for 5 seconds to simulate connecting
+        await asyncio.sleep(5)
+        characteristic.value = bytes(WIFI_CONNECTED, "utf-8")
 
     else:
         characteristic.value = value
@@ -85,9 +102,6 @@ async def add_helium_custom_service(server: BlessServer):
     service_uuid = '0fda92b2-44a2-4af2-84f5-fa682baa2b8d'
     await server.add_new_service(service_uuid)
 
-
-
-
     char_flags = GATTCharacteristicProperties.read
     permissions = GATTAttributePermissions.readable
     
@@ -106,9 +120,21 @@ async def add_helium_custom_service(server: BlessServer):
 
     await server.add_new_characteristic(service_uuid, wifi_services_uuid, char_flags, bytes(services.SerializeToString()), permissions)
 
-    char_flags = GATTCharacteristicProperties.write | GATTCharacteristicProperties.read
+    services = diagnostics_pb2.diagnostics_v1()
+    services.diagnostics['test'] = 'testing'
+    services.diagnostics['test2'] = 'testing2'
+    services.diagnostics['test3'] = 'testing3'
+
+    await server.add_new_characteristic(service_uuid, diagnostics_uuid, char_flags, bytes(services.SerializeToString()), permissions)
+
+
+    char_flags = GATTCharacteristicProperties.write | GATTCharacteristicProperties.read | GATTCharacteristicProperties.notify
     permissions = GATTAttributePermissions.writeable | GATTAttributePermissions.readable
-    await server.add_new_characteristic(service_uuid, add_gatway, char_flags, b'', permissions)
+    await server.add_new_characteristic(service_uuid, add_gatway, char_flags, b'not supported', permissions)
+
+    await server.add_new_characteristic(service_uuid, wifi_connect, char_flags, b'', permissions)
+
+
 
 
 server: BlessServer = None
