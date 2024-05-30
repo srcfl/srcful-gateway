@@ -17,7 +17,7 @@ class Handler(GetHandler):
             returns={
                 "device": "string, device name",
                 "serialNumber": "string, serial number",
-                "publikKey": "string, public key",
+                "publicKey": "string, public key",
                 "chipDeathCount": "int, number of times the chip has died"
                 
             }
