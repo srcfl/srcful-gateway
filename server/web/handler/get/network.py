@@ -44,10 +44,7 @@ class ModbusScanHandler(GetHandler):
 
     def do_get(self, data: RequestData):
         
-        parameters = data.query_params.get("ports", "")
-        if parameters == "":
-            return 400, json.dumps({"error": "missing ports parameter"})
-
+        ports = data.query_params.get("ports", "502,1502,8899")
 
         local_ip = get_ip_address()
 
@@ -55,16 +52,19 @@ class ModbusScanHandler(GetHandler):
         network_prefix = '.'.join(local_ip.split('.')[:-1]) + '.0/24'
 
         nm = nmap.PortScanner()
-        nm.scan(network_prefix, ports=parameters, arguments='-T5')
+        nm.scan(network_prefix, ports=ports, arguments='-T5')
 
         modbus_devices = []
 
         for host in nm.all_hosts():
+            ports = nm[host]['tcp']
             for port in ports:
-                if nm[host].has_tcp(port) and nm[host]['tcp'][port]['state'] == 'open':
+                state = ports[port]['state']
+                if state == 'open':
+                    print(host, port, 'open')
                     device = {
-                    'host': host,
-                    'port': port
+                        'host': host,
+                        'port': port
                     }
                     modbus_devices.append(device)
     
