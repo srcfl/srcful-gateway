@@ -7,6 +7,7 @@ import sys
 import logging
 import asyncio
 import threading
+import json
 from uuid import UUID
 
 from typing import Any, Union
@@ -56,6 +57,7 @@ WIFI_ERROR = "error"
 SERVER: BlessServer = None
 
 def connect_wifi(characteristic: BlessGATTCharacteristic, value):
+    logger.debug(f"Connect wifi")
     wifi_connect_details = wifi_connect_pb2.wifi_connect_v1()
     wifi_connect_details.ParseFromString(bytes(value))
 
@@ -73,7 +75,33 @@ def connect_wifi(characteristic: BlessGATTCharacteristic, value):
         logger.debug(f"Char updated, value set to {characteristic.value}")
     else:
         logger.debug(f"Failed to update value")
+
+def add_gateway(characteristic: BlessGATTCharacteristic, value):
+    logger.debug(f"Add gateway") 
+    add_gw_details = add_gateway_pb2.add_gateway_v1()
+    add_gw_details.ParseFromString(bytes(value))
+
+    print(f"add gateway owner {add_gw_details.owner}, fee {add_gw_details.fee} ")
+    print(f"amount {add_gw_details.amount}, payer {add_gw_details.payer}")
+
+    # https://docs.helium.com/hotspot-makers/become-a-maker/hotspot-integration-testing/#generate-an-add-hotspot-transaction
+    test_response = {
+        "address": "11TL62V8NYvSTXmV5CZCjaucskvNR1Fdar1Pg4Hzmzk5tk2JBac",
+        "fee": 65000,
+        "mode": "full",
+        "owner": "14GWyFj9FjLHzoN3aX7Tq7PL6fEg4dfWPY8CrK8b9S5ZrcKDz6S",
+        "payer": "138LbePH4r7hWPuTnK6HXVJ8ATM2QU71iVHzLTup1UbnPDvbxmr",
+        "staking fee": 4000000,
+        "txn": "CrkBCiEBrlImpYLbJ0z0hw5b4g9isRyPrgbXs9X+RrJ4pJJc9MkSIQA7yIy7F+9oPYCTmDz+v782GMJ4AC+jM+VfjvUgAHflWSJGMEQCIGfugfLkXv23vJcfwPYjLlMyzYhKp+Rg8B2YKwnsDHaUAiASkdxUO4fdS33D7vyid8Tulizo9SLEL1lduyvda9YVRCohAa5SJqWC2ydM9IcOW+IPYrEcj64G17PV/kayeKSSXPTJOMCEPUDo+wM="
+    }
     
+    characteristic.value = bytes(json.dumps(test_response), "utf-8")
+    if SERVER.update_value(helium_service_uuid, add_gatway):
+        logger.debug(f"Char updated, value set to {characteristic.value}")
+    else:
+        logger.debug(f"Failed to update value")
+    
+
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
     logger.debug(f"Reading {characteristic.value}")
@@ -83,11 +111,7 @@ def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray
 def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
     logger.debug(f"Writing!!")
     if characteristic.uuid == add_gatway:
-        add_gw_details = add_gateway_pb2.add_gateway_v1()
-        add_gw_details.ParseFromString(bytes(value))
-
-        print(f"add gateway owner {add_gw_details.owner}, fee {add_gw_details.fee} ")
-        print(f"amount {add_gw_details.amount}, payer {add_gw_details.payer}")
+        threading.Thread(target=add_gateway, args=(characteristic, value,)).start()
     elif characteristic.uuid == wifi_connect:
         
         threading.Thread(target=connect_wifi, args=(characteristic, value,)).start()
@@ -150,8 +174,6 @@ async def add_helium_custom_service(server: BlessServer):
     await server.add_new_characteristic(helium_service_uuid, add_gatway, char_flags, b'not supported', permissions)
 
     await server.add_new_characteristic(helium_service_uuid, wifi_connect, char_flags, b'', permissions)
-
-
 
 
 async def run(loop):
