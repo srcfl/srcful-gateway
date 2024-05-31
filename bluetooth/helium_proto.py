@@ -1,6 +1,8 @@
 """
 Example for a BLE 4.0 Server
 """
+
+import time
 import sys
 import logging
 import asyncio
@@ -31,6 +33,7 @@ if sys.platform in ["darwin", "win32"]:
 else:
     trigger = asyncio.Event()
 
+helium_service_uuid = "0000180a-0000-1000-8000-00805f9b34fb"
 
 onboarding_key_uuid = 'd083b2bd-be16-4600-b397-61512ca2f5ad'
 public_key_uuid = '0a852c59-50d3-4492-bfd3-22fe58a24f01'
@@ -50,13 +53,35 @@ WIFI_CONNECTING = "connecting"
 WIFI_CONNECTED = "connected"
 WIFI_ERROR = "error"
 
+SERVER: BlessServer = None
+
+def connect_wifi(characteristic: BlessGATTCharacteristic, value):
+    wifi_connect_details = wifi_connect_pb2.wifi_connect_v1()
+    wifi_connect_details.ParseFromString(bytes(value))
+
+    print(f"wifi connect ssid {wifi_connect_details.service}, password {wifi_connect_details.password}")
+    characteristic.value = bytes(WIFI_CONNECTING, "utf-8")
+    if SERVER.update_value(helium_service_uuid, wifi_connect):
+        logger.debug(f"Char updated, value set to {characteristic.value}")
+    else:
+        logger.debug(f"Failed to update value")
+
+
+    time.sleep(5)
+    characteristic.value = bytes(WIFI_CONNECTED, "utf-8")
+    if SERVER.update_value(helium_service_uuid, wifi_connect):
+        logger.debug(f"Char updated, value set to {characteristic.value}")
+    else:
+        logger.debug(f"Failed to update value")
+    
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
     logger.debug(f"Reading {characteristic.value}")
     return characteristic.value
 
 
-async def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
+def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
+    logger.debug(f"Writing!!")
     if characteristic.uuid == add_gatway:
         add_gw_details = add_gateway_pb2.add_gateway_v1()
         add_gw_details.ParseFromString(bytes(value))
@@ -64,15 +89,8 @@ async def write_request(characteristic: BlessGATTCharacteristic, value: Any, **k
         print(f"add gateway owner {add_gw_details.owner}, fee {add_gw_details.fee} ")
         print(f"amount {add_gw_details.amount}, payer {add_gw_details.payer}")
     elif characteristic.uuid == wifi_connect:
-        wifi_connect_details = wifi_connect_pb2.wifi_connect_v1()
-        wifi_connect_details.ParseFromString(bytes(value))
-
-        print(f"wifi connect ssid {wifi_connect_details.service}, password {wifi_connect_details.password}")
-        characteristic.value = bytes(WIFI_CONNECTING, "utf-8")
-
-        # wait for 5 seconds to simulate connecting
-        await asyncio.sleep(5)
-        characteristic.value = bytes(WIFI_CONNECTED, "utf-8")
+        
+        threading.Thread(target=connect_wifi, args=(characteristic, value,)).start()
 
     else:
         characteristic.value = value
@@ -83,19 +101,19 @@ async def write_request(characteristic: BlessGATTCharacteristic, value: Any, **k
 
 
 async def add_helium_device_info_service(server: BlessServer):
-    service_uuid = "0000180a-0000-1000-8000-00805f9b34fb"
-    await server.add_new_service(service_uuid)
+    
+    await server.add_new_service(helium_service_uuid)
 
     char_uuid = "00002A29-0000-1000-8000-00805F9B34FB"
     char_flags = GATTCharacteristicProperties.read
     permissions = GATTAttributePermissions.readable
-    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'Helium', permissions)
+    await server.add_new_characteristic(helium_service_uuid, char_uuid, char_flags, b'Helium', permissions)
 
     char_uuid = "00002A25-0000-1000-8000-00805F9B34FB"
-    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'6081F989E7BF', permissions)
+    await server.add_new_characteristic(helium_service_uuid, char_uuid, char_flags, b'6081F989E7BF', permissions)
 
     char_uuid = "00002A26-0000-1000-8000-00805F9B34FB"
-    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'2020.02.18.1', permissions)
+    await server.add_new_characteristic(helium_service_uuid, char_uuid, char_flags, b'2020.02.18.1', permissions)
 
 
 async def add_helium_custom_service(server: BlessServer):
@@ -128,7 +146,7 @@ async def add_helium_custom_service(server: BlessServer):
     await server.add_new_characteristic(service_uuid, diagnostics_uuid, char_flags, bytes(services.SerializeToString()), permissions)
 
 
-    char_flags = GATTCharacteristicProperties.write | GATTCharacteristicProperties.read | GATTCharacteristicProperties.notify
+    char_flags = GATTCharacteristicProperties.write | GATTCharacteristicProperties.read | GATTCharacteristicProperties.indicate
     permissions = GATTAttributePermissions.writeable | GATTAttributePermissions.readable
     await server.add_new_characteristic(service_uuid, add_gatway, char_flags, b'not supported', permissions)
 
@@ -137,25 +155,23 @@ async def add_helium_custom_service(server: BlessServer):
 
 
 
-server: BlessServer = None
-
 async def run(loop):
     trigger.clear()
     # Instantiate the server
     my_service_name = "Srcful Hotspot"
-    global server
-    server = BlessServer(name=my_service_name, loop=loop, name_overwrite=True)
-    server.read_request_func = read_request
-    server.write_request_func = write_request
+    global SERVER
+    SERVER = BlessServer(name=my_service_name, loop=loop, name_overwrite=True)
+    SERVER.read_request_func = read_request
+    SERVER.write_request_func = write_request
 
 
     # device info service does not work on windows
     # await add_helium_device_info_service(server)
-    await add_helium_custom_service(server)
+    await add_helium_custom_service(SERVER)
 
     # Add Service
     my_service_uuid = "A07498CA-AD5B-474E-940D-16F1FBE7E8CD"
-    await server.add_new_service(my_service_uuid)
+    await SERVER.add_new_service(my_service_uuid)
 
     # Add a Characteristic to the service
     my_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
@@ -165,12 +181,12 @@ async def run(loop):
         | GATTCharacteristicProperties.indicate
     )
     permissions = GATTAttributePermissions.readable | GATTAttributePermissions.writeable
-    await server.add_new_characteristic(
+    await SERVER.add_new_characteristic(
         my_service_uuid, my_char_uuid, char_flags, None, permissions
     )
 
-    logger.debug(server.get_characteristic(my_char_uuid))
-    await server.start()
+    logger.debug(SERVER.get_characteristic(my_char_uuid))
+    await SERVER.start()
     logger.debug("Advertising")
     logger.info(f"Write '0xF' to the advertised characteristic: {my_char_uuid}")
     try:
@@ -180,21 +196,21 @@ async def run(loop):
             await trigger.wait()
     except KeyboardInterrupt:
         print("Server stopped by user")
-        await server.stop()
+        await SERVER.stop()
         trigger.set()
 
     if not trigger.is_set():
         await asyncio.sleep(2)
         logger.debug("Updating")
-        server.get_characteristic(my_char_uuid)
-        server.update_value(my_service_uuid, "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B")
+        SERVER.get_characteristic(my_char_uuid)
+        SERVER.update_value(my_service_uuid, "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B")
         await asyncio.sleep(5)
-        await server.stop()
+        await SERVER.stop()
 
 
 try:
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run(loop))
 except KeyboardInterrupt:
-    server.stop()
+    SERVER.stop()
     print("Server stopped by user")
