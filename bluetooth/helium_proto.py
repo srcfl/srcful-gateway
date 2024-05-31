@@ -33,7 +33,7 @@ if sys.platform in ["darwin", "win32"]:
 else:
     trigger = asyncio.Event()
 
-helium_service_uuid = "0000180a-0000-1000-8000-00805f9b34fb"
+helium_service_uuid = "0fda92b2-44a2-4af2-84f5-fa682baa2b8d"
 
 onboarding_key_uuid = 'd083b2bd-be16-4600-b397-61512ca2f5ad'
 public_key_uuid = '0a852c59-50d3-4492-bfd3-22fe58a24f01'
@@ -101,8 +101,8 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
 
 
 async def add_helium_device_info_service(server: BlessServer):
-    
-    await server.add_new_service(helium_service_uuid)
+    service_uuid = '0000180a-0000-1000-8000-00805f9b34fb'
+    await server.add_new_service(service_uuid)
 
     char_uuid = "00002A29-0000-1000-8000-00805F9B34FB"
     char_flags = GATTCharacteristicProperties.read
@@ -117,40 +117,39 @@ async def add_helium_device_info_service(server: BlessServer):
 
 
 async def add_helium_custom_service(server: BlessServer):
-    service_uuid = '0fda92b2-44a2-4af2-84f5-fa682baa2b8d'
-    await server.add_new_service(service_uuid)
+    await server.add_new_service(helium_service_uuid)
 
     char_flags = GATTCharacteristicProperties.read
     permissions = GATTAttributePermissions.readable
     
 
-    await server.add_new_characteristic(service_uuid, onboarding_key_uuid, char_flags, b'11TqqVzycXK5k49bXbmcUcSne91krq7v3VSQCfDXr', permissions)
-    await server.add_new_characteristic(service_uuid, public_key_uuid, char_flags, b'117ei8D1Bk2kYqWNjSFuLgg3BrtTNSTi2tt14LRUFgt', permissions)
-    await server.add_new_characteristic(service_uuid, wifi_mac_uuid, char_flags, b'wifi_mac', permissions)
-    await server.add_new_characteristic(service_uuid, lights_uuid, char_flags, b'n/a', permissions)
-    await server.add_new_characteristic(service_uuid, wifi_ssid, char_flags, b'magic_ssid', permissions)
-    await server.add_new_characteristic(service_uuid, ethernet_online, char_flags, b'false', permissions)
+    await server.add_new_characteristic(helium_service_uuid, onboarding_key_uuid, char_flags, b'11TqqVzycXK5k49bXbmcUcSne91krq7v3VSQCfDXr', permissions)
+    await server.add_new_characteristic(helium_service_uuid, public_key_uuid, char_flags, b'117ei8D1Bk2kYqWNjSFuLgg3BrtTNSTi2tt14LRUFgt', permissions)
+    await server.add_new_characteristic(helium_service_uuid, wifi_mac_uuid, char_flags, b'wifi_mac', permissions)
+    await server.add_new_characteristic(helium_service_uuid, lights_uuid, char_flags, b'n/a', permissions)
+    await server.add_new_characteristic(helium_service_uuid, wifi_ssid, char_flags, b'magic_ssid', permissions)
+    await server.add_new_characteristic(helium_service_uuid, ethernet_online, char_flags, b'false', permissions)
 
     services = wifi_services_pb2.wifi_services_v1()
     services.services.append("nisse")
     services.services.append("kalle")
     services.services.append("pelle")
 
-    await server.add_new_characteristic(service_uuid, wifi_services_uuid, char_flags, bytes(services.SerializeToString()), permissions)
+    await server.add_new_characteristic(helium_service_uuid, wifi_services_uuid, char_flags, bytes(services.SerializeToString()), permissions)
 
     services = diagnostics_pb2.diagnostics_v1()
     services.diagnostics['test'] = 'testing'
     services.diagnostics['test2'] = 'testing2'
     services.diagnostics['test3'] = 'testing3'
 
-    await server.add_new_characteristic(service_uuid, diagnostics_uuid, char_flags, bytes(services.SerializeToString()), permissions)
+    await server.add_new_characteristic(helium_service_uuid, diagnostics_uuid, char_flags, bytes(services.SerializeToString()), permissions)
 
 
     char_flags = GATTCharacteristicProperties.write | GATTCharacteristicProperties.read | GATTCharacteristicProperties.indicate
     permissions = GATTAttributePermissions.writeable | GATTAttributePermissions.readable
-    await server.add_new_characteristic(service_uuid, add_gatway, char_flags, b'not supported', permissions)
+    await server.add_new_characteristic(helium_service_uuid, add_gatway, char_flags, b'not supported', permissions)
 
-    await server.add_new_characteristic(service_uuid, wifi_connect, char_flags, b'', permissions)
+    await server.add_new_characteristic(helium_service_uuid, wifi_connect, char_flags, b'', permissions)
 
 
 
