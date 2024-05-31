@@ -48,19 +48,6 @@ class ModbusScanHandler(GetHandler):
         if parameters == "":
             return 400, json.dumps({"error": "missing ports parameter"})
 
-        parameters = parameters.split(",")
-        ports = []
-        for param in parameters:
-            if "-" in param:
-                interval = param.split("-")
-                ports += [*range(int(interval[0]), int(interval[1]) + 1)]
-            else:
-                ports.append(int(param))
-
-        # Convert the list of common ports to a comma separated string for nmap
-        comma_separated_ports = ','.join(map(str, ports))
-
-        logger.info(f"Scanning network for modbus devices on ports {comma_separated_ports}")
 
         local_ip = get_ip_address()
 
@@ -68,7 +55,7 @@ class ModbusScanHandler(GetHandler):
         network_prefix = '.'.join(local_ip.split('.')[:-1]) + '.0/24'
 
         nm = nmap.PortScanner()
-        nm.scan(network_prefix, ports=comma_separated_ports, arguments='-T5')
+        nm.scan(network_prefix, ports=parameters, arguments='-T5')
 
         modbus_devices = []
 
