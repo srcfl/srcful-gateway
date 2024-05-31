@@ -131,13 +131,13 @@ async def add_helium_device_info_service(server: BlessServer):
     char_uuid = "00002A29-0000-1000-8000-00805F9B34FB"
     char_flags = GATTCharacteristicProperties.read
     permissions = GATTAttributePermissions.readable
-    await server.add_new_characteristic(helium_service_uuid, char_uuid, char_flags, b'Helium', permissions)
+    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'Helium', permissions)
 
     char_uuid = "00002A25-0000-1000-8000-00805F9B34FB"
-    await server.add_new_characteristic(helium_service_uuid, char_uuid, char_flags, b'6081F989E7BF', permissions)
+    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'6081F989E7BF', permissions)
 
     char_uuid = "00002A26-0000-1000-8000-00805F9B34FB"
-    await server.add_new_characteristic(helium_service_uuid, char_uuid, char_flags, b'2020.02.18.1', permissions)
+    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'2020.02.18.1', permissions)
 
 
 async def add_helium_custom_service(server: BlessServer):
@@ -187,7 +187,7 @@ async def run(loop):
 
 
     # device info service does not work on windows
-    # await add_helium_device_info_service(server)
+    # await add_helium_device_info_service(SERVER)
     await add_helium_custom_service(SERVER)
 
     # Add Service
