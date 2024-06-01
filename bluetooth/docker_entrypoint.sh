@@ -30,7 +30,7 @@ DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket \
   string:bluetooth.service string:replace
 
 service dbus start
-bluetoothd --experimental --noplugin=* -f ./bluetooth.conf &
+bluetoothd --experimental --noplugin=* --configfile /code/bluetooth.conf &
 
 hciconfig hci0 up
 
