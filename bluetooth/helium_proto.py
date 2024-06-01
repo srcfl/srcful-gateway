@@ -17,6 +17,7 @@ import protos.add_gateway_pb2 as add_gateway_pb2
 import protos.wifi_connect_pb2 as wifi_connect_pb2
 import protos.diagnostics_pb2 as diagnostics_pb2
 
+
 from bless import (  # type: ignore
     BlessServer,
     BlessGATTCharacteristic,
@@ -124,14 +125,41 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
             trigger.set()
 
 
+from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
+from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
+from typing import List
+
+class DeviceInfoService(BlessGATTServiceBlueZDBus):
+    def __init__(self):
+        super(DeviceInfoService, self).__init__('0000180a-0000-1000-8000-00805f9b34fb')  # here we use the full uuid for the device info service
+        self._uuid: str = '180A'  # here we use the short uuid for the device info service
+
+class DeviceInfoCharacteristic(BlessGATTCharacteristicBlueZDBus):
+    def __init__(self, uuid: Union[str, UUID], short_uuid: str, properties: GATTCharacteristicProperties, permissions: GATTAttributePermissions, value: bytearray):
+        super(DeviceInfoCharacteristic, self).__init__(uuid, properties, permissions, value)
+        self._uuid: str = short_uuid
+
 async def add_helium_device_info_service(server: BlessServer):
     service_uuid = '0000180a-0000-1000-8000-00805f9b34fb'
     await server.add_new_service(service_uuid)
+    
+    #await server.setup_task
+    #service = DeviceInfoService()
+    #await service.init(server)
+    #server.services[service._uuid] = service
 
     char_uuid = "00002A29-0000-1000-8000-00805F9B34FB"
     char_flags = GATTCharacteristicProperties.read
     permissions = GATTAttributePermissions.readable
-    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'Helium', permissions)
+
+    #characteristic: BlessGATTCharacteristicBlueZDBus = (
+    #        DeviceInfoCharacteristic(char_uuid, "2A29", char_flags, permissions, b'Helium')
+    #    )
+    #await characteristic.init(service)
+    #service.add_characteristic(characteristic)
+
+    #service.add_characteristic(char_uuid, char_flags, b'Helium', permissions)
+    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'Helium Systems, Inc.', permissions)
 
     char_uuid = "00002A25-0000-1000-8000-00805F9B34FB"
     await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'6081F989E7BF', permissions)
@@ -176,6 +204,10 @@ async def add_helium_custom_service(server: BlessServer):
     await server.add_new_characteristic(helium_service_uuid, wifi_connect, char_flags, b'', permissions)
 
 
+
+
+
+
 async def run(loop):
     trigger.clear()
     # Instantiate the server
@@ -187,12 +219,11 @@ async def run(loop):
 
 
     # device info service does not work on windows
-    # await add_helium_device_info_service(SERVER)
+    #await add_helium_device_info_service(SERVER)
     await add_helium_custom_service(SERVER)
+    await add_helium_device_info_service(SERVER)
 
-    # Add Service
-    my_service_uuid = "A07498CA-AD5B-474E-940D-16F1FBE7E8CD"
-    await SERVER.add_new_service(my_service_uuid)
+    
 
     # Add a Characteristic to the service
     my_char_uuid = "51FF12BB-3ED8-46E5-B4F9-D64E2FEC021B"
@@ -203,7 +234,7 @@ async def run(loop):
     )
     permissions = GATTAttributePermissions.readable | GATTAttributePermissions.writeable
     await SERVER.add_new_characteristic(
-        my_service_uuid, my_char_uuid, char_flags, None, permissions
+        helium_service_uuid, my_char_uuid, char_flags, None, permissions
     )
 
     logger.debug(SERVER.get_characteristic(my_char_uuid))
