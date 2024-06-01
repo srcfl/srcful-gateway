@@ -63,7 +63,7 @@ class ModbusScanHandler(GetHandler):
                 if state == 'open':
                     print(host, port, 'open')
                     device = {
-                        'host': host,
+                        'ip': host,
                         'port': port
                     }
                     modbus_devices.append(device)
