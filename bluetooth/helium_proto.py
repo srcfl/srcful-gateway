@@ -2,6 +2,8 @@
 Example for a BLE 4.0 Server
 """
 
+import base58
+
 import time
 import sys
 import logging
@@ -77,6 +79,9 @@ def connect_wifi(characteristic: BlessGATTCharacteristic, value):
     else:
         logger.debug(f"Failed to update value")
 
+def bytes_to_hex_string(byte_data):
+    return ''.join(f'{byte:02x}' for byte in byte_data)
+
 def add_gateway(characteristic: BlessGATTCharacteristic, value):
     logger.debug(f"Add gateway") 
     add_gw_details = add_gateway_pb2.add_gateway_v1()
@@ -84,6 +89,17 @@ def add_gateway(characteristic: BlessGATTCharacteristic, value):
 
     print(f"add gateway owner {add_gw_details.owner}, fee {add_gw_details.fee} ")
     print(f"amount {add_gw_details.amount}, payer {add_gw_details.payer}")
+
+
+    owner = base58.b58decode_check(add_gw_details.owner)[1:]
+    payer = base58.b58decode_check(add_gw_details.payer)[1:]
+
+    print(f"Decoded owner {bytes_to_hex_string(owner[1:])}")
+    print(f"Decoded payer {bytes_to_hex_string(payer[1:])}")
+
+    wallet = base58.b58encode(owner[1:])
+    print(f"Wallet: {wallet}")
+
 
     # https://docs.helium.com/hotspot-makers/become-a-maker/hotspot-integration-testing/#generate-an-add-hotspot-transaction
     test_response = {
