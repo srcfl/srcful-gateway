@@ -32,6 +32,9 @@ COPY --from=build /code/venv /code/venv
 ENV VIRTUAL_ENV=/code/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
+# copy bluetooth main configuration
+COPY bluetooth.conf /etc/bluetooth/main.conf
+
 WORKDIR /code
 COPY . .
 ENTRYPOINT sh docker_entrypoint.sh
