@@ -45,13 +45,7 @@ def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray
 
 def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
     logger.debug(f"Writing!!")
-    if characteristic.uuid == helium.add_gatway:
-        threading.Thread(target=helium.add_gateway, args=(SERVER, characteristic, value,)).start()
-    elif characteristic.uuid == helium.wifi_connect:
-        
-        threading.Thread(target=helium.connect_wifi, args=(SERVER, characteristic, value,)).start()
-
-    else:
+    if helium.write_request(server, characteristic, value) != True:
         characteristic.value = value
         logger.debug(f"Char value set to {characteristic.value}")
         if characteristic.value == b"\x0f":
@@ -100,7 +94,7 @@ async def run(loop):
     )
     permissions = GATTAttributePermissions.readable | GATTAttributePermissions.writeable
     await SERVER.add_new_characteristic(
-        helium.helium_service_uuid, my_char_uuid, char_flags, None, permissions
+        helium.service_uuid, my_char_uuid, char_flags, None, permissions
     )
 
     logger.debug(SERVER.get_characteristic(my_char_uuid))
