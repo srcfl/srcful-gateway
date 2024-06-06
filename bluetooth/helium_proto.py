@@ -40,12 +40,13 @@ SERVER: BlessServer = None
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
     logger.debug(f"Reading {characteristic.value}")
+    helium.read_request(SERVER, characteristic)
     return characteristic.value
 
 
 def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
     logger.debug(f"Writing!!")
-    if helium.write_request(server, characteristic, value) != True:
+    if helium.write_request(SERVER, characteristic, value) != True:
         characteristic.value = value
         logger.debug(f"Char value set to {characteristic.value}")
         if characteristic.value == b"\x0f":
