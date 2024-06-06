@@ -39,7 +39,7 @@ wifi_services_uuid = 'd7515033-7e7b-45be-803f-c8737b171a29'
 diagnostics_uuid = 'b833d34f-d871-422c-bf9e-8e6ec117d57e'
 wifi_mac_uuid = '9c4314f2-8a0c-45fd-a58d-d4a7e64c3a57'
 lights_uuid = '180efdef-7579-4b4a-b2df-72733b7fa2fe'
-wifi_ssid = '7731de63-bc6a-4100-8ab1-89b2356b038b'
+WIFI_SSID_UUID = '7731de63-bc6a-4100-8ab1-89b2356b038b'
 ethernet_online = 'e5866bd6-0288-4476-98ca-ef7da6b4d289'
 
 assert_location = 'd435f5de-01a4-4e7d-84ba-dfd347f60275'
@@ -54,6 +54,18 @@ def get_wifi_ssids():
         return response.json()['ssids']
     else:
         return []
+    
+def get_connected_wifi_ssid():
+    response = requests.get("http://localhost:5000/api/network", timeout=10)
+    if response.status_code == 200:
+        for connection in response.json['connections']:
+            if "wireless" in connection['connection']['type']:
+                return connection['connection']['id']
+    else:
+        return "n/a"
+    
+def scan_wifi():
+    requests.get("http://localhost:5000/api/wifi/scan", timeout=10)
 
 
 def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
@@ -64,10 +76,19 @@ def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, *
 
         services = wifi_services_pb2.wifi_services_v1()
         for ssid in wifi_ssids:
-            services.services.append(ssid)
+            if len(ssid) > 0:
+                services.services.append(ssid)
 
         characteristic.value = bytes(services.SerializeToString())
         server.update_value(service_uuid, wifi_services_uuid)
+
+        # we start a rescan so we can get the latest wifi networks the next time we read
+        threading.Thread(target=scan_wifi).start()
+    if characteristic.uuid == WIFI_SSID_UUID:
+        logger.debug(f"Getting current wifi ssid")
+        wifi_ssid = get_connected_wifi_ssid()
+        characteristic.value = bytes(wifi_ssid, "utf-8")
+        server.update_value(service_uuid, wifi_ssid)
 
 
 def write_request(server: BlessServer, characteristic: BlessGATTCharacteristic, value: Any, **kwargs) -> bool:
@@ -85,6 +106,9 @@ def write_request(server: BlessServer, characteristic: BlessGATTCharacteristic, 
 async def add_custom_service(server: BlessServer):
     await server.add_new_service(service_uuid)
 
+    # tell the server to scan for networks
+    threading.Thread(target=scan_wifi).start()
+
     char_flags = GATTCharacteristicProperties.read
     permissions = GATTAttributePermissions.readable
 
@@ -92,13 +116,10 @@ async def add_custom_service(server: BlessServer):
     await server.add_new_characteristic(service_uuid, public_key_uuid, char_flags, b'117ei8D1Bk2kYqWNjSFuLgg3BrtTNSTi2tt14LRUFgt', permissions)
     await server.add_new_characteristic(service_uuid, wifi_mac_uuid, char_flags, b'wifi_mac', permissions)
     await server.add_new_characteristic(service_uuid, lights_uuid, char_flags, b'n/a', permissions)
-    await server.add_new_characteristic(service_uuid, wifi_ssid, char_flags, b'magic_ssid', permissions)
+    await server.add_new_characteristic(service_uuid, WIFI_SSID_UUID, char_flags, b'magic_ssid', permissions)
     await server.add_new_characteristic(service_uuid, ethernet_online, char_flags, b'false', permissions)
 
     services = wifi_services_pb2.wifi_services_v1()
-    services.services.append("nisse")
-    services.services.append("kalle")
-    services.services.append("pelle")
 
     await server.add_new_characteristic(service_uuid, wifi_services_uuid, char_flags, bytes(services.SerializeToString()), permissions)
 
@@ -182,9 +203,6 @@ def connect_wifi(server: BlessServer, characteristic: BlessGATTCharacteristic, v
     characteristic.value = bytes(WIFI_ERROR, "utf-8")
     server.update_value(service_uuid, wifi_connect)
 
-
-
-    
 
 def bytes_to_hex_string(byte_data):
     return ''.join(f'{byte:02x}' for byte in byte_data)
