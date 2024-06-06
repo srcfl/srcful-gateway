@@ -149,25 +149,42 @@ async def add_device_info_service(server: BlessServer):
 
 
 
+def is_connected(connections, ssid):
+    for connection in connections:
+        if connection['connection']['id'] == ssid:
+            return True
+    return False
+
+
 def connect_wifi(server: BlessServer, characteristic: BlessGATTCharacteristic, value):
     logger.debug(f"Connect wifi")
     wifi_connect_details = wifi_connect_pb2.wifi_connect_v1()
     wifi_connect_details.ParseFromString(bytes(value))
 
     print(f"wifi connect ssid {wifi_connect_details.service}, password {wifi_connect_details.password}")
-    characteristic.value = bytes(WIFI_CONNECTING, "utf-8")
-    if server.update_value(service_uuid, wifi_connect):
-        logger.debug(f"Char updated, value set to {characteristic.value}")
-    else:
-        logger.debug(f"Failed to update value")
+    
+    response = requests.post("http://localhost:5000/api/wifi", json={"ssid": wifi_connect_details.service, "psk": wifi_connect_details.password}, timeout=10)
+    if response.status_code == 200 and response.json()['status'] == "ok":
+        characteristic.value = bytes(WIFI_CONNECTING, "utf-8")
+        server.update_value(service_uuid, wifi_connect)
+
+        for _ in range(10):
+            time.sleep(5)
+
+            response = requests.get("http://localhost:5000/api/network", json={"ssid": wifi_connect_details.service, "psk": wifi_connect_details.password}, timeout=10)
+            if response.status_code == 200 and is_connected(response.json()['connections'], wifi_connect_details.service):
+                
+                characteristic.value = bytes(WIFI_CONNECTED, "utf-8")
+                server.update_value(service_uuid, wifi_connect)
+                return
+
+    # if we get here somethign went wrong
+    characteristic.value = bytes(WIFI_ERROR, "utf-8")
+    server.update_value(service_uuid, wifi_connect)
 
 
-    time.sleep(5)
-    characteristic.value = bytes(WIFI_CONNECTED, "utf-8")
-    if server.update_value(service_uuid, wifi_connect):
-        logger.debug(f"Char updated, value set to {characteristic.value}")
-    else:
-        logger.debug(f"Failed to update value")
+
+    
 
 def bytes_to_hex_string(byte_data):
     return ''.join(f'{byte:02x}' for byte in byte_data)
