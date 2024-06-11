@@ -27,7 +27,7 @@ balena login
 
 and select Credentials and use the email and password avaiable in bitwarden.
 
-More on how to monitor, build and deploy [here](balena.md).
+More on how to monitor, build and deploy [here](/markdowns/balena.md).
 
 ## Branching strategy
 
@@ -81,7 +81,7 @@ python setup.py install
 
 ## Rest API
 
-The rest API is documented in [api.md](api.md) but this documentation is always one step behind so use the gateway REST endpoint `doc` to get the latest version.
+The rest API is documented in [api.md](/markdowns/api.md) but this documentation is always one step behind so use the gateway REST endpoint `doc` to get the latest version.
 
 # Testing
 
