@@ -40,6 +40,7 @@ class OpenInverterPerpetualTask(Task):
                 logger.info(message)
                 self.bb.add_error(message)
                 self.time = event_time + 60000 * 5
+                
                 return self
         except Exception as e:
             logger.exception("Exception opening inverter: %s", e)
