@@ -1,8 +1,8 @@
-import os
+import sys
 
 
 def get():
-    if os.name == 'Linux':
+    if sys.platform == 'linux':
         try:
             return open('/sys/class/net/eth0/address').readline().strip().upper()
         except FileNotFoundError:
