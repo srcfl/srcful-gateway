@@ -1,8 +1,7 @@
 import logging
-
 from server.blackboard import BlackBoard
 from server.inverters.inverter import Inverter
-
+from server.web.handler.get.network import ModbusScanHandler
 from .task import Task
 
 logger = logging.getLogger(__name__)
@@ -20,10 +19,7 @@ class OpenInverterPerpetualTask(Task):
             self.bb.inverters.remove(self.inverter)
             self.inverter.terminate()
             return
-
         try:
-            
-
             if self.inverter.open(reconnect_delay=0, retries=3, timeout=5, reconnect_delay_max=0):
                 # terminate and remove all inverters from the blackboard
                 for i in self.bb.inverters.lst:
@@ -32,15 +28,25 @@ class OpenInverterPerpetualTask(Task):
 
                 self.bb.inverters.add(self.inverter)
                 self.bb.add_info("Inverter opened: " + str(self.inverter.get_config()))
-
                 return
-            else:
-                # possibly we should create a new inverter object. We have previously had trouble with reconnecting in the Harvester
-                message = "Failed to open inverter, retry in 5 minutes: " + str(self.inverter.get_config())
-                logger.info(message)
-                self.bb.add_error(message)
-                self.time = event_time + 60000 * 5
+            
+            else:    
+                scanner = ModbusScanHandler()
+                port = self.inverter.get_config_dict()['port']
+                hosts = scanner.scan_ports([int(port)], 0.01)
                 
+                if len(hosts) > 0:
+                    # At least one device was found on the port
+                    self.inverter.set_host(hosts[0]['ip'])
+                    logger.info("Found inverter at %s, retry in 10 seconds...", hosts[0]['ip']) 
+                    self.time = event_time + 10000
+                else:
+                    # possibly we should create a new inverter object. We have previously had trouble with reconnecting in the Harvester
+                    message = "Failed to open inverter, retry in 5 minutes: " + str(self.inverter.get_config())
+                    logger.info(message)
+                    self.bb.add_error(message)
+                    self.time = event_time + 60000 * 1
+
                 return self
         except Exception as e:
             logger.exception("Exception opening inverter: %s", e)

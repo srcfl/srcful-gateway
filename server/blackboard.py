@@ -3,7 +3,6 @@ import time
 import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
-
 import logging
 
 logger = logging.getLogger(__name__)

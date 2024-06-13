@@ -74,6 +74,10 @@ class ModbusRTU(Inverter):
             self.get_type(),
             self.get_address(),
         )
+    
+    def set_host(self):
+        #TODO: Implement this method
+        pass
 
     def _create_client(self, **kwargs):
         return ModbusClient(

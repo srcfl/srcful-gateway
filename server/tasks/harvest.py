@@ -1,10 +1,8 @@
 
 import logging
-
 from server.inverters.inverter import Inverter
 from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
-
 from .task import Task
 from .harvestTransport import ITransportFactory
 
@@ -15,13 +13,12 @@ class Harvest(Task):
     def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter, transport_factory: ITransportFactory):
         super().__init__(event_time, bb)
         self.inverter = inverter
-        # self.stats['lastHarvest'] = 'n/a'
-        # self.stats['harvests'] = 0
         self.barn = {}
-        self.min_backoff_time = 1000
+        
         # incremental backoff stuff
+        self.min_backoff_time = 1000
         self.backoff_time = self.min_backoff_time  # start with a 1-second backoff
-        self.max_backoff_time = 256000  # max ~4.3-minute backoff
+        self.max_backoff_time = 4000  # max ~4.3-minute backoff
         self.transport_factory = transport_factory
 
     def execute(self, event_time) -> Task | list[Task]:
@@ -38,12 +35,9 @@ class Harvest(Task):
 
             elapsed_time_ms = end_time - start_time
             log.debug("Harvest took %s ms", elapsed_time_ms)
-            # log.debug("Harvest: %s", harvest)
 
             self.min_backoff_time = max(elapsed_time_ms * 2, 1000)
 
-            # self.stats['lastHarvest'] = harvest
-            # self.stats['harvests'] += 1
             self.barn[event_time] = harvest
 
             self.backoff_time = max(self.backoff_time - self.backoff_time * 0.1, self.min_backoff_time)
@@ -61,6 +55,7 @@ class Harvest(Task):
                 self.inverter.terminate()
                 open_inverter = OpenInverterPerpetualTask(event_time + 30000, self.bb, self.inverter.clone())
                 self.time = event_time + 10000
+
                 # we return self so that in the next execute the last harvest will be transported
                 return [self, open_inverter]
             else:

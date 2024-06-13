@@ -69,22 +69,16 @@ class ModbusScanHandler(GetHandler):
             return result == 0
         except socket.error:
             return False
-
-    def do_get(self, data: RequestData):
-        """Scan the network for modbus devices."""
+        
+    def scan_ports(self, ports: list[int], timeout: float):
         local_ip = get_ip_address()
 
         # Extract the network prefix from the local IP address
         network_prefix = ".".join(local_ip.split(".")[:-1]) + ".0/24"
         subnet = ipaddress.ip_network(network_prefix)
-
-        ports = data.query_params.get("ports", "502,1502,6607")
-        timeout = data.query_params.get("timeout", 0.01) # 10ms may be too short for some networks?
-
-        ports = self.parse_ports(ports)
-
+        
         logger.info(f"Scanning subnet {subnet} for modbus devices on ports {ports} with timeout {timeout}.")
-
+        
         modbus_devices = []
 
         for ip in subnet.hosts():
@@ -99,6 +93,19 @@ class ModbusScanHandler(GetHandler):
 
         if not modbus_devices:
             logger.info(f"No IPs with given port(s) {ports} open found in the subnet {subnet}")
+
+        return modbus_devices
+
+
+    def do_get(self, data: RequestData):
+        """Scan the network for modbus devices."""
+        
+
+        ports = data.query_params.get("ports", "502,1502,6607")
+        ports = self.parse_ports(ports)
+        timeout = data.query_params.get("timeout", 0.01) # 10ms may be too short for some networks? 
+
+        modbus_devices = self.scan_ports(ports=ports, timeout=timeout)
     
         return 200, json.dumps({"devices":modbus_devices})
 

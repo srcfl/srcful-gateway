@@ -1,6 +1,5 @@
 from .inverter import Inverter
 from pymodbus.client import ModbusTcpClient as ModbusClient
-
 from typing_extensions import TypeAlias
 import logging
 
@@ -59,6 +58,9 @@ class ModbusTCP(Inverter):
             self.get_type(),
             self.get_address(),
         )
+
+    def set_host(self, host):
+        self.setup = (host, self.get_port(), self.get_type(), self.get_address())
 
     def _create_client(self, **kwargs):
         return ModbusClient(

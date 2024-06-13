@@ -86,6 +86,10 @@ class Inverter:
         """Returns the inverter's address"""
         raise NotImplementedError("Subclass must implement abstract method")
     
+    def set_host(self):
+        """Sets the inverter's host IP-address"""
+        raise NotImplementedError("Subclass must implement abstract method")
+    
     def get_backend_type(self):
         return self.get_type().lower()
 

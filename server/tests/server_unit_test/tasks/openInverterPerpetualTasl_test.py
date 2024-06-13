@@ -1,7 +1,6 @@
 from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
-
 from unittest.mock import MagicMock
 
 
@@ -63,3 +62,10 @@ def test_execute_new_inverter_added():
     assert inverter.terminate.called
     assert inverter not in bb.inverters.lst
     assert inverter2 in bb.inverters.lst
+
+
+def test_execute_new_inverter_added_after_rescan():
+    bb = BlackBoard()
+    inverter = MagicMock()
+    inverter.open.return_value = False
+    task = OpenInverterPerpetualTask(0, bb, inverter)

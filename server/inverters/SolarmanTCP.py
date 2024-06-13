@@ -9,14 +9,12 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 class SolarmanTCP(Inverter):
-
     """
     ip: string, IP address of the inverter,
     port: int, Port of the inverter,
     type: string, solaredge, huawei or fronius etc...,
     address: int, Modbus address of the inverter
     """
-
 
     # Address, Serial, Port, Slave_ID, verbose 
     Setup: TypeAlias = tuple[str | bytes | bytearray, int, int, int, bool]
@@ -63,6 +61,9 @@ class SolarmanTCP(Inverter):
             self.get_type(),
             self.get_address(),
         )
+    
+    def set_host(self, host):
+        self.setup = (host, self.get_serial(), self.get_port(), self.get_type(), self.get_address())
 
     def _create_client(self, **kwargs):
         return PySolarmanV5(self.get_host(), 
