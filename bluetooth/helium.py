@@ -65,7 +65,11 @@ def get_connected_wifi_ssid():
         return "n/a"
     
 def scan_wifi():
-    requests.get("http://localhost:5000/api/wifi/scan", timeout=10)
+    try:
+        requests.get("http://localhost:5000/api/wifi/scan", timeout=10)
+    except Exception as e:
+        logger.error(f"Error scanning wifi {e}")
+        return
 
 
 def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:

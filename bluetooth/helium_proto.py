@@ -54,20 +54,22 @@ def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs)
             trigger.set()
 
 
-from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
-from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
-from typing import List
+try:
+    from bless.backends.bluezdbus.service import BlessGATTServiceBlueZDBus
+    from bless.backends.bluezdbus.characteristic import BlessGATTCharacteristicBlueZDBus
+    from typing import List
 
-class DeviceInfoService(BlessGATTServiceBlueZDBus):
-    def __init__(self):
-        super(DeviceInfoService, self).__init__('0000180a-0000-1000-8000-00805f9b34fb')  # here we use the full uuid for the device info service
-        self._uuid: str = '180A'  # here we use the short uuid for the device info service
+    class DeviceInfoService(BlessGATTServiceBlueZDBus):
+        def __init__(self):
+            super(DeviceInfoService, self).__init__('0000180a-0000-1000-8000-00805f9b34fb')  # here we use the full uuid for the device info service
+            self._uuid: str = '180A'  # here we use the short uuid for the device info service
 
-class DeviceInfoCharacteristic(BlessGATTCharacteristicBlueZDBus):
-    def __init__(self, uuid: Union[str, UUID], short_uuid: str, properties: GATTCharacteristicProperties, permissions: GATTAttributePermissions, value: bytearray):
-        super(DeviceInfoCharacteristic, self).__init__(uuid, properties, permissions, value)
-        self._uuid: str = short_uuid
-
+    class DeviceInfoCharacteristic(BlessGATTCharacteristicBlueZDBus):
+        def __init__(self, uuid: Union[str, UUID], short_uuid: str, properties: GATTCharacteristicProperties, permissions: GATTAttributePermissions, value: bytearray):
+            super(DeviceInfoCharacteristic, self).__init__(uuid, properties, permissions, value)
+            self._uuid: str = short_uuid
+except ImportError:
+    pass
 
 async def run(loop):
     trigger.clear()
@@ -82,7 +84,7 @@ async def run(loop):
     # device info service does not work on windows
     #await add_helium_device_info_service(SERVER)
     await helium.add_custom_service(SERVER)
-    await helium.add_device_info_service(SERVER)
+    #await helium.add_device_info_service(SERVER)
 
     
 
