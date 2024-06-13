@@ -41,11 +41,23 @@ def test_modbus_scan():
     handler = ModbusScanHandler()
 
     ports = "502"
-
     assert handler.parse_ports(ports) == [502]
 
-    # status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {"ports": ports}, {}))
-    # assert status_code == 200
-    # response = json.loads(response)
-    # assert isinstance(response, list)
-    # assert len(response) > 0
+    ports = "502,503-510,1502"
+    parsed_ports = [502, 503, 504, 505, 506, 507, 508, 509, 510, 1502]
+    assert handler.parse_ports(ports) == parsed_ports
+    
+    # Important that the host is not running a modbus server on any of 
+    # the ports above, else the test will fail
+    assert handler.scan_ip("localhost", 502, 0.01) == False
+    assert handler.scan_ports(parsed_ports, 0.001) == []
+
+    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {"ports": ports}, {}))
+    assert status_code == 200
+    response = json.loads(response)
+
+    assert "devices" in response
+    assert response["devices"] == []
+
+
+    

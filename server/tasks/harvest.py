@@ -18,7 +18,7 @@ class Harvest(Task):
         # incremental backoff stuff
         self.min_backoff_time = 1000
         self.backoff_time = self.min_backoff_time  # start with a 1-second backoff
-        self.max_backoff_time = 4000  # max ~4.3-minute backoff
+        self.max_backoff_time = 256000  # max ~4.3-minute backoff
         self.transport_factory = transport_factory
 
     def execute(self, event_time) -> Task | list[Task]:

@@ -71,8 +71,9 @@ class ModbusScanHandler(GetHandler):
             return False
         
     def scan_ports(self, ports: list[int], timeout: float):
+        """Scan the local network for modbus devices on the given ports."""
+        
         local_ip = get_ip_address()
-
         # Extract the network prefix from the local IP address
         network_prefix = ".".join(local_ip.split(".")[:-1]) + ".0/24"
         subnet = ipaddress.ip_network(network_prefix)
@@ -100,7 +101,6 @@ class ModbusScanHandler(GetHandler):
     def do_get(self, data: RequestData):
         """Scan the network for modbus devices."""
         
-
         ports = data.query_params.get("ports", "502,1502,6607")
         ports = self.parse_ports(ports)
         timeout = data.query_params.get("timeout", 0.01) # 10ms may be too short for some networks? 

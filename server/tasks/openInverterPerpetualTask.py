@@ -38,14 +38,14 @@ class OpenInverterPerpetualTask(Task):
                 if len(hosts) > 0:
                     # At least one device was found on the port
                     self.inverter.set_host(hosts[0]['ip'])
-                    logger.info("Found inverter at %s, retry in 10 seconds...", hosts[0]['ip']) 
-                    self.time = event_time + 10000
+                    logger.info("Found inverter at %s, retry in 5 seconds...", hosts[0]['ip']) 
+                    self.time = event_time + 5000
                 else:
                     # possibly we should create a new inverter object. We have previously had trouble with reconnecting in the Harvester
                     message = "Failed to open inverter, retry in 5 minutes: " + str(self.inverter.get_config())
                     logger.info(message)
                     self.bb.add_error(message)
-                    self.time = event_time + 60000 * 1
+                    self.time = event_time + 60000 * 5
 
                 return self
         except Exception as e:
