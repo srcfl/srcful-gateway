@@ -13,7 +13,7 @@ def get():
 
 
 def get_wifi_mac():
-    if sys.platform != 'linux':
+    if sys.platform == 'linux':
         import dbus
         bus = dbus.SystemBus()
         manager = dbus.Interface(bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager'), 'org.freedesktop.NetworkManager')
