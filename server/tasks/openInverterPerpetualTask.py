@@ -11,6 +11,7 @@ class OpenInverterPerpetualTask(Task):
     def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter):
         super().__init__(event_time, bb)
         self.inverter = inverter
+        self.scanner = ModbusScanHandler()
 
     def execute(self, event_time):
         
@@ -31,14 +32,13 @@ class OpenInverterPerpetualTask(Task):
                 return
             
             else:    
-                scanner = ModbusScanHandler()
-                port = self.inverter.get_config_dict()['port']
-                hosts = scanner.scan_ports([int(port)], 0.01)
+                port = self.inverter.get_config_dict()['port'] # get the port from the previous inverter config
+                hosts = self.scanner.scan_ports([int(port)], 0.01) # overwrite hosts with the new result of the scan
                 
                 if len(hosts) > 0:
                     # At least one device was found on the port
                     self.inverter.set_host(hosts[0]['ip'])
-                    logger.info("Found inverter at %s, retry in 5 seconds...", hosts[0]['ip']) 
+                    logger.info("Found inverter at %s, retry in 5 seconds...", self.hosts[0]['ip']) 
                     self.time = event_time + 5000
                 else:
                     # possibly we should create a new inverter object. We have previously had trouble with reconnecting in the Harvester

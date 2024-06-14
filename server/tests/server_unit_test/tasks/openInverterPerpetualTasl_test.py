@@ -2,12 +2,13 @@ from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
 from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 
 def test_execute_invertert_added():
     bb = BlackBoard()
-    hf = HarvestFactory(bb)
-    hf.dummy()
+    HarvestFactory(bb)
+
     inverter = MagicMock()
     inverter.open.return_value = True
     task = OpenInverterPerpetualTask(0, bb, inverter)
@@ -18,10 +19,11 @@ def test_execute_invertert_added():
     assert ret is None
     assert bb.purge_tasks()[0] is not None
 
+
 def test_retry_on_exception():
     bb = BlackBoard()
-    hf = HarvestFactory(bb)
-    hf.dummy()
+    HarvestFactory(bb)
+
     inverter = MagicMock()
     inverter.open.side_effect = Exception("test")
     task = OpenInverterPerpetualTask(0, bb, inverter)
@@ -34,8 +36,8 @@ def test_retry_on_exception():
 
 def test_execute_invertert_could_not_open():
     bb = BlackBoard()
-    hf = HarvestFactory(bb)
-    hf.dummy()
+    HarvestFactory(bb)
+    
     inverter = MagicMock()
     inverter.open.return_value = False
     task = OpenInverterPerpetualTask(0, bb, inverter)
@@ -45,6 +47,7 @@ def test_execute_invertert_could_not_open():
     assert inverter.open.called
     assert ret is task
     assert len(bb.purge_tasks()) == 0
+
 
 def test_execute_new_inverter_added():
     bb = BlackBoard()
@@ -63,9 +66,31 @@ def test_execute_new_inverter_added():
     assert inverter not in bb.inverters.lst
     assert inverter2 in bb.inverters.lst
 
-
-def test_execute_new_inverter_added_after_rescan():
+ 
+@patch('server.web.handler.get.network.ModbusScanHandler')
+def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
     bb = BlackBoard()
     inverter = MagicMock()
+    
     inverter.open.return_value = False
     task = OpenInverterPerpetualTask(0, bb, inverter)
+
+    task.execute(event_time=0)
+
+    assert len(task.bb.inverters.lst) == 0
+    
+    # Create a mock for the scanner
+    mock_scanner = mock_modbus_scan_handler.return_value
+    mock_scanner.scan_ports.return_value = [{'ip': '192.168.50.1'}]
+
+    # Inject the mock scanner into the task
+    task.scanner = mock_scanner
+
+    task.execute(event_time=1)
+
+    task.inverter.set_host.assert_called_once_with('192.168.50.1')
+    inverter.open.return_value = True
+
+    task.execute(event_time=5001)
+
+    assert len(task.bb.inverters.lst) == 1
