@@ -88,7 +88,7 @@ def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
 
     task.execute(event_time=1)
 
-    task.inverter.set_host.assert_called_once_with('192.168.50.1')
+    inverter.clone.assert_called_once_with('192.168.50.1')
     inverter.open.return_value = True
 
     task.execute(event_time=5001)

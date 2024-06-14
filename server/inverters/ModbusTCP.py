@@ -25,8 +25,10 @@ class ModbusTCP(Inverter):
         self.setup = setup
         super().__init__()
 
-    def clone(self):
-        return ModbusTCP((self.get_host(), self.get_port(),
+    def clone(self, host: str = None):
+        if host is None:
+            host = self.get_host()
+        return ModbusTCP((host, self.get_port(),
                             self.get_type(), self.get_address()))
 
     def get_host(self):
@@ -58,9 +60,6 @@ class ModbusTCP(Inverter):
             self.get_type(),
             self.get_address(),
         )
-
-    def set_host(self, host):
-        self.setup = (host, self.get_port(), self.get_type(), self.get_address())
 
     def _create_client(self, **kwargs):
         return ModbusClient(

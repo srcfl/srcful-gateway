@@ -24,8 +24,10 @@ class SolarmanTCP(Inverter):
         self.setup = setup
         super().__init__()
 
-    def clone(self):
-        return PySolarmanV5((self.get_host(), self.get_serial(), self.get_port(),
+    def clone(self, host: str = None):
+        if host is None:
+            host = self.get_host()
+        return PySolarmanV5((host, self.get_serial(), self.get_port(),
                             self.get_type(), self.get_address()))
 
     def get_host(self):
@@ -61,9 +63,6 @@ class SolarmanTCP(Inverter):
             self.get_type(),
             self.get_address(),
         )
-    
-    def set_host(self, host):
-        self.setup = (host, self.get_serial(), self.get_port(), self.get_type(), self.get_address())
 
     def _create_client(self, **kwargs):
         return PySolarmanV5(self.get_host(), 
