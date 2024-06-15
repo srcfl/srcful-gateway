@@ -6,7 +6,7 @@ from server.web.handler.get.network import AddressHandler
 from server.web.handler.get.network import ModbusScanHandler
 from server.wifi.wifi import get_connection_configs
 from server.blackboard import BlackBoard
-
+from unittest.mock import patch
 
 @pytest.fixture
 def request_data():
@@ -37,7 +37,9 @@ def test_network_address(request_data):
         assert 0 <= int(part) <= 255
     assert response["port"] == 8081
 
-def test_modbus_scan():
+@patch('server.web.handler.get.network.ModbusScanHandler.scan_ports')
+@patch('server.web.handler.get.network.ModbusScanHandler.scan_ip')
+def test_modbus_scan(mock_scan_ip, mock_scan_ports):
     handler = ModbusScanHandler()
 
     ports = "502"
@@ -47,17 +49,32 @@ def test_modbus_scan():
     parsed_ports = [502, 503, 504, 505, 506, 507, 508, 509, 510, 1502]
     assert handler.parse_ports(ports) == parsed_ports
     
-    # Important that the host is not running a modbus server on any of 
-    # the ports above, else the test will fail
+
+    # Mock the scan_ip method to return False
+    mock_scan_ip.return_value = False
     assert handler.scan_ip("localhost", 502, 0.01) == False
+
+    # Mock the scan_ports method to return an empty list
+    mock_scan_ports.return_value = []
     assert handler.scan_ports(parsed_ports, 0.001) == []
 
+    # We mock the scan_ports method to return an empty list
+    mock_scan_ports.return_value = []
     status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {"ports": ports}, {}))
     assert status_code == 200
     response = json.loads(response)
 
     assert "devices" in response
     assert response["devices"] == []
+
+    # Now we mock the scan_ports method to return a list of one device
+    mock_scan_ports.return_value = [{"ip": "192.168.50.220"}]
+    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {"ports": ports}, {}))
+    assert status_code == 200
+    response = json.loads(response)
+
+    assert "devices" in response
+    assert response["devices"] == [{"ip": "192.168.50.220"}]
 
 
     
