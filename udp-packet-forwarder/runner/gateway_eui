@@ -1,0 +1,145 @@
+#!/usr/bin/env bash 
+
+cd "$( dirname "$0" )" || exit
+
+# -----------------------------------------------------------------------------
+# Chip ID
+# -----------------------------------------------------------------------------
+
+function chip_id {
+
+    local DESIGN=$1
+    local DEVICE=$2
+    local CHIP_ID_COMMAND
+
+    [[ "$DEVICE" == *"ttyV"* ]] && TIMEOUT=10 || TIMEOUT=3
+
+    CHIP_ID_COMMAND="/app/artifacts/${DESIGN}/chip_id"
+    if [[ -f $CHIP_ID_COMMAND ]]; then
+        
+        if [[ "$DESIGN" == "corecell" ]]; then
+            [[ "$DEVICE" == *"tty"* ]] && COM_TYPE="-u"
+            GATEWAY_EUI=$( timeout "${TIMEOUT}s" "$CHIP_ID_COMMAND" "$COM_TYPE" -d "$DEVICE" 2>/dev/null | grep 'EUI' | sed 's/^.*0x//' | tr "[:lower:]" "[:upper:]" )
+            [[ -n "${GATEWAY_EUI}" ]] && return 1
+        fi
+        
+        if [[ "$DESIGN" == "2g4" ]] && [[ "$DEVICE" == *"tty"* ]]; then 
+            GATEWAY_EUI=$( timeout "${TIMEOUT}s" "$CHIP_ID_COMMAND" -d "$DEVICE" 2>/dev/null | grep 'EUI' | sed 's/^.*0x//' | tr "[:lower:]" "[:upper:]" )
+            [[ -n "${GATEWAY_EUI}" ]] && return 1
+        fi
+        
+        if [[ "$DESIGN" == "picocell" ]] && [[ "$DEVICE" == *"tty"* ]]; then 
+            GATEWAY_EUI=$( timeout "${TIMEOUT}s" "$CHIP_ID_COMMAND" -d "$DEVICE" 2>/dev/null | tr "[:lower:]" "[:upper:]" )
+            [[ -n "${GATEWAY_EUI}" ]] && return 1
+        fi
+        
+    fi
+    
+    return 0
+    
+}
+
+# -----------------------------------------------------------------------------
+# Network device
+# -----------------------------------------------------------------------------
+
+if [[ "${INTERFACE}" == "NET" ]]; then
+    NETLINK=${DEVICE:-$( /sbin/ip route|awk '/default/ { print $3 ":3333" }' )}
+    DEVICE="/dev/ttyV0"
+    socat pty,link=$DEVICE,waitslave "tcp:$NETLINK" &
+fi
+
+# -----------------------------------------------------------------------------
+# Create reset file
+# -----------------------------------------------------------------------------
+
+# Raspberry Pi requires using libgpiod with gpiochip4
+if [[ $( grep -c "Raspberry Pi 5" /proc/cpuinfo ) -eq 0  ]]; then
+    USE_LIBGPIOD=${USE_LIBGPIOD:-0}
+    GPIO_CHIP=${GPIO_CHIP:-gpiochip0}
+else
+    USE_LIBGPIOD=${USE_LIBGPIOD:-1}
+    GPIO_CHIP=${GPIO_CHIP:-gpiochip4}
+fi
+
+# Create reset file
+if [[ ${USE_LIBGPIOD:-0} -eq 0 ]]; then
+    cp reset.sh.legacy reset_lgw.sh
+else
+    cp reset.sh.gpiod reset_lgw.sh
+fi
+sed -i "s#{{GPIO_CHIP}}#${GPIO_CHIP:-gpiochip0}#" reset_lgw.sh
+sed -i "s#{{RESET_GPIO}}#${RESET_GPIO:-6,17}#" reset_lgw.sh
+sed -i "s#{{POWER_EN_GPIO}}#${POWER_EN_GPIO:-0}#" reset_lgw.sh
+sed -i "s#{{POWER_EN_LOGIC}}#${POWER_EN_LOGIC:-1}#" reset_lgw.sh
+chmod +x reset_lgw.sh
+
+# -----------------------------------------------------------------------------
+# Entry point
+# -----------------------------------------------------------------------------
+
+if [[ -f /app/config/local_conf.json ]]; then
+
+    GATEWAY_EUI=$( jq '.gateway_conf.gateway_ID' /app/config/local_conf.json | sed 's/"//g' )
+
+    echo "Gateway EUI: ${GATEWAY_EUI^^} (read from local_conf.conf)"
+
+elif [[ -f /app/config/global_conf.json ]]; then
+
+    GATEWAY_EUI=$( jq '.gateway_conf.gateway_ID' /app/config/global_conf.json | sed 's/"//g' )
+
+    echo "Gateway EUI: ${GATEWAY_EUI^^} (read from global_conf.conf)"
+
+elif [[ "$GATEWAY_EUI_SOURCE" == "chip" ]]; then
+    
+    # Get all possible devices
+    DEVICES=$( ls /dev/spidev* /dev/ttyACM* /dev/ttyUSB* /dev/ttyV* 2> /dev/null )
+
+    # Look for devices
+    FOUND=0
+    for DEVICE in $DEVICES; do
+        for DESIGN in corecell 2g4 picocell; do
+            chip_id "$DESIGN" "$DEVICE"
+            if [[ $? -ne 0 ]] ; then
+                echo "Gateway EUI: ${GATEWAY_EUI^^} (based on $DESIGN concentrator at $DEVICE)"
+                FOUND=$(( FOUND + 1 ))
+                break;
+            fi
+        done
+    done
+
+    if [[ $FOUND -eq 0 ]]; then
+        echo "No concentrator found, GATEWAY_EUI from concentrator is not possible"
+    fi
+
+elif [[ -n "$GATEWAY_EUI" ]]; then
+
+    echo "Gateway EUI: ${GATEWAY_EUI^^} (based on environment variable)"
+
+else
+
+    # Unset it but keep it global
+    GATEWAY_EUI_SOURCE=""
+
+    # Try usual interfaces
+    for INET in eth0 wlan0 usb0 eth1; do
+        if [[ $( grep -c "^\s*${INET}:" /proc/net/dev ) -eq 1 ]]; then
+            GATEWAY_EUI_SOURCE=$INET
+            break
+        fi
+    done
+    
+    # If none of the above, get the most used NIC based on received bytes
+    if [[ -z $GATEWAY_EUI_SOURCE ]]; then
+        GATEWAY_EUI_SOURCE=$( tail -n+3 < /proc/net/dev | sort -k2 -nr | head -n1 | cut -d ":" -f1 | sed 's/ //g' )
+    fi
+    
+    # Get the Gateway EUI from the source
+    if [[ -n $GATEWAY_EUI_SOURCE ]]; then
+        GATEWAY_EUI=$( ip link show "$GATEWAY_EUI_SOURCE" | awk '/ether/ {print $2}' | awk -F: '{print $1$2$3"FFFE"$4$5$6}' )
+        echo "Gateway EUI: ${GATEWAY_EUI^^} (based on interface ${GATEWAY_EUI_SOURCE})"
+    else
+        echo -e "${COLOR_ERROR}ERROR: No network interface found. Cannot set gateway EUI.${COLOR_END}"
+    fi
+    
+fi
