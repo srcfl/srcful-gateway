@@ -1,11 +1,8 @@
 import queue
 import sys
-import time
 import logging
 import threading
-
 from concurrent.futures import ThreadPoolExecutor
-
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
 from server.tasks.itask import ITask
@@ -103,8 +100,7 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None):
     bb = BlackBoard()
-    harvest_factory = HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
-    harvest_factory.dummy()
+    HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
 
     logger.info("eGW version: %s", bb.get_version())
 

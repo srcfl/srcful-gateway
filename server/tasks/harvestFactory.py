@@ -15,6 +15,3 @@ class HarvestFactory:
     
     def remove_inverter(self, inverter):
         pass
-
-    def dummy(self):
-        pass

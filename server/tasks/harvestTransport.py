@@ -24,9 +24,6 @@ class HarvestTransport(IHarvestTransport):
 
     def __init__(self, event_time: int, bb: BlackBoard, barn: dict, inverter_backend_type: str):
         super().__init__(event_time, bb)
-        # self.stats['lastHarvestTransport'] = 'n/a'
-        # if 'harvestTransports' not in self.stats:
-        #  self.stats['harvestTransports'] = 0
         self.barn = barn
         self.inverter_type = inverter_backend_type
 
@@ -47,7 +44,6 @@ class HarvestTransport(IHarvestTransport):
 
     def _on_200(self, reply):
         log.info("Response: %s", reply)
-        # self.stats['harvestTransports'] += 1
 
     def _on_error(self, reply: requests.Response):
         log.warning("Error in harvest transport: %s", str(reply))

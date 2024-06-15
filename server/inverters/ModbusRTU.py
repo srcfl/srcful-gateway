@@ -25,8 +25,10 @@ class ModbusRTU(Inverter):
         self.setup = setup
         super().__init__()
 
-    def clone(self):
-        return ModbusRTU((self.get_host(), self.get_baudrate(),
+    def clone(self, host: str = None):
+        if host is None:
+            host = self.get_host()
+        return ModbusRTU((host, self.get_baudrate(),
                             self.get_bytesize(), self.get_parity(),
                             self.get_stopbits(), self.get_type(), self.get_address()))
 

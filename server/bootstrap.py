@@ -3,9 +3,7 @@ from .inverters.ModbusTCP import ModbusTCP
 from .inverters.ModbusRTU import ModbusRTU
 from .inverters.SolarmanTCP import SolarmanTCP
 from .tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
-
 import os
-
 import logging
 
 logger = logging.getLogger(__name__)

@@ -27,7 +27,7 @@ class Inverter:
     def is_terminated(self) -> bool:
         return self._isTerminated
 
-    def clone(self):
+    def clone(self, host: str = None):
         """Returns a clone of the inverter. This clone will only have the configuration and not the connection."""
         raise NotImplementedError("Subclass must implement abstract method")
 

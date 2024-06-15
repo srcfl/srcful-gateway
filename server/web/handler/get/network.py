@@ -1,9 +1,10 @@
 import json
-import nmap
 from server.wifi.wifi import get_connection_configs, is_connected, get_ip_address
 from ..handler import GetHandler
 from ..requestData import RequestData
 import logging
+import ipaddress
+import socket
 
 logger = logging.getLogger(__name__)
 
@@ -36,50 +37,75 @@ class AddressHandler(GetHandler):
 # A class to scan for modbus devices on the network
 class ModbusScanHandler(GetHandler):
     def schema(self):
-        return self.create_schema(
-            "Scans the network for modbus devices",
-            required={"ports": "string, containing a comma separated list of ports to scan for modbus devices."},
-            returns={"devices": "a list of JSON Objects: {'host': host ip, 'port': host port}."}
-        )
+        return {
+            "description": "Scans the network for modbus devices",
+            "optional": {
+                "ports": "string, containing a comma separated list of ports to scan for modbus devices.",
+                "timeout": "float, the timeout in seconds for each ip:port scan. Default is 0.01 (10ms)."
+            },
+            "returns": {
+                "devices": "a list of JSON Objects: {'host': host ip, 'port': host port}."
+                }
+        }
 
-    def do_get(self, data: RequestData):
-        
-        parameters = data.query_params.get("ports", "")
-        if parameters == "":
-            return 400, json.dumps({"error": "missing ports parameter"})
-
-        parameters = parameters.split(",")
+    def parse_ports(self, ports_str):
+        """Parse a string of ports and port ranges into a list of integers."""
         ports = []
-        for param in parameters:
-            if "-" in param:
-                interval = param.split("-")
-                ports += [*range(int(interval[0]), int(interval[1]) + 1)]
+        for part in ports_str.split(','):
+            if '-' in part:
+                start, end = map(int, part.split('-'))
+                ports.extend(range(start, end + 1))
             else:
-                ports.append(int(param))
+                ports.append(int(part))
+        return ports
 
-        # Convert the list of common ports to a comma separated string for nmap
-        comma_separated_ports = ','.join(map(str, ports))
-
-        logger.info(f"Scanning network for modbus devices on ports {comma_separated_ports}")
-
+    def scan_ip(self, ip: str, port: int, timeout: float):
+        """Check if a specific port is open on a given IP address."""
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(timeout)
+            result = sock.connect_ex((ip, port))
+            sock.close()
+            return result == 0
+        except socket.error:
+            return False
+        
+    def scan_ports(self, ports: list[int], timeout: float):
+        """Scan the local network for modbus devices on the given ports."""
+        
         local_ip = get_ip_address()
-
         # Extract the network prefix from the local IP address
-        network_prefix = '.'.join(local_ip.split('.')[:-1]) + '.0/24'
-
-        nm = nmap.PortScanner()
-        nm.scan(network_prefix, ports=comma_separated_ports, arguments='-T5')
-
+        network_prefix = ".".join(local_ip.split(".")[:-1]) + ".0/24"
+        subnet = ipaddress.ip_network(network_prefix)
+        
+        logger.info(f"Scanning subnet {subnet} for modbus devices on ports {ports} with timeout {timeout}.")
+        
         modbus_devices = []
 
-        for host in nm.all_hosts():
+        for ip in subnet.hosts():
+            ip = str(ip)
             for port in ports:
-                if nm[host].has_tcp(port) and nm[host]['tcp'][port]['state'] == 'open':
+                if self.scan_ip(ip, port, float(timeout)):
                     device = {
-                    'host': host,
-                    'port': port
+                        "ip": ip,
+                        "port": port
                     }
                     modbus_devices.append(device)
+
+        if not modbus_devices:
+            logger.info(f"No IPs with given port(s) {ports} open found in the subnet {subnet}")
+
+        return modbus_devices
+
+
+    def do_get(self, data: RequestData):
+        """Scan the network for modbus devices."""
+        
+        ports = data.query_params.get("ports", "502,1502,6607")
+        ports = self.parse_ports(ports)
+        timeout = data.query_params.get("timeout", 0.01) # 10ms may be too short for some networks? 
+
+        modbus_devices = self.scan_ports(ports=ports, timeout=timeout)
     
         return 200, json.dumps({"devices":modbus_devices})
 

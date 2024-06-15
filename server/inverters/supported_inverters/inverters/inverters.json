@@ -405,6 +405,74 @@
           "num_of_registers": 2
         }
       ]
+    },
+    {
+      "name": "ferroamp",
+      "version": "0.1",
+      "verbose_always": false,
+      "model_group": "Model X/Y",
+      "display_name": "ferroamp",
+      "protocol": "modbus",
+      "description": "Another inverter profile...",
+      "registers_verbose": [
+        {
+          "fcode": 4,
+          "start_register": 31005,
+          "num_of_registers": 5
+        },
+        {
+          "fcode": 4,
+          "start_register": 32001,
+          "num_of_registers": 125
+        },
+        {
+          "fcode": 4,
+          "start_register": 32129,
+          "num_of_registers": 17
+        },
+        {
+          "fcode": 4,
+          "start_register": 33065,
+          "num_of_registers": 82
+        },
+        {
+          "fcode": 4,
+          "start_register": 34065,
+          "num_of_registers": 70
+        },
+        {
+          "fcode": 4,
+          "start_register": 35001,
+          "num_of_registers": 4
+        },
+        {
+          "fcode": 4,
+          "start_register": 35065,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 35101,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 36001,
+          "num_of_registers": 100
+        }
+      ],
+      "registers": [
+        {
+          "fcode": 4,
+          "start_register": 32017,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 35101,
+          "num_of_registers": 2
+        }
+      ]
     }
   ]
 }

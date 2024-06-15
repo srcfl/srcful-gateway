@@ -3,7 +3,6 @@ import time
 import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -129,7 +128,7 @@ class BlackBoard:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.10.1"
+        return "0.11.0"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:

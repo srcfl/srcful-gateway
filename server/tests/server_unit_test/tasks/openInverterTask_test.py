@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 def test_execute_invertert_added():
     bb = BlackBoard()
     hf = HarvestFactory(bb)
-    hf.dummy()
+
     inverter = MagicMock()
     inverter.open.return_value = True
     task = OpenInverterTask(0, bb, inverter)
@@ -22,8 +22,7 @@ def test_execute_invertert_added():
 
 def test_execute_invertert_could_not_open():
     bb = BlackBoard()
-    hf = HarvestFactory(bb)
-    hf.dummy()
+
     inverter = MagicMock()
     inverter.open.return_value = False
     task = OpenInverterTask(0, bb, inverter)
@@ -54,8 +53,6 @@ def test_execute_old_inverter_terminated():
 
 def test_retry_on_exception():
     bb = BlackBoard()
-    hf = HarvestFactory(bb)
-    hf.dummy()
     inverter = MagicMock()
     inverter.open.side_effect = Exception("test")
     task = OpenInverterTask(0, bb, inverter)

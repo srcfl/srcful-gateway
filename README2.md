@@ -1,6 +1,6 @@
 # Srcful Energy Gateway
 
-The Srcful Energy Gateway application is a bundle of services that are deployed as docker containers on a Raspberry Pi.
+The Srcful Energy Gateway application is a bundle of services that are deployed as docker containers that are intended to run on a Raspberry Pi.
 
 ```
 +------------+                       +------------+
@@ -12,9 +12,20 @@ The Srcful Energy Gateway application is a bundle of services that are deployed 
 +------------+                       +------------+
 ```
 
-## Setting Up the Raspberry Pi
+1. **Select a Lightweight Linux Distro**: Use Raspberry Pi OS (64-bit).
 
-Raspberry Pi OS Lite (64-bit) is the recommended operating system.
+2. **Download and Use Raspberry Pi Imager**:
+
+   - Get it from the official website.
+   - Burn Raspberry Pi OS Lite (64-bit) to an SD card.
+
+3. **Image Configuration**: Enable SSH and WiFi using the Raspberry Pi Imager.
+
+4. **Insert SD Card and Power On**: Insert the SD card into the Raspberry Pi and power it on.
+
+5. **Connect to Raspberry Pi**: Use SSH (ssh pi@<RASPBERRY_PI_IP>).
+
+## Setting Up the Raspberry Pi
 
 1. **Configure and Update**:
 
@@ -26,35 +37,3 @@ Raspberry Pi OS Lite (64-bit) is the recommended operating system.
    - Use `sudo raspi-config` to enable `I2C` and `SPI` interfaces.
    - For Rak Hotspot Miner V2, edit `/boot/firmware/config.txt` to add `dtoverlay=spi0-1cs`.
    - Save, exit, and restart with `sudo reboot`, then log in again using SSH.
-
-## Building and Running the Project
-
-To build and run this project, simply run the following command:
-
-```shell
-docker-compose -f compose-rpi4.yml up
-```
-
-Or in detached mode:
-
-```shell
-docker-compose -f compose-rpi4.yml up -d
-```
-
-## Testing
-
-To run the tests, execute the following command:
-
-For the `server` service:
-
-```shell
-pytest server/tests/server_unit_test
-pytest server/tests/server_rest_test
-```
-
-For the `bluetooth` service:
-
-```shell
-pytest bluetooth/tests/ble_unit_test
-pytest bluetooth/tests/ble_rest_test
-```

@@ -71,7 +71,7 @@ RESPONSE_CHAR = "51ff12bb-3ed8-46e5-b4f9-d64e2fec021c"  # client read from this
 API_URL = "localhost:5000"
 SERVICE_NAME = f"SrcFul Energy Gateway {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
 SERVER = None
-REQUEST_TIMEOUT = 5
+REQUEST_TIMEOUT = 20
 
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
