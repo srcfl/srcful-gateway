@@ -1,0 +1,73 @@
+version: "2"
+
+services:
+  web:
+    ports:
+      - "80:5000"
+    build: ./server
+    container_name: srcful-gw
+    restart: always
+    environment:
+      - HOST_IP
+      - REST_SERVICE_PORT=80 # should correspond to the port in the web service below
+      - REST_SERVICE_PORT_INTERNAL=5000 # should correspond to the port in the web service below
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
+    devices:
+      - /dev/i2c-1
+    volumes:
+      - srcful-data:/data/srcful
+      - /var/run/dbus:/host/run/dbus
+    labels:
+      io.balena.features.supervisor-api: 1 # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
+
+  bluetooth:
+    build: ./bluetooth
+    container_name: ble
+    privileged: true
+    network_mode: host
+    restart: always
+    environment:
+      - HOST_IP
+      - REST_SERVICE_PORT=80
+      - REST_SERVICE_PORT_INTERNAL=5000
+      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
+    depends_on:
+      - "web"
+    volumes:
+      - /var/run/dbus:/host/run/dbus
+      - /sys:/sys
+      - /lib/modules:/lib/modules
+
+  gateway-rs:
+    build: ./gateway-rs
+    devices:
+      - /dev/i2c-1
+    expose:
+      - "1680"
+    environment:
+      - GATEWAY_SETTINGS=/app/settings.toml
+    depends_on:
+      - packet-forwarder
+    network_mode: host
+
+  packet-forwarder:
+    # Use pre-defined image
+    image: rakwireless/udp-packet-forwarder:latest
+    restart: unless-stopped
+    privileged: true # set this to true or define the required devices to share with the container under the `devices` tag below
+    network_mode: host # required to read host interface MAC instead of virtual one, you don't need this if you set the GATEWAY_EUI manually
+
+    environment:
+      MODEL: "RAK7248"
+
+      USE_LIBGPIOD: 1
+      RESET_GPIO: 25
+
+      # Helium settings
+      SERVER_HOST: 127.0.0.1
+      SERVER_PORT: 1680
+
+volumes:
+  srcful-data:

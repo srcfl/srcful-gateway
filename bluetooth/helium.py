@@ -1,15 +1,7 @@
-import asyncio
 import logging
 import json
-import base58
 import time
 from typing import Any
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(name=__name__)
-
-
-import protos
 
 from bless import (  # type: ignore
     BlessServer,
@@ -18,13 +10,16 @@ from bless import (  # type: ignore
     GATTAttributePermissions,
 )
 
-
 import protos.wifi_services_pb2 as wifi_services_pb2
 import protos.add_gateway_pb2 as add_gateway_pb2
 import protos.wifi_connect_pb2 as wifi_connect_pb2
 import protos.diagnostics_pb2 as diagnostics_pb2
 import threading
 import requests
+
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(name=__name__)
 
 WIFI_CONNECTING = "connecting"
 WIFI_CONNECTED = "connected"
@@ -42,23 +37,35 @@ lights_uuid = '180efdef-7579-4b4a-b2df-72733b7fa2fe'
 WIFI_SSID_UUID = '7731de63-bc6a-4100-8ab1-89b2356b038b'
 ethernet_online = 'e5866bd6-0288-4476-98ca-ef7da6b4d289'
 
-assert_location = 'd435f5de-01a4-4e7d-84ba-dfd347f60275'
-add_gatway = 'df3b16ca-c985-4da2-a6d2-9b9b9abdb858'
-wifi_connect = '398168aa-0111-4ec0-b1fa-171671270608'
+assert_location_uuid = 'd435f5de-01a4-4e7d-84ba-dfd347f60275'
+add_gatway_uuid = 'df3b16ca-c985-4da2-a6d2-9b9b9abdb858'
+wifi_connect_uuid = '398168aa-0111-4ec0-b1fa-171671270608'
 
+api_endpoint = "http://localhost:80/api"
+
+
+response = requests.get("http://localhost:3000/onboading_keys", timeout=10)
+if response.status_code == 200:
+    public_key = response.json()['key'].encode('utf-8')
+    onboarding_key = response.json()['onboarding'].encode('utf-8')
+    name = response.json()['name'].encode('utf-8')
+
+logger.debug(f"Public key {public_key}")
+logger.debug(f"Onboarding key {onboarding_key}")
+logger.debug(f"Name {name}")
 
 def get_wifi_ssids():
     # request the ssids fro the server
-    response = requests.get("http://localhost:5000/api/wifi" , timeout=10)
+    response = requests.get(f"{api_endpoint}/wifi" , timeout=10)
     if response.status_code == 200:
         return response.json()['ssids']
     else:
         return []
     
 def get_connected_wifi_ssid():
-    response = requests.get("http://localhost:5000/api/network", timeout=10)
+    response = requests.get(f"{api_endpoint}/network", timeout=10)
     if response.status_code == 200:
-        for connection in response.json['connections']:
+        for connection in response.json()['connections']:
             if "wireless" in connection['connection']['type']:
                 return connection['connection']['id']
     else:
@@ -66,7 +73,7 @@ def get_connected_wifi_ssid():
     
 def scan_wifi():
     try:
-        requests.get("http://localhost:5000/api/wifi/scan", timeout=10)
+        requests.get(f"{api_endpoint}/wifi/scan", timeout=10)
     except Exception as e:
         logger.error(f"Error scanning wifi {e}")
         return
@@ -97,15 +104,16 @@ def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, *
 
 def write_request(server: BlessServer, characteristic: BlessGATTCharacteristic, value: Any, **kwargs) -> bool:
     logger.debug(f"Writing!!")
-    if characteristic.uuid == add_gatway:
+    if characteristic.uuid == add_gatway_uuid:
         threading.Thread(target=add_gateway, args=(server, characteristic, value,)).start()
         return True
-    elif characteristic.uuid == wifi_connect:
+    elif characteristic.uuid == wifi_connect_uuid:
         
         threading.Thread(target=connect_wifi, args=(server, characteristic, value,)).start()
         return True
 
     return False
+    
 
 async def add_custom_service(server: BlessServer):
     await server.add_new_service(service_uuid)
@@ -116,8 +124,8 @@ async def add_custom_service(server: BlessServer):
     char_flags = GATTCharacteristicProperties.read
     permissions = GATTAttributePermissions.readable
 
-    await server.add_new_characteristic(service_uuid, onboarding_key_uuid, char_flags, b'11TqqVzycXK5k49bXbmcUcSne91krq7v3VSQCfDXr', permissions)
-    await server.add_new_characteristic(service_uuid, public_key_uuid, char_flags, b'117ei8D1Bk2kYqWNjSFuLgg3BrtTNSTi2tt14LRUFgt', permissions)
+    await server.add_new_characteristic(service_uuid, onboarding_key_uuid, char_flags, onboarding_key, permissions)
+    await server.add_new_characteristic(service_uuid, public_key_uuid, char_flags, public_key, permissions)
     await server.add_new_characteristic(service_uuid, wifi_mac_uuid, char_flags, b'wifi_mac', permissions)
     await server.add_new_characteristic(service_uuid, lights_uuid, char_flags, b'n/a', permissions)
     await server.add_new_characteristic(service_uuid, WIFI_SSID_UUID, char_flags, b'magic_ssid', permissions)
@@ -137,9 +145,9 @@ async def add_custom_service(server: BlessServer):
 
     char_flags = GATTCharacteristicProperties.write | GATTCharacteristicProperties.read | GATTCharacteristicProperties.indicate
     permissions = GATTAttributePermissions.writeable | GATTAttributePermissions.readable
-    await server.add_new_characteristic(service_uuid, add_gatway, char_flags, b'not supported', permissions)
+    await server.add_new_characteristic(service_uuid, add_gatway_uuid, char_flags, b'not supported', permissions)
 
-    await server.add_new_characteristic(service_uuid, wifi_connect, char_flags, b'', permissions)
+    await server.add_new_characteristic(service_uuid, wifi_connect_uuid, char_flags, b'', permissions)
 
     logger.debug(f"Helium Service added with uuid {service_uuid}")
 
@@ -186,63 +194,56 @@ def connect_wifi(server: BlessServer, characteristic: BlessGATTCharacteristic, v
     wifi_connect_details = wifi_connect_pb2.wifi_connect_v1()
     wifi_connect_details.ParseFromString(bytes(value))
 
-    print(f"wifi connect ssid {wifi_connect_details.service}, password {wifi_connect_details.password}")
+    logger.info(f"wifi connect ssid {wifi_connect_details.service}, password {wifi_connect_details.password}")
     
-    response = requests.post("http://localhost:5000/api/wifi", json={"ssid": wifi_connect_details.service, "psk": wifi_connect_details.password}, timeout=10)
+    response = requests.post(f"{api_endpoint}/wifi", json={"ssid": wifi_connect_details.service, "psk": wifi_connect_details.password}, timeout=10)
     if response.status_code == 200 and response.json()['status'] == "ok":
         characteristic.value = bytes(WIFI_CONNECTING, "utf-8")
-        server.update_value(service_uuid, wifi_connect)
+        server.update_value(service_uuid, wifi_connect_uuid)
 
         for _ in range(10):
             time.sleep(5)
 
-            response = requests.get("http://localhost:5000/api/network", json={"ssid": wifi_connect_details.service, "psk": wifi_connect_details.password}, timeout=10)
+            response = requests.get(f"{api_endpoint}/network", json={"ssid": wifi_connect_details.service, "psk": wifi_connect_details.password}, timeout=10)
             if response.status_code == 200 and is_connected(response.json()['connections'], wifi_connect_details.service):
                 
                 characteristic.value = bytes(WIFI_CONNECTED, "utf-8")
-                server.update_value(service_uuid, wifi_connect)
+                server.update_value(service_uuid, wifi_connect_uuid)
                 return
 
     # if we get here somethign went wrong
     characteristic.value = bytes(WIFI_ERROR, "utf-8")
-    server.update_value(service_uuid, wifi_connect)
+    server.update_value(service_uuid, wifi_connect_uuid)
 
 
 def bytes_to_hex_string(byte_data):
     return ''.join(f'{byte:02x}' for byte in byte_data)
 
 def add_gateway(server: BlessServer, characteristic: BlessGATTCharacteristic, value):
-    logger.debug(f"Add gateway") 
-    add_gw_details = add_gateway_pb2.add_gateway_v1()
-    add_gw_details.ParseFromString(bytes(value))
-
-    print(f"add gateway owner {add_gw_details.owner}, fee {add_gw_details.fee} ")
-    print(f"amount {add_gw_details.amount}, payer {add_gw_details.payer}")
-
-
-    owner = base58.b58decode_check(add_gw_details.owner)[1:]
-    payer = base58.b58decode_check(add_gw_details.payer)[1:]
-
-    print(f"Decoded owner {bytes_to_hex_string(owner[1:])}")
-    print(f"Decoded payer {bytes_to_hex_string(payer[1:])}")
-
-    wallet = base58.b58encode(owner[1:])
-    print(f"Wallet: {wallet}")
-
 
     # https://docs.helium.com/hotspot-makers/become-a-maker/hotspot-integration-testing/#generate-an-add-hotspot-transaction
-    test_response = {
-        "address": "11TL62V8NYvSTXmV5CZCjaucskvNR1Fdar1Pg4Hzmzk5tk2JBac",
-        "fee": 65000,
-        "mode": "full",
-        "owner": "14GWyFj9FjLHzoN3aX7Tq7PL6fEg4dfWPY8CrK8b9S5ZrcKDz6S",
-        "payer": "138LbePH4r7hWPuTnK6HXVJ8ATM2QU71iVHzLTup1UbnPDvbxmr",
-        "staking fee": 4000000,
-        "txn": "CrkBCiEBrlImpYLbJ0z0hw5b4g9isRyPrgbXs9X+RrJ4pJJc9MkSIQA7yIy7F+9oPYCTmDz+v782GMJ4AC+jM+VfjvUgAHflWSJGMEQCIGfugfLkXv23vJcfwPYjLlMyzYhKp+Rg8B2YKwnsDHaUAiASkdxUO4fdS33D7vyid8Tulizo9SLEL1lduyvda9YVRCohAa5SJqWC2ydM9IcOW+IPYrEcj64G17PV/kayeKSSXPTJOMCEPUDo+wM="
-    }
+
+    logger.debug(f"Add gateway") 
     
-    characteristic.value = bytes(json.dumps(test_response), "utf-8")
-    if server.update_value(service_uuid, add_gatway):
+    data = {
+        "owner": public_key.decode('utf-8'),
+        "payer": public_key.decode('utf-8'),
+        "mode": "full"
+    }
+
+    response = requests.post("http://localhost:3000/add_gateway", json=data)
+
+    print()
+
+    if response.status_code == 200:
+        logger.debug(f"Response {response.json()}")
+    else:
+        logger.debug(f"Failed to add gateway {response.text}")
+
+    print()
+    characteristic.value = bytes(json.dumps(response.json()), "utf-8")
+    if server.update_value(service_uuid, add_gatway_uuid):
         logger.debug(f"Char updated, value set to {characteristic.value}")
     else:
         logger.debug(f"Failed to update value")
+

@@ -46,6 +46,6 @@ if [ -z "$GPIO_BUTTON_PIN" ]; then
 fi
 
 
-python ble_service_twochars.py -api_url 127.0.0.1:${REST_SERVICE_PORT} -gpio_button_pin ${GPIO_BUTTON_PIN}
+python ble_service_twochars_helium.py -api_url 127.0.0.1:${REST_SERVICE_PORT} -gpio_button_pin ${GPIO_BUTTON_PIN}
 
 /bin/bash

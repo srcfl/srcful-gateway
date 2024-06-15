@@ -3,6 +3,10 @@ import subprocess
 import os
 import signal
 import json
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(name=__name__)
 
 app = Flask(__name__)
 
@@ -18,6 +22,7 @@ def start_gateway():
     try:
         # Start the helium_gateway with the specified config file
         gateway_process = subprocess.Popen(['./helium_gateway', '-c', settings_path, 'server'])
+        logger.info(f"helium_gateway started with PID: {gateway_process.pid}")
         return jsonify({"message": "helium_gateway started successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -30,19 +35,22 @@ def stop_gateway():
             # Terminate the helium_gateway process
             os.kill(gateway_process.pid, signal.SIGTERM)
             gateway_process = None
+            logger.info("helium_gateway stopped")
             return jsonify({"message": "helium_gateway stopped successfully"}), 200
         else:
+            logger.warning("helium_gateway is not running")
             return jsonify({"error": "helium_gateway is not running"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/get_info', methods=['GET'])
+@app.route('/onboading_keys', methods=['GET'])
 def get_info():
     try:
         # Get info from the helium_gateway
         result = subprocess.run(['./helium_gateway', '-c', settings_path, 'key', 'info'], capture_output=True, text=True)
         # Parse the JSON string into a Python dictionary
         info_dict = json.loads(result.stdout)
+        logger.info(f"Gateway info: {info_dict}")
         return jsonify(info_dict), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -76,4 +84,7 @@ def add_gateway():
         return jsonify({"error": str(e)}), 500
 
 def create_app():
-   return app
+    # Start the helium_gateway with the specified config file
+    gateway_process = subprocess.Popen(['./helium_gateway', '-c', settings_path, 'server'])
+    logger.info(f"helium_gateway started with PID: {gateway_process.pid}")
+    return app

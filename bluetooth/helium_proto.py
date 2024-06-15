@@ -9,15 +9,11 @@ import asyncio
 import threading
 from uuid import UUID
 import helium
-
-
 from typing import Any, Union
-
 import protos.wifi_services_pb2 as wifi_services_pb2
 import protos.add_gateway_pb2 as add_gateway_pb2
 import protos.wifi_connect_pb2 as wifi_connect_pb2
 import protos.diagnostics_pb2 as diagnostics_pb2
-
 
 from bless import (  # type: ignore
     BlessServer,
@@ -40,6 +36,7 @@ SERVER: BlessServer = None
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
     logger.debug(f"Reading {characteristic.value}")
+    logger.debug(f"Reading {characteristic.uuid}")
     helium.read_request(SERVER, characteristic)
     return characteristic.value
 
@@ -110,7 +107,7 @@ async def run(loop):
         else:
             await trigger.wait()
     except KeyboardInterrupt:
-        print("Server stopped by user")
+        logger.info("Server stopped by user")
         await SERVER.stop()
         trigger.set()
 
@@ -128,4 +125,4 @@ try:
     loop.run_until_complete(run(loop))
 except KeyboardInterrupt:
     SERVER.stop()
-    print("Server stopped by user")
+    logger.info("Server stopped by user")
