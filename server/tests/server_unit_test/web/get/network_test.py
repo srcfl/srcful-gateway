@@ -30,12 +30,15 @@ def test_network_address(request_data):
     status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
-    ip = response["ip"]
+    ip = response[handler.IP]
     
     assert ip.count(".") == 3
     for part in ip.split("."):
         assert 0 <= int(part) <= 255
-    assert response["port"] == 8081
+    assert response[handler.PORT] == 8081
+
+    assert response[handler.ETH0_MAC]
+    assert response[handler.WLAN0_MAC]
 
 @patch('server.web.handler.get.network.ModbusScanHandler.scan_ports')
 @patch('server.web.handler.get.network.ModbusScanHandler.scan_ip')

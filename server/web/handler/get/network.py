@@ -1,5 +1,6 @@
 import json
 from server.wifi.wifi import get_connection_configs, is_connected, get_ip_address
+from server.wifi import macAddr
 from ..handler import GetHandler
 from ..requestData import RequestData
 import logging
@@ -20,18 +21,53 @@ class NetworkHandler(GetHandler):
 
 
 class AddressHandler(GetHandler):
+
+
+    @property
+    def IP(self):
+        return "ip"
+    
+    @property
+    def PORT(self):
+        return "port"
+    
+    @property
+    def ETH0_MAC(self):
+        return "eth0_mac"
+    
+    @property
+    def WLAN0_MAC(self):
+        return "wlan0_mac"
+    
+    @property
+    def NA(self):
+        return "n/a"
+
     def schema(self):
         return self.create_schema(
             "Returns the IP address of the device",
-            returns={"ip": "string, containing the IP local network address of the device. 127.0.0.1 is returned if no network is available.",
-                     "port": "int, containing the port of the REST server."}
+            returns={self.IP: "string, containing the IP local network address of the device. 127.0.0.1 is returned if no network is available.",
+                     self.PORT: "int, containing the port of the REST server.",
+                     self.ETH0_MAC: f"string, the mac adress of the first ethernet adapter or {self.NA} if not available",
+                     self.WLAN0_MAC: f"string, the mac adress of the first wifi adapter or {self.NA} if not available"}
         )
 
     def do_get(self, data: RequestData):
-        if is_connected():
-            return 200, json.dumps({"ip": get_ip_address(), "port": data.bb.rest_server_port})
-        else:
-            return 200, json.dumps({"ip": "no network", "port": 0})
+
+        ip = get_ip_address() if is_connected() else "no network"
+        
+        try:
+            wlan0 = macAddr.get_wlan0()
+        except Exception:
+            wlan0 = self.NA
+
+        try:
+            eth0 = macAddr.get_eth0()
+        except Exception:
+            eth0 = self.NA
+
+        return 200, json.dumps({self.IP: ip, self.PORT: data.bb.rest_server_port,
+                                self.ETH0_MAC: eth0, self.WLAN0_MAC: wlan0})
 
 
 # A class to scan for modbus devices on the network
