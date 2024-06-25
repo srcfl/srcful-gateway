@@ -40,8 +40,8 @@ class AddressHandler(GetHandler):
         return "wlan0_mac"
     
     @property
-    def ETH0_IP(self):
-        return "eth0_ip"
+    def NA(self):
+        return "n/a"
     
     @property
     def INTERFACES(self):
@@ -55,7 +55,7 @@ class AddressHandler(GetHandler):
                      self.ETH0_MAC: f"string, the mac adress of the first ethernet adapter or {self.NA} if not available",
                      self.WLAN0_MAC: f"string, the mac adress of the first wifi adapter or {self.NA} if not available",
                      self.INTERFACES: f"dictionary, interface and ip adress pairs, typically starts with en - for ethernet or wl for wifi (wlan)",
-                     self.WLAN0_IP: f"string, the ip adress of the first wifi adapter or {self.NA} if not available"}
+                    }
         )
 
     def do_get(self, data: RequestData):
