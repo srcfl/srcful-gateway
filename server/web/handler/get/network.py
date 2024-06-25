@@ -1,5 +1,5 @@
 import json
-from server.network.wifi import get_connection_configs, is_connected, get_ip_address
+from server.network.wifi import get_connection_configs, is_connected, get_ip_address, get_ip_addresses_with_interfaces
 from server.network import macAddr
 from ..handler import GetHandler
 from ..requestData import RequestData
@@ -40,8 +40,12 @@ class AddressHandler(GetHandler):
         return "wlan0_mac"
     
     @property
-    def NA(self):
-        return "n/a"
+    def ETH0_IP(self):
+        return "eth0_ip"
+    
+    @property
+    def INTERFACES(self):
+        return "interfaces"
 
     def schema(self):
         return self.create_schema(
@@ -49,12 +53,15 @@ class AddressHandler(GetHandler):
             returns={self.IP: "string, containing the IP local network address of the device. 127.0.0.1 is returned if no network is available.",
                      self.PORT: "int, containing the port of the REST server.",
                      self.ETH0_MAC: f"string, the mac adress of the first ethernet adapter or {self.NA} if not available",
-                     self.WLAN0_MAC: f"string, the mac adress of the first wifi adapter or {self.NA} if not available"}
+                     self.WLAN0_MAC: f"string, the mac adress of the first wifi adapter or {self.NA} if not available",
+                     self.INTERFACES: f"dictionary, interface and ip adress pairs, typically starts with en - for ethernet or wl for wifi (wlan)",
+                     self.WLAN0_IP: f"string, the ip adress of the first wifi adapter or {self.NA} if not available"}
         )
 
     def do_get(self, data: RequestData):
 
         ip = get_ip_address() if is_connected() else "no network"
+        ip_interfaces = get_ip_addresses_with_interfaces()
         
         try:
             wlan0 = macAddr.get_wlan0()
@@ -66,8 +73,16 @@ class AddressHandler(GetHandler):
         except Exception:
             eth0 = self.NA
 
-        return 200, json.dumps({self.IP: ip, self.PORT: data.bb.rest_server_port,
-                                self.ETH0_MAC: eth0, self.WLAN0_MAC: wlan0})
+        ip_json = {iface: ip for iface, ip in ip_interfaces}
+
+        response = {
+            self.IP: ip,
+            self.PORT: data.bb.rest_server_port,
+            self.ETH0_MAC: eth0,
+            self.WLAN0_MAC: wlan0,
+            self.INTERFACES : {iface: ip for iface, ip in ip_interfaces}
+        }
+        return 200, json.dumps(response)
 
 
 # A class to scan for modbus devices on the network
