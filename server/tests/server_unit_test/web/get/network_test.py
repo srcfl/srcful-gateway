@@ -4,7 +4,7 @@ from server.web.handler.requestData import RequestData
 from server.web.handler.get.network import NetworkHandler
 from server.web.handler.get.network import AddressHandler
 from server.web.handler.get.network import ModbusScanHandler
-from server.wifi.wifi import get_connection_configs
+from server.network.wifi import get_connection_configs
 from server.blackboard import BlackBoard
 from unittest.mock import patch
 

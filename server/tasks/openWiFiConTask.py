@@ -1,6 +1,6 @@
 import logging
 
-from server.wifi.wifi import WiFiHandler
+from server.network.wifi import WiFiHandler
 from server.blackboard import BlackBoard
 
 from .task import Task

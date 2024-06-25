@@ -1,6 +1,6 @@
 import json
-from server.wifi.wifi import get_connection_configs, is_connected, get_ip_address
-from server.wifi import macAddr
+from server.network.wifi import get_connection_configs, is_connected, get_ip_address
+from server.network import macAddr
 from ..handler import GetHandler
 from ..requestData import RequestData
 import logging

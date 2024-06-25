@@ -1,7 +1,7 @@
 import json
 import logging
 
-from server.wifi.scan import WifiScanner
+from server.network.scan import WifiScanner
 
 from ..handler import GetHandler
 from ..requestData import RequestData
