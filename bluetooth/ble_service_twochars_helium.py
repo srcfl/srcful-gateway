@@ -2,27 +2,18 @@ import logging
 import asyncio
 import threading
 import sys
-
 import argparse
 from typing import Any
 import requests
-
 import egwttp
-
-
 import macAddr
 import helium
-
-
-# import wifiprov
-
 from bless import (  # type: ignore
     BlessServer,
     BlessGATTCharacteristic,
     GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
-
 try:
     from gpioButton import GpioButton
 except ImportError:
@@ -79,7 +70,7 @@ REQUEST_TIMEOUT = 5
 
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
-    logger.debug("Reading %s", characteristic.value)
+    logger.debug("Reading %s %s", characteristic.uuid,characteristic.value)
     return characteristic.value
 
 
@@ -140,6 +131,8 @@ def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **
 def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
     if helium.write_request(SERVER, characteristic, value) != True:
         threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
+    else: 
+        pass
 
 
 async def run(gpio_button_pin: int = -1):
@@ -183,22 +176,6 @@ async def run(gpio_button_pin: int = -1):
     logger.debug(SERVER.get_characteristic(REQUEST_CHAR))
     logger.debug(SERVER.get_characteristic(RESPONSE_CHAR))
 
-    
-    # bluez backend specific
-    # if g_server.app:
-    #  async def on_startNotify(characteristic: BlessGATTCharacteristic):
-    #    logger.debug("StartNotify called - client subscribed")
-    #    await g_server.app.stop_advertising(g_server.adapter)
-    #    logger.debug("Advertising stopped")
-    #    return True
-    #
-    #  async def on_stopNotify(characteristic: BlessGATTCharacteristic):
-    #    logger.debug("StopNotify called - client unsubscribed")
-    #    await g_server.app.start_advertising(g_server.adapter)
-    #    logger.debug("Advertising started")
-    #    return True
-    #  g_server.app.StartNotify = on_startNotify
-    #  g_server.app.StopNotify = on_stopNotify
 
     await SERVER.start()
 

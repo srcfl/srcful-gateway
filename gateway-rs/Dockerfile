@@ -1,12 +1,22 @@
-# Use an appropriate base image
-FROM python:3.9-alpine
+# Use a Debian-based image
+FROM python:3.9-slim
 
 # Set the working directory
 WORKDIR /app
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    cmake \
+    build-essential \
+    libpython3-dev \
+    libdbus-1-dev \
+    libglib2.0-dev \
+    curl \
+    tar \
+    && rm -rf /var/lib/apt/lists/*
+
 # Download the binary
-RUN apk add --no-cache curl tar && \
-    curl -L -o helium-gateway.tar.gz https://github.com/helium/gateway-rs/releases/download/v1.3.0/helium-gateway-1.3.0-armv7-unknown-linux-musleabihf.tar.gz && \
+RUN curl -L -o helium-gateway.tar.gz https://github.com/helium/gateway-rs/releases/download/v1.3.0/helium-gateway-1.3.0-armv7-unknown-linux-musleabihf.tar.gz && \
     tar -xzf helium-gateway.tar.gz && \
     rm helium-gateway.tar.gz
 
@@ -16,7 +26,7 @@ COPY settings.toml /app/settings.toml
 # Copy the requirements file into the container
 COPY requirements.txt /app/requirements.txt
 
-# Install the dependencies
+# Install the Python dependencies
 RUN pip install -r /app/requirements.txt
 
 # Copy the rest of the application code into the container

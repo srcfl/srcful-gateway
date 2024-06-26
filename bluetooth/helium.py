@@ -1,21 +1,23 @@
 import logging
-import json
 import time
 from typing import Any
-
+from google.protobuf.json_format import MessageToJson
 from bless import (  # type: ignore
     BlessServer,
     BlessGATTCharacteristic,
     GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
-
 import protos.wifi_services_pb2 as wifi_services_pb2
 import protos.add_gateway_pb2 as add_gateway_pb2
 import protos.wifi_connect_pb2 as wifi_connect_pb2
 import protos.diagnostics_pb2 as diagnostics_pb2
 import threading
 import requests
+import base58
+import ast
+import time
+import dbus
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -44,15 +46,15 @@ wifi_connect_uuid = '398168aa-0111-4ec0-b1fa-171671270608'
 api_endpoint = "http://localhost:80/api"
 
 
-response = requests.get("http://localhost:3000/onboading_keys", timeout=10)
-if response.status_code == 200:
-    public_key = response.json()['key'].encode('utf-8')
-    onboarding_key = response.json()['onboarding'].encode('utf-8')
-    name = response.json()['name'].encode('utf-8')
+# response = requests.get("http://localhost:3000/onboading_keys", timeout=10)
+# if response.status_code == 200:
+#     public_key = response.json()['key'].encode('utf-8')
+#     onboarding_key = response.json()['onboarding'].encode('utf-8')
+#     name = response.json()['name'].encode('utf-8')
 
-logger.debug(f"Public key {public_key}")
-logger.debug(f"Onboarding key {onboarding_key}")
-logger.debug(f"Name {name}")
+# logger.debug(f"Public key {public_key}")
+# logger.debug(f"Onboarding key {onboarding_key}")
+# logger.debug(f"Name {name}")
 
 def get_wifi_ssids():
     # request the ssids fro the server
@@ -81,6 +83,9 @@ def scan_wifi():
 
 def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
     # set the value of the characteristic
+    logger.debug(f"################################################")
+    logger.debug(f"***** Read request {characteristic.uuid}")
+    logger.debug(f"################################################")
     if characteristic.uuid == wifi_services_uuid:
         wifi_ssids = get_wifi_ssids()
         logger.debug(f"Got wifi ssids {wifi_ssids}")
@@ -103,19 +108,21 @@ def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, *
 
 
 def write_request(server: BlessServer, characteristic: BlessGATTCharacteristic, value: Any, **kwargs) -> bool:
-    logger.debug(f"Writing!!")
+    logger.debug(f"################################################")
+    logger.debug(f"***** Write request {characteristic.uuid}, {value.decode('utf-8')}")
+    logger.debug(f"################################################")
     if characteristic.uuid == add_gatway_uuid:
         threading.Thread(target=add_gateway, args=(server, characteristic, value,)).start()
+        time.sleep(1)
         return True
     elif characteristic.uuid == wifi_connect_uuid:
-        
         threading.Thread(target=connect_wifi, args=(server, characteristic, value,)).start()
         return True
 
     return False
     
 
-async def add_custom_service(server: BlessServer):
+async def add_custom_service(server: BlessServer):  
     await server.add_new_service(service_uuid)
 
     # tell the server to scan for networks
@@ -124,8 +131,8 @@ async def add_custom_service(server: BlessServer):
     char_flags = GATTCharacteristicProperties.read
     permissions = GATTAttributePermissions.readable
 
-    await server.add_new_characteristic(service_uuid, onboarding_key_uuid, char_flags, onboarding_key, permissions)
-    await server.add_new_characteristic(service_uuid, public_key_uuid, char_flags, public_key, permissions)
+    await server.add_new_characteristic(service_uuid, onboarding_key_uuid, char_flags, bytes('112qfPXyyXmH7miY5UXa4HFuXwF4PdrfU17kftKpk2a2SpKpxtsh', 'utf-8'), permissions)
+    await server.add_new_characteristic(service_uuid, public_key_uuid, char_flags, bytes('112qfPXyyXmH7miY5UXa4HFuXwF4PdrfU17kftKpk2a2SpKpxtsh', 'utf-8'), permissions)
     await server.add_new_characteristic(service_uuid, wifi_mac_uuid, char_flags, b'wifi_mac', permissions)
     await server.add_new_characteristic(service_uuid, lights_uuid, char_flags, b'n/a', permissions)
     await server.add_new_characteristic(service_uuid, WIFI_SSID_UUID, char_flags, b'magic_ssid', permissions)
@@ -136,16 +143,16 @@ async def add_custom_service(server: BlessServer):
     await server.add_new_characteristic(service_uuid, wifi_services_uuid, char_flags, bytes(services.SerializeToString()), permissions)
 
     services = diagnostics_pb2.diagnostics_v1()
-    services.diagnostics['test'] = 'testing'
-    services.diagnostics['test2'] = 'testing2'
-    services.diagnostics['test3'] = 'testing3'
+    services.diagnostics['Name:\n'] = 'AA'
+    services.diagnostics['\nPublic Key:\n'] = 'AA'
+    services.diagnostics['\nOnboarding key:\n'] = 'AA'
 
     await server.add_new_characteristic(service_uuid, diagnostics_uuid, char_flags, bytes(services.SerializeToString()), permissions)
 
 
     char_flags = GATTCharacteristicProperties.write | GATTCharacteristicProperties.read | GATTCharacteristicProperties.indicate
     permissions = GATTAttributePermissions.writeable | GATTAttributePermissions.readable
-    await server.add_new_characteristic(service_uuid, add_gatway_uuid, char_flags, b'not supported', permissions)
+    await server.add_new_characteristic(service_uuid, add_gatway_uuid, char_flags, b'', permissions)
 
     await server.add_new_characteristic(service_uuid, wifi_connect_uuid, char_flags, b'', permissions)
 
@@ -219,31 +226,69 @@ def connect_wifi(server: BlessServer, characteristic: BlessGATTCharacteristic, v
 def bytes_to_hex_string(byte_data):
     return ''.join(f'{byte:02x}' for byte in byte_data)
 
+
+def bytes_to_dbus_byte_array(str):
+    byte_array = []
+
+    for c in str:
+        byte_array.append(dbus.Byte(c))
+
+    return byte_array
+
 def add_gateway(server: BlessServer, characteristic: BlessGATTCharacteristic, value):
+    
 
     # https://docs.helium.com/hotspot-makers/become-a-maker/hotspot-integration-testing/#generate-an-add-hotspot-transaction
 
     logger.debug(f"Add gateway") 
-    
-    data = {
-        "owner": public_key.decode('utf-8'),
-        "payer": public_key.decode('utf-8'),
-        "mode": "full"
-    }
+    logger.debug(f"Value: {value}")
 
-    response = requests.post("http://localhost:3000/add_gateway", json=data)
+    # Convert bytearray to bytes
+    byte_data = bytes(value)
+
+    # Create an instance of the add_gateway_v1 message
+    add_gw_details = add_gateway_pb2.add_gateway_v1()
+
+    # Parse the byte array into the message
+    add_gw_details.ParseFromString(byte_data)
+
+    owner = base58.b58decode_check(add_gw_details.owner)[1:]
+    payer = base58.b58decode_check(add_gw_details.payer)[1:]
+
+    logger.debug(f"Decoded owner {bytes_to_hex_string(owner[1:])}")
+    logger.debug(f"Decoded payer {bytes_to_hex_string(payer[1:])}")
+
+    wallet = base58.b58encode(owner[1:])
+    logger.debug(f"Wallet: {wallet}")
+
+    response = requests.post("http://localhost:3000/add_gateway", data=value)
+    
+    # characteristic.value = 'Kalle Anka'.encode('utf-8')
+    # if server.update_value(service_uuid, add_gatway_uuid):
+    #     logger.debug(f"Char updated, value set to {characteristic.value}")
+    # else:
+    #     logger.debug(f"Failed to update value")
 
     print()
+    response_json = response.json()
+    
+
 
     if response.status_code == 200:
-        logger.debug(f"Response {response.json()}")
+        logger.debug(f"Response {response_json['txn']}")
+
+        txn_bytes = base58.b58decode(response_json['txn'])
+
+        characteristic.value = bytes_to_dbus_byte_array(txn_bytes)
+
+        if server.update_value(service_uuid, add_gatway_uuid):
+            logger.debug(f"Char updated, dbus bytes: {bytes_to_dbus_byte_array(txn_bytes)}")
+            logger.debug(f"Char updated, value set to {characteristic.value}")
+        else:
+            logger.debug(f"Failed to update value")
+
     else:
         logger.debug(f"Failed to add gateway {response.text}")
 
-    print()
-    characteristic.value = bytes(json.dumps(response.json()), "utf-8")
-    if server.update_value(service_uuid, add_gatway_uuid):
-        logger.debug(f"Char updated, value set to {characteristic.value}")
-    else:
-        logger.debug(f"Failed to update value")
+    
 

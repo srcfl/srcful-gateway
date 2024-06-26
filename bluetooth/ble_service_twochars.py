@@ -2,26 +2,17 @@ import logging
 import asyncio
 import threading
 import sys
-
 import argparse
 from typing import Any
 import requests
-
 import egwttp
-
-
 import macAddr
-
-
-# import wifiprov
-
 from bless import (  # type: ignore
     BlessServer,
     BlessGATTCharacteristic,
     GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
-
 from gpioButton import GpioButton
 
 logging.basicConfig(level=logging.DEBUG)
