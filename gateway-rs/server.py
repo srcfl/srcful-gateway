@@ -5,11 +5,10 @@ import signal
 import json
 import logging
 from client import GatewayClient
-import helpers
 from protos import add_gateway_pb2
 import base58 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
 
 app = Flask(__name__)
@@ -75,7 +74,7 @@ def add_gateway():
     add_gw_details = add_gateway_pb2.add_gateway_v1()
     add_gw_details.ParseFromString(bytes(data))
 
-    logger.debug(f"add gateway owner {add_gw_details.owner}, fee {add_gw_details.fee} "
+    logger.info(f"add gateway owner {add_gw_details.owner}, fee {add_gw_details.fee} "
                          f"amount {add_gw_details.amount}, payer {add_gw_details.payer}")
 
     try:

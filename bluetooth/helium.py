@@ -20,7 +20,7 @@ import time
 import dbus
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
 
 WIFI_CONNECTING = "connecting"
@@ -263,12 +263,6 @@ def add_gateway(server: BlessServer, characteristic: BlessGATTCharacteristic, va
 
     response = requests.post("http://localhost:3000/add_gateway", data=value)
     
-    # characteristic.value = 'Kalle Anka'.encode('utf-8')
-    # if server.update_value(service_uuid, add_gatway_uuid):
-    #     logger.debug(f"Char updated, value set to {characteristic.value}")
-    # else:
-    #     logger.debug(f"Failed to update value")
-
     print()
     response_json = response.json()
     
