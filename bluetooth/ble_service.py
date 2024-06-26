@@ -1,14 +1,9 @@
 import logging
 import asyncio
-
 import argparse
-
 import requests
-
 import egwttp
 from typing import Any
-
-# import wifiprov
 
 from ble_flush import remove_all_paired_devices
 

@@ -5,12 +5,8 @@
 # in this situation the device must be removed before it can be re-paired
 
 from __future__ import absolute_import, print_function, unicode_literals
-import argparse
 from gi.repository import GLib
-
 import os
-import sys
-import time
 import dbus
 import dbus.service
 import dbus.mainloop.glib

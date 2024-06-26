@@ -15,7 +15,6 @@ import protos.diagnostics_pb2 as diagnostics_pb2
 import threading
 import requests
 import base58
-import ast
 import time
 import dbus
 

@@ -1,12 +1,8 @@
 # Based on https://git.kernel.org/pub/scm/bluetooth/bluez.git/tree/test/simple-agent
 # and https://github.com/nicokaiser/rpi-audio-receiver/blob/master/install-bluetooth.sh
-
 from __future__ import absolute_import, print_function, unicode_literals
 import argparse
-
 import os
-import sys
-import time
 import dbus
 import dbus.service
 import dbus.mainloop.glib
