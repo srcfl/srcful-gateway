@@ -70,7 +70,8 @@ REQUEST_TIMEOUT = 5
 
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
-    logger.debug("Reading %s %s", characteristic.uuid,characteristic.value)
+    helium.read_request(SERVER, characteristic)
+
     return characteristic.value
 
 
@@ -86,6 +87,13 @@ def request_get(path: str, offset: int) -> bytes:
 
 def request_post(path: str, content: str, offset: int) -> bytes:
     return handle_response(path, "POST", requests.post(API_URL + path, data=content, timeout=REQUEST_TIMEOUT), offset)
+
+
+def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
+    if helium.write_request(SERVER, characteristic, value) != True:
+        threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
+    else: 
+        pass
 
 
 def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
@@ -127,12 +135,6 @@ def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **
     else:
         logger.debug("Not a EGWTTP request, doing nothing")
 
-
-def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
-    if helium.write_request(SERVER, characteristic, value) != True:
-        threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
-    else: 
-        pass
 
 
 async def run(gpio_button_pin: int = -1):

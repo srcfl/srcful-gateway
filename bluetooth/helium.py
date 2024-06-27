@@ -19,7 +19,7 @@ import time
 import dbus
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(name=__name__)
 
 WIFI_CONNECTING = "connecting"
@@ -45,16 +45,6 @@ wifi_connect_uuid = '398168aa-0111-4ec0-b1fa-171671270608'
 api_endpoint = "http://localhost:80/api"
 
 
-# response = requests.get("http://localhost:3000/onboading_keys", timeout=10)
-# if response.status_code == 200:
-#     public_key = response.json()['key'].encode('utf-8')
-#     onboarding_key = response.json()['onboarding'].encode('utf-8')
-#     name = response.json()['name'].encode('utf-8')
-
-# logger.debug(f"Public key {public_key}")
-# logger.debug(f"Onboarding key {onboarding_key}")
-# logger.debug(f"Name {name}")
-
 def get_wifi_ssids():
     # request the ssids fro the server
     response = requests.get(f"{api_endpoint}/wifi" , timeout=10)
@@ -63,6 +53,7 @@ def get_wifi_ssids():
     else:
         return []
     
+
 def get_connected_wifi_ssid():
     response = requests.get(f"{api_endpoint}/network", timeout=10)
     if response.status_code == 200:
@@ -71,13 +62,28 @@ def get_connected_wifi_ssid():
                 return connection['connection']['id']
     else:
         return "n/a"
-    
+
+
 def scan_wifi():
     try:
         requests.get(f"{api_endpoint}/wifi/scan", timeout=10)
     except Exception as e:
         logger.error(f"Error scanning wifi {e}")
         return
+
+
+def get_ip():
+    try:
+        response = requests.get(f"{api_endpoint}/network/address", timeout=10)
+        if response.status_code == 200:
+            logger.debug(f"Got ip {response.json()['address']}")
+            return response.json()['address']
+        else:
+            return "n/a"
+        
+    except Exception as e:
+        logger.error(f"Error getting ip {e}")
+        return "n/a"
 
 
 def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
@@ -99,7 +105,9 @@ def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, *
 
         # we start a rescan so we can get the latest wifi networks the next time we read
         threading.Thread(target=scan_wifi).start()
+
     if characteristic.uuid == WIFI_SSID_UUID:
+        threading.Thread(target=add_gateway, args=(server, characteristic, value,)).start()
         logger.debug(f"Getting current wifi ssid")
         wifi_ssid = get_connected_wifi_ssid()
         characteristic.value = bytes(wifi_ssid, "utf-8")
@@ -112,7 +120,7 @@ def write_request(server: BlessServer, characteristic: BlessGATTCharacteristic, 
     logger.debug(f"################################################")
     if characteristic.uuid == add_gatway_uuid:
         threading.Thread(target=add_gateway, args=(server, characteristic, value,)).start()
-        time.sleep(1)
+        time.sleep(1) # Look into this... This was needed in order for the value to be updated before it was read
         return True
     elif characteristic.uuid == wifi_connect_uuid:
         threading.Thread(target=connect_wifi, args=(server, characteristic, value,)).start()
@@ -145,6 +153,7 @@ async def add_custom_service(server: BlessServer):
     services.diagnostics['Name:\n'] = 'AA'
     services.diagnostics['\nPublic Key:\n'] = 'AA'
     services.diagnostics['\nOnboarding key:\n'] = 'AA'
+    services.diagnostics['\IP Address:\n'] = get_ip()
 
     await server.add_new_characteristic(service_uuid, diagnostics_uuid, char_flags, bytes(services.SerializeToString()), permissions)
 
@@ -185,7 +194,6 @@ async def add_device_info_service(server: BlessServer):
 
     char_uuid = "00002A26-0000-1000-8000-00805F9B34FB"
     await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'2020.02.18.1', permissions)
-
 
 
 def is_connected(connections, ssid):
@@ -233,6 +241,7 @@ def bytes_to_dbus_byte_array(str):
         byte_array.append(dbus.Byte(c))
 
     return byte_array
+
 
 def add_gateway(server: BlessServer, characteristic: BlessGATTCharacteristic, value):
     
