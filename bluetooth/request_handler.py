@@ -11,13 +11,13 @@ import helium_gw
 import time
 from typing import Any
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
 def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
     logger.debug(f"################################################")
-    logger.debug(f"***** Read request {characteristic.uuid}")
+    logger.debug(f"***** Read request {characteristic.uuid} {characteristic.value}")
     logger.debug(f"################################################")
     
     if characteristic.uuid == constants.WIFI_SERVICES_UUID:
@@ -44,11 +44,15 @@ def write_request(server: BlessServer, characteristic: BlessGATTCharacteristic, 
     logger.debug(f"***** Write request {characteristic.uuid}, {value.decode('utf-8')}")
     logger.debug(f"################################################")
     if characteristic.uuid == constants.ADD_GATEWAY_UUID:
-        threading.Thread(target=helium_gw.add_gateway, args=(server, characteristic, value,)).start()
-        time.sleep(1) # Look into this... This was needed in order for the value to be updated before it was read
+        
+        # Seems like the timing of return here is critical. 
+        # If the return is too early, the value is not updated
+        helium_gw.add_gateway(server, characteristic, value)
+
+        # threading.Thread(target=helium_gw.add_gateway, args=(server, characteristic, value,)).start()
+        # time.sleep(1) # Look into this... This was needed in order for the value to be updated before it was read
         return True
     elif characteristic.uuid == constants.WIFI_CONNECT_UUID:
         threading.Thread(target=srcful_gw.connect_wifi, args=(server, characteristic, value,)).start()
         return True
-
     return False
