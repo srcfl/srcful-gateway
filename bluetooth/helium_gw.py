@@ -3,18 +3,14 @@ import dbus # Do we really need dbus ?
 import base58
 import logging
 import requests
-import constants 
 import protos.add_gateway_pb2 as add_gateway_pb2
-from bless import (  # type: ignore
-    BlessServer,
-    BlessGATTCharacteristic
-)
 
-logging.basicConfig(level=logging.DEBUG)
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
 
 
-def bytes_to_dbus_byte_array(str):
+def bytes_to_dbus_byte_array(str) -> list:
     byte_array = []
 
     for c in str:
@@ -25,7 +21,7 @@ def bytes_to_dbus_byte_array(str):
 def bytes_to_hex_string(byte_data):
     return ''.join(f'{byte:02x}' for byte in byte_data)
 
-def add_gateway(server: BlessServer, characteristic: BlessGATTCharacteristic, value):
+def create_add_gateway_txn(value) -> bytes:
     # https://docs.helium.com/hotspot-makers/become-a-maker/hotspot-integration-testing/#generate-an-add-hotspot-transaction
 
     logger.debug(f"Add gateway") 
@@ -59,15 +55,9 @@ def add_gateway(server: BlessServer, characteristic: BlessGATTCharacteristic, va
 
         txn_bytes = base58.b58decode(response_json['txn'])
 
-        characteristic.value = bytes_to_dbus_byte_array(txn_bytes)
-
-        if server.update_value(constants.SERVICE_UUID, constants.ADD_GATEWAY_UUID):
-            logger.debug(f"Char updated, dbus bytes: {bytes_to_dbus_byte_array(txn_bytes)}")
-            logger.debug(f"Char updated, value set to {characteristic.value}")
-        else:
-            logger.debug(f"Failed to update value")
-
+        return bytes_to_dbus_byte_array(txn_bytes)
     else:
         logger.debug(f"Failed to add gateway {response.text}")
+        return None
 
     

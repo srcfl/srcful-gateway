@@ -1,19 +1,18 @@
 import logging 
-import constants 
+from typing import Any
 from bless import (  # type: ignore
     BlessServer,
     BlessGATTCharacteristic
 )
+import constants 
 import protos.wifi_services_pb2 as wifi_services_pb2
-import threading
-import srcful_gw
+from srcful_gateway import SrcfulGateway
 import helium_gw
-import time
-from typing import Any
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+srcful_gw = SrcfulGateway()
 
 def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
     logger.debug(f"################################################")
@@ -47,12 +46,26 @@ def write_request(server: BlessServer, characteristic: BlessGATTCharacteristic, 
         
         # Seems like the timing of return here is critical. 
         # If the return is too early, the value is not updated
-        helium_gw.add_gateway(server, characteristic, value)
+        add_gateway_txn = helium_gw.create_add_gateway_txn(value)
 
-        # threading.Thread(target=helium_gw.add_gateway, args=(server, characteristic, value,)).start()
-        # time.sleep(1) # Look into this... This was needed in order for the value to be updated before it was read
+        characteristic.value = add_gateway_txn
+        if server.update_value(constants.SERVICE_UUID, constants.ADD_GATEWAY_UUID):
+            logger.debug(f"Char updated, dbus bytes: {add_gateway_txn}")
+            logger.debug(f"Char updated, value set to {characteristic.value}")
+        else:
+            logger.debug(f"Failed to update value")
+
         return True
     elif characteristic.uuid == constants.WIFI_CONNECT_UUID:
-        threading.Thread(target=srcful_gw.connect_wifi, args=(server, characteristic, value,)).start()
+
+        def update_status_callback(status):
+            logger.debug(f"WiFi Status: {status}")
+            
+            characteristic.value = bytes(status, "utf-8")
+            server.update_value(constants.SERVICE_UUID, constants.WIFI_CONNECT_UUID)
+        
+        srcful_gw.connect_wifi(value, update_status_callback)
+        
         return True
+    
     return False
