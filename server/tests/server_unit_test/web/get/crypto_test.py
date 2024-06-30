@@ -29,19 +29,22 @@ def test_get(mock_chip_class):
     bb.increment_chip_death_count()
 
     public_key = bytearray(64)
-    chip_info = {
-        "deviceName": "test_chip",
-        "serialNumber": b"deadbeef".hex(),
-        "publicKey": public_key.hex(),
-        "chipDeathCount": bb.chip_death_count
+    serial_no = b"deadbeef"
+    expected = {
+        handler.DEVICE: "test_chip",
+        handler.SERIAL_NO: b"deadbeef".hex(),
+        handler.PUBLIC_KEY: public_key.hex(),
+        handler.COMPACT_KEY: public_key[:32].hex(),
+        handler.CHIP_DEATH_COUNT: bb.chip_death_count
     }
 
     mock_chip_instance = mock_chip_class.return_value.__enter__.return_value
-    mock_chip_instance.get_chip_info.return_value = chip_info
+    mock_chip_instance.get_device_name.return_value = "test_chip"
+    mock_chip_instance.get_serial_number.return_value = serial_no
     mock_chip_instance.get_public_key.return_value = public_key
+    mock_chip_instance.public_key_to_compact.return_value = public_key[:32]
 
     code, result = handler.do_get(RequestData(bb, {}, {}, {}))
 
-    assert mock_chip_instance.get_chip_info.called
     assert code == 200
-    assert result == json.dumps(chip_info)
+    assert result == json.dumps(expected)
