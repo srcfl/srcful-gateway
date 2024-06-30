@@ -171,6 +171,10 @@ class Chip:
     def jwtlify(data):
         return Chip.base64_url_encode(json.dumps(data).encode("utf-8")).decode("utf-8")
 
+    @staticmethod
+    def to_compact(pub_key:str) -> str:
+        return ""
+
     def build_jwt(self, data_2_sign, inverter_model):
         self.ensure_chip_initialized()
         header_base64 = Chip.jwtlify(self.build_header(inverter_model))

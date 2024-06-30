@@ -157,3 +157,9 @@ def test_jwtlify():
     data = {'message': 'Hello World'}
     encoded = crypto.Chip.jwtlify(data)
     assert encoded == "eyJtZXNzYWdlIjogIkhlbGxvIFdvcmxkIn0"
+
+def test_compact_key():
+    pubkey = "" 
+    compact = crypto.Chip.to_compact(pubkey)
+    expected = ""
+    assert compact == expected
