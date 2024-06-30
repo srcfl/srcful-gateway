@@ -34,7 +34,7 @@ def test_get(mock_chip_class):
         handler.DEVICE: "test_chip",
         handler.SERIAL_NO: b"deadbeef".hex(),
         handler.PUBLIC_KEY: public_key.hex(),
-        handler.COMPACT_KEY: public_key[:32].hex(),
+        handler.COMPACT_KEY: public_key[:32].decode("utf-8"),
         handler.CHIP_DEATH_COUNT: bb.chip_death_count
     }
 

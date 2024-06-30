@@ -173,12 +173,12 @@ class Chip:
         return Chip.base64_url_encode(json.dumps(data).encode("utf-8")).decode("utf-8")
 
     @staticmethod
-    def public_key_to_compact(pub_key:bytearray) -> str:
+    def public_key_to_compact(pub_key:bytearray) -> bytes:
         assert len(pub_key) == 64
         x_as_bytes = pub_key[:32]
         x_as_b58_encoded = b58encode_check(bytes([0, 0]) + x_as_bytes) # helium adds 0, 0 and not the real high/low bit
 
-        return x_as_b58_encoded.decode('utf-8')
+        return x_as_b58_encoded
 
     def build_jwt(self, data_2_sign, inverter_model):
         self.ensure_chip_initialized()

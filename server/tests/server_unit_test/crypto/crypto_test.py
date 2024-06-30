@@ -162,4 +162,4 @@ def test_compact_key():
     pubkey = "a3302c809a6a42d2e71f5fe6e73b70fefeb47b4e02acd9ff9de44931ad4a301f31144c6a37bdde31a333e998d7c59cd1269627b354817dbb93841bfccd1b2534" 
     compact = crypto.Chip.public_key_to_compact(bytearray.fromhex(pubkey))
     expected = "112EsRY1kgy7RD3mu4UU1U3EzBJq364pALxazcEyvxTTGVJtvpFZ"
-    assert compact == expected
+    assert compact.decode("utf-8") == expected

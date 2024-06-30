@@ -53,7 +53,7 @@ class Handler(GetHandler):
             ret[self.DEVICE] = chip.get_device_name()
             ret[self.SERIAL_NO] = chip.get_serial_number().hex()
             ret[self.PUBLIC_KEY] = pub_key.hex()
-            ret[self.COMPACT_KEY] = chip.public_key_to_compact(pub_key).hex()
+            ret[self.COMPACT_KEY] = chip.public_key_to_compact(pub_key).decode("utf-8")
             ret[self.CHIP_DEATH_COUNT] = data.bb.chip_death_count
         return 200, json.dumps(ret)
 
