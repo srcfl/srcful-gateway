@@ -18,13 +18,12 @@ try:
 except ImportError:
     GpioButton = None
 import constants
-import request_handler
 import protos.wifi_services_pb2 as wifi_services_pb2
 import protos.diagnostics_pb2 as diagnostics_pb2
+from request_handler import RequestHandler
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
-
 
 if sys.platform == "linux" and GpioButton is not None:
     # if we are on a bluez backend then we add the start and stop advertising functions
@@ -70,6 +69,7 @@ API_URL = "localhost:5000"
 SERVICE_NAME = f"SrcFul Hotspot {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
 SERVER = None
 REQUEST_TIMEOUT = 5
+request_handler = None
 
 async def add_custom_service(server: BlessServer):  
     await server.add_new_service(constants.SERVICE_UUID)
@@ -136,7 +136,7 @@ async def add_device_info_service(server: BlessServer):
 
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
-    request_handler.read_request(SERVER, characteristic)
+    request_handler.read_request(characteristic)
 
     return characteristic.value
 
@@ -152,7 +152,7 @@ def request_post(path: str, content: str, offset: int) -> bytes:
     return handle_response(path, "POST", requests.post(API_URL + path, data=content, timeout=REQUEST_TIMEOUT), offset)
 
 def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
-    if request_handler.write_request(SERVER, characteristic, value) != True:
+    if request_handler.write_request(characteristic, value) != True:
         threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
     else: 
         pass
@@ -198,9 +198,13 @@ def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **
 
 async def run(gpio_button_pin: int = -1):
     global SERVER
+    global request_handler
     trigger.clear()
+    
     # Instantiate the server
     SERVER = BlessServer(name=SERVICE_NAME, name_overwrite=True)
+    request_handler = RequestHandler(SERVER)
+
     SERVER.read_request_func = read_request
     SERVER.write_request_func = write_request
 
