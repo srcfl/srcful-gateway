@@ -1,7 +1,6 @@
 from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
-from unittest.mock import MagicMock
 from unittest.mock import MagicMock, patch
 
 
