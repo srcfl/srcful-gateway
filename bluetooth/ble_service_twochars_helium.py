@@ -22,7 +22,7 @@ import request_handler
 import protos.wifi_services_pb2 as wifi_services_pb2
 import protos.diagnostics_pb2 as diagnostics_pb2
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
 
 

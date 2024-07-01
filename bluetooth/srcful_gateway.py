@@ -6,8 +6,9 @@ import logging
 import protos.wifi_connect_pb2 as wifi_connect_pb2
 import threading
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(name=__name__)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class SrcfulGateway:
@@ -18,14 +19,14 @@ class SrcfulGateway:
 
     def scan_wifi(self) -> None:
         try:
-            requests.get(f"{constants.API_ENDPOINT}/wifi/scan", timeout=10)
+            requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/wifi/scan", timeout=10)
         except Exception as e:
             logger.error(f"Error scanning wifi {e}")
             return
     
     def get_wifi_ssids(self) -> list:
         try:
-            response = requests.get(f"{constants.API_ENDPOINT}/wifi" , timeout=10)
+            response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/wifi" , timeout=10)
             if response.status_code == 200:
                 return response.json()['ssids']
             else:
@@ -35,7 +36,7 @@ class SrcfulGateway:
             return []
 
     def get_connected_wifi_ssid(self) -> str:
-        response = requests.get(f"{constants.API_ENDPOINT}/network", timeout=10)
+        response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/network", timeout=10)
         if response.status_code == 200:
             for connection in response.json()['connections']:
                 if "wireless" in connection['connection']['type']:
@@ -45,7 +46,7 @@ class SrcfulGateway:
 
     def get_local_ip(self) -> str:
         try:
-            response = requests.get(f"{constants.API_ENDPOINT}/network/address", timeout=10)
+            response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/network/address", timeout=10)
             if response.status_code == 200:
                 logger.debug(f"Got ip {response.json()['address']}")
                 return response.json()['address']
@@ -65,7 +66,7 @@ class SrcfulGateway:
     def check_wifi_connection(self, wifi_ssid, update_status_callback, stop_event) -> None:
         while not stop_event.is_set():
             try:
-                response = requests.get(f"{constants.API_ENDPOINT}/network", timeout=10)
+                response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/network", timeout=10)
                 connections = response.json()['connections']
                 if response.status_code == 200 and self.is_wifi_connected(connections, wifi_ssid):
                     update_status_callback(constants.WIFI_CONNECTED)
@@ -82,7 +83,7 @@ class SrcfulGateway:
 
         post_body = {"ssid": wifi_connect_details.service, "psk": wifi_connect_details.password}
 
-        response = requests.post(f"{constants.API_ENDPOINT}/wifi", json=post_body, timeout=10)
+        response = requests.post(f"{constants.SRCFUL_GW_API_ENDPOINT}/wifi", json=post_body, timeout=10)
 
         if response.status_code == 200 and response.json()['status'] == "ok":
             update_status_callback(constants.WIFI_CONNECTING)

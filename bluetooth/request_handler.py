@@ -7,12 +7,14 @@ from bless import (  # type: ignore
 import constants 
 import protos.wifi_services_pb2 as wifi_services_pb2
 from srcful_gateway import SrcfulGateway
-import helium_gw
+from helium_gateway import HeliumGateway
 
-logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 srcful_gw = SrcfulGateway()
+helium_gw = HeliumGateway()
 
 def read_request(server: BlessServer, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
     logger.debug(f"################################################")
@@ -49,8 +51,7 @@ def write_request(server: BlessServer, characteristic: BlessGATTCharacteristic, 
         add_gateway_txn = helium_gw.create_add_gateway_txn(value)
 
         characteristic.value = add_gateway_txn
-        if server.update_value(constants.SERVICE_UUID, constants.ADD_GATEWAY_UUID):
-            logger.debug(f"Char updated, dbus bytes: {add_gateway_txn}")
+        if server.update_value(constants.SERVICEc_UUID, constants.ADD_GATEWAY_UUID):
             logger.debug(f"Char updated, value set to {characteristic.value}")
         else:
             logger.debug(f"Failed to update value")

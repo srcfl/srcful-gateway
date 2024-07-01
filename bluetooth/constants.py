@@ -17,4 +17,6 @@ ASSERT_LOCATION_UUID = 'd435f5de-01a4-4e7d-84ba-dfd347f60275'
 ADD_GATEWAY_UUID = 'df3b16ca-c985-4da2-a6d2-9b9b9abdb858'
 WIFI_CONNECT_UUID = '398168aa-0111-4ec0-b1fa-171671270608'
 
-API_ENDPOINT = "http://localhost:80/api"
+SRCFUL_GW_API_ENDPOINT = "http://localhost:80/api"
+HELIUM_API_ENDPOINT = "http://localhost:3000"
+
