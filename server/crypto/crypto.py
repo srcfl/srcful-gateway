@@ -1,6 +1,7 @@
 from base64 import urlsafe_b64encode
 import json
 import base64
+from base58 import b58encode_check
 import threading
 
 import logging
@@ -116,7 +117,7 @@ class Chip:
         atcab_info(info)
         return atcab_get_device_name(info)
 
-    def get_serial_number(self):
+    def get_serial_number(self) -> bytearray:
         self.ensure_chip_initialized()
         serial_number = bytearray(12)
         self._throw_on_error(atcab_read_serial_number(serial_number), "Failed to read serial number")
@@ -127,20 +128,20 @@ class Chip:
         public_key_b64 = base64.b64encode(der + public_key).decode("ascii")
         return public_key_b64
 
-    def get_public_key(self):
+    def get_public_key(self) -> bytearray:
         self.ensure_chip_initialized()
         public_key = bytearray(64)
         self._throw_on_error(atcab_get_pubkey(0, public_key), "Failed to get public key")
 
         return public_key
 
-    def get_chip_info(self):
-        self.ensure_chip_initialized()
-        return {
-            "deviceName": self.get_device_name(),
-            "serialNumber": self.get_serial_number().hex(),
-            "publicKey": self.get_public_key().hex(),
-        }
+    # def get_chip_info(self):
+    #     self.ensure_chip_initialized()
+    #     return {
+    #         "deviceName": self.get_device_name(),
+    #         "serialNumber": self.get_serial_number().hex(),
+    #         "publicKey": self.get_public_key().hex(),
+    #     }
 
     def build_header(self, inverter_model) -> dict:
         self.ensure_chip_initialized()
@@ -152,7 +153,7 @@ class Chip:
             "model": inverter_model,
         }
 
-    def get_signature(self, data_to_sign):
+    def get_signature(self, data_to_sign) -> bytearray:
         self.ensure_chip_initialized()
         digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
         digest.update(str.encode(data_to_sign))
@@ -170,6 +171,14 @@ class Chip:
     @staticmethod
     def jwtlify(data):
         return Chip.base64_url_encode(json.dumps(data).encode("utf-8")).decode("utf-8")
+
+    @staticmethod
+    def public_key_to_compact(pub_key:bytearray) -> bytes:
+        assert len(pub_key) == 64
+        x_as_bytes = pub_key[:32]
+        x_as_b58_encoded = b58encode_check(bytes([0, 0]) + x_as_bytes) # helium adds 0, 0 and not the real high/low bit
+
+        return x_as_b58_encoded
 
     def build_jwt(self, data_2_sign, inverter_model):
         self.ensure_chip_initialized()

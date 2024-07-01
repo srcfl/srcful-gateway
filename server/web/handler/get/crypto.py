@@ -11,14 +11,36 @@ log = logging.getLogger(__name__)
 
 
 class Handler(GetHandler):
+
+    @property
+    def DEVICE(self):
+        return "deviceName"
+    
+    @property   
+    def SERIAL_NO(self):
+        return "serialNumber"
+    
+    @property
+    def PUBLIC_KEY(self):
+        return "publicKey"
+    
+    @property
+    def COMPACT_KEY(self):
+        return "compactKey"
+    
+    @property
+    def CHIP_DEATH_COUNT(self):
+        return "chipDeathCount"
+
     def schema(self) -> dict:
         return self.create_schema(
             "Get crypo chip information",
             returns={
-                "device": "string, device name",
-                "serialNumber": "string, serial number",
-                "publicKey": "string, public key",
-                "chipDeathCount": "int, number of times the chip has died"
+                self.DEVICE: "string, device name",
+                self.SERIAL_NO: "string, serial number as hex string",
+                self.PUBLIC_KEY: "string, public key as hex string",
+                self.COMPACT_KEY: "string, compact form of public key ecc swarm key used in Helium",
+                self.CHIP_DEATH_COUNT: "int, number of times the chip has died"
                 
             }
         )
@@ -26,8 +48,13 @@ class Handler(GetHandler):
     def do_get(self, data: RequestData):
         # return the json data {'serial:' crypto.serial, 'pubkey': crypto.publicKey}
         with crypto.Chip() as chip:
-            ret = chip.get_chip_info()
-            ret['chipDeathCount'] = data.bb.chip_death_count
+            pub_key = chip.get_public_key()
+            ret = {}
+            ret[self.DEVICE] = chip.get_device_name()
+            ret[self.SERIAL_NO] = chip.get_serial_number().hex()
+            ret[self.PUBLIC_KEY] = pub_key.hex()
+            ret[self.COMPACT_KEY] = chip.public_key_to_compact(pub_key).decode("utf-8")
+            ret[self.CHIP_DEATH_COUNT] = data.bb.chip_death_count
         return 200, json.dumps(ret)
 
 

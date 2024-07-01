@@ -1,7 +1,7 @@
 import json
 import logging
 
-from server.wifi.wifi import WiFiHandler
+from server.network.wifi import WiFiHandler
 from server.tasks.openWiFiConTask import OpenWiFiConTask
 
 from ..handler import PostHandler

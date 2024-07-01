@@ -32,6 +32,9 @@ except ImportError:
     
     def get_ip_address():
         return '0.0.0.0'
+    
+    def get_ip_addresses_with_interfaces():
+        return [('No active connection', '0.0.0.0')]
 
 else:
 
@@ -63,6 +66,41 @@ else:
                         return address_data[0]['address']
         print("No active connection found")
         return '0.0.0.0'
+    
+
+    def get_ip_addresses_with_interfaces():
+        bus = dbus.SystemBus()
+        nm_obj = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
+        nm = dbus.Interface(nm_obj, 'org.freedesktop.NetworkManager')
+        devices = nm.GetDevices()
+        
+        ip_addresses = []
+        
+        for path in devices:
+            logger.debug("network device path: %s", path)
+            dev_obj = bus.get_object('org.freedesktop.NetworkManager', path)
+            dev = dbus.Interface(dev_obj, "org.freedesktop.NetworkManager.Device")
+            state = dev.Get('org.freedesktop.NetworkManager.Device', 'State', dbus_interface='org.freedesktop.DBus.Properties')
+            iface = dev.Get('org.freedesktop.NetworkManager.Device', 'Interface', dbus_interface='org.freedesktop.DBus.Properties')
+            
+            logger.debug("device state: %i", state)
+            logger.debug("device interface: %s", iface)
+            
+            if state == 100:  # Active connection
+                ip_config_objpath = dev.Get('org.freedesktop.NetworkManager.Device', 'Ip4Config', dbus_interface='org.freedesktop.DBus.Properties')
+                if ip_config_objpath != '/':  # If there is an associated IP4Config object
+                    ip_config_obj = bus.get_object('org.freedesktop.NetworkManager', ip_config_objpath)
+                    ip_config_iface = dbus.Interface(ip_config_obj, 'org.freedesktop.NetworkManager.IP4Config')
+                    address_data = ip_config_iface.Get('org.freedesktop.NetworkManager.IP4Config', 'AddressData', dbus_interface='org.freedesktop.DBus.Properties')
+                    for address in address_data:
+                        if address['address'] != '127.0.0.1':  # Ignore loopback addresses
+                            ip_addresses.append((iface, address['address']))
+        
+        if not ip_addresses:
+            logger.debug("No active connection found")
+            return []
+        
+        return ip_addresses
 
     def get_connection_configs():
         bus = dbus.SystemBus()
