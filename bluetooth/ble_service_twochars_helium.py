@@ -17,10 +17,7 @@ try:
     from gpioButton import GpioButton
 except ImportError:
     GpioButton = None
-import constants
-import protos.wifi_services_pb2 as wifi_services_pb2
-import protos.diagnostics_pb2 as diagnostics_pb2
-from request_handler import RequestHandler
+from gateway import Gateway
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
@@ -69,78 +66,15 @@ API_URL = "localhost:5000"
 SERVICE_NAME = f"SrcFul Hotspot {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
 SERVER = None
 REQUEST_TIMEOUT = 5
-request_handler = None
-
-async def add_custom_service(server: BlessServer):  
-    await server.add_new_service(constants.SERVICE_UUID)
-
-    char_flags = GATTCharacteristicProperties.read
-    permissions = GATTAttributePermissions.readable
-
-    # To-Do: Read the onboarding and public key from the device and populate the characteristics    
-
-    await server.add_new_characteristic(constants.SERVICE_UUID, constants.ONBOARDING_KEY_UUID, char_flags, bytes('112qfPXyyXmH7miY5UXa4HFuXwF4PdrfU17kftKpk2a2SpKpxtsh', 'utf-8'), permissions)
-    await server.add_new_characteristic(constants.SERVICE_UUID, constants.PUBLIC_KEY_UUID, char_flags, bytes('112qfPXyyXmH7miY5UXa4HFuXwF4PdrfU17kftKpk2a2SpKpxtsh', 'utf-8'), permissions)
-    await server.add_new_characteristic(constants.SERVICE_UUID, constants.WIFI_MAC_UUID, char_flags, b'wifi_mac', permissions)
-    await server.add_new_characteristic(constants.SERVICE_UUID, constants.LIGHTS_UUID, char_flags, b'n/a', permissions)
-    await server.add_new_characteristic(constants.SERVICE_UUID, constants.WIFI_SSID_UUID, char_flags, b'magic_ssid', permissions)
-    await server.add_new_characteristic(constants.SERVICE_UUID, constants.ETHERNET_ONLINE, char_flags, b'false', permissions)
-
-    services = wifi_services_pb2.wifi_services_v1()
-
-    await server.add_new_characteristic(constants.SERVICE_UUID, constants.WIFI_SERVICES_UUID, char_flags, bytes(services.SerializeToString()), permissions)
-
-    services = diagnostics_pb2.diagnostics_v1()
-    services.diagnostics['Name:\n'] = 'AA'
-    services.diagnostics['\nPublic Key:\n'] = 'AA'
-    services.diagnostics['\nOnboarding key:\n'] = 'AA'
-
-    await server.add_new_characteristic(constants.SERVICE_UUID, constants.DIAGNOSTICS_UUID, char_flags, bytes(services.SerializeToString()), permissions)
-
-
-    char_flags = GATTCharacteristicProperties.write | GATTCharacteristicProperties.read | GATTCharacteristicProperties.indicate
-    permissions = GATTAttributePermissions.writeable | GATTAttributePermissions.readable
-    await server.add_new_characteristic(constants.SERVICE_UUID, constants.ADD_GATEWAY_UUID, char_flags, b'', permissions)
-
-    await server.add_new_characteristic(constants.SERVICE_UUID, constants.WIFI_CONNECT_UUID, char_flags, b'', permissions)
-
-    logger.debug(f"Helium Service added with uuid {constants.SERVICE_UUID}")
-
-async def add_device_info_service(server: BlessServer):
-    service_uuid = '0000180a-0000-1000-8000-00805f9b34fb'
-    await server.add_new_service(service_uuid)
-    
-    #await server.setup_task
-    #service = DeviceInfoService()
-    #await service.init(server)
-    #server.services[service._uuid] = service
-
-    char_uuid = "00002A29-0000-1000-8000-00805F9B34FB"
-    char_flags = GATTCharacteristicProperties.read
-    permissions = GATTAttributePermissions.readable
-
-    #characteristic: BlessGATTCharacteristicBlueZDBus = (
-    #        DeviceInfoCharacteristic(char_uuid, "2A29", char_flags, permissions, b'Helium')
-    #    )
-    #await characteristic.init(service)
-    #service.add_characteristic(characteristic)
-
-    #service.add_characteristic(char_uuid, char_flags, b'Helium', permissions)
-    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'Helium Systems, Inc.', permissions)
-
-    char_uuid = "00002A25-0000-1000-8000-00805F9B34FB"
-    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'6081F989E7BF', permissions)
-
-    char_uuid = "00002A26-0000-1000-8000-00805F9B34FB"
-    await server.add_new_characteristic(service_uuid, char_uuid, char_flags, b'2020.02.18.1', permissions)
+gateway = None
 
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
-    request_handler.read_request(characteristic)
+    gateway.handle_read_request(characteristic)
 
     return characteristic.value
 
-def handle_response(path: str, method: str, reply: requests.Response, offset: int):
+def handle_response(path: str, method: str, reply: requests.Response, offset: int) -> bytes:
     egwttp_response = egwttp.construct_response(path, method, reply.text, offset)
     logger.debug("Reply: %s", egwttp_response)
     return egwttp_response
@@ -151,13 +85,13 @@ def request_get(path: str, offset: int) -> bytes:
 def request_post(path: str, content: str, offset: int) -> bytes:
     return handle_response(path, "POST", requests.post(API_URL + path, data=content, timeout=REQUEST_TIMEOUT), offset)
 
-def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
-    if request_handler.write_request(characteristic, value) != True:
+def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs) -> None:
+    if gateway.handle_write_request(characteristic, value) != True:
         threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
     else: 
         pass
 
-def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
+def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs) -> None:
     characteristic.value = value
     # if request_response and request_response.value:
     val = value.decode("utf-8")
@@ -198,19 +132,17 @@ def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **
 
 async def run(gpio_button_pin: int = -1):
     global SERVER
-    global request_handler
+    global gateway
     trigger.clear()
     
     # Instantiate the server
     SERVER = BlessServer(name=SERVICE_NAME, name_overwrite=True)
-    request_handler = RequestHandler(SERVER)
+    gateway = Gateway(SERVER)
 
     SERVER.read_request_func = read_request
     SERVER.write_request_func = write_request
 
-    await add_custom_service(SERVER)
-    await add_device_info_service(SERVER)
-
+    await gateway.init_gateway()
 
     # Add Service
     await SERVER.add_new_service(SERVICE_UUID)

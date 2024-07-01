@@ -5,6 +5,7 @@ import time
 import logging
 import protos.wifi_connect_pb2 as wifi_connect_pb2
 import threading
+from typing import Any
 
 
 logger = logging.getLogger(__name__)
@@ -15,14 +16,51 @@ class SrcfulGateway:
 
     def __init__(self) -> None:
         self.scan_wifi() # Initial scan upon object creation
-        pass
+        network_json = self.get_network_info()
+
+        # We should probably remove the hardcoded values
+        self.eth_ip = network_json['interfaces']['eth0']
+        self.eth_mac = network_json['eth0_mac']
+        self.wifi_ip = network_json['interfaces']['wlan0']
+        self.wifi_mac = network_json['wlan0_mac']
+
+    def get_network_info(self) -> None:
+        try:
+            response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/network/address", timeout=10)
+            if response.status_code == 200:
+                return response.json()
+        except Exception as e:
+            logger.error(f"Error getting mac {e}")
+    
+    def get_eth_ip(self) -> str:
+        return self.eth_ip
+
+    def get_eth_mac(self) -> str:
+        return self.eth_mac
+
+    def get_wifi_ip(self) -> str:
+        return self.wifi_ip
+
+    def get_wifi_mac(self) -> str:
+        return self.wifi_mac
+
+    def get_swarm_id(self) -> str:
+        try:
+            response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/crypto", timeout=10)
+            if response.status_code == 200:
+                return response.json()['compactKey']
+            else:
+                return "n/a"
+        except Exception as e:
+            logger.error(f"Error getting swarm id {e}")
+            return "n/a"
 
     def scan_wifi(self) -> None:
         try:
             requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/wifi/scan", timeout=10)
         except Exception as e:
             logger.error(f"Error scanning wifi {e}")
-            return
+            return "n/a"
     
     def get_wifi_ssids(self) -> list:
         try:
@@ -45,17 +83,7 @@ class SrcfulGateway:
             return "n/a"
 
     def get_local_ip(self) -> str:
-        try:
-            response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/network/address", timeout=10)
-            if response.status_code == 200:
-                logger.debug(f"Got ip {response.json()['address']}")
-                return response.json()['address']
-            else:
-                return "n/a"
-        
-        except Exception as e:
-            logger.error(f"Error getting ip {e}")
-            return "n/a"
+        return self.wifi_ip
     
     def is_wifi_connected(self, connections, ssid) -> bool:
         for connection in connections:
