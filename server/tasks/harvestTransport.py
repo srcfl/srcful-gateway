@@ -4,6 +4,7 @@ import requests
 from server.inverters.inverter import Inverter
 from server.blackboard import BlackBoard
 import server.crypto.crypto as crypto
+import server.crypto.revive_run as revive_run
 
 from .srcfulAPICallTask import SrcfulAPICallTask
 
@@ -27,20 +28,35 @@ class HarvestTransport(IHarvestTransport):
         self.barn = barn
         self.inverter_type = inverter_backend_type
 
-    def _data(self):
+    def _create_jwt(self):
         with crypto.Chip() as chip:
             try:
-                jwt = chip.build_jwt(self.barn, self.inverter_type)
+                jwt = chip.build_jwt(self.barn, self.inverter_type, 5)
                 HarvestTransport.do_increase_chip_death_count = True
             except crypto.Chip.Error as e:
                 log.error("Error creating JWT: %s", e)
-                if HarvestTransport.do_increase_chip_death_count:
-                    self.bb.increment_chip_death_count()
-                    HarvestTransport.do_increase_chip_death_count = False
-                log.info("Incrementing chip death count to: %i ", self.bb.chip_death_count)
                 raise e
         
         return jwt
+
+    def _data(self):
+        retries = 5
+        
+        while retries > 0:
+            try:
+                jwt = self._create_jwt()
+                return jwt
+            except crypto.Chip.Error as e:
+                if retries > 0:
+                    retries -= 1
+                    revive_run.as_process()
+
+        # if we end up here the chip has not been revived        
+        if HarvestTransport.do_increase_chip_death_count:
+            self.bb.increment_chip_death_count()
+            HarvestTransport.do_increase_chip_death_count = False
+        log.info("Incrementing chip death count to: %i ", self.bb.chip_death_count)
+        raise e
 
     def _on_200(self, reply):
         log.info("Response: %s", reply)

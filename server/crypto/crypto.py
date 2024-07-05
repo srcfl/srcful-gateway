@@ -117,10 +117,15 @@ class Chip:
         atcab_info(info)
         return atcab_get_device_name(info)
 
-    def get_serial_number(self) -> bytearray:
+    def get_serial_number(self, retries:int=0) -> bytearray:
         self.ensure_chip_initialized()
         serial_number = bytearray(12)
-        self._throw_on_error(atcab_read_serial_number(serial_number), "Failed to read serial number")
+        code = atcab_read_serial_number(serial_number)
+        if retries > 0 and code != ATCA_SUCCESS:
+            
+            return self.get_serial_number(retries - 1)
+            
+        self._throw_on_error(code, "Failed to read serial number")
         return serial_number
 
     def public_key_2_pem(self, public_key: bytearray) -> str:
@@ -128,10 +133,15 @@ class Chip:
         public_key_b64 = base64.b64encode(der + public_key).decode("ascii")
         return public_key_b64
 
-    def get_public_key(self) -> bytearray:
+    def get_public_key(self, retries:int=0) -> bytearray:
         self.ensure_chip_initialized()
         public_key = bytearray(64)
-        self._throw_on_error(atcab_get_pubkey(0, public_key), "Failed to get public key")
+
+        code = atcab_get_pubkey(0, public_key)
+        if retries > 0 and code != ATCA_SUCCESS:
+            return self.get_public_key(retries - 1)
+
+        self._throw_on_error(code, "Failed to get public key")
 
         return public_key
 
@@ -153,15 +163,18 @@ class Chip:
             "model": inverter_model,
         }
 
-    def get_signature(self, data_to_sign) -> bytearray:
+    def get_signature(self, data_to_sign, retries:int = 0) -> bytearray:
         self.ensure_chip_initialized()
         digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
         digest.update(str.encode(data_to_sign))
         message = digest.finalize()
 
         signature = bytearray(64)
-        self._throw_on_error(atcab_sign(0, message, signature), "Failed to sign message")
-
+        code = atcab_sign(0, message, signature)
+        if retries > 0 and code != ATCA_SUCCESS:
+            return self.get_signature(data_to_sign, retries - 1)
+        
+        self._throw_on_error(code, "Failed to sign message")
         return signature
 
     @staticmethod
@@ -180,14 +193,14 @@ class Chip:
 
         return x_as_b58_encoded
 
-    def build_jwt(self, data_2_sign, inverter_model):
+    def build_jwt(self, data_2_sign, inverter_model:str, retries:int=0):
         self.ensure_chip_initialized()
         header_base64 = Chip.jwtlify(self.build_header(inverter_model))
 
         payload_base64 = Chip.jwtlify(data_2_sign)
         header_and_payload = header_base64 + "." + payload_base64
 
-        signature = self.get_signature(header_and_payload)
+        signature = self.get_signature(header_and_payload, retries)
 
         signature_base64 = Chip.base64_url_encode(signature).decode("utf-8")
 

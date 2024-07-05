@@ -118,6 +118,7 @@ def test_get_public_key():
     assert len(public_key) == 64
 
 
+
 # def test_get_chip_info():
 #     with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
 #         with patch('server.crypto.crypto.atcab_read_serial_number', return_value=crypto.ATCA_SUCCESS):

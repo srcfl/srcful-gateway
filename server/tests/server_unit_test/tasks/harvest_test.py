@@ -278,7 +278,7 @@ def test_data_harvest_transport_jwt(mock_chip_class):
     instance = harvestTransport.HarvestTransport(0, {}, barn, inverter_type)
     jwt = instance._data()
 
-    mock_chip_instance.build_jwt.assert_called_once_with(instance.barn, instance.inverter_type)
+    mock_chip_instance.build_jwt.assert_called_once_with(instance.barn, instance.inverter_type, 5)
     assert jwt == {str(barn), inverter_type}
 
 def test_on_200():
