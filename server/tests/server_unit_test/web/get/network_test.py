@@ -21,7 +21,7 @@ def test_network(request_data):
     status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
-    expected = json.loads(json.dumps({"connections":get_connection_configs()}))   # getConnectionConfigs() returns a list of dicts, so we need to convert it to JSON and back to a dict to compare   
+    expected = json.loads(json.dumps({handler.CONNECTIONS:get_connection_configs()}))   # getConnectionConfigs() returns a list of dicts, so we need to convert it to JSON and back to a dict to compare   
     assert response == expected
 
 
@@ -63,21 +63,21 @@ def test_modbus_scan(mock_scan_ip, mock_scan_ports):
 
     # We mock the scan_ports method to return an empty list
     mock_scan_ports.return_value = []
-    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {"ports": ports}, {}))
+    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {handler.PORTS: ports}, {}))
     assert status_code == 200
     response = json.loads(response)
 
-    assert "devices" in response
-    assert response["devices"] == []
+    assert handler.DEVICES in response
+    assert response[handler.DEVICES] == []
 
     # Now we mock the scan_ports method to return a list of one device
-    mock_scan_ports.return_value = [{"ip": "192.168.50.220"}]
-    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {"ports": ports}, {}))
+    mock_scan_ports.return_value = [{handler.IP: "192.168.50.220"}]
+    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {handler.PORTS: ports}, {}))
     assert status_code == 200
     response = json.loads(response)
 
-    assert "devices" in response
-    assert response["devices"] == [{"ip": "192.168.50.220"}]
+    assert handler.DEVICES in response
+    assert response[handler.DEVICES] == [{handler.IP: "192.168.50.220"}]
 
 
     
