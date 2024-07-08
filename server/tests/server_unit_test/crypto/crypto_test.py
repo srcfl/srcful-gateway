@@ -100,6 +100,13 @@ def test_get_serial_number():
                 serial_number = chip.get_serial_number()
     assert len(serial_number) == 12
 
+def test_get_serial_number_retry():
+    with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
+        with patch('server.crypto.crypto.atcab_read_serial_number', side_effect=[1 , crypto.ATCA_SUCCESS]):
+            with crypto.Chip() as chip:
+                serial_number = chip.get_serial_number(1)
+    assert len(serial_number) == 12
+
 
 def test_public_key_2_pem():
     public_key = 'Hello World!'.encode('utf-8')
@@ -117,7 +124,12 @@ def test_get_public_key():
                 public_key = chip.get_public_key()
     assert len(public_key) == 64
 
-
+def test_get_public_key_with_retry():
+    with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
+        with patch('server.crypto.crypto.atcab_get_pubkey', side_effect=[1 , crypto.ATCA_SUCCESS]):
+            with crypto.Chip() as chip:
+                public_key = chip.get_public_key(retries=1)
+    assert len(public_key) == 64
 
 # def test_get_chip_info():
 #     with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
@@ -135,6 +147,13 @@ def test_get_signature():
         with patch('server.crypto.crypto.atcab_sign', return_value=crypto.ATCA_SUCCESS):
             with crypto.Chip() as chip:
                 signature = chip.get_signature("Hello World!")
+    assert len(signature) == 64
+
+def test_get_signature_retry():
+    with patch('server.crypto.crypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
+        with patch('server.crypto.crypto.atcab_sign', side_effect=[1, crypto.ATCA_SUCCESS]):
+            with crypto.Chip() as chip:
+                signature = chip.get_signature("Hello World!", 1)
     assert len(signature) == 64
 
 def test_get_jwt():
