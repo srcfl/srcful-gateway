@@ -13,7 +13,7 @@ from server.inverters.inverter import Inverter
 def inverter_fixture():
     inverter = MagicMock()
 
-    # These registers are word-sized, so they are 2 bytes each, e.g. the 1 in [1, 2, 3, 4] is 0x0100 (2 bytes) in hex (little endian)
+    # These registers are word-sized, so they are 2 bytes each, e.g. the 1 in [1, 2, 3, 4] is 0x0001 (2 bytes) in hex (big endian)
     inverter.read_registers.return_value = [1, 2, 3, 4]
 
     assert 'read_registers' in dir(Inverter)
@@ -129,30 +129,33 @@ def test_int_value(request_data):
     response = json.loads(response)
     assert response.get('value') == 2  # = 0x00000001 as signed int
 
-def test_float_value_little(request_data):
+def test_float_value_BADC(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'float'
     request_data.query_params['size'] = '2'
-    request_data.query_params['endianess'] = 'big'
-    request_data.post_params['address'] = 0x4155
+    request_data.query_params['endianess'] = 'little'
+    request_data.post_params['address'] = 0x4248
 
     status_code, response = handler.do_get(request_data)
 
     assert status_code == 200
     response = json.loads(response)
+
+    print("Hex", response.get('raw_value'))
+    print("Value", response.get('value'))
     
-    val = response.get('value') - 13.328451156616211
+    val = response.get('value') - 198949.03125
 
     # Can't use assert equals on floating point numbers due to precision issues
     assert abs(val) < 1e-20
     
 
-def test_float_value_big(request_data):
+def test_float_value_ABCD(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'float'
     request_data.query_params['size'] = '2'
     request_data.query_params['endianess'] = 'big'
-    request_data.post_params['address'] = 0x4155
+    request_data.post_params['address'] = 0x4248
 
     assert 'read_registers' in dir(Inverter)
 
@@ -160,7 +163,7 @@ def test_float_value_big(request_data):
     assert status_code == 200
     response = json.loads(response)
     # Can't use assert equals on floating point numbers due to precision issues
-    val = response.get('value') - 13.328451156616211
+    val = response.get('value') - 50.314727783203125
     assert abs(val) < 1e-5
     
 def test_double_value(request_data):

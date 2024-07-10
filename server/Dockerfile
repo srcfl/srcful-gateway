@@ -16,6 +16,7 @@ RUN apk add curl jq
 RUN apk add --no-cache dbus dbus-dev glib-dev dbus-glib
 
 RUN pip install --upgrade pip
+
 # Install Python D-Bus library
 RUN pip install --no-cache-dir dbus-python==1.3.2
 

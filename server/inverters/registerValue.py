@@ -70,6 +70,10 @@ class RegisterValue:
         self.datatype = datatype
         self.endianness = endianness
         self.regType = register_type
+    
+    def _swap_words(self, data: bytearray) -> bytearray:
+        """Swaps the two words in a 32-bit float value"""
+        return data[2:4] + data[0:2]
 
     def read_value(self, inverter: Inverter):
         """Reads the value of the register from the inverter"""
@@ -91,29 +95,25 @@ class RegisterValue:
     def get_value(self, raw: bytearray):
         """Converts a list of bytes to a value based on the datatype and endianness of the register"""
         value = None
-        endianess = self.endianness
+        endianness = self.endianness
 
         if self.datatype == RegisterValue.Type.UINT:
-            value = int.from_bytes(raw, byteorder=endianess.value, signed=False)
+            value = int.from_bytes(raw, byteorder=endianness.value, signed=False)
         elif self.datatype == RegisterValue.Type.INT:
-            value = int.from_bytes(raw, byteorder=endianess.value, signed=True)
+            value = int.from_bytes(raw, byteorder=endianness.value, signed=True)
         elif self.datatype == RegisterValue.Type.FLOAT:
-            if endianess == RegisterValue.Endianness.BIG:
-                endianess = ">"
+            if endianness == RegisterValue.Endianness.BIG:
+                endianness = ">"
             else:
-                endianess = "<"
-
-            if len(raw) == 4:
-                value = struct.unpack(f"{endianess}f", raw)[0]
-            elif len(raw) == 8:
-                value = struct.unpack(f"{endianess}d", raw)[0]
-            else:
-                raise Exception(f"Unsupported float length : {len(raw)}")
+                endianness = "<"
+                
+            raw = self._swap_words(raw)
+            value = struct.unpack(f"{endianness}f", raw)[0]
 
         elif self.datatype == RegisterValue.Type.ASCII:
             value = raw.decode("ascii")
         elif self.datatype == RegisterValue.Type.UTF16:
-            value = raw.decode("utf-16" + ("be" if endianess.value == "big" else "le"))
+            value = raw.decode("utf-16" + ("be" if endianness.value == "big" else "le"))
         else:
             raise Exception("Unsupported datatype " + self.datatype.value)
 
