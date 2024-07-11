@@ -61,7 +61,6 @@ else:
         devices = nm.GetDevices()
 
         for path in devices:
-            logger.debug("Hello World!")
             dev_obj = bus.get_object('org.freedesktop.NetworkManager', path)
             dev_iface = dbus.Interface(dev_obj, "org.freedesktop.NetworkManager.Device")
             iface = dev_iface.Get('org.freedesktop.NetworkManager.Device', 'Interface', dbus_interface='org.freedesktop.DBus.Properties')
@@ -70,7 +69,6 @@ else:
             logger.debug("interface %s", iface)
             logger.debug("properties", properties)
             if properties['DeviceType'] == device_type:
-                logger.debug("Found something")
                 state = dev_iface.Get('org.freedesktop.NetworkManager.Device', 'State', dbus_interface='org.freedesktop.DBus.Properties')
                 if state == 100:  # Active connection
                     ip_config_objpath = dev_iface.Get('org.freedesktop.NetworkManager.Device', 'Ip4Config', dbus_interface='org.freedesktop.DBus.Properties')
