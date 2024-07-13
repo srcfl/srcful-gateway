@@ -93,25 +93,26 @@ class AddressHandler(GetHandler):
 class ModbusScanHandler(GetHandler):
 
     @property
-    def IP(self):
+    def IP(self) -> str:
         return "ip"
     
-    def PORT(self):
+    @property
+    def PORT(self) -> str:
         return "port"
 
     @property
-    def DEVICES(self):
+    def DEVICES(self) -> str:
         return "devices"
     
     @property
-    def PORTS(self):
+    def PORTS(self) -> str:
         return "ports"
     
     @property
-    def TIMEOUT(self):
+    def TIMEOUT(self) -> str:
         return "timeout"
 
-    def schema(self):
+    def schema(self) -> dict:
         return {
             "description": "Scans the network for modbus devices",
             "optional": {
@@ -123,7 +124,7 @@ class ModbusScanHandler(GetHandler):
                 }
         }
 
-    def parse_ports(self, ports_str):
+    def parse_ports(self, ports_str) -> list[int]:
         """Parse a string of ports and port ranges into a list of integers."""
         ports = []
         for part in ports_str.split(','):
@@ -134,7 +135,7 @@ class ModbusScanHandler(GetHandler):
                 ports.append(int(part))
         return ports
 
-    def scan_ip(self, ip: str, port: int, timeout: float):
+    def scan_ip(self, ip: str, port: int, timeout: float) -> bool:
         """Check if a specific port is open on a given IP address."""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -145,7 +146,7 @@ class ModbusScanHandler(GetHandler):
         except socket.error:
             return False
         
-    def scan_ports(self, ports: list[int], timeout: float):
+    def scan_ports(self, ports: list[int], timeout: float) -> list[dict[str, str]]:
         """Scan the local network for modbus devices on the given ports."""
         
         local_ip = get_ip_address()
@@ -181,6 +182,6 @@ class ModbusScanHandler(GetHandler):
         timeout = data.query_params.get(self.TIMEOUT, 0.01) # 10ms may be too short for some networks? 
 
         modbus_devices = self.scan_ports(ports=ports, timeout=timeout)
-    
+        
         return 200, json.dumps({self.DEVICES:modbus_devices})
 
