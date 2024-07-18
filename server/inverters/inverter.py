@@ -3,7 +3,7 @@ from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from .supported_inverters.profiles import InverterProfiles
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 
@@ -178,7 +178,6 @@ class Inverter(ABC):
             raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
         return resp
 
-    @abstractmethod
     def _read_registers(self, operation, scan_start, scan_range):
         if operation == 0x04:
             resp = self.client.read_input_registers(scan_start, scan_range, slave=self.get_address())
