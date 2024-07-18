@@ -1,2 +1,6 @@
 [run]
-omit = server/tests/*
+omit = 
+    server/tests/*
+    server/crypto/cryptoauthlib_mock.py
+    server/crypto/exceptions_mock.py
+    server/crypto/status_mock.py    
