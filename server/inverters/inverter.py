@@ -3,6 +3,8 @@ from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from .supported_inverters.profiles import InverterProfiles
+from abc import ABC, abstractmethod
+
 
 
 pymodbus_apply_logging_config("INFO")
@@ -11,7 +13,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class Inverter:
+class Inverter(ABC):
     """Base class for all inverters."""
 
     def __init__(self):
@@ -133,6 +135,7 @@ class Inverter:
         """
         return [x for x in range(scan_start, scan_start + scan_range, 1)]
 
+   
     def read_registers(self, operation, scan_start, scan_range):
         """
         Read a range of input registers from a start address
@@ -175,6 +178,7 @@ class Inverter:
             raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
         return resp
 
+    @abstractmethod
     def _read_registers(self, operation, scan_start, scan_range):
         if operation == 0x04:
             resp = self.client.read_input_registers(scan_start, scan_range, slave=self.get_address())

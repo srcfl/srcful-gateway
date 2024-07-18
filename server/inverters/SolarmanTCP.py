@@ -72,7 +72,7 @@ class SolarmanTCP(Inverter):
                             False, 
                             **kwargs)
 
-    # Template method
+    # Template method, override from superclass
     def _read_registers(self, operation, scan_start, scan_range):
         if operation != 0x04:
             resp = self.client.read_input_registers(self.get_address(), scan_start, scan_range)
