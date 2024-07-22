@@ -77,8 +77,6 @@ class AddressHandler(GetHandler):
         except Exception:
             eth0 = self.NA
 
-        ip_json = {iface: ip for iface, ip in ip_interfaces}
-
         response = {
             self.IP: ip,
             self.PORT: data.bb.rest_server_port,

@@ -1,11 +1,8 @@
 import json
 from server.inverters.ModbusTCP import ModbusTCP
-
 from server.tasks.openInverterTask import OpenInverterTask
-
 from ..handler import PostHandler
 from ..requestData import RequestData
-
 import logging
 
 logger = logging.getLogger(__name__)

@@ -34,7 +34,6 @@ def get_inverters():
     else:
         return [inv_tcp]
     
-
 def test_sma_inverter():
     """
     Test that the SMA inverter is created correctly.
@@ -48,7 +47,6 @@ def test_sma_inverter():
 
     assert len(registers) > 0
 
-
 def test_inverters_are_open():
     """
     Test that the inverters are open after the open() method has been called.
@@ -57,7 +55,6 @@ def test_inverters_are_open():
 
     for inv in inverters:
         assert inv.is_open()
-
 
 def test_inverters_are_not_open():
     """
@@ -76,7 +73,6 @@ def test_inverters_are_not_open():
         assert not inv.is_open()
         assert not inv.open()
 
-
 def test_get_tcp_config():
     """
     Test that the get_config_dict() method returns the correct dictionary.
@@ -90,7 +86,6 @@ def test_get_tcp_config():
         "host": "localhost",
         "port": 8081,
     }
-
 
 def test_get_rt_config():
     """
@@ -109,13 +104,13 @@ def test_get_rt_config():
         "stopbits": 1
     }
 
-
 def test_inverter_clone():
     inverters = get_inverters()
 
     for inv in inverters:
+        print(inv.clone().setup)
+        print(inv.setup)
         assert inv.setup == inv.clone().setup
-
 
 def test_read_harvest_data():
     """
@@ -135,7 +130,6 @@ def test_read_harvest_data():
         assert type(result) is dict
         assert len(result) > 0
 
-
 def test_read_harvest_data_terminated_exception():
     """
     Test that an exception is raised when trying to read from a terminated inverter.
@@ -148,7 +142,6 @@ def test_read_harvest_data_terminated_exception():
 
         with pytest.raises(Exception):
             inv.read_harvest_data()
-
 
 def test_read_harvest_no_data_exception():
     """
@@ -170,7 +163,6 @@ def test_read_harvest_no_data_exception():
         with pytest.raises(Exception):
             inv.read_harvest_data()
 
-
 def test_modbus_connection_exception():
     """
     Test that an exception is raised when a connection exception occurs while reading from an inverter.
@@ -178,7 +170,7 @@ def test_modbus_connection_exception():
     inverters = get_inverters()
 
     for inverter in inverters:
-        # Patch the _read_registers or the internal method that performs the actual communication
+        # Patch the read_registers or the internal method that performs the actual communication
         with patch.object(inverter, '_read_registers') as mock_read_registers, \
              patch.object(inverter, 'get_address', return_value=1), \
              patch('server.inverters.inverter.log') as mock_log:
@@ -200,8 +192,6 @@ def test_modbus_connection_exception():
             expected_log_msg = "Modbus Error: [Connection] Connection error"
             mock_log.error.assert_called_with("ConnectionException occurred: %s", expected_log_msg)
 
-
-
 def test_modbus_io_exception():
     """
     Test that an exception is raised when an IO exception occurs while reading from an inverter.
@@ -209,12 +199,12 @@ def test_modbus_io_exception():
     inverters = get_inverters()
 
     for inverter in inverters:
-        # Patch the _read_registers method which is called internally by read_registers
+        # Patch the read_registers method which is called internally by read_registers
         with patch.object(inverter, '_read_registers') as mock_read_registers, \
              patch.object(inverter, 'get_address', return_value=1), \
              patch('server.inverters.inverter.log') as mock_log:
 
-            # Set up the side effect for _read_registers
+            # Set up the side effect for read_registers
             mock_read_registers.side_effect = ModbusIOException("Exception occurred while reading registers")
 
             # Determine the operation code based on inverter type

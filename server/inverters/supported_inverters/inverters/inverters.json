@@ -256,30 +256,30 @@
       "description": "Another inverter profile...",
       "registers_verbose": [
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 3,
           "num_of_registers": 86
         },
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 514,
           "num_of_registers": 125
         },
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 644,
           "num_of_registers": 50
         }
       ],
       "registers": [
         {
-          "fcode": 4,
-          "start_register": 608,
+          "fcode": 3,
+          "start_register": 609,
           "num_of_registers": 1
         },
         {
-          "fcode": 4,
-          "start_register": 608,
+          "fcode": 3,
+          "start_register": 672,
           "num_of_registers": 2
         }
       ]
@@ -294,30 +294,30 @@
       "description": "Another inverter profile...",
       "registers_verbose": [
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 3,
           "num_of_registers": 86
         },
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 514,
           "num_of_registers": 125
         },
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 644,
           "num_of_registers": 50
         }
       ],
       "registers": [
         {
-          "fcode": 4,
-          "start_register": 608,
+          "fcode": 3,
+          "start_register": 609,
           "num_of_registers": 1
         },
         {
-          "fcode": 4,
-          "start_register": 608,
+          "fcode": 3,
+          "start_register": 672,
           "num_of_registers": 2
         }
       ]

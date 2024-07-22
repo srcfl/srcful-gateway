@@ -1,6 +1,5 @@
 from .inverter import Inverter
 from pysolarmanv5 import PySolarmanV5
-from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from typing_extensions import TypeAlias
 import logging
 
@@ -17,44 +16,60 @@ class SolarmanTCP(Inverter):
     """
 
     # Address, Serial, Port, Slave_ID, verbose 
-    Setup: TypeAlias = tuple[str | bytes | bytearray, int, int, int, bool]
+    Setup: TypeAlias = tuple[str | bytes | bytearray, int, int, str, int]
 
-    def __init__(self, setup: Setup):
+    def __init__(self, setup: Setup) -> None:
         log.info("Creating with: %s" % str(setup))
         self.setup = setup
         super().__init__()
 
+    def open(self, **kwargs) -> bool:
+        if not self.is_terminated():
+            self._create_client(**kwargs)
+            if not self.client.sock:
+                log.error("FAILED to open inverter: %s", self.get_type())
+            return bool(self.client.sock)
+        else:
+            return False
+
+    def is_open(self) -> bool:
+        return bool(self.client.sock)
+
+    def close(self) -> None:
+        self.client.disconnect()
+
+    def terminate(self) -> None:
+        self.close()
+        self._isTerminated = True
+
+    def is_terminated(self) -> bool:
+        return self._isTerminated
+
     def clone(self, host: str = None):
         if host is None:
             host = self.get_host()
-        return PySolarmanV5((host, self.get_serial(), self.get_port(),
-                            self.get_type(), self.get_address()))
+        return PySolarmanV5(address=host,
+                            serial=self.get_serial(), 
+                            port=self.get_port(), 
+                            mb_slave_id=self.get_address(), 
+                            v5_error_correction=False)
 
-    def get_host(self):
+    def get_host(self) -> str:
         return self.setup[0]
 
-    def get_serial(self):
+    def get_serial(self) -> int:
         return self.setup[1]
     
-    def get_port(self):
+    def get_port(self) -> int:
         return self.setup[2]
 
-    def get_type(self):
+    def get_type(self) -> str:
         return self.setup[3]
     
-    def get_address(self):
+    def get_address(self) -> int:
         return self.setup[4]
 
-    def get_config_dict(self):
-        return {
-            "connection": "SOLARMAN",
-            "type": self.get_type(),
-            "address": self.get_address(),
-            "host": self.get_host(),
-            "port": self.get_port(),
-        }
-
-    def get_config(self):
+    def get_config(self) -> tuple[str, str, int, str, int]:
         return (
             "SOLARMAN",
             self.get_host(),
@@ -64,18 +79,37 @@ class SolarmanTCP(Inverter):
             self.get_address(),
         )
 
-    def _create_client(self, **kwargs):
-        return PySolarmanV5(self.get_host(), 
-                            self.get_serial(), 
-                            self.get_port(), 
-                            self.get_address(), 
-                            False, 
+    def get_config_dict(self) -> dict:
+        return {
+            "connection": "SOLARMAN",
+            "type": self.get_type(),
+            "serial": self.get_serial(),
+            "address": self.get_address(),
+            "host": self.get_host(),
+            "port": self.get_port(),
+        }
+
+    def get_backend_type(self) -> str:
+        return self.get_type().lower()
+    
+    def _create_client(self, **kwargs) -> None:
+        self.client = PySolarmanV5(address=self.get_host(), 
+                            serial=self.get_serial(), 
+                            port=self.get_port(), 
+                            mb_slave_id=self.get_address(), 
+                            v5_error_correction=False, 
                             **kwargs)
 
-    # Template method
-    def _read_registers(self, operation, scan_start, scan_range):
-        if operation != 0x04:
-            resp = self.client.read_input_registers(self.get_address(), scan_start, scan_range)
+    def _read_registers(self, operation, scan_start, scan_range) -> list:
+        
+        resp = None
+
+        if operation == 0x04:
+            resp = self.client.read_input_registers(register_addr=scan_start, quantity=scan_range)
         elif operation == 0x03:
-            resp = self.client.read_holding_registers(self.get_address(), scan_start, scan_range)
+            resp = self.client.read_holding_registers(register_addr=scan_start, quantity=scan_range)
+
         return resp
+
+    def write_register(self, operation, register, value) -> bool:
+        raise NotImplementedError("Not implemented yet")
