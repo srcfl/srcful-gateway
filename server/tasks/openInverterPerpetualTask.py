@@ -6,7 +6,6 @@ from .task import Task
 
 logger = logging.getLogger(__name__)
 
-
 class OpenInverterPerpetualTask(Task):
     def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter):
         super().__init__(event_time, bb)
@@ -17,12 +16,14 @@ class OpenInverterPerpetualTask(Task):
         
         # has an inverter been opened?
         if len(self.bb.inverters.lst) > 0 and self.bb.inverters.lst[0].is_open():
+            logger.debug("Inverter is already open, removing it from the blackboard")
             self.bb.inverters.remove(self.inverter)
             self.inverter.terminate()
             return
         try:
             if self.inverter.open(reconnect_delay=0, retries=3, timeout=5, reconnect_delay_max=0):
                 # terminate and remove all inverters from the blackboard
+                logger.debug("Removing all inverters from the blackboard after opening a new inverter")
                 for i in self.bb.inverters.lst:
                     i.terminate()
                     self.bb.inverters.remove(i)
@@ -31,7 +32,7 @@ class OpenInverterPerpetualTask(Task):
                 self.bb.add_info("Inverter opened: " + str(self.inverter.get_config()))
                 return
             
-            else:    
+            else:
                 port = self.inverter.get_config_dict()['port'] # get the port from the previous inverter config
                 hosts = self.scanner.scan_ports([int(port)], 0.01) # overwrite hosts with the new result of the scan
                 

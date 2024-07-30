@@ -29,6 +29,7 @@ class ModbusRTU(Inverter):
     def __init__(self, setup: Setup):
         log.info("Creating with: %s" % str(setup))
         self.setup = setup
+        self.client = None
         super().__init__()
 
     def open(self, **kwargs) -> bool:

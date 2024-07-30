@@ -24,7 +24,7 @@ from bless import (  # type: ignore
 
 from gpioButton import GpioButton
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
 
 

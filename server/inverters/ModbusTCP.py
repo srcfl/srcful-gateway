@@ -92,9 +92,10 @@ class ModbusTCP(Inverter):
         return self.get_type().lower()
 
     def _create_client(self, **kwargs) -> None:
-        self.client =  ModbusClient(
-            host=self.get_host(), port=self.get_port(), unit_id=self.get_address(),
-            **kwargs
+        self.client =  ModbusClient(host=self.get_host(), 
+                                    port=self.get_port(), 
+                                    unit_id=self.get_address(),
+                                    **kwargs
         )
 
     def _read_registers(self, operation, scan_start, scan_range) -> list:

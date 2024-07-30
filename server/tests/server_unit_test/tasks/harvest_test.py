@@ -294,3 +294,4 @@ def test_on_error():
     response = Mock()
     instance = harvestTransport.HarvestTransport(0, {}, {}, "huawei")
     instance._on_error(response)
+

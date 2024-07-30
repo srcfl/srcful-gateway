@@ -16,7 +16,7 @@ from bless import (  # type: ignore
         GATTAttributePermissions
         )
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
 trigger: threading.Event = threading.Event()
 

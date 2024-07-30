@@ -148,9 +148,10 @@ class Bootstrap(BootstrapSaver):
             port = int(task_args[3])
             inverter_type = task_args[4]
             address = int(task_args[5])
+            verbose = False
 
             return OpenInverterPerpetualTask(
                 event_time + 1000,
                 bb,
-                SolarmanTCP((ip, serial, port, inverter_type, address, False)),
+                SolarmanTCP((ip, serial, port, inverter_type, address, verbose)),
             )

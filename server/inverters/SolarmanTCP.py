@@ -5,22 +5,26 @@ import logging
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log.setLevel(logging.DEBUG)
 
 class SolarmanTCP(Inverter):
     """
     ip: string, IP address of the inverter,
+    serial: int, Serial number of the logger stick,
     port: int, Port of the inverter,
     type: string, solaredge, huawei or fronius etc...,
     address: int, Modbus address of the inverter
+    verbose: int, 0 or 1 for verbose logging
+
     """
 
-    # Address, Serial, Port, Slave_ID, verbose 
-    Setup: TypeAlias = tuple[str | bytes | bytearray, int, int, str, int]
+    # Address, Serial, Port, type, Slave_ID, verbose 
+    Setup: TypeAlias = tuple[str | bytes | bytearray, int, int, str, int, int]
 
     def __init__(self, setup: Setup) -> None:
         log.info("Creating with: %s" % str(setup))
         self.setup = setup
+        self.client = None
         super().__init__()
 
     def open(self, **kwargs) -> bool:
@@ -36,7 +40,13 @@ class SolarmanTCP(Inverter):
         return bool(self.client.sock)
 
     def close(self) -> None:
-        self.client.disconnect()
+        try:
+            self.client.disconnect()
+            self.client.sock = None
+            log.info("Close -> Inverter disconnected successfully: %s", self.get_type())
+        except Exception as e:
+            log.error("Close -> Error disconnecting inverter: %s", self.get_type())
+            log.error(e)
 
     def terminate(self) -> None:
         self.close()
@@ -48,11 +58,15 @@ class SolarmanTCP(Inverter):
     def clone(self, host: str = None):
         if host is None:
             host = self.get_host()
-        return PySolarmanV5(address=host,
-                            serial=self.get_serial(), 
-                            port=self.get_port(), 
-                            mb_slave_id=self.get_address(), 
-                            v5_error_correction=False)
+
+        return SolarmanTCP(
+            (host, 
+             self.get_serial(), 
+             self.get_port(), 
+             self.get_type(), 
+             self.get_address(), 
+             self.setup[5])
+        )
 
     def get_host(self) -> str:
         return self.setup[0]
@@ -97,11 +111,11 @@ class SolarmanTCP(Inverter):
                             serial=self.get_serial(), 
                             port=self.get_port(), 
                             mb_slave_id=self.get_address(), 
-                            v5_error_correction=False, 
+                            v5_error_correction=False,
+                            verbose=self.setup[5],
                             **kwargs)
 
     def _read_registers(self, operation, scan_start, scan_range) -> list:
-        
         resp = None
 
         if operation == 0x04:

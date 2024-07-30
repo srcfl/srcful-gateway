@@ -2,7 +2,8 @@ from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
 from unittest.mock import MagicMock, patch
-
+from server.inverters.SolarmanTCP import SolarmanTCP
+import pytest
 
 def test_execute_invertert_added():
     bb = BlackBoard()
@@ -93,3 +94,4 @@ def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
     task.execute(event_time=5001)
 
     assert len(task.bb.inverters.lst) == 1
+

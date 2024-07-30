@@ -41,6 +41,7 @@ class Handler(PostHandler):
                     int(data.data["port"]),
                     data.data["type"],
                     int(data.data["address"]),
+                    0
                 )
                 inverter = SolarmanTCP(conf) 
                 logger.info("Created a SolarmanV5 inverter")

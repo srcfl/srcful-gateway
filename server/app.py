@@ -99,6 +99,7 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
 
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None):
+
     bb = BlackBoard()
     HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
 

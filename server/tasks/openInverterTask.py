@@ -38,9 +38,12 @@ class OpenInverterTask(Task):
         try:
             if self.inverter.open(reconnect_delay=0, retries=3, timeout=5, reconnect_delay_max=0):
                 # terminate and remove all inverters from the blackboard
+                logger.info("Opening: %s", self.inverter.get_config())
                 for i in self.bb.inverters.lst:
                     i.terminate()
                     self.bb.inverters.remove(i)
+                
+                logger.info("Inverter opened: %s", self.inverter.get_config())
 
                 self.bb.inverters.add(self.inverter)
                 self.bb.add_info("Inverter opened: " + str(self.inverter.get_config()))

@@ -80,6 +80,7 @@ class Inverter:
             scan_range = entry.offset
 
             r = self.populate_registers(scan_start, scan_range)
+            # log.debug("OK - Populating Registers: %s", str(r))
             v = self.read_registers(operation, scan_start, scan_range)
 
             regs += r

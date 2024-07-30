@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import logging, uuid, sys
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
 
 try:
