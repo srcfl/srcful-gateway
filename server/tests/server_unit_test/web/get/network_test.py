@@ -58,7 +58,7 @@ def test_modbus_scan(mock_scan_ip, mock_scan_ports):
 
     ports = "502,503-510,1502"
     parsed_ports = handler.parse_ports(ports)
-    assert handler.parse_ports(ports) == parsed_ports
+    assert parsed_ports == [502, 503, 504, 505, 506, 507, 508, 509, 510, 1502]
     
 
     # Mock the scan_ip method to return False
