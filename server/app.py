@@ -10,7 +10,7 @@ from server.tasks.openInverterTask import OpenInverterTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
-from server.tasks.startupTask import StartupInfoTask
+from server.tasks.startupInfoTask import StartupInfoTask
 # from server.tasks.cryptoReviveTask import CryptoReviveTask
 from server.bootstrap import Bootstrap
 
