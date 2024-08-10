@@ -58,7 +58,14 @@ def test_solarmanv5_inverter():
 
     assert new_inverter.get_port() == 8899
 
-
+    assert new_inverter.get_config_dict() ==  {
+            "connection": "SOLARMAN",
+            "type": "DEYE_HYRID",
+            "serial": 123456789,
+            "address": 1,
+            "host": "localhost",
+            "port": 8899,
+        }
 
 
 def test_sma_inverter():
