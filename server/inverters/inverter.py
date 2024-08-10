@@ -1,6 +1,6 @@
 import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
-from .supported_inverters.profiles import InverterProfiles
+from .supported_inverters.profiles import InverterProfiles, InverterProfile
 
 
 log = logging.getLogger(__name__)

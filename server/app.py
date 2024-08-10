@@ -10,6 +10,7 @@ from server.tasks.openInverterTask import OpenInverterTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
+from server.tasks.startupInfoTask import StartupInfoTask
 # from server.tasks.cryptoReviveTask import CryptoReviveTask
 from server.bootstrap import Bootstrap
 
@@ -115,6 +116,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     bootstrap = Bootstrap(bootstrap_file)
 
     bb.inverters.add_listener(bootstrap)
+
+    tasks.put(StartupInfoTask(bb.time_ms(), bb))
 
     # put some initial tasks in the queue
     if inverter is not None:
