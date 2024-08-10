@@ -177,7 +177,7 @@ class ModbusScanHandler(GetHandler):
     def do_get(self, data: RequestData):
         """Scan the network for modbus devices."""
         
-        ports = data.query_params.get(self.PORT, "502,1502,6607")
+        ports = data.query_params.get(self.PORTS, "502,1502,6607")
         ports = self.parse_ports(ports)
         timeout = data.query_params.get(self.TIMEOUT, 0.01) # 10ms may be too short for some networks? 
 
