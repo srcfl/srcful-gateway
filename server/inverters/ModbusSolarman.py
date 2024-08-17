@@ -1,4 +1,4 @@
-from .inverter import Inverter
+from .modbus import Modbus
 from pysolarmanv5 import PySolarmanV5
 from typing_extensions import TypeAlias
 import logging
@@ -7,7 +7,7 @@ import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-class SolarmanTCP(Inverter):
+class ModbusSolarman(Modbus):
     """
     ip: string, IP address of the inverter,
     serial: int, Serial number of the logger stick,
@@ -27,8 +27,8 @@ class SolarmanTCP(Inverter):
         self.client = None
         super().__init__()
 
-    def open(self, **kwargs) -> bool:
-        if not self.is_terminated():
+    def _open(self, **kwargs) -> bool:
+        if not self._is_terminated():
             self._create_client(**kwargs)
             if not self.client.sock:
                 log.error("FAILED to open inverter: %s", self.get_type())
@@ -36,10 +36,10 @@ class SolarmanTCP(Inverter):
         else:
             return False
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         return bool(self.client.sock)
 
-    def close(self) -> None:
+    def _close(self) -> None:
         try:
             self.client.disconnect()
             self.client.sock = None
@@ -48,18 +48,18 @@ class SolarmanTCP(Inverter):
             log.error("Close -> Error disconnecting inverter: %s", self.get_type())
             log.error(e)
 
-    def terminate(self) -> None:
-        self.close()
+    def _terminate(self) -> None:
+        self._close()
         self._isTerminated = True
 
-    def is_terminated(self) -> bool:
+    def _is_terminated(self) -> bool:
         return self._isTerminated
 
-    def clone(self, host: str = None):
+    def _clone(self, host: str = None):
         if host is None:
             host = self.get_host()
 
-        return SolarmanTCP(
+        return ModbusSolarman(
             (host, 
              self.get_serial(), 
              self.get_port(), 
@@ -83,7 +83,7 @@ class SolarmanTCP(Inverter):
     def get_address(self) -> int:
         return self.setup[4]
 
-    def get_config(self) -> tuple[str, str, int, str, int]:
+    def _get_config(self) -> tuple[str, str, int, str, int]:
         return (
             "SOLARMAN",
             self.get_host(),
@@ -93,7 +93,7 @@ class SolarmanTCP(Inverter):
             self.get_address(),
         )
 
-    def get_config_dict(self) -> dict:
+    def _get_config_dict(self) -> dict:
         return {
             "connection": "SOLARMAN",
             "type": self.get_type(),
@@ -103,7 +103,7 @@ class SolarmanTCP(Inverter):
             "port": self.get_port(),
         }
 
-    def get_backend_type(self) -> str:
+    def _get_backend_type(self) -> str:
         return self.get_type().lower()
     
     def _create_client(self, **kwargs) -> None:

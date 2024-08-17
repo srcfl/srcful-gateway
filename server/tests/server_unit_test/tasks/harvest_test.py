@@ -89,7 +89,7 @@ def test_adaptive_backoff():
     assert t.backoff_time == 1966
 
     # Mock one failed poll -> We back off by 2 seconds instead of 1
-    t.inverter.read_harvest_data.side_effect = Exception("mocked exception")
+    t.inverter._read_harvest_data.side_effect = Exception("mocked exception")
     t.execute(17)
 
     assert t.backoff_time == 3932
@@ -124,13 +124,13 @@ def test_adaptive_poll():
 
     assert t.backoff_time == 1966
 
-    t.inverter.read_harvest_data.side_effect = Exception("mocked exception")
+    t.inverter._read_harvest_data.side_effect = Exception("mocked exception")
     t.backoff_time = t.max_backoff_time
     t.execute(17)
 
     assert t.backoff_time == 256000
 
-    t.inverter.read_harvest_data.side_effect = None
+    t.inverter._read_harvest_data.side_effect = None
     t.execute(17)
 
     assert t.backoff_time == 230400.0
@@ -226,7 +226,7 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     assert mock_inverter.clone.call_count == 1
     
     # assert that inverter has been terminated
-    assert t.inverter.terminate.call_count == 1
+    assert t.inverter._terminate.call_count == 1
     mock_inverter.is_terminated.return_value = True
 
     # make sure we get nothing as the barn is empty

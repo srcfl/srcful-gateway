@@ -1,4 +1,4 @@
-from .inverter import Inverter
+from .modbus import Modbus
 from pymodbus.client import ModbusSerialClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
 from pymodbus.exceptions import ModbusIOException
@@ -12,7 +12,7 @@ log.setLevel(logging.INFO)
 pymodbus_apply_logging_config("INFO")
 
 
-class ModbusRTU(Inverter):
+class ModbusRTU(Modbus):
 
     """
     port: string, Serial port used for communication,
@@ -32,7 +32,7 @@ class ModbusRTU(Inverter):
         self.client = None
         super().__init__()
 
-    def open(self, **kwargs) -> bool:
+    def _open(self, **kwargs) -> bool:
         self._create_client(**kwargs)
         if not self.client.connect():
             log.error("FAILED to open inverter: %s", self.get_type())
@@ -40,20 +40,20 @@ class ModbusRTU(Inverter):
         else:
             return False
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         return bool(self.client.socket)
     
-    def close(self) -> None:
+    def _close(self) -> None:
         self.client.close()
 
-    def terminate(self) -> None:
-        self.close()
+    def _terminate(self) -> None:
+        self._close()
         self._isTerminated = True
 
-    def is_terminated(self) -> bool:
+    def _is_terminated(self) -> bool:
         return self._isTerminated
 
-    def clone(self, host: str = None):
+    def _clone(self, host: str = None):
         if host is None:
             host = self.get_host()
             
@@ -82,7 +82,7 @@ class ModbusRTU(Inverter):
     def get_address(self) -> int:
         return self.setup[6]
 
-    def get_config(self) -> tuple[str, str, int, int, str, float, str, int]:
+    def _get_config(self) -> tuple[str, str, int, int, str, float, str, int]:
         return (
             "RTU",
             self.get_host(),
@@ -94,7 +94,7 @@ class ModbusRTU(Inverter):
             self.get_address(),
         )
 
-    def get_config_dict(self) -> dict:
+    def _get_config_dict(self) -> dict:
         return {
             "connection": "RTU",
             "type": self.get_type(),
@@ -106,7 +106,7 @@ class ModbusRTU(Inverter):
             "stopbits": self.get_stopbits(),
         }
     
-    def get_backend_type(self) -> str:
+    def _get_backend_type(self) -> str:
         return self.get_type().lower()
     
     def _create_client(self, **kwargs) -> None:

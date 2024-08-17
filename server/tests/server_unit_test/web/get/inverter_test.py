@@ -2,7 +2,7 @@
 
 import pytest
 import json
-from server.inverters.inverter import Inverter
+from server.inverters.modbus import Modbus
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.inverter import Handler
 from server.blackboard import BlackBoard
@@ -12,11 +12,11 @@ from server.blackboard import BlackBoard
 def request_data():
     class MockInverter:
         def get_config_dict(self):
-            assert "get_config_dict" in dir(Inverter)
+            assert "get_config_dict" in dir(Modbus)
             return {"test": "test"}
 
         def is_open(self):
-            assert "is_open" in dir(Inverter)
+            assert "is_open" in dir(Modbus)
             return True
 
     bb = BlackBoard()

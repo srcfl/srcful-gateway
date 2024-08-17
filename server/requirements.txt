@@ -6,3 +6,4 @@ requests == 2.32.0
 typing-extensions == 4.9.0
 pyserial == 3.5
 pysolarmanv5 == 3.0.1
+pysunspec2==1.1.5

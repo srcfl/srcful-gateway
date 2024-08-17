@@ -1,5 +1,5 @@
 import json
-from server.inverters.SolarmanTCP import SolarmanTCP
+from server.inverters.SolarmanTCP import ModbusSolarman
 from server.tasks.openInverterTask import OpenInverterTask
 from ..handler import PostHandler
 from ..requestData import RequestData
@@ -43,7 +43,7 @@ class Handler(PostHandler):
                     int(data.data["address"]),
                     0
                 )
-                inverter = SolarmanTCP(conf) 
+                inverter = ModbusSolarman(conf) 
                 logger.info("Created a SolarmanV5 inverter")
 
                 data.bb.add_task(OpenInverterTask(data.bb.time_ms() + 100, data.bb, inverter))

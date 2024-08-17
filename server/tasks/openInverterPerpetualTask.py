@@ -1,13 +1,13 @@
 import logging
 from server.blackboard import BlackBoard
-from server.inverters.inverter import Inverter
+from server.inverters.modbus import Modbus
 from server.web.handler.get.network import ModbusScanHandler
 from .task import Task
 
 logger = logging.getLogger(__name__)
 
 class OpenInverterPerpetualTask(Task):
-    def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter):
+    def __init__(self, event_time: int, bb: BlackBoard, inverter: Modbus):
         super().__init__(event_time, bb)
         self.inverter = inverter
         self.scanner = ModbusScanHandler()
@@ -18,10 +18,10 @@ class OpenInverterPerpetualTask(Task):
         if len(self.bb.inverters.lst) > 0 and self.bb.inverters.lst[0].is_open():
             logger.debug("Inverter is already open, removing it from the blackboard")
             self.bb.inverters.remove(self.inverter)
-            self.inverter.terminate()
+            self.inverter._terminate()
             return
         try:
-            if self.inverter.open(reconnect_delay=0, retries=3, timeout=5, reconnect_delay_max=0):
+            if self.inverter._open(reconnect_delay=0, retries=3, timeout=5, reconnect_delay_max=0):
                 # terminate and remove all inverters from the blackboard
                 logger.debug("Removing all inverters from the blackboard after opening a new inverter")
                 for i in self.bb.inverters.lst:
@@ -29,21 +29,21 @@ class OpenInverterPerpetualTask(Task):
                     self.bb.inverters.remove(i)
 
                 self.bb.inverters.add(self.inverter)
-                self.bb.add_info("Inverter opened: " + str(self.inverter.get_config()))
+                self.bb.add_info("Inverter opened: " + str(self.inverter._get_config()))
                 return
             
             else:
-                port = self.inverter.get_config_dict()['port'] # get the port from the previous inverter config
+                port = self.inverter._get_config_dict()['port'] # get the port from the previous inverter config
                 hosts = self.scanner.scan_ports([int(port)], 0.01) # overwrite hosts with the new result of the scan
                 
                 if len(hosts) > 0:
                     # At least one device was found on the port
-                    self.inverter = self.inverter.clone(hosts[0]['ip'])
+                    self.inverter = self.inverter._clone(hosts[0]['ip'])
                     logger.info("Found inverter at %s, retry in 5 seconds...", hosts[0]['ip']) 
                     self.time = event_time + 5000
                 else:
                     # possibly we should create a new inverter object. We have previously had trouble with reconnecting in the Harvester
-                    message = "Failed to open inverter, retry in 5 minutes: " + str(self.inverter.get_config())
+                    message = "Failed to open inverter, retry in 5 minutes: " + str(self.inverter._get_config())
                     logger.info(message)
                     self.bb.add_error(message)
                     self.time = event_time + 60000 * 5

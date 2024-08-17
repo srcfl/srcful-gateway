@@ -1,4 +1,4 @@
-from .inverter import Inverter
+from .modbus import Modbus
 from pymodbus.client import ModbusTcpClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
 from pymodbus.exceptions import ModbusIOException
@@ -12,7 +12,7 @@ log.setLevel(logging.INFO)
 pymodbus_apply_logging_config("INFO")
 
 
-class ModbusTCP(Inverter):
+class ModbusTCP(Modbus):
 
     """
     ip: string, IP address of the inverter,
@@ -29,8 +29,8 @@ class ModbusTCP(Inverter):
         self.client = None
         super().__init__()
 
-    def open(self, **kwargs) -> bool:
-        if not self.is_terminated():
+    def _open(self, **kwargs) -> bool:
+        if not self._is_terminated():
             self._create_client(**kwargs)
             if not self.client.connect():
                 log.error("FAILED to open inverter: %s", self.get_type())
@@ -38,20 +38,20 @@ class ModbusTCP(Inverter):
         else:
             return False
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         return bool(self.client.socket)
 
-    def close(self) -> None:
+    def _close(self) -> None:
         self.client.close()
 
-    def terminate(self) -> None:
-        self.close()
+    def _terminate(self) -> None:
+        self._close()
         self._isTerminated = True
 
-    def is_terminated(self) -> bool:
+    def _is_terminated(self) -> bool:
         return self._isTerminated
 
-    def clone(self, host: str = None):
+    def _clone(self, host: str = None):
         if host is None:
             host = self.get_host()
 
@@ -70,7 +70,7 @@ class ModbusTCP(Inverter):
     def get_address(self) -> int:
         return self.setup[3]
 
-    def get_config(self) -> tuple[str, str, int, str, int]:
+    def _get_config(self) -> tuple[str, str, int, str, int]:
         return (
             "TCP",
             self.get_host(),
@@ -79,7 +79,7 @@ class ModbusTCP(Inverter):
             self.get_address(),
         )
 
-    def get_config_dict(self) -> dict:
+    def _get_config_dict(self) -> dict:
         return {
             "connection": "TCP",
             "type": self.get_type(),
@@ -88,7 +88,7 @@ class ModbusTCP(Inverter):
             "port": self.get_port(),
         }
 
-    def get_backend_type(self) -> str:
+    def _get_backend_type(self) -> str:
         return self.get_type().lower()
 
     def _create_client(self, **kwargs) -> None:

@@ -1,10 +1,11 @@
-from .inverters.inverter import Inverter
+from .inverters.modbus import Modbus
 from .inverters.ModbusTCP import ModbusTCP
 from .inverters.ModbusRTU import ModbusRTU
-from .inverters.SolarmanTCP import SolarmanTCP
+from .inverters.ModbusSolarman import ModbusSolarman
 from .tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 import os
 import logging
+from .inverters.IComFactory import IComFactory
 
 logger = logging.getLogger(__name__)
 
@@ -24,15 +25,16 @@ class Bootstrap(BootstrapSaver):
         self.filename = filename
         self.tasks = []
         self._create_file_if_not_exists()
+        self._icom_factory = IComFactory()
 
     # implementation of blackboard inverter observer
-    def add_inverter(self, inverter: Inverter):
-        self.append_inverter(inverter.get_config())
+    def add_inverter(self, inverter: Modbus):
+        self.append_inverter(inverter._get_config())
 
-    def remove_inverter(self, inverter: Inverter):
+    def remove_inverter(self, inverter: Modbus):
         logger.info(
             "Removing inverter from bootstrap: {} not yet supported".format(
-                inverter.get_config()
+                inverter._get_config()
             )
         )
 
@@ -59,7 +61,7 @@ class Bootstrap(BootstrapSaver):
         for task in self.get_tasks(0, None):
             if (
                 isinstance(task, OpenInverterPerpetualTask)
-                and task.inverter.get_config() == inverter_args
+                and task.inverter._get_config() == inverter_args
             ):
                 return
 
@@ -116,42 +118,16 @@ class Bootstrap(BootstrapSaver):
             return None
 
     def _create_open_inverter_task(self, task_args: list, event_time, bb):
-        # check the number of arguments
-        if task_args[0] == "TCP":
-            ip = task_args[1]
-            port = int(task_args[2])
-            inverter_type = task_args[3]
-            address = int(task_args[4])
-            return OpenInverterPerpetualTask(
-                event_time + 1000, 
-                bb, 
-                ModbusTCP((ip, port, inverter_type, address))
-            )
-        elif task_args[0] == "RTU":
-            port = task_args[1]
-            baudrate = int(task_args[2])
-            bytesize = int(task_args[3])
-            parity = task_args[4]
-            stopbits = float(task_args[5])
-            inverter_type = task_args[6]
-            address = int(task_args[7])
+        
+        obj = self._icom_factory.create_com(task_args)
+        
+        try:
             return OpenInverterPerpetualTask(
                 event_time + 1000,
                 bb,
-                ModbusRTU(
-                    (port, baudrate, bytesize, parity, stopbits, inverter_type, address)
-                ),
+                obj,
             )
-        elif task_args[0] == "SOLARMAN":
-            ip = task_args[1]
-            serial = int(task_args[2])
-            port = int(task_args[3])
-            inverter_type = task_args[4]
-            address = int(task_args[5])
-            verbose = False
-
-            return OpenInverterPerpetualTask(
-                event_time + 1000,
-                bb,
-                SolarmanTCP((ip, serial, port, inverter_type, address, verbose)),
-            )
+        except Exception as e:
+            logger.error("Failed to create OpenInverter task: {}".format(task_args))
+            logger.error(e)
+            return None

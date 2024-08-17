@@ -7,7 +7,7 @@ import pytest
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.modbus import HoldingHandler, InputHandler  # adapt to your actual module import
 from server.blackboard import BlackBoard
-from server.inverters.inverter import Inverter
+from server.inverters.modbus import Modbus
 
 @pytest.fixture
 def inverter_fixture():
@@ -16,7 +16,7 @@ def inverter_fixture():
     # These registers are word-sized, so they are 2 bytes each, e.g. the 1 in [1, 2, 3, 4] is 0x0001 (2 bytes) in hex (big endian)
     inverter.read_registers.return_value = [1, 2, 3, 4]
 
-    assert 'read_registers' in dir(Inverter)
+    assert 'read_registers' in dir(Modbus)
 
 
     return inverter
@@ -32,7 +32,7 @@ def request_data():
         return [i for i in range(address, address + size)]
 
     inv.read_registers = read_registers
-    assert 'read_registers' in dir(Inverter)
+    assert 'read_registers' in dir(Modbus)
 
     post_params = {'address': '0'}
     query_params = {'type': 'uint', 'size': '2', 'endianess': 'big'}
@@ -104,7 +104,7 @@ def test_invalid_size(request_data):
         raise Exception('invalid or incomplete address range')
 
     request_data.bb.inverters.lst[0].read_registers = read_registers
-    assert 'read_registers' in dir(Inverter)
+    assert 'read_registers' in dir(Modbus)
 
     status_code, response = handler.do_get(request_data)
     assert status_code == 400
@@ -157,7 +157,7 @@ def test_float_value_ABCD(request_data):
     request_data.query_params['endianess'] = 'big'
     request_data.post_params['address'] = 0x4248
 
-    assert 'read_registers' in dir(Inverter)
+    assert 'read_registers' in dir(Modbus)
 
     status_code, response = handler.do_get(request_data)
     assert status_code == 200

@@ -1,6 +1,6 @@
 
 import logging
-from server.inverters.inverter import Inverter
+from server.inverters.modbus import Modbus
 from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
 from .task import Task
@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 
 class Harvest(Task):
-    def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter, transport_factory: ITransportFactory):
+    def __init__(self, event_time: int, bb: BlackBoard, inverter: Modbus, transport_factory: ITransportFactory):
         super().__init__(event_time, bb)
         self.inverter = inverter
         self.barn = {}
@@ -26,11 +26,11 @@ class Harvest(Task):
         start_time = event_time
         elapsed_time_ms = 1000
 
-        if self.inverter.is_terminated():
+        if self.inverter._is_terminated():
             log.info("Inverter is terminated make the final transport if there is anything in the barn")
             return self._create_transport(1, event_time=event_time)
         try:
-            harvest = self.inverter.read_harvest_data(force_verbose=len(self.barn) == 0)
+            harvest = self.inverter._read_harvest_data(force_verbose=len(self.barn) == 0)
             end_time = self.bb.time_ms()
 
             elapsed_time_ms = end_time - start_time
@@ -55,8 +55,8 @@ class Harvest(Task):
 
             if self.backoff_time >= self.max_backoff_time:
                 log.debug("Max timeout reached terminating inverter and issuing new reopen in 30 sec")
-                self.inverter.terminate()
-                open_inverter = OpenInverterPerpetualTask(event_time + 30000, self.bb, self.inverter.clone())
+                self.inverter._terminate()
+                open_inverter = OpenInverterPerpetualTask(event_time + 30000, self.bb, self.inverter._clone())
                 self.time = event_time + 10000
 
                 # we return self so that in the next execute the last harvest will be transported

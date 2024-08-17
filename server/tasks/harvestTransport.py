@@ -1,7 +1,7 @@
 import logging
 import requests
 
-from server.inverters.inverter import Inverter
+from server.inverters.modbus import Modbus
 from server.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run
@@ -16,7 +16,7 @@ class IHarvestTransport(SrcfulAPICallTask):
 
 
 class ITransportFactory:
-    def __call__(self, event_time: int, bb: BlackBoard, inverter: Inverter, barn: dict) -> IHarvestTransport:
+    def __call__(self, event_time: int, bb: BlackBoard, inverter: Modbus, barn: dict) -> IHarvestTransport:
         pass
 
 
@@ -119,13 +119,13 @@ class LocalHarvestTransportTimedSignature(HarvestTransportTimedSignature):
 
 # Some factories
 class DefaultHarvestTransportFactory(ITransportFactory):
-    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, inverter: Inverter) -> HarvestTransport:
-        return HarvestTransport(event_time, bb, barn, inverter.get_backend_type())
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, inverter: Modbus) -> HarvestTransport:
+        return HarvestTransport(event_time, bb, barn, inverter._get_backend_type())
     
 class TimedSignatureHarvestTransportFactory(ITransportFactory):
-    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, inverter: Inverter) -> HarvestTransport:
-        return HarvestTransportTimedSignature(event_time, bb, barn, inverter.get_backend_type())
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, inverter: Modbus) -> HarvestTransport:
+        return HarvestTransportTimedSignature(event_time, bb, barn, inverter._get_backend_type())
     
 class LocalTimedSignatureHarvestTransportFactory(ITransportFactory):
-    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, inverter: Inverter) -> HarvestTransport:
-        return LocalHarvestTransportTimedSignature(event_time, bb, barn, inverter.get_backend_type())
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, inverter: Modbus) -> HarvestTransport:
+        return LocalHarvestTransportTimedSignature(event_time, bb, barn, inverter._get_backend_type())

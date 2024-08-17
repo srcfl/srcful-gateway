@@ -2,7 +2,7 @@
 
 import struct
 from enum import Enum
-from .inverter import Inverter
+from .modbus import Modbus
 
 
 class RegisterValue:
@@ -75,7 +75,7 @@ class RegisterValue:
         """Swaps the two words in a 32-bit float value"""
         return data[2:4] + data[0:2]
 
-    def read_value(self, inverter: Inverter):
+    def read_value(self, inverter: Modbus):
         """Reads the value of the register from the inverter"""
         if self.regType == RegisterValue.RegisterType.HOLDING:
             registers = inverter.read_registers(0x03, self.address, self.size)
