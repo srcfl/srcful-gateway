@@ -1,11 +1,9 @@
-from .inverters.modbus import Modbus
-from .inverters.ModbusTCP import ModbusTCP
-from .inverters.ModbusRTU import ModbusRTU
-from .inverters.ModbusSolarman import ModbusSolarman
+from .inverters.der import DER
 from .tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 import os
 import logging
 from .inverters.IComFactory import IComFactory
+from .inverters.der import DER
 
 logger = logging.getLogger(__name__)
 
@@ -25,16 +23,15 @@ class Bootstrap(BootstrapSaver):
         self.filename = filename
         self.tasks = []
         self._create_file_if_not_exists()
-        self._icom_factory = IComFactory()
 
     # implementation of blackboard inverter observer
-    def add_inverter(self, inverter: Modbus):
-        self.append_inverter(inverter._get_config())
+    def add_inverter(self, der: DER):
+        self.append_inverter(der.get_config())
 
-    def remove_inverter(self, inverter: Modbus):
+    def remove_inverter(self, der: DER):
         logger.info(
             "Removing inverter from bootstrap: {} not yet supported".format(
-                inverter._get_config()
+                der.get_config()
             )
         )
 
@@ -54,21 +51,21 @@ class Bootstrap(BootstrapSaver):
                 logger.error("Failed to create file: {}".format(self.filename))
                 logger.error(e)
 
-    def append_inverter(self, inverter_args):
+    def append_inverter(self, inverter_args: dict):
         self._create_file_if_not_exists()
 
         # check if the setup already exists
         for task in self.get_tasks(0, None):
             if (
                 isinstance(task, OpenInverterPerpetualTask)
-                and task.inverter._get_config() == inverter_args
+                and task.der.get_config() == inverter_args
             ):
                 return
 
         # append the setup to the file
         with open(self.filename, "w") as f:
-            logger.info("Writing (w) inverter to bootstrap file: %s", inverter_args)
-            inverter_str = " ".join(str(i) for i in inverter_args)
+            inverter_str = ' '.join(map(str, inverter_args.values())) # Perhaps we should save as dict instead of space-separated string ? 
+            logger.info("Writing (w) inverter to bootstrap file: %s", inverter_str)
             f.write(f"OpenInverter {inverter_str}\n")
 
     def get_tasks(self, event_time, stats):
@@ -82,6 +79,9 @@ class Bootstrap(BootstrapSaver):
             logger.error("Failed to read file: {}".format(self.filename))
             return self.tasks
 
+        # example line in the file:
+        # OpenInverter TCP 35.198.102.58 502 solaredge 1
+        lines = ["OpenInverter TCP 35.198.102.58 502 solaredge 1"]
         return self._process_lines(lines, event_time, stats)
 
     def _process_lines(self, lines: list, event_time, stats):
@@ -119,13 +119,16 @@ class Bootstrap(BootstrapSaver):
 
     def _create_open_inverter_task(self, task_args: list, event_time, bb):
         
-        obj = self._icom_factory.create_com(task_args)
+        conf = IComFactory.parse_connection_config_from_list(task_args)
+        com = IComFactory.create_com(conf)
+        
+        der = DER(com)
         
         try:
             return OpenInverterPerpetualTask(
                 event_time + 1000,
                 bb,
-                obj,
+                der,
             )
         except Exception as e:
             logger.error("Failed to create OpenInverter task: {}".format(task_args))

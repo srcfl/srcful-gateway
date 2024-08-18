@@ -1,7 +1,7 @@
 import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from .supported_inverters.profiles import InverterProfiles, InverterProfile
-from ICom import ICom
+from .ICom import ICom
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -12,7 +12,11 @@ class Modbus(ICom):
 
     def __init__(self):
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
-        self.profile = InverterProfiles().get(self.get_type())
+        self.profile: InverterProfile = InverterProfiles().get(self._get_type())
+        
+    def _get_type(self) -> str:
+        """Returns the inverter's type."""
+        raise NotImplementedError("Subclass must implement abstract method")
 
     def _open(self) -> bool:
         """Opens the Modbus connection."""
@@ -60,7 +64,7 @@ class Modbus(ICom):
         """Returns the inverter's backend type"""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def _read_harvest_data(self, force_verbose=False) -> dict:
+    def _read_harvest_data(self, force_verbose) -> dict:
         if self._is_terminated():
             raise Exception("readHarvestData() - inverter is terminated")
 
@@ -132,17 +136,26 @@ class Modbus(ICom):
 
     # ICom methods
     
-    def connect(self):
+    def connect(self) -> bool:
         return self._open()
     
-    def disconnect(self):
-        return self._close()
+    def disconnect(self) -> None:
+        return self._terminate()
     
-    def reconnect(self):
+    def reconnect(self) -> bool:
         return self._close() and self._open()
     
-    def read_harvest_data(self):
-        return self._read_harvest_data()
+    def is_open(self) -> bool:
+        return self._is_open()
     
-    def get_harvest_data_type(self):
+    def read_harvest_data(self, force_verbose) -> dict:
+        return self._read_harvest_data(force_verbose)
+    
+    def get_harvest_data_type(self) -> str:
         return self.data_type
+    
+    def get_config(self) -> dict:
+        return self._get_config_dict()
+    
+    def get_profile(self) -> InverterProfile:
+        return self.profile

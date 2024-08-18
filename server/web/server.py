@@ -25,8 +25,8 @@ def request_handler_factory(bb: BlackBoard):
                 "name": handler.get.name.Handler(),
                 "logger": handler.get.logger.Handler(),
                 "inverter": handler.get.inverter.Handler(),
-                "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
-                "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
+                # "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
+                # "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
                 "inverter/modbus/scan": handler.get.network.ModbusScanHandler(),
                 "inverter/supported": handler.get.supported.Handler(),
                 "network": handler.get.network.NetworkHandler(),
@@ -41,9 +41,7 @@ def request_handler_factory(bb: BlackBoard):
             }
 
             self.api_post_dict = {
-                "invertertcp": handler.post.modbusTCP.Handler(),
-                "inverterrtu": handler.post.modbusRTU.Handler(),
-                "invertersolarman": handler.post.modbusSolarman.Handler(),
+                "modbus_device": handler.post.modbusDevice.Handler(),
                 "wifi": handler.post.wifi.Handler(),
                 "initialize": handler.post.initialize.Handler(),
                 "inverter/modbus": handler.post.modbus.Handler(),

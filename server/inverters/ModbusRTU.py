@@ -35,7 +35,7 @@ class ModbusRTU(Modbus):
     def _open(self, **kwargs) -> bool:
         self._create_client(**kwargs)
         if not self.client.connect():
-            log.error("FAILED to open inverter: %s", self.get_type())
+            log.error("FAILED to open inverter: %s", self._get_type())
             return bool(self.client.socket)
         else:
             return False
@@ -55,68 +55,68 @@ class ModbusRTU(Modbus):
 
     def _clone(self, host: str = None):
         if host is None:
-            host = self.get_host()
+            host = self._get_host()
             
-        return ModbusRTU((host, self.get_baudrate(),
-                            self.get_bytesize(), self.get_parity(),
-                            self.get_stopbits(), self.get_type(), self.get_address()))
+        return ModbusRTU((host, self._get_baudrate(),
+                            self._get_bytesize(), self._get_parity(),
+                            self._get_stopbits(), self._get_type(), self._get_address()))
 
-    def get_host(self) -> str:
+    def _get_host(self) -> str:
         return self.setup[0]
 
-    def get_baudrate(self) -> int:
+    def _get_baudrate(self) -> int:
         return int(self.setup[1])
 
-    def get_bytesize(self) -> int:
+    def _get_bytesize(self) -> int:
         return self.setup[2]
 
-    def get_parity(self) -> str:
+    def _get_parity(self) -> str:
         return self.setup[3]
 
-    def get_stopbits(self) -> int:
+    def _get_stopbits(self) -> int:
         return self.setup[4]
 
-    def get_type(self) -> str:
+    def _get_type(self) -> str:
         return self.setup[5]
 
-    def get_address(self) -> int:
+    def _get_address(self) -> int:
         return self.setup[6]
 
     def _get_config(self) -> tuple[str, str, int, int, str, float, str, int]:
         return (
             "RTU",
-            self.get_host(),
-            self.get_baudrate(),
-            self.get_bytesize(),
-            self.get_parity(),
-            self.get_stopbits(),
-            self.get_type(),
-            self.get_address(),
+            self._get_host(),
+            self._get_baudrate(),
+            self._get_bytesize(),
+            self._get_parity(),
+            self._get_stopbits(),
+            self._get_type(),
+            self._get_address(),
         )
 
     def _get_config_dict(self) -> dict:
         return {
             "connection": "RTU",
-            "type": self.get_type(),
-            "address": self.get_address(),
-            "host": self.get_host(),
-            "baudrate": self.get_baudrate(),
-            "bytesize": self.get_bytesize(),
-            "parity": self.get_parity(),
-            "stopbits": self.get_stopbits(),
+            "type": self._get_type(),
+            "address": self._get_address(),
+            "host": self._get_host(),
+            "baudrate": self._get_baudrate(),
+            "bytesize": self._get_bytesize(),
+            "parity": self._get_parity(),
+            "stopbits": self._get_stopbits(),
         }
     
     def _get_backend_type(self) -> str:
-        return self.get_type().lower()
+        return self._get_type().lower()
     
     def _create_client(self, **kwargs) -> None:
         self.client = ModbusClient(
             method="rtu",
-            port=self.get_host(),
-            baudrate=self.get_baudrate(),
-            bytesize=self.get_bytesize(),
-            parity=self.get_parity(),
-            stopbits=self.get_stopbits(),
+            port=self._get_host(),
+            baudrate=self._get_baudrate(),
+            bytesize=self._get_bytesize(),
+            parity=self._get_parity(),
+            stopbits=self._get_stopbits(),
             **kwargs
         )
 
@@ -124,9 +124,9 @@ class ModbusRTU(Modbus):
         resp = None
         
         if operation == 0x04:
-            resp = self.client.read_input_registers(scan_start, scan_range, slave=self.get_address())
+            resp = self.client.read_input_registers(scan_start, scan_range, slave=self._get_address())
         elif operation == 0x03:
-            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.get_address())
+            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self._get_address())
 
         # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
         # We solve this by raising the exception manually
@@ -140,7 +140,7 @@ class ModbusRTU(Modbus):
         Write a range of holding registers from a start address
         """
         resp = self.client.write_registers(
-            starting_register, values, slave=self.get_address()
+            starting_register, values, slave=self._get_address()
         )
         log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
         

@@ -3,7 +3,7 @@ import sys
 from unittest.mock import MagicMock, patch
 from server.inverters.ModbusTCP import ModbusTCP
 from server.inverters.ModbusRTU import ModbusRTU 
-from server.inverters.SolarmanTCP import ModbusSolarman
+from server.inverters.ModbusSolarman import ModbusSolarman
 from server.inverters.supported_inverters.profiles import InverterProfiles
 from pymodbus.exceptions import ModbusException, ModbusIOException, ConnectionException
 
@@ -54,9 +54,9 @@ def test_solarmanv5_inverter():
 
     new_inverter = inv_solarmanv5._clone()
 
-    assert new_inverter.get_host() == "localhost"
+    assert new_inverter._get_host() == "localhost"
 
-    assert new_inverter.get_port() == 8899
+    assert new_inverter._get_port() == 8899
 
     assert new_inverter._get_config_dict() ==  {
             "connection": "SOLARMAN",
@@ -74,8 +74,8 @@ def test_sma_inverter():
     """
     inv = ModbusTCP(("localhost", 8081, "SMA", 1))
 
-    assert inv.get_type() == "SMA"
-    assert inv.get_address() == 1
+    assert inv._get_type() == "SMA"
+    assert inv._get_address() == 1
 
     registers = inv.profile.get_registers_verbose()
 

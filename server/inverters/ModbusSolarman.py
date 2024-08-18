@@ -31,7 +31,7 @@ class ModbusSolarman(Modbus):
         if not self._is_terminated():
             self._create_client(**kwargs)
             if not self.client.sock:
-                log.error("FAILED to open inverter: %s", self.get_type())
+                log.error("FAILED to open inverter: %s", self._get_type())
             return bool(self.client.sock)
         else:
             return False
@@ -43,9 +43,9 @@ class ModbusSolarman(Modbus):
         try:
             self.client.disconnect()
             self.client.sock = None
-            log.info("Close -> Inverter disconnected successfully: %s", self.get_type())
+            log.info("Close -> Inverter disconnected successfully: %s", self._get_type())
         except Exception as e:
-            log.error("Close -> Error disconnecting inverter: %s", self.get_type())
+            log.error("Close -> Error disconnecting inverter: %s", self._get_type())
             log.error(e)
 
     def _terminate(self) -> None:
@@ -57,60 +57,60 @@ class ModbusSolarman(Modbus):
 
     def _clone(self, host: str = None):
         if host is None:
-            host = self.get_host()
+            host = self._get_host()
 
         return ModbusSolarman(
             (host, 
-             self.get_serial(), 
-             self.get_port(), 
-             self.get_type(), 
-             self.get_address(), 
+             self._get_serial(), 
+             self._get_port(), 
+             self._get_type(), 
+             self._get_address(), 
              self.setup[5])
         )
 
-    def get_host(self) -> str:
+    def _get_host(self) -> str:
         return self.setup[0]
 
-    def get_serial(self) -> int:
+    def _get_serial(self) -> int:
         return self.setup[1]
     
-    def get_port(self) -> int:
+    def _get_port(self) -> int:
         return self.setup[2]
 
-    def get_type(self) -> str:
+    def _get_type(self) -> str:
         return self.setup[3]
     
-    def get_address(self) -> int:
+    def _get_address(self) -> int:
         return self.setup[4]
 
     def _get_config(self) -> tuple[str, str, int, str, int]:
         return (
             "SOLARMAN",
-            self.get_host(),
-            self.get_serial(),
-            self.get_port(),
-            self.get_type(),
-            self.get_address(),
+            self._get_host(),
+            self._get_serial(),
+            self._get_port(),
+            self._get_type(),
+            self._get_address(),
         )
 
     def _get_config_dict(self) -> dict:
         return {
             "connection": "SOLARMAN",
-            "type": self.get_type(),
-            "serial": self.get_serial(),
-            "address": self.get_address(),
-            "host": self.get_host(),
-            "port": self.get_port(),
+            "type": self._get_type(),
+            "serial": self._get_serial(),
+            "address": self._get_address(),
+            "host": self._get_host(),
+            "port": self._get_port(),
         }
 
     def _get_backend_type(self) -> str:
-        return self.get_type().lower()
+        return self._get_type().lower()
     
     def _create_client(self, **kwargs) -> None:
-        self.client = PySolarmanV5(address=self.get_host(), 
-                            serial=self.get_serial(), 
-                            port=self.get_port(), 
-                            mb_slave_id=self.get_address(), 
+        self.client = PySolarmanV5(address=self._get_host(), 
+                            serial=self._get_serial(), 
+                            port=self._get_port(), 
+                            mb_slave_id=self._get_address(), 
                             v5_error_correction=False,
                             verbose=self.setup[5],
                             **kwargs)

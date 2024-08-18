@@ -1,8 +1,8 @@
-from ModbusRTU import ModbusRTU
-from ModbusTCP import ModbusTCP
-from ModbusSolarman import ModbusSolarman
-from ModbusSunspec import ModbusSunspec
-from ICom import ICom
+from .ModbusRTU import ModbusRTU
+from .ModbusTCP import ModbusTCP
+from .ModbusSolarman import ModbusSolarman
+from .ModbusSunspec import ModbusSunspec
+from .ICom import ICom
 import logging
 
 log = logging.getLogger(__name__)
@@ -14,62 +14,118 @@ class IComFactory:
     """
     
     @staticmethod
-    def parse_connection_args(args: list) -> tuple:
+    def parse_connection_config_from_list(config: list) -> tuple:
         
-        match args[0]:
+        logging.debug("Parsing connection config from list: %s", config)
+        
+        match config[0]:
             case "TCP":
-                ip = args[1]
-                port = int(args[2])
-                inverter_type = args[3]
-                slave_id = int(args[4])
-                return (ip, port, inverter_type, slave_id)
+                ip = config[1]
+                port = int(config[2])
+                inverter_type = config[3]
+                slave_id = int(config[4])
+                return (config[0], ip, port, inverter_type, slave_id)
             case "RTU":
-                port = args[1]
-                baudrate = int(args[2])
-                bytesize = int(args[3])
-                parity = args[4]
-                stopbits = float(args[5])
-                inverter_type = args[6]
-                slave_id = int(args[7])
-                return (port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
+                port = config[1]
+                baudrate = int(config[2])
+                bytesize = int(config[3])
+                parity = config[4]
+                stopbits = float(config[5])
+                inverter_type = config[6]
+                slave_id = int(config[7])
+                return (config[0], port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
             case "SOLARMAN":
-                ip = args[1]
-                serial = int(args[2])
-                port = int(args[3])
-                inverter_type = args[4]
-                slave_id = int(args[5])
+                ip = config[1]
+                serial = int(config[2])
+                port = int(config[3])
+                inverter_type = config[4]
+                slave_id = int(config[5])
                 verbose = False
-                return (ip, serial, port, inverter_type, slave_id, verbose)
+                return (config[0], ip, serial, port, inverter_type, slave_id, verbose)
             case "SUNSPEC":
-                ip = args[1]
-                port = int(args[2])
-                slave_id = int(args[3])
-                return (ip, port, slave_id)
+                ip = config[1]
+                port = int(config[2])
+                slave_id = int(config[3])
+                return (config[0], ip, port, slave_id)
             case _:
-                log.error("Unknown connection type: %s", args[0])
+                log.error("Unknown connection type: %s", config[0])
                 return None
         
-        
     @staticmethod
-    def create_com(args: tuple) -> ICom:
+    def parse_connection_config_from_dict(config: dict) -> tuple:
+        
+        match config["mode"]:
+            case "TCP":
+                ip = config["ip"]
+                port = int(config["port"])
+                inverter_type = config["type"]
+                slave_id = int(config["address"])
+                return (config["mode"], ip, port, inverter_type, slave_id)
+            case "RTU":
+                serial_port = config["serial_port"]
+                baudrate = int(config["baudrate"])
+                bytesize = int(config["bytesize"])
+                parity = config["parity"]
+                stopbits = float(config["stopbits"])
+                inverter_type = config["type"]
+                slave_id = int(config["address"])
+                return (config["mode"], serial_port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
+            case "SOLARMAN":
+                ip = config["ip"]
+                serial = int(config["serial"])
+                port = int(config["port"])
+                inverter_type = config["type"]
+                slave_id = int(config["address"])
+                verbose = False
+                return (config["mode"], ip, serial, port, inverter_type, slave_id, verbose)
+            case "SUNSPEC":
+                ip = config["host"]
+                port = int(config["port"])
+                slave_id = int(config["address"])
+                return (config["mode"], ip, port, slave_id)
+            case _:
+                log.error("Unknown connection type: %s", config["mode"])
+                raise ValueError("Unknown connection type")
+
+    
+    @staticmethod
+    def create_com(config: tuple) -> ICom:
         """
-        Create a new ICom object
+        Create an ICom object for device communication.
+
+        Args:
+            config (tuple): Connection-specific arguments as a tuple:
+                ('TCP', ip, port, inverter_type, slave_id)
+                ('RTU', port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
+                ('SOLARMAN', ip, serial, port, inverter_type, slave_id)
+                ('SUNSPEC', ip, port, slave_id)
+
+        Returns:
+            ICom: Communication object for the specified connection type.
+
+        Raises:
+            ValueError: If the connection type (first element of the tuple) is unsupported.
         """
+                    
+        mode = config[0]
+        connection_config = config[1:]
+        # connection_config = IComFactory.parse_connection_config_from_list(config)
+        log.info("####################################################")
+        log.info("Creating ICom object for connection mode: %s", mode)
+        log.info("Connection config: %s", connection_config)
+        log.info("####################################################")
         
-        connection_type = args[0]
-        connection_args = IComFactory.parse_connection_args(args)
-        
-        factories = {
-            "TCP": ModbusTCP(connection_args),
-            "RTU": ModbusRTU(connection_args),
-            "SOLARMAN": ModbusSolarman(connection_args),
-            "SUNSPEC": ModbusSunspec(connection_args)
-        }
-        
-        try:
-            return factories[connection_type]
-        except:
-            log.error("Unknown connection type: %s", connection_type)
-            return None
+        match mode:
+            case "TCP":
+                return ModbusTCP(connection_config)
+            case "RTU":
+                return ModbusRTU(connection_config)
+            case "SOLARMAN":
+                return ModbusSolarman(connection_config)
+            case "SUNSPEC":
+                return ModbusSunspec(connection_config)
+            case _:
+                log.error("Unknown connection mode: %s", mode)
+                return None
             
         
