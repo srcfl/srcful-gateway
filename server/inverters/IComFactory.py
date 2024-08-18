@@ -79,7 +79,7 @@ class IComFactory:
                 verbose = False
                 return (config["mode"], ip, serial, port, inverter_type, slave_id, verbose)
             case "SUNSPEC":
-                ip = config["host"]
+                ip = config["ip"]
                 port = int(config["port"])
                 slave_id = int(config["address"])
                 return (config["mode"], ip, port, slave_id)

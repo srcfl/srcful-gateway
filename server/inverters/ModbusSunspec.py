@@ -11,13 +11,13 @@ class ModbusSunspec(ICom):
     # Address, Serial, Port, type, Slave_ID, verbose 
     Setup: TypeAlias = tuple[str | bytes | bytearray, int, int]
     
-    def __init__(self, host, port, slave_id):
+    def __init__(self, setup: Setup) -> None:
         """
         Constructor
         """
-        self.host = host
-        self.port = port
-        self.unit_id = slave_id
+        self.host = setup[0]
+        self.port = setup[1]
+        self.slave_id = setup[2]
         self.client = None
         
     def connect(self) -> None:
@@ -45,7 +45,7 @@ class ModbusSunspec(ICom):
             "mode": "SUNSPEC",
             "host": self.host,
             "port": self.port,
-            "slave_id": self.unit
+            "slave_id": self.slave_id
         }
         
     def get_profile(self):
