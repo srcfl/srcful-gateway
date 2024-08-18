@@ -47,3 +47,6 @@ class ModbusSunspec(ICom):
             "port": self.port,
             "slave_id": self.unit
         }
+        
+    def get_profile(self):
+        pass
