@@ -3,6 +3,7 @@ import time
 import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
+from server.settings import Settings
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ class BlackBoard:
     _messages: list[Message]
     _tasks: list[ITask]
     _chip_death_count: int
+    _settings: Settings
 
     def __init__(self):
         self._inverters = BlackBoard.Inverters()
@@ -33,6 +35,8 @@ class BlackBoard:
         self._messages = []
         self._tasks = []
         self._chip_death_count = 0
+        self._settings = Settings()
+        self._settings.harvest.add_endpoint("http://localhost:8080")
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -60,6 +64,10 @@ class BlackBoard:
                 self._messages.remove(m)
                 return True
         return False
+    
+    @property
+    def settings(self) -> Settings:
+        return self._settings
 
     @property
     def messages(self) -> tuple[Message]:

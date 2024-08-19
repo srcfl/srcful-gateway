@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from server.blackboard import BlackBoard
+from server.settings import Settings
 
 
 def test_create_harvest():
@@ -23,7 +24,7 @@ def test_inverter_terminated():
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
-    assert ret is None
+    assert ret == []
 
 
 def test_execute_harvest():
@@ -136,24 +137,31 @@ def test_adaptive_poll():
     assert t.backoff_time == 230400.0
 
 
+def _create_mock_bb():
+    mock_bb = Mock()
+    mock_bb.time_ms.return_value = 1000
+    mock_bb.settings = Settings()
+    mock_bb.settings.harvest.add_endpoint("http://localhost:8080")
+    return mock_bb
+
 def test_execute_harvest_no_transport():
     mock_inverter = Mock()
     mock_inverter.is_terminated.return_value = False
     registers = [{"1": 1717 + x} for x in range(10)]
 
-    mock_bb = Mock()
-    mock_bb.time_ms.return_value = 1000
+    mock_bb = _create_mock_bb()
 
     t = harvest.Harvest(0, mock_bb, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
 
     for i in range(len(registers)):
         mock_inverter.read_harvest_data.return_value = registers[i]
-        tasks = t.execute(i)
+        t = t.execute(i)
 
     # we should now have issued a transport and the barn should be empty
-    assert len(tasks) == 2
+    assert len(t) == 2
 
-    transport = tasks[0] if type(tasks[0]) is harvestTransport.HarvestTransport else tasks[1]
+    transport = t[0] if type(t[0]) is harvestTransport.HarvestTransport else t[1]
+    t = t[0] if type(t[0]) is harvest.Harvest else t[1]
 
     assert type(transport) is harvestTransport.HarvestTransport
 
@@ -166,8 +174,8 @@ def test_execute_harvest_incremental_backoff_increasing():
     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
     mock_inverter.is_terminated.return_value = False
 
-    mock_bb = Mock()
-    mock_bb.time_ms.return_value = 1000
+    mock_bb = _create_mock_bb()
+
 
     t = harvest.Harvest(0, mock_bb, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
 
@@ -186,8 +194,7 @@ def test_execute_harvest_incremental_backoff_reset():
     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
     mock_inverter.is_terminated.return_value = False
     
-    mock_bb = Mock()
-    mock_bb.time_ms.return_value = 1000
+    mock_bb = _create_mock_bb()
 
     t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
 
@@ -206,8 +213,7 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
     mock_inverter.is_terminated.return_value = False
     
-    mock_bb = Mock()
-    mock_bb.time_ms.return_value = 1000
+    mock_bb = _create_mock_bb()
 
     t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
 
@@ -230,12 +236,12 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     mock_inverter.is_terminated.return_value = True
 
     # make sure we get nothing as the barn is empty
-    assert t.execute(17) is None
+    assert t.execute(17) == []
 
     # Test that the execute method returns a HarvestTransport object when the has some data
     t.barn[17] = {"1": 1717}
     ret = t.execute(17)
-    assert type(ret) is harvestTransport.HarvestTransport
+    assert type(ret[0]) is harvestTransport.HarvestTransport
 
 def test_max_backoftime_leq_than_max():
     registers = [{"1": 1717 + x} for x in range(10)]
@@ -243,7 +249,7 @@ def test_max_backoftime_leq_than_max():
     mock_inverter.read_harvest_data.return_value = registers[0]
     mock_inverter.is_terminated.return_value = False
     
-    mock_bb = Mock()
+    mock_bb = _create_mock_bb()
     mock_bb.time_ms.return_value = 999999999999999999
 
     t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())

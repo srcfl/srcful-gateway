@@ -10,6 +10,8 @@ def test_blackboard():
     assert bb is not None
     assert bb.inverters is not None
     assert bb.inverters.lst is not None
+    assert bb.settings is not None
+    assert len(bb.settings.harvest.endpoints) > 0
 
 def test_blackboard_get_version():
     bb = BlackBoard()
