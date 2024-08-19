@@ -1,8 +1,22 @@
 import json
 
 class Settings:
+            
+    @property
+    def SETTINGS(self):
+        return "settings"
+    
+    
 
     class Harvest:
+
+        @property
+        def HARVEST(self):
+            return "harvest"
+        
+        @property
+        def ENDPOINTS(self):
+            return "endpoints"
 
         def __init__(self):
             self._endpoints = []
@@ -18,9 +32,7 @@ class Settings:
 
         @property
         def endpoints(self):
-            # return a copy of the list
             return self._endpoints.copy()
-
 
     def __init__(self):
         self._harvest = self.Harvest()
@@ -30,12 +42,17 @@ class Settings:
         return self._harvest
 
     def to_json(self):
-        dict = {'settings': {'harvest': {'endpoints': self.harvest._endpoints}}}
+        dict = {
+            self.SETTINGS: {
+                self.harvest.HARVEST: {
+                    self.harvest.ENDPOINTS: self.harvest._endpoints
+                }
+            }
+        }
         return json.dumps(dict, indent=4)
 
     def from_json(self, json_str: str):
         dict = json.loads(json_str)
         self.harvest.clear_endpoints()
-        for endpoint in dict['settings']['harvest']['endpoints']:
+        for endpoint in dict[self.SETTINGS][self.harvest.HARVEST][self.harvest.ENDPOINTS]:
             self.harvest.add_endpoint(endpoint)
-

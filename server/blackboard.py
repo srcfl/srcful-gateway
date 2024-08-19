@@ -36,7 +36,7 @@ class BlackBoard:
         self._tasks = []
         self._chip_death_count = 0
         self._settings = Settings()
-        self._settings.harvest.add_endpoint("http://localhost:8080")
+        self._settings.harvest.add_endpoint("https://testnet.srcful.dev/gw/data/")
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
