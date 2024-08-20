@@ -50,6 +50,7 @@ def request_handler_factory(bb: BlackBoard):
                 "inverter/modbus": handler.post.modbus.Handler(),
                 "logger": handler.post.logger.Handler(),
                 "echo": handler.post.echo.Handler(),
+                "settings": handler.post.settings.Handler(),
             }
 
             self.api_delete_dict = {

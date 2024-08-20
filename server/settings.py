@@ -1,4 +1,7 @@
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Settings:
             
@@ -52,6 +55,7 @@ class Settings:
         return json.dumps(dict, indent=4)
 
     def from_json(self, json_str: str):
+        logger.info(f"Settings.from_json: {json_str}")
         dict = json.loads(json_str)
         self.harvest.clear_endpoints()
         for endpoint in dict[self.SETTINGS][self.harvest.HARVEST][self.harvest.ENDPOINTS]:
