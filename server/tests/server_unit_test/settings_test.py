@@ -1,6 +1,9 @@
 import pytest
 import json
-from server.settings import Settings
+import time
+from server.settings import Settings, DebouncedMonitorBase
+from unittest.mock import Mock, patch
+
 
 @pytest.fixture
 def settings():
@@ -199,3 +202,72 @@ def test_listener_called_on_clear(settings):
     called = False  # Reset flag
     settings.harvest.clear_endpoints()
     assert called
+
+class TestMonitor(DebouncedMonitorBase):
+    def __init__(self, debounce_delay: float = 0.1):
+        super().__init__(debounce_delay)
+        self.action_performed = False
+
+    def _perform_action(self):
+        self.action_performed = True
+
+@pytest.fixture
+def test_monitor():
+    return TestMonitor()
+
+def test_debounce_action_called(test_monitor):
+    test_monitor.on_change()
+    time.sleep(0.2)  # Wait for debounce timer to expire
+    assert test_monitor.action_performed
+
+def test_debounce_action_not_called_immediately(test_monitor):
+    test_monitor.on_change()
+    assert not test_monitor.action_performed
+
+def test_multiple_changes_result_in_single_action(test_monitor):
+    for _ in range(5):
+        test_monitor.on_change()
+        time.sleep(0.05)  # Wait less than debounce delay between changes
+    
+    time.sleep(0.2)  # Wait for debounce timer to expire
+    assert test_monitor.action_performed
+    
+    # Reset and wait to ensure no more actions are performed
+    test_monitor.action_performed = False
+    time.sleep(0.2)
+    assert not test_monitor.action_performed
+
+def test_changes_after_action_trigger_new_action(test_monitor):
+    test_monitor.on_change()
+    time.sleep(0.2)  # Wait for first action to be performed
+    assert test_monitor.action_performed
+
+    test_monitor.action_performed = False
+    test_monitor.on_change()
+    time.sleep(0.2)  # Wait for second action to be performed
+    assert test_monitor.action_performed
+
+@pytest.mark.parametrize("debounce_delay", [0.1, 0.5, 1.0])
+def test_custom_debounce_delay(debounce_delay):
+    monitor = TestMonitor(debounce_delay)
+    monitor.on_change()
+    time.sleep(debounce_delay - 0.05)  # Wait slightly less than debounce delay
+    assert not monitor.action_performed
+    time.sleep(0.1)  # Wait a bit more to exceed debounce delay
+    assert monitor.action_performed
+
+def test_concurrent_changes(test_monitor):
+    with patch('threading.Timer') as mock_timer:
+        for _ in range(10):
+            test_monitor.on_change()
+        
+        # Check that Timer was called 10 times
+        assert mock_timer.call_count == 10
+        
+        # Check that cancel was called 9 times (not called for the first timer)
+        assert sum(1 for call in mock_timer.mock_calls if call[0] == '().cancel') == 9
+
+
+def test_abstract_method_not_implemented():
+    with pytest.raises(TypeError, match="Can't instantiate abstract class"):
+        DebouncedMonitorBase()

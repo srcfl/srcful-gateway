@@ -1,8 +1,41 @@
 import json
 import logging
+import threading
 from typing import Callable, List
 
+from abc import ABC, abstractmethod
+from typing import Optional
+
 logger = logging.getLogger(__name__)
+
+
+class DebouncedMonitorBase(ABC):
+    def __init__(self, debounce_delay: float = 1.0):
+        self.debounce_delay = debounce_delay
+        self._debounce_timer: Optional[threading.Timer] = None
+        self._lock = threading.Lock()
+
+    def debounce_action(self):
+        with self._lock:
+            if self._debounce_timer:
+                self._debounce_timer.cancel()
+            self._debounce_timer = threading.Timer(self.debounce_delay, self._perform_action)
+            self._debounce_timer.start()
+
+    @abstractmethod
+    def _perform_action(self):
+        """
+        This method should be overridden by subclasses to define the action
+        to be performed after the debounce delay.
+        """
+        pass
+
+    def on_change(self):
+        """
+        This method should be called whenever a change occurs that needs to trigger the debounced action.
+        """
+        logger.info("Change detected")
+        self.debounce_action()
 
 class Observable:
     def __init__(self):
@@ -66,7 +99,10 @@ class Settings(Observable):
     def harvest(self) -> Harvest:
         return self._harvest
 
-    def to_json(self):
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict, indent=4)
+
+    def to_dict(self) -> dict:
         dict = {
             self.SETTINGS: {
                 self.harvest.HARVEST: {
@@ -74,7 +110,8 @@ class Settings(Observable):
                 }
             }
         }
-        return json.dumps(dict, indent=4)
+        return dict
+
 
     def from_json(self, json_str: str):
         logger.info(f"Settings.from_json: {json_str}")

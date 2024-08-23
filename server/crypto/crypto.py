@@ -182,7 +182,7 @@ class Chip:
         return urlsafe_b64encode(data).rstrip(b"=")
     
     @staticmethod
-    def jwtlify(data):
+    def jwtlify(data:dict) -> bytes:
         return Chip.base64_url_encode(json.dumps(data).encode("utf-8")).decode("utf-8")
 
     @staticmethod

@@ -3,7 +3,7 @@ import time
 import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
-from server.settings import Settings
+from server.settings import Settings, DebouncedMonitorBase
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,6 +37,20 @@ class BlackBoard:
         self._chip_death_count = 0
         self._settings = Settings()
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/")
+
+        class SettingsMonitor(DebouncedMonitorBase):
+            def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
+                super().__init__(debounce_delay)
+                self.blackboard = blackboard
+
+            def _perform_action(self):
+                logger.info("Settings change detected")
+                # TODO: Create a task to handle the settings change
+                
+        
+        self._settings_monitor = SettingsMonitor(self)
+        self.settings.add_listener(self._settings_monitor.on_change)
+        
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
