@@ -100,7 +100,7 @@ class Settings(Observable):
         return self._harvest
 
     def to_json(self) -> str:
-        return json.dumps(self.to_dict, indent=4)
+        return json.dumps(self.to_dict(), indent=4)
 
     def to_dict(self) -> dict:
         dict = {

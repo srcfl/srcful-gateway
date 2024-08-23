@@ -203,7 +203,7 @@ def test_listener_called_on_clear(settings):
     settings.harvest.clear_endpoints()
     assert called
 
-class TestMonitor(DebouncedMonitorBase):
+class TMonitor(DebouncedMonitorBase):
     def __init__(self, debounce_delay: float = 0.1):
         super().__init__(debounce_delay)
         self.action_performed = False
@@ -213,7 +213,7 @@ class TestMonitor(DebouncedMonitorBase):
 
 @pytest.fixture
 def test_monitor():
-    return TestMonitor()
+    return TMonitor()
 
 def test_debounce_action_called(test_monitor):
     test_monitor.on_change()
@@ -249,7 +249,7 @@ def test_changes_after_action_trigger_new_action(test_monitor):
 
 @pytest.mark.parametrize("debounce_delay", [0.1, 0.5, 1.0])
 def test_custom_debounce_delay(debounce_delay):
-    monitor = TestMonitor(debounce_delay)
+    monitor = TMonitor(debounce_delay)
     monitor.on_change()
     time.sleep(debounce_delay - 0.05)  # Wait slightly less than debounce delay
     assert not monitor.action_performed

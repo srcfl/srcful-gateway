@@ -115,6 +115,18 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     bootstrap = Bootstrap(bootstrap_file)
 
+    class SettingsMonitor(DebouncedMonitorBase):
+            def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
+                super().__init__(debounce_delay)
+                self.blackboard = blackboard
+
+            def _perform_action(self):
+                logger.info("Settings change detected")
+                # self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard))        
+        
+    bb._settings_monitor = SettingsMonitor(bb)
+    bb.settings.add_listener(bb._settings_monitor.on_change)
+
     bb.inverters.add_listener(bootstrap)
 
     tasks.put(StartupInfoTask(bb.time_ms(), bb))
