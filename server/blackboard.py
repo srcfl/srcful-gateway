@@ -17,7 +17,7 @@ class BlackBoard:
     Tasks can be added to the blackboard and will be executed by the main loop. This makes it possible for non Task objects to create tasks.
     """
 
-    _inverters: "BlackBoard.Inverters"
+    _ders: "BlackBoard.DERs"
     _start_time: int
     _rest_server_port: int
     _rest_server_ip: str
@@ -26,7 +26,7 @@ class BlackBoard:
     _chip_death_count: int
 
     def __init__(self):
-        self._inverters = BlackBoard.Inverters()
+        self._ders = BlackBoard.DERs()
         self._start_time = time.monotonic_ns()
         self._rest_server_port = 80
         self._rest_server_ip = "localhost"
@@ -121,7 +121,7 @@ class BlackBoard:
 
     @property
     def inverters(self):
-        return self._inverters
+        return self._ders
 
     @property
     def elapsed_time(self):
@@ -140,7 +140,7 @@ class BlackBoard:
     def time_ms(self):
         return time.time_ns() // 1_000_000
 
-    class Inverters:
+    class DERs:
         """Observable list of inverters"""
 
         def __init__(self):

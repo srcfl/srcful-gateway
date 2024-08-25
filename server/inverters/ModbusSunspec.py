@@ -1,6 +1,10 @@
 import sunspec2.modbus.client as client
 from typing_extensions import TypeAlias
 from .ICom import ICom
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class ModbusSunspec(ICom):
     """
@@ -20,9 +24,14 @@ class ModbusSunspec(ICom):
         self.slave_id = setup[2]
         self.client = None
         
-    def connect(self) -> None:
+    def connect(self) -> bool:
         self.client = client.SunSpecModbusClientDeviceTCP(slave_id=self.slave_id, ipaddr=self.host, ipport=self.port)
         self.client.scan()
+        # Print connection details and models 
+        logger.info("Connected to %s:%s", self.host, self.port)
+        logger.info("Models: %s", self.client.models)
+        logger.info("Num of models: %s", len(self.client.models))
+        return len(self.client.models) > 0
         
     def disconnect(self) -> None:
         self.client.disconnect()
