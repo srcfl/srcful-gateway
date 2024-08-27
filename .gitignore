@@ -11,7 +11,7 @@ node_modules
 *.pem
 *.crt
 *.key
-
+*.env
 .vscode
 
 .coverage
