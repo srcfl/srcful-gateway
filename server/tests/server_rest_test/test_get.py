@@ -1,5 +1,6 @@
 import requests
 import settings
+import json
 
 # these tests are meant to be run against the local server
 # you would also need an inverter (or the simulator) running
@@ -240,6 +241,22 @@ def test_notification_list():
     assert response.headers["content-type"] == "application/json"
     
     assert "ids" in response.json()
+
+def test_get_settings():
+    url = settings.API_URL + "settings"
+    headers = {"user-agent": "vscode-restclient"}
+
+    response = requests.get(url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+
+    # Check that the response is a valid JSON object
+    try:
+        json_response = response.json()
+        assert isinstance(json_response, dict)
+    except json.JSONDecodeError:
+        assert False, "Response is not valid JSON"
 
 def test_notification_message():
 

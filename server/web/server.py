@@ -38,6 +38,7 @@ def request_handler_factory(bb: BlackBoard):
                 "supported": handler.get.supported.Handler(),
                 "notification": handler.get.notification.ListHandler(),
                 "notification/{id}": handler.get.notification.MessageHandler(),
+                "settings": handler.get.settings.Handler(),
             }
 
             self.api_post_dict = {
@@ -49,6 +50,7 @@ def request_handler_factory(bb: BlackBoard):
                 "inverter/modbus": handler.post.modbus.Handler(),
                 "logger": handler.post.logger.Handler(),
                 "echo": handler.post.echo.Handler(),
+                "settings": handler.post.settings.Handler(),
             }
 
             self.api_delete_dict = {

@@ -1,5 +1,6 @@
 
 import logging
+from typing import List
 from server.inverters.inverter import Inverter
 from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
@@ -28,7 +29,7 @@ class Harvest(Task):
 
         if self.inverter.is_terminated():
             log.info("Inverter is terminated make the final transport if there is anything in the barn")
-            return self._create_transport(1, event_time=event_time)
+            return self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
         try:
             harvest = self.inverter.read_harvest_data(force_verbose=len(self.barn) == 0)
             end_time = self.bb.time_ms()
@@ -68,14 +69,18 @@ class Harvest(Task):
         self.time = event_time + self.backoff_time
 
         # check if it is time to transport the harvest
-        transport = self._create_transport(10, event_time=event_time + elapsed_time_ms * 2)
-        if (transport):
-            return [self, transport]
+        transport = self._create_transport(10, event_time + elapsed_time_ms * 2, self.bb.settings.harvest._endpoints)
+        if len(transport) > 0:
+            return [self] + transport
         return self
 
-    def _create_transport(self, limit: int, event_time: int):
+    def _create_transport(self, limit: int, event_time: int, endpoints: list[str]) ->List[Task]:
+        ret = []
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
-            transport = self.transport_factory(event_time + 100, self.bb, self.barn, self.inverter)
+            for endpoint in endpoints:
+                log.info("Creating transport for %s", endpoint)
+                transport = self.transport_factory(event_time + 100, self.bb, self.barn, self.inverter)
+                transport.post_url = endpoint
             self.barn = {}
-            return transport
-        return None
+            ret.append(transport)
+        return ret

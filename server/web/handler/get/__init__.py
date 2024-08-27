@@ -11,4 +11,5 @@ from . import wifi
 from . import version
 from . import supported
 from . import notification
+from . import settings
 
