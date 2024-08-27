@@ -34,8 +34,8 @@ except Exception:
         atcab_read_serial_number,
         atcab_get_pubkey,
     )
-    from .hazmat_mock import default_backend
-    from .hazmat_mock import hashes
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import hashes
 
     log.info("Using mock cryptoauthlib and hazmat")
 
