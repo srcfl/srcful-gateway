@@ -39,7 +39,7 @@ def get_test_private_key_serial():
         raise ValueError("TEST_PRIVATE_KEY variable not set in test_config.env")
     return load_private_key_from_hex(private_key_hex), bytes.fromhex(env_vars.get('TEST_SERIAL'))
 
-class MockCryptoChip:
+class MockCryptoChip(crypto.Chip):
     def __init__(self):
         
 
@@ -111,4 +111,4 @@ def patched_chip(mock_crypto_chip):
 
         mock_get_pubkey.side_effect = get_pubkey_side_effect
 
-        yield crypto.Chip()
+        yield MockCryptoChip()

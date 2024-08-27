@@ -26,7 +26,7 @@ def test_make_the_call_with_task(blackboard):
     assert t.reply.status_code == 200
 
 def test_get_settings_with_mock_chip(blackboard, patched_chip):
-    with patch('server.crypto.crypto.Chip', return_value=patched_chip):
+    with patch('server.crypto.crypto.Chip.__new__', return_value=patched_chip):
         t = GetSettingsTask(0, blackboard)
         t.execute(0)
 

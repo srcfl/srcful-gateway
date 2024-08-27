@@ -23,7 +23,7 @@ class SaveSettingsTask(SrcfulAPICallTask):
         message = crypto.Chip.jwtlify(self.settings.to_dict())
         with crypto.Chip() as chip:
             header = self._build_header(chip.get_serial_number().hex())
-            message = message + "." + header
+            message = header + "." + message
             signature = chip.get_signature(message)
             message = message + "." + crypto.Chip.base64_url_encode(signature).decode("utf-8")
             return message
@@ -45,14 +45,14 @@ class SaveSettingsTask(SrcfulAPICallTask):
         m = """
             mutation SetGatewayConfigurationWithDeviceJWT {
                 setConfiguration(deviceConfigurationInputType: {
-                    jwt: ""
+                    jwt: $jwt
                 }) {
                     success
                 }
                 }
             """
 
-        m = m.replace("$jwt", jwt)
+        m = m.replace("$jwt", f'"{jwt}"')
 
 
         log.info("Preparing settings with jwt %s", jwt)
