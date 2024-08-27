@@ -1,6 +1,7 @@
 import requests
 import logging
 import time
+import base64
 
 from datetime import datetime, timezone
 
@@ -8,7 +9,7 @@ import server.crypto.crypto as crypto
 from server.blackboard import BlackBoard
 
 from .srcfulAPICallTask import SrcfulAPICallTask
-
+from server.settings import ChangeSource
 log = logging.getLogger(__name__)
 
 
@@ -25,10 +26,12 @@ class GetSettingsTask(SrcfulAPICallTask):
         unix_timestamp = int(time.time())
 
         # Convert Unix timestamp to datetime object
+
         dt = datetime.fromtimestamp(unix_timestamp, tz=timezone.utc)
 
         # Format datetime as ISO 8601 string
-        iso_timestamp = dt.isoformat().replace('+00:00', 'Z')
+        # should be something like 2024-08-26T13:02:00
+        iso_timestamp = dt.isoformat().replace('+00:00', '')
 
         with crypto.Chip() as chip:
             serial = chip.get_serial_number().hex()
@@ -40,10 +43,10 @@ class GetSettingsTask(SrcfulAPICallTask):
             {
                 gatewayConfiguration {
                     configuration(deviceAuth: {
-                    id: $serial,
-                    timestamp: $timestamp,
-                    signedIdAndTimestamp: $signature,
-                    subKey: "settings"
+                        id: $serial,
+                        timestamp: $timestamp,
+                        signedIdAndTimestamp: $signature,
+                        subKey: "settings"
                     }) {
                     data
                     }
@@ -64,3 +67,4 @@ class GetSettingsTask(SrcfulAPICallTask):
     def _on_200(self, reply: requests.Response):
         
         log.info("Got settings: %s", reply.json()["data"])
+        self.bb.settings.update_from_dict(reply.json()["data"]["gatewayConfiguration"]["configuration"], ChangeSource.BACKEND)

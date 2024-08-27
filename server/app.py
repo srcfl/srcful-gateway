@@ -11,7 +11,8 @@ from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.startupInfoTask import StartupInfoTask
-# from server.tasks.cryptoReviveTask import CryptoReviveTask
+from server.settings import DebouncedMonitorBase
+from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.bootstrap import Bootstrap
 
 
@@ -121,8 +122,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 self.blackboard = blackboard
 
             def _perform_action(self):
-                logger.info("Settings change detected")
-                # self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard))        
+                logger.info("Settings change detected, scheduling a save to backend")
+                self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard)) 
         
     bb._settings_monitor = SettingsMonitor(bb)
     bb.settings.add_listener(bb._settings_monitor.on_change)

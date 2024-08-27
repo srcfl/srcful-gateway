@@ -8,16 +8,12 @@ from server.settings import Settings
 
 import server.crypto.crypto as crypto
 
+from server.tests.server_unit_test.crypto.mockChip import patched_chip, mock_crypto_chip
+
 
 @pytest.fixture
 def blackboard():
     return BlackBoard()
-
-@pytest.fixture
-def settings():
-    ret = Settings()
-    ret.harvest.add_endpoint("https://example.com")
-
 
 def test_make_the_call_with_task(blackboard):
     with patch("server.crypto.crypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
@@ -28,3 +24,11 @@ def test_make_the_call_with_task(blackboard):
                   t.execute(0)
 
     assert t.reply.status_code == 200
+
+def test_get_settings_with_mock_chip(blackboard, patched_chip):
+    with patch('server.crypto.crypto.Chip', return_value=patched_chip):
+        t = GetSettingsTask(0, blackboard)
+        t.execute(0)
+
+    assert t.reply.status_code == 200
+    assert "errors" not in t.reply.json()

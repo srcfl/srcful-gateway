@@ -5,7 +5,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from server.blackboard import BlackBoard
-from server.settings import Settings
+from server.settings import Settings, ChangeSource
+
 
 
 def test_create_harvest():
@@ -141,7 +142,7 @@ def _create_mock_bb():
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
     mock_bb.settings = Settings()
-    mock_bb.settings.harvest.add_endpoint("http://localhost:8080")
+    mock_bb.settings.harvest.add_endpoint("http://localhost:8080", ChangeSource.LOCAL)
     return mock_bb
 
 def test_execute_harvest_no_transport():
