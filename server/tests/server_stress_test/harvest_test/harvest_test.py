@@ -16,7 +16,7 @@ def test_execute_harvest_incremental_backoff_server_does_not_reply():
     server_thread.start()
 
     inverter = ModbusTCP(("localhost", 5021, "solaredge", 1))
-    inverter.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
+    inverter._open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
 
     # this inverter allows for connecting and one harvest (3 reads) read before it disconnects
 
@@ -31,11 +31,11 @@ def test_execute_harvest_incremental_backoff_server_does_not_reply():
     # we should not have been able to read 100 times before the backoff time is maxed out
     assert i < 100
 
-    assert inverter.is_terminated() is False
+    assert inverter._is_terminated() is False
 
     # the next call therminates the inverter
     ret = t.execute(17)
-    assert inverter.is_terminated() is True
+    assert inverter._is_terminated() is True
 
 
 
@@ -46,7 +46,7 @@ def test_execute_harvest_server_disconnects():
     server_thread.start()
 
     inverter = ModbusTCP(("localhost", 5022, "solaredge", 1))
-    inverter.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
+    inverter._open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
 
     server.stop_server()
     server_thread.join(1)
@@ -74,7 +74,7 @@ def test_execute_harvest_server_disconnects():
 
     # this call should open the connection again
     ret = t.execute(bb.time_ms())
-    assert inverter.is_open() is True
+    assert inverter._is_open() is True
 
     # we are now reconnected and should be able to read once again
     ret = t.execute(bb.time_ms())

@@ -2,7 +2,7 @@ from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
 from unittest.mock import MagicMock, patch
-from server.inverters.SolarmanTCP import SolarmanTCP
+from server.inverters.ModbusSolarman import ModbusSolarman
 import pytest
 
 def test_execute_invertert_added():

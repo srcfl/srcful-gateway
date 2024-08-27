@@ -22,7 +22,7 @@ def test_post_create_inverter_tcp():
     task = tasks[0]
     assert isinstance(task, OpenInverterTask)
 
-    assert task.inverter.get_config()[1:] == (
+    assert task.der._get_config()[1:] == (
         conf["ip"],
         conf["port"],
         conf["type"],
@@ -55,7 +55,7 @@ def test_post_create_inverter_rtu():
     task = tasks[0]
     assert isinstance(task, OpenInverterTask)
 
-    assert task.inverter.get_config()[1:] == (
+    assert task.der._get_config()[1:] == (
         conf["port"],
         conf["baudrate"],
         conf["bytesize"],

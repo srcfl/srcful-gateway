@@ -3,7 +3,7 @@ import sys
 from unittest.mock import MagicMock, patch
 from server.inverters.ModbusTCP import ModbusTCP
 from server.inverters.ModbusRTU import ModbusRTU 
-from server.inverters.SolarmanTCP import SolarmanTCP
+from server.inverters.ModbusSolarman import ModbusSolarman
 from server.inverters.supported_inverters.profiles import InverterProfiles
 from pymodbus.exceptions import ModbusException, ModbusIOException, ConnectionException
 
@@ -22,12 +22,12 @@ def get_inverters():
     # We open to make the client attribute available, then
     # we mock the socket attribute to make the is_open() method return True.
     # This would normally be true if a real connection was established.
-    inv_tcp.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
+    inv_tcp._open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
     inv_tcp.client.socket = MagicMock()
 
     if sys.platform != "win32":
         inv_rtu = ModbusRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, "LQT40S", 1))
-        inv_rtu.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
+        inv_rtu._open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
         inv_rtu.client.socket = MagicMock()
 
         return [inv_tcp, inv_rtu]
@@ -35,30 +35,30 @@ def get_inverters():
         return [inv_tcp]
 
 def test_solarmanv5_inverter():
-    inv_solarmanv5 = SolarmanTCP(("localhost", 123456789, 8899, "DEYE_HYRID", 1, False))
+    inv_solarmanv5 = ModbusSolarman(("localhost", 123456789, 8899, "DEYE_HYRID", 1, False))
     
     
     # Expect that NoSocketAvailableError is raised 
     with pytest.raises(Exception):
-        inv_solarmanv5.open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
+        inv_solarmanv5._open(reconnect_delay=0, retries=0, timeout=0.1, reconnect_delay_max=0)
 
     inv_solarmanv5.client = MagicMock()
 
     inv_solarmanv5.client.sock = MagicMock()
 
-    assert inv_solarmanv5.is_open() == True
+    assert inv_solarmanv5._is_open() == True
 
-    inv_solarmanv5.terminate()
+    inv_solarmanv5._terminate()
 
-    assert inv_solarmanv5.is_terminated() == True
+    assert inv_solarmanv5._is_terminated() == True
 
-    new_inverter = inv_solarmanv5.clone()
+    new_inverter = inv_solarmanv5._clone()
 
-    assert new_inverter.get_host() == "localhost"
+    assert new_inverter._get_host() == "localhost"
 
-    assert new_inverter.get_port() == 8899
+    assert new_inverter._get_port() == 8899
 
-    assert new_inverter.get_config_dict() ==  {
+    assert new_inverter._get_config_dict() ==  {
             "connection": "SOLARMAN",
             "type": "DEYE_HYRID",
             "serial": 123456789,
@@ -74,8 +74,8 @@ def test_sma_inverter():
     """
     inv = ModbusTCP(("localhost", 8081, "SMA", 1))
 
-    assert inv.get_type() == "SMA"
-    assert inv.get_address() == 1
+    assert inv._get_type() == "SMA"
+    assert inv._get_address() == 1
 
     registers = inv.profile.get_registers_verbose()
 
@@ -113,7 +113,7 @@ def test_get_tcp_config():
     """
     inv = ModbusTCP(("localhost", 8081, "HUAWEI", 1))
 
-    assert inv.get_config_dict() == {
+    assert inv._get_config_dict() == {
         "connection": "TCP",
         "type": "HUAWEI",
         "address": 1,
@@ -127,7 +127,7 @@ def test_get_rt_config():
     """
     inv = ModbusRTU(("/dev/ttyUSB0", 9600, 8, "N", 1, "LQT40S", 1))
 
-    assert inv.get_config_dict() == { 
+    assert inv._get_config_dict() == { 
         "connection": "RTU",
         "type": "LQT40S",
         "address": 1,

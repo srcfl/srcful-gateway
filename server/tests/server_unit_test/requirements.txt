@@ -1,0 +1,6 @@
+pymodbus == 3.6.3
+requests
+base58
+typing_extensions
+pysolarmanv5
+pyfakefs

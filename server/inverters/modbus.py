@@ -1,54 +1,58 @@
 import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from .supported_inverters.profiles import InverterProfiles, InverterProfile
-
+from .ICom import ICom
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-class Inverter:
+class Modbus(ICom):
     """Base class for all inverters."""
 
     def __init__(self):
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
-        self.profile = InverterProfiles().get(self.get_type())
+        self.profile: InverterProfile = InverterProfiles().get(self._get_type())
+        
+    def _get_type(self) -> str:
+        """Returns the inverter's type."""
+        raise NotImplementedError("Subclass must implement abstract method")
 
-    def open(self) -> bool:
+    def _open(self) -> bool:
         """Opens the Modbus connection."""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         """
         Returns True if the inverter is open.
         Reason for checking the socket is because that is that ModbusTcpClient and 
         ModbusSerialClient uses different methods to check if the connection is open, 
         but they both have a socket attribute that is None if the connection is closed, 
-        so we use that to check if the connection is open. 
+        so we use that to check if the connection is open.
         """
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def close(self) -> None:
+    def _close(self) -> None:
         """Closes the Modbus connection."""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def terminate(self) -> None:
+    def _terminate(self) -> None:
         """Terminates the inverter."""
         raise NotImplementedError("Subclass must implement abstract method")
     
-    def is_terminated(self) -> bool:
+    def _is_terminated(self) -> bool:
         """Returns True if the inverter is terminated."""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def clone(self, host: str = None):
+    def _clone(self, host: str = None):
         """Returns a clone of the inverter. This clone will only have the configuration and not the connection."""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def get_config(self) -> tuple:
+    def _get_config(self) -> tuple:
         """Returns the inverter's setup as a tuple."""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def get_config_dict(self) -> dict:
+    def _get_config_dict(self) -> dict:
         """Returns the inverter's setup as a dictionary."""
         raise NotImplementedError("Subclass must implement abstract method")
 
@@ -56,12 +60,12 @@ class Inverter:
         """Creates the Modbus client."""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def get_backend_type(self) -> str:
+    def _get_backend_type(self) -> str:
         """Returns the inverter's backend type"""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def read_harvest_data(self, force_verbose=False) -> dict:
-        if self.is_terminated():
+    def _read_harvest_data(self, force_verbose) -> dict:
+        if self._is_terminated():
             raise Exception("readHarvestData() - inverter is terminated")
 
         regs = []
@@ -79,7 +83,7 @@ class Inverter:
             scan_start = entry.start_register
             scan_range = entry.offset
 
-            r = self.populate_registers(scan_start, scan_range)
+            r = self._populate_registers(scan_start, scan_range)
             # log.debug("OK - Populating Registers: %s", str(r))
             v = self.read_registers(operation, scan_start, scan_range)
 
@@ -96,11 +100,15 @@ class Inverter:
         else:
             raise Exception("readHarvestData() - res is empty")
 
-    def populate_registers(self, scan_start, scan_range) -> list:
+    def _populate_registers(self, scan_start, scan_range) -> list:
         """
         Populate a list of registers from a start address and a range
         """
         return [x for x in range(scan_start, scan_start + scan_range, 1)]
+    
+    def _read_registers(self) -> list:
+        """Reads a range of registers from a start address."""
+        raise NotImplementedError("Subclass must implement abstract method")
 
     def read_registers(self, operation, scan_start, scan_range) -> list:
         """
@@ -125,7 +133,29 @@ class Inverter:
     def write_registers(self) -> bool:
         """Writes a range of registers from a start address."""
         raise NotImplementedError("Subclass must implement abstract method")
+
+    # ICom methods
     
-    def _read_registers(self) -> list:
-        """Reads a range of registers from a start address."""
-        raise NotImplementedError("Subclass must implement abstract method")
+    def connect(self) -> bool:
+        return self._open()
+    
+    def disconnect(self) -> None:
+        return self._terminate()
+    
+    def reconnect(self) -> bool:
+        return self._close() and self._open()
+    
+    def is_open(self) -> bool:
+        return self._is_open()
+    
+    def read_harvest_data(self, force_verbose) -> dict:
+        return self._read_harvest_data(force_verbose)
+    
+    def get_harvest_data_type(self) -> str:
+        return self.data_type
+    
+    def get_config(self) -> dict:
+        return self._get_config_dict()
+    
+    def get_profile(self) -> InverterProfile:
+        return self.profile

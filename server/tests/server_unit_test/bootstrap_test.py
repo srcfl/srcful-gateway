@@ -1,7 +1,7 @@
 import os
 from pyfakefs.fake_filesystem_unittest import Patcher
 import server.bootstrap as bootstrap
-from server.inverters.inverter import Inverter
+from server.inverters.modbus import Modbus
 from unittest.mock import MagicMock
 import logging
 
@@ -52,7 +52,7 @@ def test_booststrap_get_tasks_nofile():
 def test_booststrap_remove_inverter():
     inverter = MagicMock()
     exp = ("TCP", "localhost", 502, "SOLAREDGE", 4)
-    assert "get_config" in dir(Inverter)
+    assert "get_config" in dir(Modbus)
     inverter.get_config.return_value = exp
 
     b = bootstrap.Bootstrap('')
@@ -71,7 +71,7 @@ def test_bootstrap_add_inverter():
         # exp = ("RTU", "/dev/ttyS0", 9600, 8, 'N', 1, "lqt40s", 1)
         inverter = MagicMock()
 
-        assert "get_config" in dir(Inverter)
+        assert "get_config" in dir(Modbus)
         inverter.get_config.return_value = exp
 
         b.add_inverter(inverter)
