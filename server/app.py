@@ -137,7 +137,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     tasks.put(StartupInfoTask(bb.time_ms(), bb))
 
     # put some initial tasks in the queue
-    tasks.put(GetSettingsTask(bb.time_ms() + 1000, bb, web_server))
+    tasks.put(GetSettingsTask(bb.time_ms() + 1000, bb))
 
     if inverter is not None:
         tasks.put(OpenInverterTask(bb.time_ms(), bb, ModbusTCP(inverter)))
