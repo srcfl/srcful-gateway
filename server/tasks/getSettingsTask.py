@@ -1,7 +1,8 @@
 import requests
 import logging
 import time
-import base64
+from typing import List, Union, Tuple
+from .itask import ITask
 
 from datetime import datetime, timezone
 
@@ -11,6 +12,8 @@ from server.blackboard import BlackBoard
 from .srcfulAPICallTask import SrcfulAPICallTask
 from server.settings import ChangeSource
 log = logging.getLogger(__name__)
+
+from server.tasks.saveSettingsTask import SaveSettingsTask
 
 
 class GetSettingsTask(SrcfulAPICallTask):
@@ -61,10 +64,19 @@ class GetSettingsTask(SrcfulAPICallTask):
         return {"query": q}
 
 
-    def _on_error(self, reply: requests.Response) -> int:
+    def _on_error(self, reply: requests.Response) -> Union[int, Tuple[int, Union[List[ITask], ITask, None]]]:
         return 0
 
-    def _on_200(self, reply: requests.Response):
+    def _on_200(self, reply: requests.Response) -> Union[List[ITask], ITask, None]:
+        json_data = reply.json()
         
         log.info("Got settings: %s", reply.json()["data"])
-        self.bb.settings.update_from_dict(reply.json()["data"]["gatewayConfiguration"]["configuration"], ChangeSource.BACKEND)
+        if json_data["data"] is not None and "gatewayConfiguration" in json_data["data"] and "configuration" in json_data["data"]["gatewayConfiguration"]:
+            if json_data["data"]["gatewayConfiguration"]["configuration"] is not None:
+                self.bb.settings.update_from_dict(json_data["data"]["gatewayConfiguration"]["configuration"], ChangeSource.BACKEND)
+            else:
+                log.error("Settings are None")
+                # save the default settings
+                return SaveSettingsTask(1017, self.bb)
+        else:
+            log.error("Wrong json format: %s", json_data)
