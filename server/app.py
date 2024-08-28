@@ -11,7 +11,7 @@ from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.startupInfoTask import StartupInfoTask
-from server.settings import DebouncedMonitorBase
+from server.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.bootstrap import Bootstrap
 
@@ -100,7 +100,7 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     scheduler.main_loop()
 
 
-def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None):
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None): 
 
     bb = BlackBoard()
     HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
@@ -121,9 +121,12 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 super().__init__(debounce_delay)
                 self.blackboard = blackboard
 
-            def _perform_action(self):
-                logger.info("Settings change detected, scheduling a save to backend")
-                self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard)) 
+            def _perform_action(self, source: ChangeSource):
+                if source != ChangeSource.BACKEND:
+                    logger.info("Settings change detected, scheduling a save to backend")
+                    self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard))
+                else:
+                    logger.info("Ignoring settings change from backend")
         
     bb._settings_monitor = SettingsMonitor(bb)
     bb.settings.add_listener(bb._settings_monitor.on_change)
