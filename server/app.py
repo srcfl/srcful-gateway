@@ -12,6 +12,7 @@ from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.startupInfoTask import StartupInfoTask
 from server.settings import DebouncedMonitorBase, ChangeSource
+from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.bootstrap import Bootstrap
 
@@ -136,6 +137,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     tasks.put(StartupInfoTask(bb.time_ms(), bb))
 
     # put some initial tasks in the queue
+    tasks.put(GetSettingsTask(bb.time_ms() + 1000, bb, web_server))
+
     if inverter is not None:
         tasks.put(OpenInverterTask(bb.time_ms(), bb, ModbusTCP(inverter)))
 
