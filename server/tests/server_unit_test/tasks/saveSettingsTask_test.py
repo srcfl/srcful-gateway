@@ -4,12 +4,11 @@ from server.tasks.saveSettingsTask import SaveSettingsTask
 from unittest.mock import Mock, patch
 
 from server.blackboard import BlackBoard
-from server.settings import Settings
+from server.settings import Settings, ChangeSource
 
 import server.crypto.crypto as crypto
 
 from server.tests.server_unit_test.crypto.mockChip import patched_chip, mock_crypto_chip
-
 
 @pytest.fixture
 def blackboard():
@@ -35,6 +34,7 @@ def test_make_the_call_with_task(blackboard):
 
 def test_get_settings_with_mock_chip(blackboard, patched_chip):
     with patch('server.crypto.crypto.Chip.__new__', return_value=patched_chip):
+        blackboard.settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
         t = SaveSettingsTask(0, blackboard)
         t.execute(0)
 
