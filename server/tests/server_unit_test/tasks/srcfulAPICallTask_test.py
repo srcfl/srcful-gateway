@@ -75,7 +75,7 @@ def test_execute_calls_post_and_handles_non_200_response():
     mock_data = {"foo": "bar"}
     mock_response = Mock()
     mock_response.status_code = 500
-    mock_on_error = Mock(return_value=1000)
+    mock_on_error = Mock(return_value=(1000))
     task = ConcreteSUT(0, {})
 
     # Mock the requests module so we can intercept the post() call
@@ -92,6 +92,36 @@ def test_execute_calls_post_and_handles_non_200_response():
         mock_on_error.assert_called_once_with(mock_response)
 
         assert result.time == 1000
+
+def test_execute_calls_post_and_handles_non_200_response_with_tasks():
+    mock_data = {"foo": "bar"}
+    mock_response = Mock()
+    mock_response.status_code = 500
+    mock_on_error = Mock(return_value=(1000, Mock()))
+    task = ConcreteSUT(0, {})
+
+    # Mock the requests module so we can intercept the post() call
+    with patch("requests.post") as mock_post:
+        mock_post.return_value = mock_response
+        task._data = Mock(return_value=mock_data)
+        task._on_error = mock_on_error
+
+        result = task.execute(0)
+        mock_post.assert_called_once_with(
+            "https://testnet.srcful.dev/gw/data/", data=mock_data, timeout=5
+        )
+
+        mock_on_error.assert_called_once_with(mock_response)
+
+        # Assert that the result is a list containing the task and the mock
+        assert isinstance(result, list)
+        assert len(result) == 2
+        mock_index = next(i for i, item in enumerate(result) if isinstance(item, Mock))
+        task_index = next(i for i, item in enumerate(result) if isinstance(item, ConcreteSUT))
+        assert mock_index != task_index
+        assert isinstance(result[mock_index], Mock)
+        assert result[task_index] == task
+
 
 
 def test_execute_handles_request_exception():
