@@ -8,7 +8,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, PrivateFormat, load_pem_private_key, NoEncryption
 import base64
 import json
-import jwt
 
 from server.crypto import crypto
 from server.tests.server_unit_test.crypto.mockChip import patched_chip, mock_crypto_chip

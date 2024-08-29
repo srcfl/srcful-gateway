@@ -55,7 +55,7 @@ def test_handle_settings_settings_are_updated(blackboard):
     new_settings.harvest.add_endpoint("https://test.com", ChangeSource.BACKEND)
 
     t = GetSettingsTask(0, blackboard)
-    ret = t._handle_settings({"data": {"gatewayConfiguration": {"configuration": {"data": new_settings.to_dict()}}}})
+    ret = t._handle_settings({"data": {"gatewayConfiguration": {"configuration": {"data": new_settings.to_json()}}}})
     assert ret is None
 
     assert blackboard.settings.harvest.endpoints == new_settings.harvest.endpoints

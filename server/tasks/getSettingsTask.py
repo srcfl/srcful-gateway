@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 
 from server.tasks.saveSettingsTask import SaveSettingsTask
 
+import json
 
 class GetSettingsTask(SrcfulAPICallTask):
     """Task to get the configuration from the server using the crypto chip"""
@@ -78,7 +79,7 @@ class GetSettingsTask(SrcfulAPICallTask):
             settings_dict = json_data["data"]["gatewayConfiguration"]["configuration"]
             if settings_dict is not None and settings_dict["data"] is not None:
                 log.info("Updating settings: %s", settings_dict)
-                self.bb.settings.update_from_dict(settings_dict["data"], ChangeSource.BACKEND)
+                self.bb.settings.update_from_dict(json.loads(settings_dict["data"]), ChangeSource.BACKEND)
             else:
                 log.error("Settings are None")
                 # save the default settings
