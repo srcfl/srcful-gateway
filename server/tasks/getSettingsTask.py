@@ -69,14 +69,19 @@ class GetSettingsTask(SrcfulAPICallTask):
 
     def _on_200(self, reply: requests.Response) -> Union[List[ITask], ITask, None]:
         json_data = reply.json()
+        return self._handle_settings(json_data)
         
-        log.info("Got settings: %s", reply.json()["data"])
-        if json_data["data"] is not None and "gatewayConfiguration" in json_data["data"] and "configuration" in json_data["data"]["gatewayConfiguration"]:
-            if json_data["data"]["gatewayConfiguration"]["configuration"] is not None:
-                self.bb.settings.update_from_dict(json_data["data"]["gatewayConfiguration"]["configuration"], ChangeSource.BACKEND)
+    def _handle_settings(self, json_data: dict):
+        log.info("Got settings: %s", json_data)
+
+        try:
+            settings_dict = json_data["data"]["gatewayConfiguration"]["configuration"]
+            if settings_dict is not None:
+                self.bb.settings.update_from_dict(settings_dict["data"], ChangeSource.BACKEND)
             else:
                 log.error("Settings are None")
                 # save the default settings
                 return SaveSettingsTask(1017, self.bb)
-        else:
+        except KeyError:
             log.error("Wrong json format: %s", json_data)
+            return None
