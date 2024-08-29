@@ -32,7 +32,8 @@ class HarvestTransport(IHarvestTransport):
     def _create_jwt(self):
         with crypto.Chip() as chip:
             try:
-                jwt = chip.build_jwt(self.barn, self.der_profile.name.lower(), 5)
+                name = ""
+                jwt = chip.build_jwt(self.barn, name, 5)
                 HarvestTransport.do_increase_chip_death_count = True
             except crypto.Chip.Error as e:
                 log.error("Error creating JWT: %s", e)
