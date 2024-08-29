@@ -76,7 +76,8 @@ class GetSettingsTask(SrcfulAPICallTask):
 
         try:
             settings_dict = json_data["data"]["gatewayConfiguration"]["configuration"]
-            if settings_dict is not None:
+            if settings_dict is not None and settings_dict["data"] is not None:
+                log.info("Updating settings: %s", settings_dict)
                 self.bb.settings.update_from_dict(settings_dict["data"], ChangeSource.BACKEND)
             else:
                 log.error("Settings are None")

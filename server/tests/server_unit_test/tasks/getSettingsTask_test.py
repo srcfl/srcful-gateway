@@ -41,7 +41,7 @@ def test_get_settings_with_mock_chip(blackboard, patched_chip):
 
 def test_handle_settings_with_none(blackboard):
     t = GetSettingsTask(0, blackboard)
-    ret = t._handle_settings({"data": {"gatewayConfiguration": {"configuration": None}}})
+    ret = t._handle_settings({'data': {'gatewayConfiguration': {'configuration': {'data': None}}}})
     assert isinstance(ret, SaveSettingsTask)
 
 def test_handle_settings_with_wrong_format(blackboard):
