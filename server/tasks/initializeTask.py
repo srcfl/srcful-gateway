@@ -1,8 +1,11 @@
 import logging
 import requests
 
+from typing import List, Union, Tuple
 import server.crypto.crypto as crypto
 from server.blackboard import BlackBoard
+from .itask import ITask
+
 
 from .srcfulAPICallTask import SrcfulAPICallTask
 
@@ -52,7 +55,7 @@ class InitializeTask(SrcfulAPICallTask):
 
         return {"query": m}
 
-    def _on_200(self, reply: requests.Response):
+    def _on_200(self, reply: requests.Response) -> Union[List[ITask], ITask, None]:
         if (
             reply.json()["data"]["gatewayInception"] is not None
             and reply.json()["data"]["gatewayInception"]["initialize"] is not None
@@ -63,6 +66,6 @@ class InitializeTask(SrcfulAPICallTask):
         else:
             self.is_initialized = False
 
-    def _on_error(self, reply: requests.Response) -> int:
+    def _on_error(self, reply: requests.Response) -> Union[int, Tuple[int, Union[List[ITask], ITask, None]]]:
         log.warning("Failed to initialize wallet %s", self.wallet)
         return 0

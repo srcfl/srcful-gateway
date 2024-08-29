@@ -12,6 +12,7 @@ node_modules
 *.crt
 *.key
 *.env
+
 .vscode
 
 .coverage

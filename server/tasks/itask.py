@@ -1,3 +1,7 @@
+from __future__ import annotations
+from typing import List, Union
+
+
 class ITask:
     """Interface for a task. A task is a unit of work that can be scheduled for execution at a given time.
     Tasks are executed synchronously, so they should not block.
@@ -29,7 +33,7 @@ class ITask:
         """Adjust the time of the task to the new time"""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def execute(self, event_time):
+    def execute(self, event_time) -> Union[List[ITask], ITask, None]:
         """execute the task, return None a single Task or a list of tasks to be added to the scheduler"""
         # throw a not implemented exception
         raise NotImplementedError("Subclass must implement abstract method")
