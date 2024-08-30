@@ -22,7 +22,7 @@ class SrcfulAPICallTask(Task, ABC):
     def __init__(self, event_time: int, bb: BlackBoard):
         super().__init__(event_time, bb)
         self.reply = None
-        self.post_url = "https://testnet.srcful.dev/gw/data/"
+        self.post_url = "https://devnet.srcful.dev/gw/data"
 
     def _json(self) -> dict:
         """override to return the json to send to the server json argument in post"""

@@ -81,7 +81,7 @@ class Bootstrap(BootstrapSaver):
 
         # example line in the file:
         # OpenInverter TCP 35.198.102.58 502 solaredge 1
-        lines = ["OpenInverter TCP 35.198.102.58 502 solaredge 1"]
+        # lines = ["OpenInverter TCP 35.198.102.58 502 solaredge 1"]
         return self._process_lines(lines, event_time, stats)
 
     def _process_lines(self, lines: list, event_time, stats):

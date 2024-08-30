@@ -153,7 +153,7 @@ class Chip:
     #         "publicKey": self.get_public_key().hex(),
     #     }
 
-    def build_header(self, inverter_model) -> dict:
+    def build_header(self, inverter_model="") -> dict:
         self.ensure_chip_initialized()
         return {
             "alg": "ES256",

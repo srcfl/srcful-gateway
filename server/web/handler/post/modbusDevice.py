@@ -35,15 +35,14 @@ class Handler(PostHandler):
         )
     def do_post(self, data: RequestData) -> tuple[int, str]:
         
-        conf = IComFactory.parse_connection_config_from_dict(data.data)
-        com = IComFactory.create_com(conf)
-        
-        der = DER(com)
-        
         try:
+            if "mode" not in data.data:
+                return 400, json.dumps({"status": "mode field is required"})
+            
             conf = IComFactory.parse_connection_config_from_dict(data.data)
             com = IComFactory.create_com(conf)
             logger.info(f"Created a Modbus {conf[0]} connection")
+            der = DER(com) 
             
             data.bb.add_task(OpenInverterTask(data.bb.time_ms() + 100, data.bb, der))
             return 200, json.dumps({"status": "ok"})    
