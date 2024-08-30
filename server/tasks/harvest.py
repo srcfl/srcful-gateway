@@ -73,17 +73,10 @@ class Harvest(Task):
             return [self] + transport
         return self
 
-    def _create_transport(self, limit: int, event_time: int, endpoints: list[str]) ->List[Task]:
+    def _create_transport(self, limit: int, event_time: int, endpoints: list[str]) -> list[Task]:
         ret = []
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
-<<<<<<< HEAD
-            for endpoint in endpoints:
-                log.info("Creating transport for %s", endpoint)
-                transport = self.transport_factory(event_time + 100, self.bb, self.barn, self.inverter)
-                transport.post_url = endpoint
-=======
             transport = self.transport_factory(event_time + 100, self.bb, self.barn, self.der)
->>>>>>> 209-add-support-for-multi-dir
             self.barn = {}
             ret.append(transport)
         return ret
