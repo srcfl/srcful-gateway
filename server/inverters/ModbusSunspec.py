@@ -60,6 +60,7 @@ class ModbusSunspec(ICom):
 
                 payload = {}
                 payload["Hz"] = payload_verbose["Hz"]
+                payload["W"] = payload_verbose["W"]
                 payload["DCW"] = payload_verbose["DCW"]
                 
                 return payload
