@@ -30,10 +30,9 @@ class ModbusSunspec(ICom):
         self.client = client.SunSpecModbusClientDeviceTCP(slave_id=self.slave_id, ipaddr=self.host, ipport=self.port)
         self.client.scan()
         self.client.connect()
-        # Print connection details and models 
-        logger.info("Connected to %s:%s", self.host, self.port)
+        
         logger.info("Models: %s", self.client.models)
-        logger.info("Num of models: %s", len(self.client.models))
+        
         if 'inverter' in self.client.models:
             self.inverter = self.client.inverter[0]
             
@@ -57,18 +56,13 @@ class ModbusSunspec(ICom):
                 payload_verbose = self.client.get_dict(True)
                 return payload_verbose
             else:
-                
                 payload_verbose = self.inverter.get_dict(True)
 
                 payload = {}
-                
-                logger.info(f"Hz: {payload_verbose['Hz']}, DCW: {payload_verbose['DCW']}")
-                
                 payload["Hz"] = payload_verbose["Hz"]
                 payload["DCW"] = payload_verbose["DCW"]
                 
                 return payload
- 
         except Exception as e:
             logger.error("Error reading harvest data: %s", e)
             return {}
