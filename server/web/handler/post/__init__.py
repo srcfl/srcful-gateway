@@ -4,3 +4,4 @@ from . import logger
 from . import modbus
 from . import echo
 from . import modbusDevice
+from . import settings
