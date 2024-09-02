@@ -10,14 +10,13 @@ import base64
 import json
 
 from server.crypto import crypto
-from server.tests.server_unit_test.crypto.mockChip import patched_chip, mock_crypto_chip
 
-def test_build_jwt(patched_chip, capsys):
+def test_build_jwt(capsys):
     # run with pytest -s server/tests/server_unit_test/crypto/jwt_test.py to see the output
     data_to_sign = {"test": "data"}
     inverter_model = "test_model"
     
-    with patched_chip as chip:
+    with crypto.Chip(crypto_impl=crypto.SoftwareCrypto()) as chip:
         jwt = chip.build_jwt(data_to_sign, inverter_model)
 
     print("\nGenerated JWT:")
@@ -38,7 +37,7 @@ def test_build_jwt(patched_chip, capsys):
     # Assert header contents
     assert header_json['alg'] == 'ES256'
     assert header_json['typ'] == 'JWT'
-    with patched_chip as chip:
+    with crypto.Chip(crypto_impl=crypto.SoftwareCrypto()) as chip:
         assert header_json['device'] == chip.get_serial_number().hex()
     assert header_json['opr'] == 'production'
     assert header_json['model'] == inverter_model

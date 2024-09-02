@@ -15,10 +15,10 @@ def request_data():
 
 def test_initialize(request_data):
 
-    with patch("server.crypto.crypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
-        with patch("server.crypto.crypto.atcab_read_serial_number", return_value=crypto.ATCA_SUCCESS):
-            with patch("server.crypto.crypto.atcab_sign", return_value=crypto.ATCA_SUCCESS):
-                with patch("server.crypto.crypto.atcab_get_pubkey", return_value=crypto.ATCA_SUCCESS):
+    with patch("server.crypto.crypto.HardwareCrypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
+        with patch("server.crypto.crypto.HardwareCrypto.atcab_read_serial_number", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
+            with patch("server.crypto.crypto.HardwareCrypto.atcab_sign", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
+                with patch("server.crypto.crypto.HardwareCrypto.atcab_get_pubkey", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
                     handler = Handler()
                     status_code, response = handler.do_post(request_data)  
 

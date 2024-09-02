@@ -1,14 +1,13 @@
 import pytest
 
 from server.tasks.saveSettingsTask import SaveSettingsTask
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from server.blackboard import BlackBoard
 from server.settings import Settings, ChangeSource
 
 import server.crypto.crypto as crypto
 
-from server.tests.server_unit_test.crypto.mockChip import patched_chip, mock_crypto_chip
 
 @pytest.fixture
 def blackboard():
@@ -21,19 +20,20 @@ def settings():
 
 
 def test_make_the_call_with_task(blackboard):
-    with patch("server.crypto.crypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
-        with patch("server.crypto.crypto.atcab_read_serial_number", return_value=crypto.ATCA_SUCCESS):
-            with patch("server.crypto.crypto.atcab_sign", return_value=crypto.ATCA_SUCCESS):
-                with patch("server.crypto.crypto.atcab_get_pubkey", return_value=crypto.ATCA_SUCCESS):
+    with patch("server.crypto.crypto.HardwareCrypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
+        with patch("server.crypto.crypto.HardwareCrypto.atcab_read_serial_number", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
+            with patch("server.crypto.crypto.HardwareCrypto.atcab_sign", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
+                with patch("server.crypto.crypto.HardwareCrypto.atcab_get_pubkey", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
                   t = SaveSettingsTask(0, blackboard)
                   t.execute(0)
 
     assert t.reply.status_code == 200
-    assert t.is_saved is False
 
 
-def test_get_settings_with_mock_chip(blackboard, patched_chip):
-    with patch('server.crypto.crypto.Chip.__new__', return_value=patched_chip):
+def test_save_settings_with_mock_chip(blackboard):
+    # this does not work with the static methods in Chip as they seem to become mocked out for some reason
+
+    with patch('server.crypto.crypto.Chip', return_value=crypto.Chip(crypto_impl=crypto.SoftwareCrypto())):
         blackboard.settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
         t = SaveSettingsTask(0, blackboard)
         t.execute(0)

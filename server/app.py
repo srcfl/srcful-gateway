@@ -121,7 +121,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     bootstrap = Bootstrap(bootstrap_file)
 
-    class SettingsMonitor(DebouncedMonitorBase):
+    class BackendSettingsSaver(DebouncedMonitorBase):
+            """ Monitors settings changes and schedules a save to the backend, ignores changes from the backend """
             def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
                 super().__init__(debounce_delay)
                 self.blackboard = blackboard
@@ -131,9 +132,9 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                     logger.info("Settings change detected, scheduling a save to backend")
                     self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard))
                 else:
-                    logger.info("Ignoring settings change from backend")
+                    logger.info("No need to save settings to backend as the source is the backend")
         
-    bb._settings_monitor = SettingsMonitor(bb)
+    bb._settings_monitor = BackendSettingsSaver(bb)
     bb.settings.add_listener(bb._settings_monitor.on_change)
 
     bb.inverters.add_listener(bootstrap)

@@ -20,16 +20,16 @@ class SaveSettingsTask(SrcfulAPICallTask):
 
     def _build_jwt(self):
         
-        message = crypto.Chip.jwtlify(self.settings.to_dict())
+        message = crypto.jwtlify(self.settings.to_dict())
         with crypto.Chip() as chip:
             header = self._build_header(chip.get_serial_number().hex())
             message = header + "." + message
             signature = chip.get_signature(message)
-            message = message + "." + crypto.Chip.base64_url_encode(signature).decode("utf-8")
+            message = message + "." + crypto.base64_url_encode(signature).decode("utf-8")
             return message
         
     def _build_header(self, serial_number):
-        ret = crypto.Chip.jwtlify({
+        ret = crypto.jwtlify({
             "alg": "ES256",
             "typ": "JWT",
             "device": serial_number,

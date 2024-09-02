@@ -9,6 +9,8 @@ import signal
 from typing import Callable
 from datetime import datetime, timezone
 
+import socket
+
 logger = logging.getLogger(__name__)
 
 class GraphQLSubscriptionClient(threading.Thread):
@@ -32,10 +34,13 @@ class GraphQLSubscriptionClient(threading.Thread):
                     on_message=self.on_message,
                     on_error=self.on_error,
                     on_close=self.on_close,
+                    on_ping=self.on_ping,
+                    on_pong=self.on_pong,
                     header=self.headers
                 )
+                
                 logger.info(f"WebSocket connection opened")
-                self.ws.run_forever()
+                self.ws.run_forever(ping_interval=45)
             except Exception as e:
                 logger.error(f"WebSocket error: {e} url: {self.url}")
             
@@ -52,17 +57,24 @@ class GraphQLSubscriptionClient(threading.Thread):
         logger.info("WebSocket connection opened")
         self.send_connection_init()
 
+    def on_ping(self, ws, message):
+        logger.debug(f"Received ping: {message}")
+    def on_pong(self, ws, message):
+        logger.debug(f"Received pong: {message}")
+        ws.sock.pong(message)
+
     def on_message(self, ws, message):
         data = json.loads(message)
         logger.info("Received message: %s", data)
 
         if data.get('type') == 'connection_ack':
             logger.info("Connection acknowledged, sending subscription")
-            self.subscribe_to_settings()
+            # self.subscribe_to_settings()
         elif data.get('type') == 'data':
             # Handle incoming data
             pass
         
+        # This is what we should do next
         # if 'data' in data and 'gatewayConfigurationChanged' in data['data']:
         #     new_settings = data['data']['gatewayConfigurationChanged']['data']
         #     self.bb.settings.update_from_dict(new_settings, ChangeSource.BACKEND)
@@ -81,6 +93,8 @@ class GraphQLSubscriptionClient(threading.Thread):
         }
         self.ws.send(json.dumps(init_message))
         logger.info("Sent connection_init message")
+        logger.info(f"socked timeout: {self.ws.sock.gettimeout()}")
+
 
     def _get_subscription_query(self, chip_constructor: Callable[[], crypto.Chip]):
         query = """
@@ -91,6 +105,7 @@ class GraphQLSubscriptionClient(threading.Thread):
             signedIdAndTimestamp: "$signature",
           }) {
             data
+            subKey
           }
         }
         """
@@ -104,7 +119,7 @@ class GraphQLSubscriptionClient(threading.Thread):
         # should be something like 2024-08-26T13:02:00
         iso_timestamp = dt.isoformat().replace('+00:00', '')
 
-        with crypto.Chip() as chip:
+        with chip_constructor() as chip:
             serial = chip.get_serial_number().hex()
             timestamp = iso_timestamp
             message = f"{serial}:{timestamp}"
@@ -116,14 +131,17 @@ class GraphQLSubscriptionClient(threading.Thread):
 
         return query
 
+    
+
     def subscribe_to_settings(self):
+
         query = self._get_subscription_query(crypto.Chip)
+
         subscription_message = {
             "type": "start",
             "id": "1",
             "payload": {
-                "query": query,
-                "variables": {}
+                "query": query
             }
         }
 

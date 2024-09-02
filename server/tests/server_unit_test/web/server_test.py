@@ -111,8 +111,8 @@ def test_handler_get_root(mock_setup, mock_handle, mock_finish):
     h.end_headers = lambda: None
     h.wfile = BytesIO()
 
-    with patch("server.crypto.crypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
-        with patch("server.crypto.crypto.atcab_read_serial_number", return_value=crypto.ATCA_SUCCESS):
+    with patch("server.crypto.crypto.HardwareCrypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
+        with patch("server.crypto.crypto.HardwareCrypto.atcab_read_serial_number", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
             h.do_GET()
     v = h.wfile.getvalue().decode("utf-8")
     assert "<html>" in v
@@ -131,7 +131,7 @@ def test_handler_get_returns_exception(mock_setup, mock_handle, mock_finish):
     h.end_headers = lambda: None
     h.wfile = BytesIO()
 
-    with patch("server.crypto.crypto.atcab_init", side_effect=Exception("test")):
+    with patch("server.crypto.crypto.HardwareCrypto.atcab_init", side_effect=Exception("test")), patch('server.crypto.software.SoftwareCrypto.atcab_init', side_effect=Exception("test")):
         h.do_GET()
     v = h.wfile.getvalue().decode("utf-8")
     assert "test" in v

@@ -18,10 +18,10 @@ def test_executeTask():
 
 def test_make_the_call_with_task():
 
-    with patch("server.crypto.crypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
-        with patch("server.crypto.crypto.atcab_read_serial_number", return_value=crypto.ATCA_SUCCESS):
-            with patch("server.crypto.crypto.atcab_sign", return_value=crypto.ATCA_SUCCESS):
-                with patch("server.crypto.crypto.atcab_get_pubkey", return_value=crypto.ATCA_SUCCESS):
+    with patch("server.crypto.crypto.HardwareCrypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
+        with patch("server.crypto.crypto.HardwareCrypto.atcab_read_serial_number", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
+            with patch("server.crypto.crypto.HardwareCrypto.atcab_sign", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
+                with patch("server.crypto.crypto.HardwareCrypto.atcab_get_pubkey", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
                   t = InitializeTask(0, {}, "aaa", True)
                   t.execute(0)
 
