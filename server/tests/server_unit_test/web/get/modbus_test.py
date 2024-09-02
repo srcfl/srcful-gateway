@@ -103,7 +103,7 @@ def test_invalid_size(request_data):
     def read_registers(operation, address, size):
         raise Exception('invalid or incomplete address range')
 
-    request_data.bb.inverters.lst[0].read_registers = read_registers
+    request_data.bb.ders.lst[0].read_registers = read_registers
     assert 'read_registers' in dir(Modbus)
 
     status_code, response = handler.do_get(request_data)
