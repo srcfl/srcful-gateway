@@ -33,7 +33,7 @@ class SaveSettingsTask(SrcfulAPICallTask):
             "alg": "ES256",
             "typ": "JWT",
             "device": serial_number,
-            "subKey": "settings",
+            "subKey": self.bb.settings.API_SUBKEY,
         })
 
         return ret

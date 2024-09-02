@@ -3,6 +3,7 @@ import pytest
 from server.blackboard import BlackBoard
 from unittest.mock import patch
 import server.crypto.crypto as crypto
+from server.settings import ChangeSource
 
 @pytest.fixture
 def blackboard():
@@ -32,3 +33,10 @@ def test_get_settings_with_mock_chip(blackboard):
         assert chip.get_serial_number().hex() in ret
 
     assert True
+
+def test_on_message(blackboard):
+    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    blackboard.settings.harvest.clear_endpoints(ChangeSource.BACKEND)
+
+    client.on_message(None, '{"type":"data","id":"1","payload":{"data":{"configurationDataChanges":{"data":"{\\u0022settings\\u0022: {\\u0022harvest\\u0022: {\\u0022endpoints\\u0022: [\\u0022https://mainnet.srcful.dev/gw/data/\\u0022]}}}","subKey":"settings"}}}}')
+    assert blackboard.settings.harvest.endpoints == ['https://mainnet.srcful.dev/gw/data/'] 

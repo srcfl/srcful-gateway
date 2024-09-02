@@ -8,6 +8,8 @@ import server.crypto.crypto as crypto
 import signal
 from typing import Callable
 from datetime import datetime, timezone
+from server.settings import Settings, ChangeSource
+from server.tasks.getSettingsTask import handle_settings
 
 import socket
 
@@ -61,24 +63,19 @@ class GraphQLSubscriptionClient(threading.Thread):
         logger.debug(f"Received ping: {message}")
     def on_pong(self, ws, message):
         logger.debug(f"Received pong: {message}")
-        ws.sock.pong(message)
 
     def on_message(self, ws, message):
         data = json.loads(message)
-        logger.info("Received message: %s", data)
+        logger.info("Received message: %s", message)
 
         if data.get('type') == 'connection_ack':
             logger.info("Connection acknowledged, sending subscription")
-            # self.subscribe_to_settings()
+            self.subscribe_to_settings()
         elif data.get('type') == 'data':
-            # Handle incoming data
-            pass
         
-        # This is what we should do next
-        # if 'data' in data and 'gatewayConfigurationChanged' in data['data']:
-        #     new_settings = data['data']['gatewayConfigurationChanged']['data']
-        #     self.bb.settings.update_from_dict(new_settings, ChangeSource.BACKEND)
-        #     logger.info("Settings updated from subscription")
+            # This is what we should do next
+            if 'data' in data['payload'] and data['payload']['data']['configurationDataChanges']['subKey'] == self.bb.settings.API_SUBKEY:
+                handle_settings(self.bb, data['payload']['data']['configurationDataChanges'])
 
     def on_error(self, ws, error):
         logger.error(f"WebSocket error: {error}, url: {self.url}")

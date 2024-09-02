@@ -1,6 +1,6 @@
 import pytest
 
-from server.tasks.getSettingsTask import GetSettingsTask
+from server.tasks.getSettingsTask import GetSettingsTask, handle_settings
 
 from unittest.mock import Mock, patch
 
@@ -42,13 +42,11 @@ def test_get_settings_with_mock_chip(blackboard):
 
 
 def test_handle_settings_with_none(blackboard):
-    t = GetSettingsTask(0, blackboard)
-    ret = t._handle_settings({'data': {'gatewayConfiguration': {'configuration': {'data': None}}}})
+    ret = handle_settings(blackboard, {'data': None})
     assert isinstance(ret, SaveSettingsTask)
 
 def test_handle_settings_with_wrong_format(blackboard):
-    t = GetSettingsTask(0, blackboard)
-    ret = t._handle_settings({"data": {"bork": {"bork": {"bork": None}}}})
+    ret = handle_settings(blackboard, {"data": {"bork": {"bork": {"bork": None}}}})
     assert ret is None
 
 def test_handle_settings_settings_are_updated(blackboard):
@@ -56,8 +54,7 @@ def test_handle_settings_settings_are_updated(blackboard):
 
     new_settings.harvest.add_endpoint("https://test.com", ChangeSource.BACKEND)
 
-    t = GetSettingsTask(0, blackboard)
-    ret = t._handle_settings({"data": {"gatewayConfiguration": {"configuration": {"data": new_settings.to_json()}}}})
+    ret = handle_settings(blackboard, {"data": new_settings.to_json()})
     assert ret is None
 
     assert blackboard.settings.harvest.endpoints == new_settings.harvest.endpoints

@@ -74,6 +74,10 @@ class Settings(Observable):
         self._harvest = self.Harvest(self)
 
     @property
+    def API_SUBKEY(self):
+        return "settings"
+
+    @property
     def SETTINGS(self):
         return "settings"
 

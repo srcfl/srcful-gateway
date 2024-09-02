@@ -17,6 +17,26 @@ from server.tasks.saveSettingsTask import SaveSettingsTask
 
 import json
 
+
+def handle_settings(bb: BlackBoard, raw_json_data_from_api: dict):
+    log.info("Got settings: %s", raw_json_data_from_api)
+
+    try:
+        
+        if raw_json_data_from_api is not None and raw_json_data_from_api["data"] is not None:
+            log.info("Updating settings: %s", raw_json_data_from_api)
+            bb.settings.update_from_dict(json.loads(raw_json_data_from_api["data"]), ChangeSource.BACKEND)
+        else:
+            log.error("Settings are None")
+            # save the default settings
+            return SaveSettingsTask(1017, bb)
+    except KeyError:
+        log.error("Wrong json format: %s", raw_json_data_from_api)
+        return None
+    except TypeError:
+        log.error("Wrong json format: %s", raw_json_data_from_api)
+        return None
+
 class GetSettingsTask(SrcfulAPICallTask):
     """Task to get the configuration from the server using the crypto chip"""
 
@@ -50,7 +70,7 @@ class GetSettingsTask(SrcfulAPICallTask):
                         id: $serial,
                         timestamp: $timestamp,
                         signedIdAndTimestamp: $signature,
-                        subKey: "settings"
+                        subKey: $subKey
                     }) {
                     data
                     }
@@ -61,6 +81,7 @@ class GetSettingsTask(SrcfulAPICallTask):
         q = q.replace("$timestamp", f'"{timestamp}"')
         q = q.replace("$serial", f'"{serial}"')
         q = q.replace("$signature", f'"{signature}"')
+        q = q.replace("$subKey", f'"{self.bb.settings.API_SUBKEY}"')
 
         return {"query": q}
 
@@ -70,20 +91,6 @@ class GetSettingsTask(SrcfulAPICallTask):
 
     def _on_200(self, reply: requests.Response) -> Union[List[ITask], ITask, None]:
         json_data = reply.json()
-        return self._handle_settings(json_data)
+        return handle_settings(self.bb, json_data["data"]["gatewayConfiguration"]["configuration"])
         
-    def _handle_settings(self, json_data: dict):
-        log.info("Got settings: %s", json_data)
-
-        try:
-            settings_dict = json_data["data"]["gatewayConfiguration"]["configuration"]
-            if settings_dict is not None and settings_dict["data"] is not None:
-                log.info("Updating settings: %s", settings_dict)
-                self.bb.settings.update_from_dict(json.loads(settings_dict["data"]), ChangeSource.BACKEND)
-            else:
-                log.error("Settings are None")
-                # save the default settings
-                return SaveSettingsTask(1017, self.bb)
-        except KeyError:
-            log.error("Wrong json format: %s", json_data)
-            return None
+    
