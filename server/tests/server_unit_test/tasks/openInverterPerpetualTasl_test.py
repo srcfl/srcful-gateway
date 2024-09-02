@@ -15,7 +15,7 @@ def test_execute_invertert_added():
     ret = task.execute(0)
 
     assert inverter in bb.ders.lst
-    assert inverter.open.called
+    assert inverter.connect.called
     assert ret is None
     assert bb.purge_tasks()[0] is not None
 
@@ -25,11 +25,11 @@ def test_retry_on_exception():
     HarvestFactory(bb)
 
     inverter = MagicMock()
-    inverter.open.side_effect = Exception("test")
+    inverter.connect.side_effect = Exception("test")
     task = OpenInverterPerpetualTask(0, bb, inverter)
     ret = task.execute(0)
 
-    assert inverter.open.called
+    assert inverter.connect.called
     assert ret is task
     assert len(bb.purge_tasks()) == 0
 
@@ -39,12 +39,12 @@ def test_execute_invertert_could_not_open():
     HarvestFactory(bb)
     
     inverter = MagicMock()
-    inverter.open.return_value = False
+    inverter.connect.return_value = False
     task = OpenInverterPerpetualTask(0, bb, inverter)
     ret = task.execute(0)
 
     assert inverter not in bb.ders.lst
-    assert inverter.open.called
+    assert inverter.connect.called
     assert ret is task
     assert len(bb.purge_tasks()) == 0
 
@@ -52,7 +52,7 @@ def test_execute_invertert_could_not_open():
 def test_execute_new_inverter_added():
     bb = BlackBoard()
     inverter = MagicMock()
-    inverter.open.return_value = False
+    inverter.connect.return_value = False
     task = OpenInverterPerpetualTask(0, bb, inverter)
     
     inverter2 = MagicMock()
@@ -62,7 +62,7 @@ def test_execute_new_inverter_added():
 
     task.execute(0)
 
-    assert inverter.terminate.called
+    assert inverter.disconnect.called
     assert inverter not in bb.ders.lst
     assert inverter2 in bb.ders.lst
 
@@ -72,7 +72,7 @@ def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
     bb = BlackBoard()
     inverter = MagicMock()
     
-    inverter.open.return_value = False
+    inverter.connect.return_value = False
     task = OpenInverterPerpetualTask(0, bb, inverter)
 
     task.execute(event_time=0)
@@ -89,7 +89,7 @@ def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
     task.execute(event_time=1)
 
     inverter.clone.assert_called_once_with('192.168.50.1')
-    inverter.open.return_value = True
+    inverter.connect.return_value = True
 
     task.execute(event_time=5001)
 
