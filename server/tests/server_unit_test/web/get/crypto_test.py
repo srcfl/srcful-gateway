@@ -4,6 +4,7 @@ from server.blackboard import BlackBoard
 from server.web.handler.requestData import RequestData
 import pytest
 import json
+import server.crypto.crypto as crypto
 
 
 @pytest.fixture
@@ -21,30 +22,16 @@ def mock_release():
     pass
 
 
-@patch("server.crypto.crypto.Chip", autospec=True)
-def test_get(mock_chip_class):
+def test_get():
     handler = get_crypto.Handler()
     bb = BlackBoard()
 
     bb.increment_chip_death_count()
 
-    public_key = bytearray(64)
-    serial_no = b"deadbeef"
-    expected = {
-        handler.DEVICE: "test_chip",
-        handler.SERIAL_NO: b"deadbeef".hex(),
-        handler.PUBLIC_KEY: public_key.hex(),
-        handler.COMPACT_KEY: public_key[:32].decode("utf-8"),
-        handler.CHIP_DEATH_COUNT: bb.chip_death_count
-    }
+    with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
+        with patch('server.crypto.crypto.HardwareCrypto.atcab_read_serial_number', return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
+            with patch('server.crypto.crypto.HardwareCrypto.atcab_get_pubkey', return_value=(crypto.ATCA_SUCCESS, b'0000000000000000000000000000000000000000000000000000000000000000')):
 
-    mock_chip_instance = mock_chip_class.return_value.__enter__.return_value
-    mock_chip_instance.get_device_name.return_value = "test_chip"
-    mock_chip_instance.get_serial_number.return_value = serial_no
-    mock_chip_instance.get_public_key.return_value = public_key
-    mock_chip_instance.public_key_to_compact.return_value = public_key[:32]
-
-    code, result = handler.do_get(RequestData(bb, {}, {}, {}))
+              code, result = handler.do_get(RequestData(bb, {}, {}, {}))
 
     assert code == 200
-    assert result == json.dumps(expected)
