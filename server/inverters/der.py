@@ -35,3 +35,6 @@ class DER:
     
     def get_profile(self) -> dict:
         return self.com.get_profile()
+    
+    def clone(self, host: str) -> 'DER':
+        return self.com.clone(host)

@@ -14,7 +14,7 @@ class Handler(PostHandler):
         return self.create_schema(
             "Open an inverter and start harvesting the data",
             required={
-                "mode": "string, mode of modbus connection (e.g., 'TCP', 'RTU', 'SOLARMAN', 'SUNSPEC')",
+                "connection": "string, type of modbus connection (e.g., 'TCP', 'RTU', 'SOLARMAN', 'SUNSPEC')",
             },
             optional={
                 "ip": "string, IP address of the inverter (for TCP, SOLARMAN, SUNSPEC)",
@@ -36,8 +36,8 @@ class Handler(PostHandler):
     def do_post(self, data: RequestData) -> tuple[int, str]:
         
         try:
-            if "mode" not in data.data:
-                return 400, json.dumps({"status": "mode field is required"})
+            if "connection" not in data.data:
+                return 400, json.dumps({"status": "connection field is required"})
             
             conf = IComFactory.parse_connection_config_from_dict(data.data)
             com = IComFactory.create_com(conf)

@@ -20,7 +20,7 @@ def test_create_harvest_transport():
 
 def test_inverter_terminated():
     mock_inverter = Mock()
-    mock_inverter.is_terminated.return_value = True
+    mock_inverter.is_open.return_value = False
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
@@ -31,7 +31,7 @@ def test_execute_harvest():
     mock_inverter = Mock()
     registers = {"1": "1717"}
     mock_inverter.read_harvest_data.return_value = registers
-    mock_inverter.is_terminated.return_value = False
+    mock_inverter.connect.return_value = True
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
@@ -47,7 +47,7 @@ def test_execute_harvest_x10():
     mock_inverter = Mock()
     registers = [{"1": 1717 + x} for x in range(10)]
     t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
-    mock_inverter.is_terminated.return_value = False
+    mock_inverter.connect.return_value = True
 
     for i in range(9):
         mock_inverter.read_harvest_data.return_value = registers[i]
@@ -79,7 +79,7 @@ def test_execute_harvest_x10():
 
 def test_adaptive_backoff():
     mock_inverter = Mock()
-    mock_inverter.is_terminated.return_value = False
+    mock_inverter.connect.return_value = True
     
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
@@ -90,7 +90,7 @@ def test_adaptive_backoff():
     assert t.backoff_time == 1966
 
     # Mock one failed poll -> We back off by 2 seconds instead of 1
-    t.der._read_harvest_data.side_effect = Exception("mocked exception")
+    t.der.read_harvest_data.side_effect = Exception("mocked exception")
     t.execute(17)
 
     assert t.backoff_time == 3932
@@ -115,7 +115,7 @@ def test_adaptive_backoff():
 
 def test_adaptive_poll():
     mock_inverter = Mock()
-    mock_inverter.is_terminated.return_value = False
+    mock_inverter.connect.return_value = True
 
     mock_bb = Mock()
     mock_bb.time_ms.return_value = 1000
@@ -125,13 +125,13 @@ def test_adaptive_poll():
 
     assert t.backoff_time == 1966
 
-    t.der._read_harvest_data.side_effect = Exception("mocked exception")
+    t.der.read_harvest_data.side_effect = Exception("mocked exception")
     t.backoff_time = t.max_backoff_time
     t.execute(17)
 
     assert t.backoff_time == 256000
 
-    t.der._read_harvest_data.side_effect = None
+    t.der.read_harvest_data.side_effect = None
     t.execute(17)
 
     assert t.backoff_time == 230400.0
@@ -211,7 +211,7 @@ def test_execute_harvest_incremental_backoff_reset():
 def test_execute_harvest_incremental_backoff_terminate_on_max():
     mock_inverter = Mock()
     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
-    mock_inverter.is_terminated.return_value = False
+    mock_inverter.connect.return_value = True
     
     mock_bb = _create_mock_bb()
 

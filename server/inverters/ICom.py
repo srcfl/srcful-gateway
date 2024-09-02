@@ -43,3 +43,7 @@ class ICom(ABC):
     @abstractmethod
     def get_profile(self) -> InverterProfile:
         pass
+    
+    @abstractmethod
+    def clone(self, host: str) -> 'ICom':
+        pass

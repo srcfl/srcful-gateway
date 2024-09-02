@@ -49,21 +49,21 @@ class Harvest(Task):
 
             log.debug("Handling exeption reading harvest: %s", str(e))
             
-            # end_time = self.bb.time_ms()
+            end_time = self.bb.time_ms()
 
-            # elapsed_time_ms = end_time - start_time
+            elapsed_time_ms = end_time - start_time
 
-            # if self.backoff_time >= self.max_backoff_time:
-            #     log.debug("Max timeout reached terminating inverter and issuing new reopen in 30 sec")
-            #     self.der._terminate()
-            #     open_inverter = OpenInverterPerpetualTask(event_time + 30000, self.bb, self.der._clone())
-            #     self.time = event_time + 10000
+            if self.backoff_time >= self.max_backoff_time:
+                log.debug("Max timeout reached terminating inverter and issuing new reopen in 30 sec")
+                self.der.disconnect()
+                open_inverter = OpenInverterPerpetualTask(event_time + 30000, self.bb, self.der._clone())
+                self.time = event_time + 10000
 
-            #     # we return self so that in the next execute the last harvest will be transported
-            #     return [self, open_inverter]
-            # else:
-            #     log.info("Incrementing backoff time to: %s", self.backoff_time)
-            #     self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
+                # we return self so that in the next execute the last harvest will be transported
+                return [self, open_inverter]
+            else:
+                log.info("Incrementing backoff time to: %s", self.backoff_time)
+                self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
             
         self.time = event_time + self.backoff_time
 

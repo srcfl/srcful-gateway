@@ -32,23 +32,24 @@ class OpenInverterPerpetualTask(Task):
                 self.bb.add_info("Inverter opened: " + str(self.der.get_config()))
                 return
             
-            # else:
-            #     port = self.der._get_config_dict()['port'] # get the port from the previous inverter config
-            #     hosts = self.scanner.scan_ports([int(port)], 0.01) # overwrite hosts with the new result of the scan
+            else:
+                port = self.der.get_config()['port'] # get the port from the previous inverter config
+                hosts = self.scanner.scan_ports([int(port)], 0.01) # overwrite hosts with the new result of the scan
                 
-            #     if len(hosts) > 0:
-            #         # At least one device was found on the port
-            #         self.der = self.der._clone(hosts[0]['ip'])
-            #         logger.info("Found inverter at %s, retry in 5 seconds...", hosts[0]['ip']) 
-            #         self.time = event_time + 5000
-            #     else:
-            #         # possibly we should create a new inverter object. We have previously had trouble with reconnecting in the Harvester
-            #         message = "Failed to open inverter, retry in 5 minutes: " + str(self.der._get_config())
-            #         logger.info(message)
-            #         self.bb.add_error(message)
-            #         self.time = event_time + 60000 * 5
+                if len(hosts) > 0:
+                    # At least one device was found on the port
+                    self.der = self.der.clone(hosts[0]['ip'])
+                    logger.info("Found inverter at %s, retry in 5 seconds...", hosts[0]['ip']) 
+                    self.time = event_time + 5000
+                else:
+                    # possibly we should create a new inverter object. We have previously had trouble with reconnecting in the Harvester
+                    message = "Failed to open inverter, retry in 5 minutes: " + str(self.der.get_config())
+                    logger.info(message)
+                    self.bb.add_error(message)
+                    self.time = event_time + 60000 * 5
 
-            #    return self
+            return self
+        
         except Exception as e:
             logger.exception("Exception opening inverter: %s", e)
             self.time = event_time + 10000

@@ -54,37 +54,37 @@ class IComFactory:
     @staticmethod
     def parse_connection_config_from_dict(config: dict) -> tuple:
         
-        match config["mode"]:
+        match config["connection"]:
             case "TCP":
-                ip = config["ip"]
+                ip = config["host"]
                 port = int(config["port"])
                 inverter_type = config["type"]
                 slave_id = int(config["address"])
-                return (config["mode"], ip, port, inverter_type, slave_id)
+                return (config["connection"], ip, port, inverter_type, slave_id)
             case "RTU":
-                serial_port = config["serial_port"]
+                serial_port = config["port"]
                 baudrate = int(config["baudrate"])
                 bytesize = int(config["bytesize"])
                 parity = config["parity"]
                 stopbits = float(config["stopbits"])
                 inverter_type = config["type"]
                 slave_id = int(config["address"])
-                return (config["mode"], serial_port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
+                return (config["connection"], serial_port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
             case "SOLARMAN":
-                ip = config["ip"]
+                ip = config["host"]
                 serial = int(config["serial"])
                 port = int(config["port"])
                 inverter_type = config["type"]
                 slave_id = int(config["address"])
                 verbose = False
-                return (config["mode"], ip, serial, port, inverter_type, slave_id, verbose)
+                return (config["connection"], ip, serial, port, inverter_type, slave_id, verbose)
             case "SUNSPEC":
-                ip = config["ip"]
+                ip = config["host"]
                 port = int(config["port"])
                 slave_id = int(config["address"])
-                return (config["mode"], ip, port, slave_id)
+                return (config["connection"], ip, port, slave_id)
             case _:
-                log.error("Unknown connection type: %s", config["mode"])
+                log.error("Unknown connection type: %s", config["connection"])
                 raise ValueError("Unknown connection type")
 
     
@@ -95,10 +95,10 @@ class IComFactory:
 
         Args:
             config (tuple): Connection-specific arguments as a tuple:
-                ('TCP', ip, port, inverter_type, slave_id)
+                ('TCP', host, port, inverter_type, slave_id)
                 ('RTU', port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
-                ('SOLARMAN', ip, serial, port, inverter_type, slave_id)
-                ('SUNSPEC', ip, port, slave_id)
+                ('SOLARMAN', host, serial, port, inverter_type, slave_id)
+                ('SUNSPEC', host, port, slave_id)
 
         Returns:
             ICom: Communication object for the specified connection type.
@@ -107,15 +107,15 @@ class IComFactory:
             ValueError: If the connection type (first element of the tuple) is unsupported.
         """
                     
-        mode = config[0]
+        connection = config[0]
         connection_config = config[1:]
         # connection_config = IComFactory.parse_connection_config_from_list(config)
         log.info("####################################################")
-        log.info("Creating ICom object for connection mode: %s", mode)
+        log.info("Creating ICom object for connection connection: %s", connection)
         log.info("Connection config: %s", connection_config)
         log.info("####################################################")
         
-        match mode:
+        match connection:
             case "TCP":
                 return ModbusTCP(connection_config)
             case "RTU":
@@ -125,7 +125,7 @@ class IComFactory:
             case "SUNSPEC":
                 return ModbusSunspec(connection_config)
             case _:
-                log.error("Unknown connection mode: %s", mode)
+                log.error("Unknown connection type: %s", connection)
                 return None
             
         

@@ -29,15 +29,25 @@ class ModbusSolarman(Modbus):
 
     def _open(self, **kwargs) -> bool:
         if not self._is_terminated():
-            self._create_client(**kwargs)
-            if not self.client.sock:
-                log.error("FAILED to open inverter: %s", self._get_type())
-            return bool(self.client.sock)
+            try:
+                self._create_client(**kwargs)
+                if not self.client.sock:
+                    log.error("FAILED to open inverter: %s", self._get_type())
+                return bool(self.client.sock)
+            except Exception as e:
+                log.error("Error opening inverter: %s", self._get_type())
+                log.error(e)
+                return False
         else:
             return False
 
     def _is_open(self) -> bool:
-        return bool(self.client.sock)
+        try:
+            return bool(self.client.sock)
+        except Exception as e:
+            log.error("Error checking if inverter is open: %s", self._get_type())
+            log.error(e)
+            return False
 
     def _close(self) -> None:
         try:
@@ -55,7 +65,7 @@ class ModbusSolarman(Modbus):
     def _is_terminated(self) -> bool:
         return self._isTerminated
 
-    def _clone(self, host: str = None):
+    def _clone(self, host: str = None) -> 'ModbusSolarman':
         if host is None:
             host = self._get_host()
 
@@ -107,13 +117,16 @@ class ModbusSolarman(Modbus):
         return self._get_type().lower()
     
     def _create_client(self, **kwargs) -> None:
-        self.client = PySolarmanV5(address=self._get_host(), 
+        try:
+            self.client = PySolarmanV5(address=self._get_host(), 
                             serial=self._get_serial(), 
                             port=self._get_port(), 
                             mb_slave_id=self._get_address(), 
                             v5_error_correction=False,
                             verbose=self.setup[5],
                             **kwargs)
+        except Exception as e:
+            log.error("Error creating client: %s", e)
 
     def _read_registers(self, operation, scan_start, scan_range) -> list:
         resp = None

@@ -53,7 +53,7 @@ class ModbusRTU(Modbus):
     def _is_terminated(self) -> bool:
         return self._isTerminated
 
-    def _clone(self, host: str = None):
+    def _clone(self, host: str = None) -> 'ModbusRTU':
         if host is None:
             host = self._get_host()
             
@@ -99,7 +99,7 @@ class ModbusRTU(Modbus):
             "connection": "RTU",
             "type": self._get_type(),
             "address": self._get_address(),
-            "host": self._get_host(),
+            "port": self._get_host(),
             "baudrate": self._get_baudrate(),
             "bytesize": self._get_bytesize(),
             "parity": self._get_parity(),

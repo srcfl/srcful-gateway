@@ -61,12 +61,12 @@ class InverterProfile:
 
 class InverterProfiles:
     def __init__(self):
-        self.profiles = []
+        self.profiles: list[InverterProfile] = []
 
         for inverter in inverters:
             self.profiles.append(InverterProfile(inverter))
 
-    def get(self, name) -> InverterProfile:
+    def get(self, name: str) -> InverterProfile:
         for profile in self.profiles:
             if profile.name.lower() == name.lower():
                 return profile

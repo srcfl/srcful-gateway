@@ -73,11 +73,14 @@ class ModbusSunspec(ICom):
     
     def get_config(self):
         return {
-            "mode": "SUNSPEC",
+            "connection": "SUNSPEC",
             "host": self.host,
             "port": self.port,
-            "slave_id": self.slave_id
+            "address": self.slave_id
         }
         
     def get_profile(self):
         pass
+    
+    def clone(self, host: str) -> 'ModbusSunspec':
+        return ModbusSunspec((host, self.port, self.slave_id))

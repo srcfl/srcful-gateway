@@ -7,7 +7,7 @@ import queue
 
 
 def test_post_create_inverter_tcp():
-    conf = {"mode": "TCP", "ip": "192.168.10.20", "port": 502, "type": "solaredge", "address": 1}
+    conf = {"connection": "TCP", "host": "192.168.10.20", "port": 502, "type": "solaredge", "address": 1}
 
     handler = ModbusDeviceHandler()
     rd = RequestData(BlackBoard(), {}, {}, conf)
@@ -19,23 +19,13 @@ def test_post_create_inverter_tcp():
     assert len(tasks) == 1
     task = tasks[0]
     assert isinstance(task, OpenInverterTask)
-    ret_conf = task.der.get_config()
+    c = task.der.get_config()
+    assert task.der.get_config() == conf
     
-    assert ret_conf == conf
-    
-    
-    
-    # assert task.der.get_config()[1:] == (
-    #     conf["mode"],
-    #     conf["ip"],
-    #     conf["port"],
-    #     conf["type"],
-    #     conf["address"],
-    # )
-
 
 def test_post_create_inverter_rtu():
     conf = {
+        "connection": "RTU",
         "port": "/dev/ttyUSB0",
         "baudrate": 115200,
         "bytesize": 8,
@@ -45,10 +35,7 @@ def test_post_create_inverter_rtu():
         "address": 1,
     }
 
-    handler = RTUHandler()
-    # check that the open inverter task was created
-    q = queue.Queue()
-
+    handler = ModbusDeviceHandler()
     rd = RequestData(BlackBoard(), {}, {}, conf)
 
     handler.do_post(rd)
@@ -58,13 +45,28 @@ def test_post_create_inverter_rtu():
     assert len(tasks) == 1
     task = tasks[0]
     assert isinstance(task, OpenInverterTask)
+    assert task.der.get_config() == conf
 
-    assert task.der._get_config()[1:] == (
-        conf["port"],
-        conf["baudrate"],
-        conf["bytesize"],
-        conf["parity"],
-        conf["stopbits"],
-        conf["type"],
-        conf["address"],
-    )
+
+def test_post_create_inverter_solarman():
+    conf = {
+        "connection": "SOLARMAN",
+        "type": "deye",
+        "serial": 1234567890,
+        "address": 1,
+        "host":"192.168.10.20",
+        "port": 502
+    }
+    
+    handler = ModbusDeviceHandler()
+    rd = RequestData(BlackBoard(), {}, {}, conf)
+
+    handler.do_post(rd)
+    
+    # check that the open inverter task was created
+    tasks = rd.bb.purge_tasks()
+    assert len(tasks) == 1
+    task = tasks[0]
+    assert isinstance(task, OpenInverterTask)
+    assert task.der.get_config() == conf
+    
