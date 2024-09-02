@@ -32,7 +32,7 @@ class RegisterHandler(GetHandler):
     def do_get(self, request_data: RequestData):
         if "address" not in request_data.post_params:
             return 400, json.dumps({"error": "missing address"})
-        if len(request_data.bb.inverters.lst) == 0:
+        if len(request_data.bb.ders.lst) == 0:
             return 400, json.dumps({"error": "inverter not initialized"})
 
         raw = bytearray()
@@ -48,7 +48,7 @@ class RegisterHandler(GetHandler):
             )
             raw, value = RegisterValue(
                 address, size, self.get_register_type(), datatype, endianness
-            ).read_value(request_data.bb.inverters.lst[0])
+            ).read_value(request_data.bb.ders.lst[0])
 
             ret = {
                 "register": address,

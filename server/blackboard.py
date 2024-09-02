@@ -128,7 +128,7 @@ class BlackBoard:
         self._rest_server_ip = ip
 
     @property
-    def inverters(self):
+    def ders(self):
         return self._ders
 
     @property

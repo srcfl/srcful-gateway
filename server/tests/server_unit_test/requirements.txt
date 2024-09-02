@@ -4,3 +4,4 @@ base58
 typing_extensions
 pysolarmanv5
 pyfakefs
+pysunspec2

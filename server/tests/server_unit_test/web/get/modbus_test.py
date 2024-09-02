@@ -26,7 +26,7 @@ def inverter_fixture():
 def request_data():
     bb = BlackBoard()
     inv = MagicMock()
-    bb.inverters.add(inv)
+    bb.ders.add(inv)
 
     def read_registers(operation, address, size):
         return [i for i in range(address, address + size)]
@@ -64,7 +64,7 @@ def test_missing_address(inverter_fixture):
     handler = HoldingHandler()
 
     bb = BlackBoard()
-    bb.inverters.add(inverter_fixture)
+    bb.ders.add(inverter_fixture)
 
     request_data = RequestData(bb, {}, {}, {})
     status_code, response = handler.do_get(request_data)

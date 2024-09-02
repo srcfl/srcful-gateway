@@ -14,7 +14,7 @@ def test_execute_invertert_added():
     task = OpenInverterPerpetualTask(0, bb, inverter)
     ret = task.execute(0)
 
-    assert inverter in bb.inverters.lst
+    assert inverter in bb.ders.lst
     assert inverter.open.called
     assert ret is None
     assert bb.purge_tasks()[0] is not None
@@ -43,7 +43,7 @@ def test_execute_invertert_could_not_open():
     task = OpenInverterPerpetualTask(0, bb, inverter)
     ret = task.execute(0)
 
-    assert inverter not in bb.inverters.lst
+    assert inverter not in bb.ders.lst
     assert inverter.open.called
     assert ret is task
     assert len(bb.purge_tasks()) == 0
@@ -58,13 +58,13 @@ def test_execute_new_inverter_added():
     inverter2 = MagicMock()
     inverter2.is_open.return_value = True
     
-    bb.inverters.add(inverter2)
+    bb.ders.add(inverter2)
 
     task.execute(0)
 
     assert inverter.terminate.called
-    assert inverter not in bb.inverters.lst
-    assert inverter2 in bb.inverters.lst
+    assert inverter not in bb.ders.lst
+    assert inverter2 in bb.ders.lst
 
  
 @patch('server.web.handler.get.network.ModbusScanHandler')
@@ -77,7 +77,7 @@ def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
 
     task.execute(event_time=0)
 
-    assert len(task.bb.inverters.lst) == 0
+    assert len(task.bb.ders.lst) == 0
     
     # Create a mock for the scanner
     mock_scanner = mock_modbus_scan_handler.return_value
@@ -93,5 +93,5 @@ def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
 
     task.execute(event_time=5001)
 
-    assert len(task.bb.inverters.lst) == 1
+    assert len(task.bb.ders.lst) == 1
 

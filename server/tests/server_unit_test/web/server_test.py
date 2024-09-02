@@ -41,7 +41,12 @@ def mock_finish():
 def test_handler_api_get_enpoints_params(mock_setup, mock_handle, mock_finish):
     h = request_handler_factory(None)(None, None, None)
     path, query = h.pre_do("/api/inverter/modbus/holding/1234?test=hello")
-    handler, params = h.get_api_handler(path, "/api/", h.api_get)
+
+    # this could really be any handler
+    from server.web.handler.get.modbus import HoldingHandler
+    handlers = {"inverter/modbus/holding/{address}": HoldingHandler()}
+
+    handler, params = h.get_api_handler(path, "/api/", h.convert_keys_to_regex(handlers))
     assert handler is not None
     assert params is not None
     assert hasattr(handler, "do_get")

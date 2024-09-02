@@ -15,20 +15,20 @@ class OpenInverterPerpetualTask(Task):
     def execute(self, event_time):
         
         # has an inverter been opened?
-        if len(self.bb.inverters.lst) > 0 and self.bb.inverters.lst[0].is_open():
+        if len(self.bb.ders.lst) > 0 and self.bb.ders.lst[0].is_open():
             logger.debug("Inverter is already open, removing it from the blackboard")
-            self.bb.inverters.remove(self.der)
+            self.bb.ders.remove(self.der)
             self.der.disconnect()
             return
         try:
             if self.der.connect():
                 # terminate and remove all inverters from the blackboard
                 logger.debug("Removing all inverters from the blackboard after opening a new inverter")
-                for i in self.bb.inverters.lst:
+                for i in self.bb.ders.lst:
                     i.disconnect()
-                    self.bb.inverters.remove(i)
+                    self.bb.ders.remove(i)
 
-                self.bb.inverters.add(self.der)
+                self.bb.ders.add(self.der)
                 self.bb.add_info("Inverter opened: " + str(self.der.get_config()))
                 return
             

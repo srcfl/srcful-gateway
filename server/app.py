@@ -115,7 +115,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     bootstrap = Bootstrap(bootstrap_file)
 
-    bb.inverters.add_listener(bootstrap)
+    bb.ders.add_listener(bootstrap)
 
     tasks.put(StartupInfoTask(bb.time_ms(), bb))
 
@@ -138,7 +138,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         logger.exception("Unexpected error: %s", sys.exc_info()[0])
         logger.exception("Exception: %s", e)
     finally:
-        for i in bb.inverters.lst:
+        for i in bb.ders.lst:
             i.close()
         web_server.close()
         logger.info("Server stopped.")

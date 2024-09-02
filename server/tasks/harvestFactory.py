@@ -8,7 +8,7 @@ class HarvestFactory:
 
     def __init__(self, bb: BlackBoard):
         self.bb = bb
-        bb.inverters.add_listener(self)
+        bb.ders.add_listener(self)
 
     def add_inverter(self, inverter):
         return self.bb.add_task(Harvest(self.bb.time_ms() + 1000, self.bb, inverter,  DefaultHarvestTransportFactory()))

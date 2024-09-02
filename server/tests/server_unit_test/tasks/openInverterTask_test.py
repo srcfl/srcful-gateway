@@ -14,7 +14,7 @@ def test_execute_invertert_added():
     task = OpenInverterTask(0, bb, inverter)
     ret = task.execute(0)
 
-    assert inverter in bb.inverters.lst
+    assert inverter in bb.ders.lst
     assert inverter.open.called
     assert ret is None
     assert bb.purge_tasks()[0] is not None
@@ -28,7 +28,7 @@ def test_execute_invertert_could_not_open():
     task = OpenInverterTask(0, bb, inverter)
     ret = task.execute(0)
 
-    assert inverter not in bb.inverters.lst
+    assert inverter not in bb.ders.lst
     assert inverter.open.called
     assert inverter.terminate.called
     assert ret is None
@@ -47,8 +47,8 @@ def test_execute_old_inverter_terminated():
     task.execute(0)
 
     assert inverter.terminate.called
-    assert inverter not in bb.inverters.lst
-    assert inverter2 in bb.inverters.lst
+    assert inverter not in bb.ders.lst
+    assert inverter2 in bb.ders.lst
     assert inverter2.open.called
 
 def test_retry_on_exception():

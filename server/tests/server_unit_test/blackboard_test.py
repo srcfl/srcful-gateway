@@ -8,8 +8,8 @@ import time
 def test_blackboard():
     bb = BlackBoard()
     assert bb is not None
-    assert bb.inverters is not None
-    assert bb.inverters.lst is not None
+    assert bb.ders is not None
+    assert bb.ders.lst is not None
     assert bb.settings is not None
     assert len(bb.settings.harvest.endpoints) > 0
 
@@ -23,9 +23,9 @@ def test_blackboard_add_inverter():
     listener = MagicMock()
     bb = BlackBoard()
     inverter = MagicMock()
-    bb.inverters.add_listener(listener)
-    bb.inverters.add(inverter)
-    assert inverter in bb.inverters.lst
+    bb.ders.add_listener(listener)
+    bb.ders.add(inverter)
+    assert inverter in bb.ders.lst
     assert listener.add_inverter.called
 
 
@@ -33,10 +33,10 @@ def test_blackboard_remove_inverter():
     listener = MagicMock()
     bb = BlackBoard()
     inverter = MagicMock()
-    bb.inverters.add_listener(listener)
-    bb.inverters.add(inverter)
-    bb.inverters.remove(inverter)
-    assert inverter not in bb.inverters.lst
+    bb.ders.add_listener(listener)
+    bb.ders.add(inverter)
+    bb.ders.remove(inverter)
+    assert inverter not in bb.ders.lst
     assert listener.remove - inverter.called
 
 

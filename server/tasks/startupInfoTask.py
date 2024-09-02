@@ -22,9 +22,9 @@ class StartupInfoTask(SrcfulAPICallTask):
             inverter_model = None
             inverter_profile_version = None
 
-            if len(self.bb.inverters.lst) > 0:
-                inverter_model = self.bb.inverters.lst[0].get_type()
-                inverter_profile_version = self.bb.inverters.lst[0].get_profile().version
+            if len(self.bb.ders.lst) > 0:
+                inverter_model = self.bb.ders.lst[0].get_type()
+                inverter_profile_version = self.bb.ders.lst[0].get_profile().version
 
             payload = {
                 "firmware version": self.bb.get_version(),

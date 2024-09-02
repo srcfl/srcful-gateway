@@ -22,13 +22,13 @@ class OpenInverterTask(Task):
                 logger.info("Opening: %s", self.der.get_config())
                 
                 # terminate and remove all inverters from the blackboard
-                for i in self.bb.inverters.lst:
+                for i in self.bb.ders.lst:
                     i.disconnect()
-                    self.bb.inverters.remove(i)
+                    self.bb.ders.remove(i)
                 
                 logger.info("DER opened: %s", self.der.get_config())
 
-                self.bb.inverters.add(self.der)
+                self.bb.ders.add(self.der)
                 self.bb.add_info("Inverter opened: " + str(self.der.get_config()))
 
                 return None
