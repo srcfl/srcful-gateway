@@ -3,6 +3,7 @@ import server.tasks.harvestTransport as harvestTransport
 import server.tasks.openInverterPerpetualTask as oit
 from unittest.mock import Mock, patch
 import pytest
+from server.inverters.supported_inverters.profiles import InverterProfile
 
 from server.blackboard import BlackBoard
 from server.settings import Settings
@@ -232,8 +233,8 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     assert mock_inverter.clone.call_count == 1
     
     # assert that inverter has been terminated
-    assert t.der._terminate.call_count == 1
-    mock_inverter.is_terminated.return_value = True
+    assert t.der.disconnect.call_count == 1
+    mock_inverter.is_open.return_value = False
 
     # make sure we get nothing as the barn is empty
     assert t.execute(17) == []
@@ -284,7 +285,7 @@ def test_data_harvest_transport_jwt(mock_chip_class):
     instance = harvestTransport.HarvestTransport(0, {}, barn, inverter_type)
     jwt = instance._data()
 
-    mock_chip_instance.build_jwt.assert_called_once_with(instance.barn, instance.der_profile, 5)
+    mock_chip_instance.build_jwt.assert_called_once_with(instance.barn, "", 5)
     assert jwt == {str(barn), inverter_type}
 
 def test_on_200():
