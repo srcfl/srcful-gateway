@@ -3,7 +3,7 @@ import time
 import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
-from server.settings import Settings
+from server.settings import Settings, ChangeSource
 import logging
 
 logger = logging.getLogger(__name__)
@@ -36,7 +36,8 @@ class BlackBoard:
         self._tasks = []
         self._chip_death_count = 0
         self._settings = Settings()
-        self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/")
+        self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
+        
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -136,7 +137,7 @@ class BlackBoard:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.13.0"
+        return "0.13.1"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:

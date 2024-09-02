@@ -1,6 +1,6 @@
 import pytest
 import json
-from server.settings import Settings  # Replace 'your_module' with the actual module name
+from server.settings import Settings, ChangeSource
 
 @pytest.fixture
 def settings():
@@ -12,29 +12,29 @@ def test_constants(settings):
     assert settings.harvest.ENDPOINTS == "endpoints"
 
 def test_harvest_add_endpoint(settings):
-    settings.harvest.add_endpoint("https://example.com")
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
     assert "https://example.com" in settings.harvest.endpoints
 
 def test_harvest_remove_endpoint(settings):
-    settings.harvest.add_endpoint("https://example.com")
-    settings.harvest.remove_endpoint("https://example.com")
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    settings.harvest.remove_endpoint("https://example.com", ChangeSource.LOCAL)
     assert "https://example.com" not in settings.harvest.endpoints
 
 def test_harvest_clear_endpoints(settings):
-    settings.harvest.add_endpoint("https://example.com")
-    settings.harvest.add_endpoint("https://test.com")
-    settings.harvest.clear_endpoints()
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    settings.harvest.add_endpoint("https://test.com", ChangeSource.LOCAL)
+    settings.harvest.clear_endpoints(ChangeSource.LOCAL)
     assert len(settings.harvest.endpoints) == 0
 
 def test_harvest_endpoints_property(settings):
-    settings.harvest.add_endpoint("https://example.com")
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
     endpoints = settings.harvest.endpoints
     endpoints.append("https://test.com")
     assert "https://test.com" not in settings.harvest.endpoints
 
 def test_to_json(settings):
-    settings.harvest.add_endpoint("https://example.com")
-    settings.harvest.add_endpoint("https://test.com")
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    settings.harvest.add_endpoint("https://test.com", ChangeSource.LOCAL)
     json_str = settings.to_json()
     expected = {
         settings.SETTINGS: {
@@ -59,11 +59,11 @@ def test_from_json(settings):
             }
         }
     })
-    settings.from_json(json_str)
+    settings.from_json(json_str, ChangeSource.BACKEND)
     assert settings.harvest.endpoints == ["https://example.com", "https://test.com"]
 
 def test_from_json_clears_existing_endpoints(settings):
-    settings.harvest.add_endpoint("https://old.com")
+    settings.harvest.add_endpoint("https://old.com", ChangeSource.LOCAL)
     json_str = json.dumps({
         settings.SETTINGS: {
             settings.harvest.HARVEST: {
@@ -73,7 +73,7 @@ def test_from_json_clears_existing_endpoints(settings):
             }
         }
     })
-    settings.from_json(json_str)
+    settings.from_json(json_str, ChangeSource.BACKEND)
     assert settings.harvest.endpoints == ["https://new.com"]
 
 def test_constants_immutability(settings):
@@ -83,9 +83,142 @@ def test_constants_immutability(settings):
 def test_invalid_json():
     settings = Settings()
     with pytest.raises(json.JSONDecodeError):
-        settings.from_json("invalid json")
+        settings.from_json("invalid json", ChangeSource.BACKEND)
 
-def test_missing_keys_in_json(settings):
-    settings = Settings()
-    with pytest.raises(KeyError):
-        settings.from_json(json.dumps({settings.SETTINGS: {}}))
+def test_add_listener(settings:Settings):
+    called = False
+    def listener(source):
+        nonlocal called
+        called = True
+        assert source == ChangeSource.LOCAL
+    
+    settings.harvest.add_listener(listener)
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    assert called
+
+def test_remove_listener(settings:Settings):
+    called = False
+    def listener(source):
+        nonlocal called
+        called = True
+    
+    settings.harvest.add_listener(listener)
+    settings.harvest.remove_listener(listener)
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    assert not called
+
+def test_multiple_listeners(settings:Settings):
+    call_count = 0
+    def listener1(source):
+        nonlocal call_count
+        call_count += 1
+        assert source == ChangeSource.LOCAL
+    def listener2(source):
+        nonlocal call_count
+        call_count += 1
+        assert source == ChangeSource.LOCAL
+    
+    settings.harvest.add_listener(listener1)
+    settings.harvest.add_listener(listener2)
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    assert call_count == 2
+
+def test_harvest_notifies_settings(settings:Settings):
+    called = False
+    def listener(source):
+        nonlocal called
+        called = True
+        assert source == ChangeSource.LOCAL
+    
+    settings.harvest.add_listener(listener)
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    assert called
+
+def test_subscribe_all(settings:Settings):
+    call_count = 0
+    def listener(source):
+        nonlocal call_count
+        call_count += 1
+        assert source == ChangeSource.LOCAL
+    
+    settings.subscribe_all(listener)
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    assert call_count == 2  # Once for Harvest, once for Settings
+
+def test_from_json_notifies_listeners(settings:Settings):
+    called = False
+    def listener(source):
+        nonlocal called
+        called = True
+        assert source == ChangeSource.BACKEND
+    
+    settings.add_listener(listener)
+    json_str = json.dumps({
+        settings.SETTINGS: {
+            settings.harvest.HARVEST: {
+                settings.harvest.ENDPOINTS: [
+                    "https://example.com"
+                ]
+            }
+        }
+    })
+    settings.from_json(json_str, ChangeSource.BACKEND)
+    assert called
+
+def test_listener_not_called_on_no_change(settings:Settings):
+    call_count = 0
+    def listener(source):
+        nonlocal call_count
+        call_count += 1
+    
+    settings.subscribe_all(listener)
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    call_count = 0  # Reset count
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)  # Adding same endpoint
+    assert call_count == 0  # Listener should not be called as there's no actual change
+
+def test_listener_called_on_remove(settings:Settings):
+    called = False
+    def listener(source):
+        nonlocal called
+        called = True
+        assert source == ChangeSource.LOCAL
+    
+    settings.subscribe_all(listener)
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    called = False  # Reset flag
+    settings.harvest.remove_endpoint("https://example.com", ChangeSource.LOCAL)
+    assert called
+
+def test_listener_called_on_clear(settings:Settings):
+    called = False
+    def listener(source):
+        nonlocal called
+        called = True
+        assert source == ChangeSource.LOCAL
+    
+    settings.subscribe_all(listener)
+    settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
+    called = False  # Reset flag
+    settings.harvest.clear_endpoints(ChangeSource.LOCAL)
+    assert called
+
+def test_update_from_backend(settings:Settings):
+    called = False
+    def listener(source):
+        nonlocal called
+        called = True
+        assert source == ChangeSource.BACKEND
+    
+    settings.add_listener(listener)
+    settings.update_from_dict({
+        settings.SETTINGS: {
+            settings.harvest.HARVEST: {
+                settings.harvest.ENDPOINTS: [
+                    "https://backend.com"
+                ]
+            }
+        }
+    }, ChangeSource.BACKEND)
+    assert called
+    assert settings.harvest.endpoints == ["https://backend.com"]

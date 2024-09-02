@@ -3,7 +3,7 @@ import logging
 
 from ..handler import PostHandler
 from ..requestData import RequestData
-from server.settings import Settings
+from server.settings import Settings, ChangeSource
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class Handler(PostHandler):
     def do_post(self, data: RequestData):
         try:
             log.info(f"Received settings update: {data.data}")
-            data.bb.settings.from_json(json.dumps(data.data))
+            data.bb.settings.from_json(json.dumps(data.data), ChangeSource.LOCAL)
             return 200, json.dumps({"success": True})
         except json.JSONDecodeError as e:
             log.error(f"Invalid JSON in request body: {str(e)}")

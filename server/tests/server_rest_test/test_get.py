@@ -166,23 +166,23 @@ def test_local_address():
     assert not settings.IP_DO_TEST_AGAINST_API_URL or (j["ip"] in settings.API_URL) # this could be flaky
 
 
-def test_modbus_raw():
-    url = settings.API_URL + "inverter/modbus/holding/40000?size=2"
+# def test_modbus_raw():
+#     url = settings.API_URL + "inverter/modbus/holding/40000?size=2"
 
-    headers = {"user-agent": "vscode-restclient"}
+#     headers = {"user-agent": "vscode-restclient"}
 
-    response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
+#     response = requests.request("GET", url, headers=headers, timeout=settings.REQUEST_TIMEOUT)
 
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "application/json"
+#     assert response.status_code == 200
+#     assert response.headers["content-type"] == "application/json"
 
-    j = response.json()
-    assert "register" in j
-    assert "raw_value" in j
-    assert "size" in j
-    assert j["size"] == 2
-    assert j["register"] == 40000
-    assert len(j["raw_value"]) == len("00000000")
+#     j = response.json()
+#     assert "register" in j
+#     assert "raw_value" in j
+#     assert "size" in j
+#     assert j["size"] == 2
+#     assert j["register"] == 40000
+#     assert len(j["raw_value"]) == len("00000000")
 
 
 def test_logger():

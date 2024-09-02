@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod 
 import logging
-from threading import Thread
 import requests
+from typing import List, Union, Tuple
+from .itask import ITask
 
 from server.blackboard import BlackBoard
 
@@ -33,13 +34,13 @@ class SrcfulAPICallTask(Task, ABC):
         return None
 
     @abstractmethod
-    def _on_200(self, reply: requests.Response):
+    def _on_200(self, reply: requests.Response) -> Union[List[ITask], ITask, None]:
         """override to handle the reply from the server"""""
 
     @abstractmethod
-    def _on_error(self, reply: requests.Response) -> int:
+    def _on_error(self, reply: requests.Response) -> Union[int, Tuple[int, Union[List[ITask], ITask, None]]]:
         """return 0 to stop retrying,
-        otherwise return the number of milliseconds to wait before retrying"""
+        otherwise return the number of milliseconds to wait before retrying and possible tasks to add to the scheduler"""
 
     def execute(self, event_time):
 
@@ -63,12 +64,25 @@ class SrcfulAPICallTask(Task, ABC):
             response = post()
             self.reply = response
             if self.reply.status_code == 200:
-                self._on_200(response)
+                return self._on_200(response)
             else:
-                retry_delay = self._on_error(response)
+                ret = self._on_error(response)
+                if isinstance(ret, tuple):
+                    retry_delay, tasks = ret
+                else:
+                    retry_delay = ret
+                    tasks = None
                 if retry_delay > 0:
                     self.time = event_time + retry_delay
-                    return self
+                    # add self to the returned tasks, can be None, a single task or a list of tasks
+                    if tasks is None:
+                        tasks = self
+                    elif isinstance(tasks, list):
+                        tasks.append(self)
+                    else:
+                        tasks = [tasks, self]
+                
+                return tasks
                 
         except Exception as e:
             self.reply = requests.Response()
