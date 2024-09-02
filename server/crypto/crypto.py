@@ -58,10 +58,10 @@ class HardwareCrypto(CryptoInterface):
         self._atcab_sign = atcab_sign
 
     def atcab_init(self, cfg):
-        return self._atcab_init(cfg), None
+        return self._atcab_init(cfg)
 
     def atcab_release(self):
-        return self._atcab_release(), None
+        return self._atcab_release()
 
     def atcab_info(self):
         revision = bytearray(4)
