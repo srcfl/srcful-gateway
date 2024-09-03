@@ -53,11 +53,10 @@ class ModbusSunspec(ICom):
             self.inverter.read()
             
             if force_verbose:
-                payload_verbose = self.client.get_dict(True)
+                payload_verbose = self.client.get_dict()
                 return payload_verbose
             else:
-                payload_verbose = self.inverter.get_dict(True)
-
+                payload_verbose = self.inverter.get_dict()
                 payload = {}
                 payload["Hz"] = payload_verbose["Hz"]
                 payload["W"] = payload_verbose["W"]
