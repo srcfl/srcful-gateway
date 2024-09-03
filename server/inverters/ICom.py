@@ -1,11 +1,19 @@
 from abc import ABC, abstractmethod
 from .supported_inverters.profiles import InverterProfile
+from enum import Enum
+
 # Enum for the type of harvest data
 
 class HarvestDataType:
     MODBUS_REGISTERS = "modbus_registers"
     JSON_DATA = "json_data"
     UNDEFINED = "undefined"
+
+class DER_TYPE(Enum):
+    PV = "pv"
+    BATTERY = "battery"
+    UTILITY_METER = "utility_meter"
+
 
 class ICom(ABC):
     
@@ -14,6 +22,10 @@ class ICom(ABC):
 
     CONNECTION_KEY = "connection"
     CONNECTION_IX = 0
+
+
+    def get_der_types(self) -> list[DER_TYPE]:
+        pass
 
     @abstractmethod
     def connect(self) -> bool:
@@ -32,7 +44,7 @@ class ICom(ABC):
         pass
     
     @abstractmethod
-    def read_harvest_data(self, force_verbose) -> dict:
+    def read_harvest_data(self, DER_TYPE, force_verbose) -> dict:
         pass
     
     @abstractmethod

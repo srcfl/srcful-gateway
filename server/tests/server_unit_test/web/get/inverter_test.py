@@ -20,7 +20,7 @@ def request_data():
             return True
 
     bb = BlackBoard()
-    bb.ders.add(MockDER())
+    bb.devices.add(MockDER())
 
     return RequestData(bb, {}, {}, {})
 

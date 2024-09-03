@@ -26,7 +26,7 @@ def inverter_fixture():
 def request_data():
     bb = BlackBoard()
     inv = MagicMock()
-    bb.ders.add(inv)
+    bb.devices.add(inv)
 
     def read_registers(operation, address, size):
         return [i for i in range(address, address + size)]
@@ -64,7 +64,7 @@ def test_missing_address(inverter_fixture):
     handler = HoldingHandler()
 
     bb = BlackBoard()
-    bb.ders.add(inverter_fixture)
+    bb.devices.add(inverter_fixture)
 
     request_data = RequestData(bb, {}, {}, {})
     status_code, response = handler.do_get(request_data)
@@ -103,7 +103,7 @@ def test_invalid_size(request_data):
     def read_registers(operation, address, size):
         raise Exception('invalid or incomplete address range')
 
-    request_data.bb.ders.lst[0].read_registers = read_registers
+    request_data.bb.devices.lst[0].read_registers = read_registers
     assert 'read_registers' in dir(Modbus)
 
     status_code, response = handler.do_get(request_data)

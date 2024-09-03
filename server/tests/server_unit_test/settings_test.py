@@ -6,10 +6,52 @@ from server.settings import Settings, ChangeSource
 def settings():
     return Settings()
 
+@pytest.fixture
+def com():
+    from server.inverters.ModbusTCP import ModbusTCP
+    return ModbusTCP(("192.168.1.1", 502, "solaredge", 17))
+
 def test_constants(settings):
     assert settings.SETTINGS == "settings"
     assert settings.harvest.HARVEST == "harvest"
     assert settings.harvest.ENDPOINTS == "endpoints"
+
+    assert settings.devices.DEVICES == "devices"
+    assert settings.devices.CONNECTIONS == "connections"
+
+def test_ders_devices_add_connection(settings, com):
+
+    expected_connection = com.get_config()
+
+    settings.devices.add_connection(com, ChangeSource.LOCAL)
+    assert len(settings.devices.connections) == 1
+    assert settings.devices.connections[0]["host"] == "192.168.1.1"
+    assert settings.devices.to_dict()[settings.devices.CONNECTIONS][0] == expected_connection
+
+def test_ders_pv_listener(settings, com):
+    called = False
+    def listener(source):
+        nonlocal called
+        called = True
+        assert source == ChangeSource.LOCAL
+    
+    settings.devices.add_listener(listener)
+
+    settings.devices.add_connection(com, ChangeSource.LOCAL)
+    assert called
+
+def test_ders_battery_listener(settings, com):
+    called = False
+    def listener(source):
+        nonlocal called
+        called = True
+        assert source == ChangeSource.LOCAL
+    
+    settings.devices.add_connection(com, ChangeSource.LOCAL)
+    settings.devices.add_listener(listener)
+    settings.devices.remove_connection(com, ChangeSource.LOCAL)
+    
+    assert called
 
 def test_harvest_add_endpoint(settings):
     settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
@@ -43,6 +85,9 @@ def test_to_json(settings):
                     "https://example.com",
                     "https://test.com"
                 ]
+            },
+            settings.devices.DEVICES: {
+                settings.devices.CONNECTIONS: []
             }
         }
     }
@@ -203,7 +248,7 @@ def test_listener_called_on_clear(settings:Settings):
     settings.harvest.clear_endpoints(ChangeSource.LOCAL)
     assert called
 
-def test_update_from_backend(settings:Settings):
+def test_update_from_backend(settings:Settings, com):
     called = False
     def listener(source):
         nonlocal called
@@ -217,8 +262,14 @@ def test_update_from_backend(settings:Settings):
                 settings.harvest.ENDPOINTS: [
                     "https://backend.com"
                 ]
+            },
+            settings.devices.DEVICES: {
+                settings.devices.CONNECTIONS: [
+                    com.get_config()
+                ]
             }
         }
     }, ChangeSource.BACKEND)
     assert called
     assert settings.harvest.endpoints == ["https://backend.com"]
+    assert settings.devices.connections == [com.get_config()]

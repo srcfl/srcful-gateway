@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
 from server.tasks.itask import ITask
-from server.tasks.openInverterTask import OpenInverterTask
+from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
@@ -145,7 +145,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     tasks.put(GetSettingsTask(bb.time_ms() + 1000, bb))
 
     if inverter is not None:
-        tasks.put(OpenInverterTask(bb.time_ms(), bb, ModbusTCP(inverter)))
+        tasks.put(OpenDeviceTask(bb.time_ms(), bb, ModbusTCP(inverter)))
 
     for task in bootstrap.get_tasks(bb.time_ms() + 500, bb):
         tasks.put(task)

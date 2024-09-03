@@ -1,4 +1,4 @@
-from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
+from server.tasks.openDevicePerpetualTask import DeviceInverterPerpetualTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
 from unittest.mock import MagicMock, patch
@@ -11,10 +11,10 @@ def test_execute_invertert_added():
 
     inverter = MagicMock()
     inverter.open.return_value = True
-    task = OpenInverterPerpetualTask(0, bb, inverter)
+    task = DeviceInverterPerpetualTask(0, bb, inverter)
     ret = task.execute(0)
 
-    assert inverter in bb.ders.lst
+    assert inverter in bb.devices.lst
     assert inverter.connect.called
     assert ret is None
     assert bb.purge_tasks()[0] is not None
@@ -26,7 +26,7 @@ def test_retry_on_exception():
 
     inverter = MagicMock()
     inverter.connect.side_effect = Exception("test")
-    task = OpenInverterPerpetualTask(0, bb, inverter)
+    task = DeviceInverterPerpetualTask(0, bb, inverter)
     ret = task.execute(0)
 
     assert inverter.connect.called
@@ -40,10 +40,10 @@ def test_execute_invertert_could_not_open():
     
     inverter = MagicMock()
     inverter.connect.return_value = False
-    task = OpenInverterPerpetualTask(0, bb, inverter)
+    task = DeviceInverterPerpetualTask(0, bb, inverter)
     ret = task.execute(0)
 
-    assert inverter not in bb.ders.lst
+    assert inverter not in bb.devices.lst
     assert inverter.connect.called
     assert ret is task
     assert len(bb.purge_tasks()) == 0
@@ -53,18 +53,18 @@ def test_execute_new_inverter_added():
     bb = BlackBoard()
     inverter = MagicMock()
     inverter.connect.return_value = False
-    task = OpenInverterPerpetualTask(0, bb, inverter)
+    task = DeviceInverterPerpetualTask(0, bb, inverter)
     
     inverter2 = MagicMock()
     inverter2.is_open.return_value = True
     
-    bb.ders.add(inverter2)
+    bb.devices.add(inverter2)
 
     task.execute(0)
 
     assert inverter.disconnect.called
-    assert inverter not in bb.ders.lst
-    assert inverter2 in bb.ders.lst
+    assert inverter not in bb.devices.lst
+    assert inverter2 in bb.devices.lst
 
  
 @patch('server.web.handler.get.network.ModbusScanHandler')
@@ -73,11 +73,11 @@ def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
     inverter = MagicMock()
     
     inverter.connect.return_value = False
-    task = OpenInverterPerpetualTask(0, bb, inverter)
+    task = DeviceInverterPerpetualTask(0, bb, inverter)
 
     task.execute(event_time=0)
 
-    assert len(task.bb.ders.lst) == 0
+    assert len(task.bb.devices.lst) == 0
     
     # Create a mock for the scanner
     mock_scanner = mock_modbus_scan_handler.return_value
@@ -93,5 +93,5 @@ def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
 
     task.execute(event_time=5001)
 
-    assert len(task.bb.ders.lst) == 1
+    assert len(task.bb.devices.lst) == 1
 

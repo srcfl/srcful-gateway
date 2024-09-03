@@ -5,6 +5,7 @@ from server.message import Message
 from server.tasks.itask import ITask
 from server.settings import Settings, ChangeSource
 import logging
+from server.inverters.ICom import ICom
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ class BlackBoard:
     Tasks can be added to the blackboard and will be executed by the main loop. This makes it possible for non Task objects to create tasks.
     """
 
-    _ders: "BlackBoard.DERs"
+    _devices: "BlackBoard.Devices"
     _start_time: int
     _rest_server_port: int
     _rest_server_ip: str
@@ -28,7 +29,7 @@ class BlackBoard:
     _settings: Settings
 
     def __init__(self):
-        self._ders = BlackBoard.DERs()
+        self._devices = BlackBoard.Devices()
         self._start_time = time.monotonic_ns()
         self._rest_server_port = 80
         self._rest_server_ip = "localhost"
@@ -129,8 +130,8 @@ class BlackBoard:
         self._rest_server_ip = ip
 
     @property
-    def ders(self):
-        return self._ders
+    def devices(self):
+        return self._devices
 
     @property
     def elapsed_time(self):
@@ -149,8 +150,8 @@ class BlackBoard:
     def time_ms(self):
         return time.time_ns() // 1_000_000
 
-    class DERs:
-        """Observable list of inverters"""
+    class Devices:
+        """Observable list harware communication objects"""
 
         def __init__(self):
             self.lst = []
@@ -162,15 +163,15 @@ class BlackBoard:
         def remove_listener(self, observer):
             self._observers.remove(observer)
 
-        def add(self, inverter):
-            self.lst.append(inverter)
+        def add(self, device:ICom):
+            self.lst.append(device)
             for o in self._observers:
-                o.add_inverter(inverter)
+                o.add_device(device)
 
-        def remove(self, inverter):
-            if inverter in self.lst:
-                self.lst.remove(inverter)
+        def remove(self, device:ICom):
+            if device in self.lst:
+                self.lst.remove(device)
                 for o in self._observers:
-                    o.remove_inverter(inverter)
+                    o.remove_device(device)
 
 

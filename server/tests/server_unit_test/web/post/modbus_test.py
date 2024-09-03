@@ -10,7 +10,7 @@ from server.blackboard import BlackBoard
 def test_do_post():
     inverter = Mock()
     bb = BlackBoard()
-    bb.ders.add(inverter)
+    bb.devices.add(inverter)
 
     handler = Handler()
 
@@ -57,7 +57,7 @@ def test_malformed_commands():
 
     def requestData(data):
         bb = BlackBoard()
-        bb.ders.add(Mock())
+        bb.devices.add(Mock())
         return RequestData(bb, {}, {}, data)
 
     # Command without required 'type' field

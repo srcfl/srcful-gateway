@@ -1,5 +1,5 @@
 from .inverters.der import DER
-from .tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
+from .tasks.openDevicePerpetualTask import DeviceInverterPerpetualTask
 import os
 import logging
 from .inverters.IComFactory import IComFactory
@@ -57,7 +57,7 @@ class Bootstrap(BootstrapSaver):
         # check if the setup already exists
         for task in self.get_tasks(0, None):
             if (
-                isinstance(task, OpenInverterPerpetualTask)
+                isinstance(task, DeviceInverterPerpetualTask)
                 and task.der.get_config() == inverter_args
             ):
                 return
@@ -125,7 +125,7 @@ class Bootstrap(BootstrapSaver):
         der = DER(com)
         
         try:
-            return OpenInverterPerpetualTask(
+            return DeviceInverterPerpetualTask(
                 event_time + 1000,
                 bb,
                 der,

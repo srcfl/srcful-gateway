@@ -1,5 +1,5 @@
 import json
-from server.tasks.openInverterTask import OpenInverterTask
+from server.tasks.openDeviceTask import OpenDeviceTask
 from ..handler import PostHandler
 from ..requestData import RequestData
 import logging
@@ -45,7 +45,7 @@ class Handler(PostHandler):
             logger.info(f"Created a Modbus {conf[0]} connection")
             der = DER(com)
             
-            data.bb.add_task(OpenInverterTask(data.bb.time_ms() + 100, data.bb, der))
+            data.bb.add_task(OpenDeviceTask(data.bb.time_ms() + 100, data.bb, der))
             return 200, json.dumps({"status": "ok"})    
             
         except Exception as e:

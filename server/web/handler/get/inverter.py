@@ -21,8 +21,8 @@ class Handler(GetHandler):
     def do_get(self, data: RequestData):
         config = {"status": "No inverter"}
 
-        if len(data.bb.ders.lst) > 0:
-            der = data.bb.ders.lst[0]
+        if len(data.bb.devices.lst) > 0:
+            der = data.bb.devices.lst[0]
             config = der.get_config()
 
             if der.is_open():

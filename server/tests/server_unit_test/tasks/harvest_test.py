@@ -1,6 +1,6 @@
 import server.tasks.harvest as harvest
 import server.tasks.harvestTransport as harvestTransport
-import server.tasks.openInverterPerpetualTask as oit
+import server.tasks.openDevicePerpetualTask as oit
 from unittest.mock import Mock, patch
 import pytest
 from server.inverters.supported_inverters.profiles import InverterProfile
@@ -226,8 +226,8 @@ def test_execute_harvest_incremental_backoff_terminate_on_max():
     # the tasks returned should be t and the open inverter task
     ret = t.execute(17)
     assert len(ret) == 2
-    oit_ix = 0 if type(ret[0]) is oit.OpenInverterPerpetualTask else 1
-    assert type(ret[oit_ix]) is oit.OpenInverterPerpetualTask
+    oit_ix = 0 if type(ret[0]) is oit.DeviceInverterPerpetualTask else 1
+    assert type(ret[oit_ix]) is oit.DeviceInverterPerpetualTask
     assert ret[(oit_ix + 1) % 2] is t
 
     # make sure the open inverter task has a cloned inverter

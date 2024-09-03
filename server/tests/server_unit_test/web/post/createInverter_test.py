@@ -1,6 +1,6 @@
 from server.web.handler.post.modbusDevice import Handler as ModbusDeviceHandler
 from server.web.handler.requestData import RequestData
-from server.tasks.openInverterTask import OpenInverterTask
+from server.tasks.openDeviceTask import OpenDeviceTask
 from server.blackboard import BlackBoard
 
 import queue
@@ -18,7 +18,7 @@ def test_post_create_inverter_tcp():
     tasks = rd.bb.purge_tasks()
     assert len(tasks) == 1
     task = tasks[0]
-    assert isinstance(task, OpenInverterTask)
+    assert isinstance(task, OpenDeviceTask)
     c = task.der.get_config()
     assert task.der.get_config() == conf
     
@@ -44,7 +44,7 @@ def test_post_create_inverter_rtu():
     tasks = rd.bb.purge_tasks()
     assert len(tasks) == 1
     task = tasks[0]
-    assert isinstance(task, OpenInverterTask)
+    assert isinstance(task, OpenDeviceTask)
     assert task.der.get_config() == conf
 
 
@@ -67,6 +67,6 @@ def test_post_create_inverter_solarman():
     tasks = rd.bb.purge_tasks()
     assert len(tasks) == 1
     task = tasks[0]
-    assert isinstance(task, OpenInverterTask)
+    assert isinstance(task, OpenDeviceTask)
     assert task.der.get_config() == conf
     

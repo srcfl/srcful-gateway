@@ -9,6 +9,8 @@ from typing import Callable, List
 
 from abc import ABC, abstractmethod
 from typing import Optional
+from server.inverters.ICom import ICom
+
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +74,7 @@ class Settings(Observable):
     def __init__(self):
         super().__init__()
         self._harvest = self.Harvest(self)
+        self._devices = self.Devices(self)
 
     @property
     def API_SUBKEY(self):
@@ -81,20 +84,27 @@ class Settings(Observable):
     def SETTINGS(self):
         return "settings"
 
+
+
     @property
     def harvest(self) -> 'Settings.Harvest':
         return self._harvest
 
+    @property
+    def devices(self) -> 'Settings.Devices':
+        return self._devices
+
     def update_from_dict(self, data: dict, source: ChangeSource):
         if data and self.SETTINGS in data:
             settings_data = data[self.SETTINGS]
-            self.harvest.update_from_dict(settings_data.get(self._harvest.HARVEST, {}), source)
+            self.harvest.update_from_dict(settings_data.get(self.harvest.HARVEST, {}), source)
+            self.devices.from_dict(settings_data.get(self.devices.DEVICES, {}), source)
 
     def to_dict(self) -> dict:
         return {
             self.SETTINGS: {
-                self._harvest.HARVEST: self._harvest.to_dict(),
-                # ... other settings ...
+                self.harvest.HARVEST: self._harvest.to_dict(),
+                self.devices.DEVICES: self.devices.to_dict()
             }
         }
 
@@ -105,6 +115,48 @@ class Settings(Observable):
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
+        
+    class Devices(Observable):
+        def __init__(self, parent: Optional[Observable] = None):
+            super().__init__(parent)
+            self._connections = []
+
+
+        def add_connection(self, connection: ICom, source: ChangeSource):
+            dict = connection.get_config()
+            if dict not in self._connections:
+                self._connections.append(dict)
+                self.notify_listeners(source)
+
+        def remove_connection(self, connection: ICom, source: ChangeSource):
+            data = connection.get_config()
+            if data in self._connections:
+                self._connections.remove(data)
+                self.notify_listeners(source)
+
+        @property
+        def CONNECTIONS(self):
+            return "connections"
+        
+        @property
+        def DEVICES(self):
+            return "devices"
+    
+        @property
+        def connections(self):
+            return self._connections
+        
+        def to_dict(self) -> dict:
+            return {
+                self.CONNECTIONS: self._connections
+            }
+        
+        def from_dict(self, data: dict, source: ChangeSource):
+            if self.CONNECTIONS in data:
+                self._connections = data[self.CONNECTIONS]
+                self.notify_listeners(source)
+    
+    
 
     class Harvest(Observable):
         def __init__(self, parent: Optional[Observable] = None):

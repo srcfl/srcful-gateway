@@ -6,7 +6,7 @@ from ..inverters.der import DER
 
 logger = logging.getLogger(__name__)
 
-class OpenInverterPerpetualTask(Task):
+class DeviceInverterPerpetualTask(Task):
     def __init__(self, event_time: int, bb: BlackBoard, der: DER):
         super().__init__(event_time, bb)
         self.der = der
@@ -15,20 +15,20 @@ class OpenInverterPerpetualTask(Task):
     def execute(self, event_time):
         
         # has an inverter been opened?
-        if len(self.bb.ders.lst) > 0 and self.bb.ders.lst[0].is_open():
+        if len(self.bb.devices.lst) > 0 and self.bb.devices.lst[0].is_open():
             logger.debug("Inverter is already open, removing it from the blackboard")
-            self.bb.ders.remove(self.der)
+            self.bb.devices.remove(self.der)
             self.der.disconnect()
             return
         try:
             if self.der.connect():
                 # terminate and remove all inverters from the blackboard
                 logger.debug("Removing all inverters from the blackboard after opening a new inverter")
-                for i in self.bb.ders.lst:
+                for i in self.bb.devices.lst:
                     i.disconnect()
-                    self.bb.ders.remove(i)
+                    self.bb.devices.remove(i)
 
-                self.bb.ders.add(self.der)
+                self.bb.devices.add(self.der)
                 self.bb.add_info("Inverter opened: " + str(self.der.get_config()))
                 return
             

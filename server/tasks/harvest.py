@@ -1,6 +1,6 @@
 
 import logging
-from server.tasks.openInverterPerpetualTask import OpenInverterPerpetualTask
+from server.tasks.openDevicePerpetualTask import DeviceInverterPerpetualTask
 from server.blackboard import BlackBoard
 from .task import Task
 from .harvestTransport import ITransportFactory
@@ -56,7 +56,7 @@ class Harvest(Task):
             if self.backoff_time >= self.max_backoff_time:
                 log.debug("Max timeout reached terminating inverter and issuing new reopen in 30 sec")
                 self.der.disconnect()
-                open_inverter = OpenInverterPerpetualTask(event_time + 30000, self.bb, self.der.clone())
+                open_inverter = DeviceInverterPerpetualTask(event_time + 30000, self.bb, self.der.clone())
                 self.time = event_time + 10000
 
                 # we return self so that in the next execute the last harvest will be transported
