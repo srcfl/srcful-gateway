@@ -3,8 +3,9 @@ from server.tasks.openInverterTask import OpenInverterTask
 from ..handler import PostHandler
 from ..requestData import RequestData
 import logging
-from ....inverters.IComFactory import IComFactory
-from ....inverters.der import DER
+from server.inverters.IComFactory import IComFactory
+from server.inverters.ICom import ICom
+from server.inverters.der import DER
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class Handler(PostHandler):
     def do_post(self, data: RequestData) -> tuple[int, str]:
         
         try:
-            if "connection" not in data.data:
+            if ICom.CONNECTION_KEY not in data.data:
                 return 400, json.dumps({"status": "connection field is required"})
             
             conf = IComFactory.parse_connection_config_from_dict(data.data)

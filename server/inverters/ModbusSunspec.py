@@ -6,11 +6,31 @@ import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
+
+
 class ModbusSunspec(ICom):
     """
     ModbusSunspec class
     """
+
+    CONNECTION = "SUNSPEC"
+
+    @staticmethod
+    def list_to_tuple(config: list) -> tuple:
+        assert config[ICom.CONNECTION_IX] == ModbusSunspec.CONNECTION, "Invalid connection type"
+        ip = config[1]
+        port = int(config[2])
+        slave_id = int(config[3])
+        return (config[ICom.CONNECTION_IX], ip, port, slave_id)
     
+    @staticmethod
+    def dict_to_tuple(config: dict) -> tuple:
+        assert config[ICom.CONNECTION_KEY] == ModbusSunspec.CONNECTION, "Invalid connection type"
+        ip = config["host"]
+        port = int(config["port"])
+        slave_id = int(config["address"])
+        return (config[ICom.CONNECTION_KEY], ip, port, slave_id)
     
     # Address, Serial, Port, type, Slave_ID, verbose 
     Setup: TypeAlias = tuple[str | bytes | bytearray, int, int]
@@ -73,7 +93,7 @@ class ModbusSunspec(ICom):
     
     def get_config(self):
         return {
-            "connection": "SUNSPEC",
+            ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
             "host": self.host,
             "port": self.port,
             "address": self.slave_id

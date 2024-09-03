@@ -1,4 +1,5 @@
 from .modbus import Modbus
+from .ICom import ICom
 from pymodbus.client import ModbusTcpClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
 from pymodbus.exceptions import ModbusIOException
@@ -21,6 +22,27 @@ class ModbusTCP(Modbus):
     address: int, Modbus address of the inverter
     """
 
+
+    CONNECTION = "TCP"
+
+    @staticmethod
+    def list_to_tuple(config: list) -> tuple:
+        assert config[ICom.CONNECTION_IX] == ModbusTCP.CONNECTION, "Invalid connection type"
+        ip = config[1]
+        port = int(config[2])
+        inverter_type = config[3]
+        slave_id = int(config[4])
+        return (config[ICom.CONNECTION_IX], ip, port, inverter_type, slave_id)
+    
+    @staticmethod
+    def dict_to_tuple(config: dict) -> tuple:
+        assert config[ICom.CONNECTION_KEY] == ModbusTCP.CONNECTION, "Invalid connection type"
+        ip = config["host"]
+        port = int(config["port"])
+        inverter_type = config["type"]
+        slave_id = int(config["address"])
+        return (config[ICom.CONNECTION_KEY], ip, port, inverter_type, slave_id)
+        
     Setup: TypeAlias = tuple[str | bytes | bytearray, int, str, int]
 
     def __init__(self, setup: Setup) -> None:
@@ -72,7 +94,7 @@ class ModbusTCP(Modbus):
 
     def _get_config(self) -> tuple[str, str, int, str, int]:
         return (
-            "TCP",
+            ModbusTCP.CONNECTION,
             self._get_host(),
             self._get_port(),
             self._get_type(),
@@ -81,7 +103,7 @@ class ModbusTCP(Modbus):
 
     def _get_config_dict(self) -> dict:
         return {
-            "connection": "TCP",
+            ICom.CONNECTION_KEY: ModbusTCP.CONNECTION,
             "type": self._get_type(),
             "address": self._get_address(),
             "host": self._get_host(),

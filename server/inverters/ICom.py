@@ -12,6 +12,9 @@ class ICom(ABC):
     # HarvestDataType Enum
     data_type = HarvestDataType.UNDEFINED
 
+    CONNECTION_KEY = "connection"
+    CONNECTION_IX = 0
+
     @abstractmethod
     def connect(self) -> bool:
         pass

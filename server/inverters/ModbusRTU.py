@@ -1,4 +1,5 @@
 from .modbus import Modbus
+from .ICom import ICom
 from pymodbus.client import ModbusSerialClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
 from pymodbus.exceptions import ModbusIOException
@@ -12,6 +13,8 @@ log.setLevel(logging.INFO)
 pymodbus_apply_logging_config("INFO")
 
 
+
+
 class ModbusRTU(Modbus):
 
     """
@@ -23,6 +26,31 @@ class ModbusRTU(Modbus):
     type: string, solaredge, huawei or fronius etc...,
     address: int, Modbus address of the inverter,
     """
+
+    CONNECTION = "RTU"
+
+    def list_to_tuple(config: list) -> tuple:
+        assert config[ICom.CONNECTION_IX] == ModbusRTU.CONNECTION, "Invalid connection type"
+        port = config[1]
+        baudrate = int(config[2])
+        bytesize = int(config[3])
+        parity = config[4]
+        stopbits = float(config[5])
+        inverter_type = config[6]
+        slave_id = int(config[7])
+        return (config[0], port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
+    
+    def dict_to_tuple(config: dict) -> tuple:
+        assert config[ICom.CONNECTION_KEY] == ModbusRTU.CONNECTION, "Invalid connection type"
+        serial_port = config["port"]
+        baudrate = int(config["baudrate"])
+        bytesize = int(config["bytesize"])
+        parity = config["parity"]
+        stopbits = float(config["stopbits"])
+        inverter_type = config["type"]
+        slave_id = int(config["address"])
+        return (config[ICom.CONNECTION_KEY], serial_port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
+
 
     Setup: TypeAlias = tuple[str, int, int, str, float, str, int]
 
@@ -84,7 +112,7 @@ class ModbusRTU(Modbus):
 
     def _get_config(self) -> tuple[str, str, int, int, str, float, str, int]:
         return (
-            "RTU",
+            ModbusRTU.CONNECTION,
             self._get_host(),
             self._get_baudrate(),
             self._get_bytesize(),
@@ -96,7 +124,7 @@ class ModbusRTU(Modbus):
 
     def _get_config_dict(self) -> dict:
         return {
-            "connection": "RTU",
+            ICom.CONNECTION_KEY: ModbusRTU.CONNECTION,
             "type": self._get_type(),
             "address": self._get_address(),
             "port": self._get_host(),

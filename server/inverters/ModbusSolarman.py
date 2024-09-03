@@ -1,4 +1,5 @@
 from .modbus import Modbus
+from .ICom import ICom
 from pysolarmanv5 import PySolarmanV5
 from typing_extensions import TypeAlias
 import logging
@@ -6,6 +7,8 @@ import logging
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
+
 
 class ModbusSolarman(Modbus):
     """
@@ -17,6 +20,31 @@ class ModbusSolarman(Modbus):
     verbose: int, 0 or 1 for verbose logging
 
     """
+
+    CONNECTION = "SOLARMAN"
+
+    @staticmethod
+    def list_to_tuple(config: list) -> tuple:
+        assert config[ICom.CONNECTION_IX] == ModbusSolarman.CONNECTION, "Invalid connection type"
+        ip = config[1]
+        serial = int(config[2])
+        port = int(config[3])
+        inverter_type = config[4]
+        slave_id = int(config[5])
+        verbose = False
+        return (config[0], ip, serial, port, inverter_type, slave_id, verbose)
+    
+    @staticmethod
+    def dict_to_tuple(config: dict) -> tuple:
+        assert config[ICom.CONNECTION_KEY] == ModbusSolarman.CONNECTION, "Invalid connection type"
+        ip = config["host"]
+        serial = int(config["serial"])
+        port = int(config["port"])
+        inverter_type = config["type"]
+        slave_id = int(config["address"])
+        verbose = False
+        return (config[ICom.CONNECTION_KEY], ip, serial, port, inverter_type, slave_id, verbose)
+    
 
     # Address, Serial, Port, type, Slave_ID, verbose 
     Setup: TypeAlias = tuple[str | bytes | bytearray, int, int, str, int, int]
@@ -95,7 +123,7 @@ class ModbusSolarman(Modbus):
 
     def _get_config(self) -> tuple[str, str, int, str, int]:
         return (
-            "SOLARMAN",
+            ModbusSolarman.CONNECTION,
             self._get_host(),
             self._get_serial(),
             self._get_port(),
@@ -105,7 +133,7 @@ class ModbusSolarman(Modbus):
 
     def _get_config_dict(self) -> dict:
         return {
-            "connection": "SOLARMAN",
+            ICom.CONNECTION_KEY: "SOLARMAN",
             "type": self._get_type(),
             "serial": self._get_serial(),
             "address": self._get_address(),
