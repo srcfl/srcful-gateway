@@ -48,8 +48,12 @@ def test_execute_harvest_x10():
     # the 10th time we should get a list of 2 tasks back
     mock_inverter = Mock()
     registers = [{"1": 1717 + x} for x in range(10)]
-    t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
+    bb = BlackBoard()
+    bb.settings.harvest.clear_endpoints(ChangeSource.LOCAL)
+    bb.settings.harvest.add_endpoint("http://dret.com:8080", ChangeSource.LOCAL)
+    t = harvest.Harvest(0, bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     mock_inverter.connect.return_value = True
+
 
     for i in range(9):
         mock_inverter.read_harvest_data.return_value = registers[i]
@@ -77,6 +81,9 @@ def test_execute_harvest_x10():
         8: registers[8],
         17: registers[9],
     }
+
+    # check that the transport has the correct post_url according to the settings
+    assert ret[1].post_url == bb.settings.harvest.endpoints[0]
 
 
 def test_adaptive_backoff():
