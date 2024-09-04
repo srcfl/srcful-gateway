@@ -55,7 +55,7 @@ def test_booststrap_remove_inverter():
     inverter.get_config.return_value = exp
 
     b = bootstrap.Bootstrap('')
-    b.remove_inverter(inverter)
+    b.remove_device(inverter)
 
     assert inverter.get_config.called
 
@@ -74,7 +74,7 @@ def test_bootstrap_add_inverter():
         assert "get_config" in dir(Modbus)
         der.get_config.return_value = solaredge_conf
 
-        b.add_inverter(der)
+        b.add_device(der)
 
         with open(file_name, "r") as f:
             lines = f.readlines()

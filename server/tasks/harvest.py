@@ -1,6 +1,7 @@
 
 import logging
-from server.tasks.openDevicePerpetualTask import DeviceInverterPerpetualTask
+from typing import List
+from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.blackboard import BlackBoard
 from .task import Task
 from .harvestTransport import ITransportFactory
@@ -56,7 +57,7 @@ class Harvest(Task):
             if self.backoff_time >= self.max_backoff_time:
                 log.debug("Max timeout reached terminating inverter and issuing new reopen in 30 sec")
                 self.der.disconnect()
-                open_inverter = DeviceInverterPerpetualTask(event_time + 30000, self.bb, self.der.clone())
+                open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.der.clone())
                 self.time = event_time + 10000
 
                 # we return self so that in the next execute the last harvest will be transported
@@ -73,10 +74,13 @@ class Harvest(Task):
             return [self] + transport
         return self
 
-    def _create_transport(self, limit: int, event_time: int, endpoints: list[str]) -> list[Task]:
+    def _create_transport(self, limit: int, event_time: int, endpoints: list[str]) -> List[Task]:
         ret = []
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
-            transport = self.transport_factory(event_time + 100, self.bb, self.barn, self.der)
+            for endpoint in endpoints:
+                log.info("Creating transport for %s", endpoint)
+                transport = self.transport_factory(event_time + 100, self.bb, self.barn, self.der)
+                transport.post_url = endpoint
             self.barn = {}
             ret.append(transport)
         return ret

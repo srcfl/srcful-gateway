@@ -5,3 +5,6 @@ from . import modbus
 from . import echo
 from . import modbusDevice
 from . import settings
+from . import modbusTCP
+from . import modbusRTU
+from . import modbusSolarman

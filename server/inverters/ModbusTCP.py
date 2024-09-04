@@ -61,9 +61,10 @@ class ModbusTCP(Modbus):
             return False
 
     def _is_open(self) -> bool:
-        return bool(self.client.socket)
+        return bool(self.client) and bool(self.client.socket)
 
     def _close(self) -> None:
+        log.info("Closing client ModbusTCP")
         self.client.close()
 
     def _terminate(self) -> None:

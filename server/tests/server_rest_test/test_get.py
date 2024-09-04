@@ -194,7 +194,7 @@ def test_logger():
 
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/json"
-    assert "server.tasks.openInverterTask" in response.json()
+    assert "server.tasks.openDeviceTask" in response.json()
 
 
 def test_supported():

@@ -19,8 +19,8 @@ def test_post_create_inverter_tcp():
     assert len(tasks) == 1
     task = tasks[0]
     assert isinstance(task, OpenDeviceTask)
-    c = task.der.get_config()
-    assert task.der.get_config() == conf
+    c = task.device.get_config()
+    assert task.device.get_config() == conf
     
 
 def test_post_create_inverter_rtu():
@@ -45,7 +45,7 @@ def test_post_create_inverter_rtu():
     assert len(tasks) == 1
     task = tasks[0]
     assert isinstance(task, OpenDeviceTask)
-    assert task.der.get_config() == conf
+    assert task.device.get_config() == conf
 
 
 def test_post_create_inverter_solarman():
@@ -68,5 +68,5 @@ def test_post_create_inverter_solarman():
     assert len(tasks) == 1
     task = tasks[0]
     assert isinstance(task, OpenDeviceTask)
-    assert task.der.get_config() == conf
+    assert task.device.get_config() == conf
     
