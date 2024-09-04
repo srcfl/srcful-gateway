@@ -25,10 +25,10 @@ class Bootstrap(BootstrapSaver):
         self._create_file_if_not_exists()
 
     # implementation of blackboard inverter observer
-    def add_inverter(self, der: DER):
+    def add_device(self, der: DER):
         self.append_inverter(der.get_config())
 
-    def remove_inverter(self, der: DER):
+    def remove_device(self, der: DER):
         logger.info(
             "Removing inverter from bootstrap: {} not yet supported".format(
                 der.get_config()
@@ -122,15 +122,13 @@ class Bootstrap(BootstrapSaver):
         conf = IComFactory.parse_connection_config_from_list(task_args)
         com = IComFactory.create_com(conf)
         
-        der = DER(com)
-        
         try:
             return DeviceInverterPerpetualTask(
                 event_time + 1000,
                 bb,
-                der,
+                com,
             )
         except Exception as e:
-            logger.error("Failed to create OpenInverter task: {}".format(task_args))
+            logger.error("Failed to create OpenDevice task: {}".format(task_args))
             logger.error(e)
             return None

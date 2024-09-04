@@ -4,13 +4,13 @@ from server.tasks.openDevicePerpetualTask import DeviceInverterPerpetualTask
 from server.blackboard import BlackBoard
 from .task import Task
 from .harvestTransport import ITransportFactory
-from server.inverters.der import DER
+from server.inverters.ICom import ICom
 
 log = logging.getLogger(__name__)
 
 
 class Harvest(Task):
-    def __init__(self, event_time: int, bb: BlackBoard, der: DER, transport_factory: ITransportFactory):
+    def __init__(self, event_time: int, bb: BlackBoard, der: ICom, transport_factory: ITransportFactory):
         super().__init__(event_time, bb)
         self.der = der
         self.barn = {}

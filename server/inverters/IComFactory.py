@@ -48,7 +48,17 @@ class IComFactory:
                 log.error("Unknown connection type: %s", config[ICom.CONNECTION_KEY])
                 raise ValueError("Unknown connection type")
 
-    
+    @staticmethod
+    def parse_and_create_com(config) -> ICom:
+        if isinstance(config, list):
+            return IComFactory.create_com(IComFactory.parse_connection_config_from_list(config))
+        elif isinstance(config, dict):
+            return IComFactory.create_com(IComFactory.parse_connection_config_from_dict(config))
+        elif isinstance(config, tuple):
+            return IComFactory.create_com(config)
+        else:
+            raise ValueError("Invalid config type")
+        
     @staticmethod
     def create_com(config: tuple) -> ICom:
         """

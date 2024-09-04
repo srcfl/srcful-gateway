@@ -3,6 +3,7 @@ import sys
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from server.inverters.IComFactory import IComFactory
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
 from server.tasks.itask import ITask
@@ -133,21 +134,33 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                     self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard))
                 else:
                     logger.info("No need to save settings to backend as the source is the backend")
-        
-    bb._settings_monitor = BackendSettingsSaver(bb)
-    bb.settings.add_listener(bb._settings_monitor.on_change)
 
-    bb.ders.add_listener(bootstrap)
+    class SettingsDeviceListener(DebouncedMonitorBase):
+        def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
+            super().__init__(debounce_delay)
+            self.blackboard = blackboard
+
+        def _perform_action(self, source: ChangeSource):
+            logger.info("SettingsDeviceListener detected a change, opening all devices")
+            # Open all devices in the list
+            for connection in self.blackboard.settings.devices.connections:
+                self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.parse_and_create_com(connection)))
+        
+    bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
+    bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
+
+    # bootstrap is deprecated so is should not listen to this anymore
+    # bb.devices.add_listener(bootstrap)
 
     tasks.put(StartupInfoTask(bb.time_ms(), bb))
 
     # put some initial tasks in the queue
-    tasks.put(GetSettingsTask(bb.time_ms() + 1000, bb))
+    tasks.put(GetSettingsTask(bb.time_ms() + 500, bb))
 
     if inverter is not None:
         tasks.put(OpenDeviceTask(bb.time_ms(), bb, ModbusTCP(inverter)))
 
-    for task in bootstrap.get_tasks(bb.time_ms() + 500, bb):
+    for task in bootstrap.get_tasks(bb.time_ms() + 2000, bb):
         tasks.put(task)
 
     tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
@@ -162,7 +175,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         logger.exception("Unexpected error: %s", sys.exc_info()[0])
         logger.exception("Exception: %s", e)
     finally:
-        for i in bb.ders.lst:
+        for i in bb.devices.lst:
             i.disconnect()
         web_server.close()
         graphql_client.stop()

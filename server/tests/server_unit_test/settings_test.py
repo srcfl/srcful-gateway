@@ -19,7 +19,7 @@ def test_constants(settings):
     assert settings.devices.DEVICES == "devices"
     assert settings.devices.CONNECTIONS == "connections"
 
-def test_ders_devices_add_connection(settings, com):
+def test_devices_add_connection(settings, com):
 
     expected_connection = com.get_config()
 
@@ -28,7 +28,7 @@ def test_ders_devices_add_connection(settings, com):
     assert settings.devices.connections[0]["host"] == "192.168.1.1"
     assert settings.devices.to_dict()[settings.devices.CONNECTIONS][0] == expected_connection
 
-def test_ders_pv_listener(settings, com):
+def test_devices_listener(settings, com):
     called = False
     def listener(source):
         nonlocal called
@@ -40,7 +40,7 @@ def test_ders_pv_listener(settings, com):
     settings.devices.add_connection(com, ChangeSource.LOCAL)
     assert called
 
-def test_ders_battery_listener(settings, com):
+def test_devices_remove_listener(settings, com):
     called = False
     def listener(source):
         nonlocal called
@@ -52,6 +52,11 @@ def test_ders_battery_listener(settings, com):
     settings.devices.remove_connection(com, ChangeSource.LOCAL)
     
     assert called
+
+def test_same_device_twice(settings, com):
+    settings.devices.add_connection(com, ChangeSource.LOCAL)
+    settings.devices.add_connection(com, ChangeSource.LOCAL)
+    assert len(settings.devices.connections) == 1
 
 def test_harvest_add_endpoint(settings):
     settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
@@ -167,6 +172,27 @@ def test_multiple_listeners(settings:Settings):
     settings.harvest.add_listener(listener2)
     settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
     assert call_count == 2
+
+def test_sub_listener_notified(settings:Settings):
+    called = False
+    def listener(source):
+        nonlocal called
+        called = True
+        assert source == ChangeSource.LOCAL
+    
+    settings.devices.add_listener(listener)
+    settings.update_from_dict({
+        settings.SETTINGS: {
+            settings.devices.DEVICES: {
+                settings.devices.CONNECTIONS: [
+                    ("TCP", "192.168.1.1", 502, "solaredge", 17)
+                ]
+            }
+        }
+    }, ChangeSource.LOCAL)  
+
+    assert called
+    
 
 def test_harvest_notifies_settings(settings:Settings):
     called = False

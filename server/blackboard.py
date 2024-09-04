@@ -151,7 +151,7 @@ class BlackBoard:
         return time.time_ns() // 1_000_000
 
     class Devices:
-        """Observable list harware communication objects"""
+        """Observable list of communication objects"""
 
         def __init__(self):
             self.lst = []
@@ -164,6 +164,7 @@ class BlackBoard:
             self._observers.remove(observer)
 
         def add(self, device:ICom):
+            assert device.is_open(), "Only open devices can be added to the blackboard"
             self.lst.append(device)
             for o in self._observers:
                 o.add_device(device)
