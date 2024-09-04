@@ -37,7 +37,7 @@ def test_bootstrap_process_lines():
     assert len(tasks) == len(configs)
     
     for task in tasks:
-        assert task.der.get_config() in configs
+        assert task.device.get_config() in configs
 
 
 def test_booststrap_get_tasks_nofile():
@@ -83,7 +83,7 @@ def test_bootstrap_add_inverter():
         assert os.path.exists(file_name)
         assert patcher.fs.exists(file_name)
 
-        assert b.get_tasks(10, [])[0].der.get_config() == solaredge_conf
+        assert b.get_tasks(10, [])[0].device.get_config() == solaredge_conf
 
 
 def test_bootstrap_append_inverter():
@@ -103,4 +103,4 @@ def test_bootstrap_append_inverter():
         assert os.path.exists(file_name)
         assert patcher.fs.exists(file_name)
 
-        assert b.get_tasks(10, [])[0].der.get_config() == solaredge_conf
+        assert b.get_tasks(10, [])[0].device.get_config() == solaredge_conf

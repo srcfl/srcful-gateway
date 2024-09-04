@@ -19,6 +19,24 @@ def test_execute_invertert_added():
     assert ret is None
     assert bb.purge_tasks()[0] is not None
 
+def test_execute_inverter_already_open():
+    bb = BlackBoard()
+    inverter = MagicMock()
+    inverter.is_open.return_value = True
+    inverter.get_config.return_value = {"port": "COM1"}
+    bb.devices.add(inverter)
+
+    new_inverter = MagicMock()
+    new_inverter.is_open.return_value = True
+    new_inverter.get_config.return_value = {"port": "COM1"}
+
+    task = OpenDeviceTask(0, bb, new_inverter)
+    ret = task.execute(0)
+
+    assert inverter in bb.devices.lst
+    assert not inverter.connect.called
+    assert not inverter.connect.called
+
 
 def test_execute_invertert_could_not_open():
     bb = BlackBoard()

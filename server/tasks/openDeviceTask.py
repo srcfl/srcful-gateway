@@ -18,6 +18,11 @@ class OpenDeviceTask(Task):
         logger.info("#################### OpenDeviceTask ####################")
         logger.info("##########################################################")
         try:
+
+            if self._is_open(self.device):
+                logger.info("Device already open: %s", self.device.get_config())
+                return None
+            
             if self.device.connect():
                 logger.info("Opening: %s", self.device.get_config())
                 
@@ -42,3 +47,9 @@ class OpenDeviceTask(Task):
             logger.exception("Exception opening device: %s", e)
             self.time = event_time + 10000
             return self
+        
+    def _is_open(self, device: ICom):
+        for i in self.bb.devices.lst:
+            if i.get_config() == device.get_config() and i.is_open():
+                return True
+        return False
