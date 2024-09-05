@@ -144,6 +144,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
             logger.info("SettingsDeviceListener detected a change, opening all devices")
             # Open all devices in the list
             for connection in self.blackboard.settings.devices.connections:
+                # TODO: if the device has been connected to before then it should be a perpetual task
                 self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.parse_and_create_com(connection)))
         
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
