@@ -14,6 +14,10 @@ class Handler:
             "optional": optional if optional is not None else {},
             "returns": returns if returns is not None else {}
         }
+    
+    def do(self, data: RequestData):
+        '''Override to implement the handler'''
+        raise NotImplementedError("do not implemented")
 
 
 class PostHandler(Handler):
@@ -25,6 +29,9 @@ class PostHandler(Handler):
     def create_schema(self, description: str, required: dict = None, optional: dict = None, returns: dict = None) -> dict:
         '''Use to create the schema of the handler'''
         return super().schema_prot("post", description, required, optional, returns)
+    
+    def do(self, data: RequestData):
+        return self.do_post(data)
 
     def do_post(self, data: RequestData):
         '''Override to implement the handler'''
@@ -41,6 +48,9 @@ class GetHandler(Handler):
     def create_schema(self, description: str, required: dict = None, optional: dict = None, returns: dict = None) -> dict:
         '''Use to create the schema of the handler'''
         return super().schema_prot("get", description, required, optional, returns)
+    
+    def do(self, data: RequestData):
+        return self.do_get(data)
 
     def do_get(self, data: RequestData):
         '''Override to implement the handler'''
@@ -57,6 +67,9 @@ class DeleteHandler(Handler):
     def create_schema(self, description: str, required: dict = None, optional: dict = None, returns: dict = None):
         '''Use to create the schema of the handler'''
         return super().schema_prot("delete", description, required, optional, returns)
+
+    def do(self, data: RequestData):
+        return self.do_delete(data)
 
     def do_delete(self, data: RequestData):
         '''Override to implement the handler'''

@@ -10,8 +10,8 @@ from typing import Callable
 from datetime import datetime, timezone
 from server.settings import Settings, ChangeSource
 from server.tasks.getSettingsTask import handle_settings
+from server.tasks.requestResponseTask import handle_request_task, RequestTask
 
-import socket
 
 logger = logging.getLogger(__name__)
 
@@ -74,8 +74,13 @@ class GraphQLSubscriptionClient(threading.Thread):
         elif data.get('type') == 'data':
         
             # This is what we should do next
-            if 'data' in data['payload'] and data['payload']['data']['configurationDataChanges']['subKey'] == self.bb.settings.API_SUBKEY:
-                handle_settings(self.bb, data['payload']['data']['configurationDataChanges'])
+            if 'data' in data['payload'] and 'configurationDataChanges' in data['payload']['data']:
+                if data['payload']['data']['configurationDataChanges']['subKey'] == self.bb.settings.API_SUBKEY:
+                    handle_settings(self.bb, data['payload']['data']['configurationDataChanges'])
+                if data['payload']['data']['configurationDataChanges']['subKey'] == RequestTask.SUBKEY:
+                    task = handle_request_task(self.bb, data['payload']['data']['configurationDataChanges'])
+                    self.bb.add_task(task)
+            
 
     def on_error(self, ws, error):
         logger.error(f"WebSocket error: {error}, url: {self.url}")
