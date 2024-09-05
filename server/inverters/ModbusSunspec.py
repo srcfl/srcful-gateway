@@ -79,8 +79,11 @@ class ModbusSunspec(ICom):
                 payload_verbose = self.inverter.get_dict()
                 payload = {}
                 payload["Hz"] = payload_verbose["Hz"]
+                payload["Hz_SF"] = payload_verbose["Hz_SF"]
                 payload["W"] = payload_verbose["W"]
+                payload["W_SF"] = payload_verbose["W_SF"]
                 payload["DCW"] = payload_verbose["DCW"]
+                payload["DCW_SF"] = payload_verbose["DCW_SF"]
                 
                 return payload
         except Exception as e:

@@ -123,7 +123,7 @@ def test_running_inverter():
 
     j = response.json()
     assert "connection" in j
-    assert j["connection"] == "TCP" or j["connection"] == "RTU"
+    assert j["connection"] == "TCP" or j["connection"] == "RTU" or j["connection"] == "SUNSPEC"
     assert "type" in j
     assert "address" in j  # this could be dependant on TCP connection
     assert "port" in j
