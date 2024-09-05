@@ -104,6 +104,56 @@ class BlackBoard:
         return message_id
 
     @property
+    def state(self) -> dict:
+        state = dict()
+        state['status'] = {'version': self.get_version(), 'uptime': self.elapsed_time, 'messages': self.message_state()}
+        state['crypto'] = self.crypto_state()
+        state['network'] = self.network_state()
+        state['devices'] = self.devices_state()
+        return state
+    
+    def message_state(self) -> dict:
+        ret = []
+        for m in self.messages:
+            m_dict = {
+                "message": m.message,
+                "type": m.type.value,
+                "timestamp": m.timestamp,
+                "id": m.id
+            }
+            ret.append(m_dict)
+        return ret
+
+    def crypto_state(self) -> dict:
+        from server.web.handler.get.crypto import Handler as CryptoHandler
+        return CryptoHandler().get_crypto_state(self.chip_death_count)
+            
+    
+    def network_state(self) -> dict:
+        try:
+            from server.network.scan import WifiScanner
+            s = WifiScanner()
+            ssids = s.get_ssids()
+            return {"wifi": {"ssids": ssids}}
+        except Exception as e:
+            logger.error(e)
+            return {"error": str(e)}
+    
+    def devices_state(self) -> list[dict]:
+        ret = {'configured': []}
+
+        for device in self._devices.lst:
+            device_state = {}
+            device_state['connection'] = device.get_config()
+            device_state['is_open'] = device.is_open()
+            ret['configured'].append(device_state)
+
+        import server.web.handler.get.supported as supported
+        ret['supported'] = supported.Handler().get_supported_inverters()
+        return ret
+    
+
+    @property
     def chip_death_count(self):
         return self._chip_death_count
 

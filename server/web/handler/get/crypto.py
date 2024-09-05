@@ -44,17 +44,21 @@ class Handler(GetHandler):
                 
             }
         )
-
-    def do_get(self, data: RequestData):
-        # return the json data {'serial:' crypto.serial, 'pubkey': crypto.publicKey}
+    
+    def get_crypto_state(self, death_count: int) -> dict:
+        ret = {}
         with crypto.Chip() as chip:
             pub_key = chip.get_public_key()
-            ret = {}
             ret[self.DEVICE] = chip.get_device_name()
             ret[self.SERIAL_NO] = chip.get_serial_number().hex()
             ret[self.PUBLIC_KEY] = pub_key.hex()
             ret[self.COMPACT_KEY] = crypto.public_key_to_compact(pub_key).decode("utf-8")
-            ret[self.CHIP_DEATH_COUNT] = data.bb.chip_death_count
+            ret[self.CHIP_DEATH_COUNT] = death_count
+        return ret
+
+    def do_get(self, data: RequestData):
+        # return the json data {'serial:' crypto.serial, 'pubkey': crypto.publicKey}
+        ret = self.get_crypto_state(data.bb.chip_death_count)
         return 200, json.dumps(ret)
 
 
