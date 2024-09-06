@@ -1,6 +1,6 @@
 from io import BytesIO
 from unittest.mock import patch
-from server.web.server import Server, request_handler_factory
+from server.web.server import Server, request_handler_factory, Endpoints
 from http.server import BaseHTTPRequestHandler
 import pytest
 import json
@@ -39,7 +39,7 @@ def mock_finish():
 @patch.object(BaseHTTPRequestHandler, "handle")
 @patch.object(BaseHTTPRequestHandler, "setup")
 def test_handler_api_get_enpoints_params(mock_setup, mock_handle, mock_finish):
-    h = request_handler_factory(None)(None, None, None)
+    h = Endpoints()
     path, query = h.pre_do("/api/inverter/modbus/holding/1234?test=hello")
 
     # this could really be any handler
@@ -62,7 +62,7 @@ def test_open_close():
 
 
 def test_handler_post_bytest_2_dict():
-    h = request_handler_factory(None)
+    h = Endpoints()
     d = h.post_2_dict("")
     assert d == {}
     assert h.post_2_dict("foo") == {}
@@ -77,7 +77,7 @@ def test_handler_post_bytest_2_dict():
 
 
 def test_handler_get_post_data():
-    h = request_handler_factory(None)
+    h = Endpoints()
     assert h.get_data({"Content-Length": "0"}, BytesIO(b"")) == {}
 
     data = b"name=John%20Doe&age=30&location=New%20York"
@@ -172,7 +172,7 @@ def test_hanler_post_returns_exception(mock_setup, mock_handle, mock_finish):
 def test_handler_get_do_get(mock_setup, mock_handle, mock_finish):
     # check that all get handlers have a doGet method
     h = request_handler_factory(BlackBoard())(None, None, None)
-    for handler in h.api_get.values():
+    for handler in h.endpoints.api_get.values():
         assert hasattr(handler, "do_get")
         assert hasattr(handler, "schema")
         assert handler.schema() is not None
@@ -188,7 +188,7 @@ def test_handler_get_do_get(mock_setup, mock_handle, mock_finish):
 def test_handler_get_do_post(mock_setup, mock_handle, mock_finish):
     # check that all post handlers have a doPost method
     h = request_handler_factory(BlackBoard())(None, None, None)
-    for handler in h.api_post.values():
+    for handler in h.endpoints.api_post.values():
         assert hasattr(handler, "do_post")
         assert hasattr(handler, "schema")
         assert handler.schema() is not None
@@ -204,7 +204,7 @@ def test_handler_get_do_post(mock_setup, mock_handle, mock_finish):
 def test_handler_get_do_delete(mock_setup, mock_handle, mock_finish):
     # check that all post handlers have a doPost method
     h = request_handler_factory(BlackBoard())(None, None, None)
-    for handler in h.api_delete.values():
+    for handler in h.endpoints.api_delete.values():
         assert hasattr(handler, "do_delete")
         assert hasattr(handler, "schema")
         assert handler.schema() is not None
