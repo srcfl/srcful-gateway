@@ -7,16 +7,16 @@ import pytest
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.modbus import HoldingHandler, InputHandler  # adapt to your actual module import
 from server.blackboard import BlackBoard
-from server.inverters.inverter import Inverter
+from server.inverters.modbus import Modbus
 
 @pytest.fixture
 def inverter_fixture():
     inverter = MagicMock()
 
-    # These registers are word-sized, so they are 2 bytes each, e.g. the 1 in [1, 2, 3, 4] is 0x0100 (2 bytes) in hex (little endian)
+    # These registers are word-sized, so they are 2 bytes each, e.g. the 1 in [1, 2, 3, 4] is 0x0001 (2 bytes) in hex (big endian)
     inverter.read_registers.return_value = [1, 2, 3, 4]
 
-    assert 'read_registers' in dir(Inverter)
+    assert 'read_registers' in dir(Modbus)
 
 
     return inverter
@@ -26,13 +26,13 @@ def inverter_fixture():
 def request_data():
     bb = BlackBoard()
     inv = MagicMock()
-    bb.inverters.add(inv)
+    bb.devices.add(inv)
 
     def read_registers(operation, address, size):
         return [i for i in range(address, address + size)]
 
     inv.read_registers = read_registers
-    assert 'read_registers' in dir(Inverter)
+    assert 'read_registers' in dir(Modbus)
 
     post_params = {'address': '0'}
     query_params = {'type': 'uint', 'size': '2', 'endianess': 'big'}
@@ -64,7 +64,7 @@ def test_missing_address(inverter_fixture):
     handler = HoldingHandler()
 
     bb = BlackBoard()
-    bb.inverters.add(inverter_fixture)
+    bb.devices.add(inverter_fixture)
 
     request_data = RequestData(bb, {}, {}, {})
     status_code, response = handler.do_get(request_data)
@@ -103,8 +103,8 @@ def test_invalid_size(request_data):
     def read_registers(operation, address, size):
         raise Exception('invalid or incomplete address range')
 
-    request_data.bb.inverters.lst[0].read_registers = read_registers
-    assert 'read_registers' in dir(Inverter)
+    request_data.bb.devices.lst[0].read_registers = read_registers
+    assert 'read_registers' in dir(Modbus)
 
     status_code, response = handler.do_get(request_data)
     assert status_code == 400
@@ -129,38 +129,41 @@ def test_int_value(request_data):
     response = json.loads(response)
     assert response.get('value') == 2  # = 0x00000001 as signed int
 
-def test_float_value_little(request_data):
+def test_float_value_BADC(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'float'
     request_data.query_params['size'] = '2'
-    request_data.query_params['endianess'] = 'big'
-    request_data.post_params['address'] = 0x4155
+    request_data.query_params['endianess'] = 'little'
+    request_data.post_params['address'] = 0x4248
 
     status_code, response = handler.do_get(request_data)
 
     assert status_code == 200
     response = json.loads(response)
+
+    print("Hex", response.get('raw_value'))
+    print("Value", response.get('value'))
     
-    val = response.get('value') - 13.328451156616211
+    val = response.get('value') - 198949.03125
 
     # Can't use assert equals on floating point numbers due to precision issues
     assert abs(val) < 1e-20
     
 
-def test_float_value_big(request_data):
+def test_float_value_ABCD(request_data):
     handler = HoldingHandler()
     request_data.query_params['type'] = 'float'
     request_data.query_params['size'] = '2'
     request_data.query_params['endianess'] = 'big'
-    request_data.post_params['address'] = 0x4155
+    request_data.post_params['address'] = 0x4248
 
-    assert 'read_registers' in dir(Inverter)
+    assert 'read_registers' in dir(Modbus)
 
     status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
     # Can't use assert equals on floating point numbers due to precision issues
-    val = response.get('value') - 13.328451156616211
+    val = response.get('value') - 50.314727783203125
     assert abs(val) < 1e-5
     
 def test_double_value(request_data):

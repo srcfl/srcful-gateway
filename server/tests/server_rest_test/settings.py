@@ -1,8 +1,8 @@
-API_URL = "http://localhost:5000/api/"
-#API_URL = "http://192.168.0.215/api/"
+# API_URL = "http://localhost:8080/api/"
+API_URL = "http://192.168.50.207/api/"
 
 IP_DO_TEST_AGAINST_API_URL = False  # checks if the ip adress is part of the API_URL
-DO_TEST_CRYPTO = False  # if set to False all crypto dependent tests should return a 500
+DO_TEST_CRYPTO = True  # if set to False all crypto dependent tests should return a 500
 
 
 INVERTER_HOST = "35.198.102.58"

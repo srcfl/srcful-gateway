@@ -10,14 +10,18 @@ import socket
 logger = logging.getLogger(__name__)
 
 class NetworkHandler(GetHandler):
+    @property
+    def CONNECTIONS(self):
+        return "connections"
+
     def schema(self):
         return self.create_schema(
             "Returns the list of networks",
-            returns={"connections": "list of dicts, containing the configured networks."}
+            returns={self.CONNECTIONS: "list of dicts, containing the configured networks."}
         )
 
     def do_get(self, data: RequestData):
-        return 200, json.dumps({"connections": get_connection_configs()})
+        return 200, json.dumps({self.CONNECTIONS: get_connection_configs()})
 
 
 class AddressHandler(GetHandler):
@@ -73,8 +77,6 @@ class AddressHandler(GetHandler):
         except Exception:
             eth0 = self.NA
 
-        ip_json = {iface: ip for iface, ip in ip_interfaces}
-
         response = {
             self.IP: ip,
             self.PORT: data.bb.rest_server_port,
@@ -87,19 +89,40 @@ class AddressHandler(GetHandler):
 
 # A class to scan for modbus devices on the network
 class ModbusScanHandler(GetHandler):
-    def schema(self):
+
+    @property
+    def IP(self) -> str:
+        return "ip"
+    
+    @property
+    def PORT(self) -> str:
+        return "port"
+
+    @property
+    def DEVICES(self) -> str:
+        return "devices"
+    
+    @property
+    def PORTS(self) -> str:
+        return "ports"
+    
+    @property
+    def TIMEOUT(self) -> str:
+        return "timeout"
+
+    def schema(self) -> dict:
         return {
             "description": "Scans the network for modbus devices",
             "optional": {
-                "ports": "string, containing a comma separated list of ports to scan for modbus devices.",
-                "timeout": "float, the timeout in seconds for each ip:port scan. Default is 0.01 (10ms)."
+                self.PORTS: "string, containing a comma separated list of ports to scan for modbus devices.",
+                self.TIMEOUT: "float, the timeout in seconds for each ip:port scan. Default is 0.01 (10ms)."
             },
             "returns": {
-                "devices": "a list of JSON Objects: {'host': host ip, 'port': host port}."
+                self.DEVICES: "a list of JSON Objects: {'host': host ip, 'port': host port}."
                 }
         }
 
-    def parse_ports(self, ports_str):
+    def parse_ports(self, ports_str) -> list[int]:
         """Parse a string of ports and port ranges into a list of integers."""
         ports = []
         for part in ports_str.split(','):
@@ -110,18 +133,19 @@ class ModbusScanHandler(GetHandler):
                 ports.append(int(part))
         return ports
 
-    def scan_ip(self, ip: str, port: int, timeout: float):
+    def scan_ip(self, ip: str, port: int, timeout: float) -> bool:
         """Check if a specific port is open on a given IP address."""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(timeout)
-            result = sock.connect_ex((ip, port))
+
+            sock.connect((ip, port))
             sock.close()
-            return result == 0
+            return True
         except socket.error:
             return False
         
-    def scan_ports(self, ports: list[int], timeout: float):
+    def scan_ports(self, ports: list[int], timeout: float) -> list[dict[str, str]]:
         """Scan the local network for modbus devices on the given ports."""
         
         local_ip = get_ip_address()
@@ -138,8 +162,8 @@ class ModbusScanHandler(GetHandler):
             for port in ports:
                 if self.scan_ip(ip, port, float(timeout)):
                     device = {
-                        "ip": ip,
-                        "port": port
+                        self.IP: ip,
+                        self.PORT: port
                     }
                     modbus_devices.append(device)
 
@@ -152,11 +176,11 @@ class ModbusScanHandler(GetHandler):
     def do_get(self, data: RequestData):
         """Scan the network for modbus devices."""
         
-        ports = data.query_params.get("ports", "502,1502,6607")
+        ports = data.query_params.get(self.PORTS, "502,1502,6607,8899")
         ports = self.parse_ports(ports)
-        timeout = data.query_params.get("timeout", 0.01) # 10ms may be too short for some networks? 
+        timeout = data.query_params.get(self.TIMEOUT, 0.01) # 10ms may be too short for some networks? 
 
         modbus_devices = self.scan_ports(ports=ports, timeout=timeout)
-    
-        return 200, json.dumps({"devices":modbus_devices})
+        
+        return 200, json.dumps({self.DEVICES:modbus_devices})
 

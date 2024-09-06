@@ -1,6 +1,7 @@
 from server.blackboard import BlackBoard
 from unittest.mock import MagicMock
 from server.message import Message
+from server.inverters.ICom import ICom
 import pytest
 import time
 
@@ -8,8 +9,10 @@ import time
 def test_blackboard():
     bb = BlackBoard()
     assert bb is not None
-    assert bb.inverters is not None
-    assert bb.inverters.lst is not None
+    assert bb.devices is not None
+    assert bb.devices.lst is not None
+    assert bb.settings is not None
+    assert len(bb.settings.harvest.endpoints) > 0
 
 def test_blackboard_get_version():
     bb = BlackBoard()
@@ -17,25 +20,25 @@ def test_blackboard_get_version():
     # assert that string contains two dots
     assert bb.get_version().count(".") == 2
 
-def test_blackboard_add_inverter():
+def test_blackboard_add_device():
     listener = MagicMock()
     bb = BlackBoard()
-    inverter = MagicMock()
-    bb.inverters.add_listener(listener)
-    bb.inverters.add(inverter)
-    assert inverter in bb.inverters.lst
-    assert listener.add_inverter.called
+    hw = MagicMock()
+    bb.devices.add_listener(listener)
+    bb.devices.add(hw)
+    assert hw in bb.devices.lst
+    assert listener.add_device.called
 
 
-def test_blackboard_remove_inverter():
+def test_blackboard_remove_device():
     listener = MagicMock()
     bb = BlackBoard()
-    inverter = MagicMock()
-    bb.inverters.add_listener(listener)
-    bb.inverters.add(inverter)
-    bb.inverters.remove(inverter)
-    assert inverter not in bb.inverters.lst
-    assert listener.remove - inverter.called
+    hw = MagicMock()
+    bb.devices.add_listener(listener)
+    bb.devices.add(hw)
+    bb.devices.remove(hw)
+    assert hw not in bb.devices.lst
+    assert listener.remove - hw.called
 
 
 @pytest.fixture

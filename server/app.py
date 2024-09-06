@@ -3,15 +3,20 @@ import sys
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from server.inverters.IComFactory import IComFactory
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 import server.web.server
 from server.tasks.itask import ITask
-from server.tasks.openInverterTask import OpenInverterTask
+from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
-from server.tasks.cryptoReviveTask import CryptoReviveTask
+from server.tasks.startupInfoTask import StartupInfoTask
+from server.settings import DebouncedMonitorBase, ChangeSource
+from server.tasks.getSettingsTask import GetSettingsTask
+from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.bootstrap import Bootstrap
+from server.web.socket.settings_subscription import GraphQLSubscriptionClient
 
 
 from server.blackboard import BlackBoard
@@ -98,7 +103,8 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     scheduler.main_loop()
 
 
-def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None):
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None): 
+
     bb = BlackBoard()
     HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
 
@@ -109,22 +115,58 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     web_server = server.web.server.Server(web_host, bb)
     logger.info("Server started http://%s:%s", web_host[0], web_host[1])
 
+    graphql_client = GraphQLSubscriptionClient(bb, "wss://api.srcful.dev/")
+    graphql_client.start()
+
     tasks = queue.PriorityQueue()
 
     bootstrap = Bootstrap(bootstrap_file)
 
-    bb.inverters.add_listener(bootstrap)
+    class BackendSettingsSaver(DebouncedMonitorBase):
+            """ Monitors settings changes and schedules a save to the backend, ignores changes from the backend """
+            def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
+                super().__init__(debounce_delay)
+                self.blackboard = blackboard
+
+            def _perform_action(self, source: ChangeSource):
+                if source != ChangeSource.BACKEND:
+                    logger.info("Settings change detected, scheduling a save to backend")
+                    self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard))
+                else:
+                    logger.info("No need to save settings to backend as the source is the backend")
+
+    class SettingsDeviceListener(DebouncedMonitorBase):
+        def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
+            super().__init__(debounce_delay)
+            self.blackboard = blackboard
+
+        def _perform_action(self, source: ChangeSource):
+            logger.info("SettingsDeviceListener detected a change, opening all devices")
+            # Open all devices in the list
+            for connection in self.blackboard.settings.devices.connections:
+                # TODO: if the device has been connected to before then it should be a perpetual task
+                self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.parse_and_create_com(connection)))
+        
+    bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
+    bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
+
+    # bootstrap is deprecated so is should not listen to this anymore
+    # bb.devices.add_listener(bootstrap)
+
+    tasks.put(StartupInfoTask(bb.time_ms(), bb))
 
     # put some initial tasks in the queue
-    if inverter is not None:
-        tasks.put(OpenInverterTask(bb.time_ms(), bb, ModbusTCP(inverter)))
+    tasks.put(GetSettingsTask(bb.time_ms() + 500, bb))
 
-    for task in bootstrap.get_tasks(bb.time_ms() + 500, bb):
+    if inverter is not None:
+        tasks.put(OpenDeviceTask(bb.time_ms(), bb, ModbusTCP(inverter)))
+
+    for task in bootstrap.get_tasks(bb.time_ms() + 2000, bb):
         tasks.put(task)
 
     tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
-    tasks.put(CryptoReviveTask(bb.time_ms() + 7000, bb))
+    # tasks.put(CryptoReviveTask(bb.time_ms() + 7000, bb))
 
     try:
         main_loop(tasks, bb)
@@ -134,9 +176,11 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         logger.exception("Unexpected error: %s", sys.exc_info()[0])
         logger.exception("Exception: %s", e)
     finally:
-        for i in bb.inverters.lst:
-            i.close()
+        for i in bb.devices.lst:
+            i.disconnect()
         web_server.close()
+        graphql_client.stop()
+        graphql_client.join()
         logger.info("Server stopped.")
 
 

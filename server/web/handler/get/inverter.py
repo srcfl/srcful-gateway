@@ -21,11 +21,11 @@ class Handler(GetHandler):
     def do_get(self, data: RequestData):
         config = {"status": "No inverter"}
 
-        if len(data.bb.inverters.lst) > 0:
-            inverter = data.bb.inverters.lst[0]
-            config = inverter.get_config_dict()
+        if len(data.bb.devices.lst) > 0:
+            der = data.bb.devices.lst[0]
+            config = der.get_config()
 
-            if inverter.is_open():
+            if der.is_open():
                 config["status"] = "open"
             else:
                 config["status"] = "closed"

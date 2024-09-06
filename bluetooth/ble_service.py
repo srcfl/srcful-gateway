@@ -14,7 +14,7 @@ from bless import (  # type: ignore
     GATTAttributePermissions
 )
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
 # this trigger is never used atm but could be used to signal the main thread that a request has been received
 trigger: asyncio.Event = asyncio.Event()

@@ -256,30 +256,30 @@
       "description": "Another inverter profile...",
       "registers_verbose": [
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 3,
           "num_of_registers": 86
         },
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 514,
           "num_of_registers": 125
         },
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 644,
           "num_of_registers": 50
         }
       ],
       "registers": [
         {
-          "fcode": 4,
-          "start_register": 608,
+          "fcode": 3,
+          "start_register": 609,
           "num_of_registers": 1
         },
         {
-          "fcode": 4,
-          "start_register": 608,
+          "fcode": 3,
+          "start_register": 672,
           "num_of_registers": 2
         }
       ]
@@ -294,30 +294,30 @@
       "description": "Another inverter profile...",
       "registers_verbose": [
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 3,
           "num_of_registers": 86
         },
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 514,
           "num_of_registers": 125
         },
         {
-          "fcode": 4,
+          "fcode": 3,
           "start_register": 644,
           "num_of_registers": 50
         }
       ],
       "registers": [
         {
-          "fcode": 4,
-          "start_register": 608,
+          "fcode": 3,
+          "start_register": 609,
           "num_of_registers": 1
         },
         {
-          "fcode": 4,
-          "start_register": 608,
+          "fcode": 3,
+          "start_register": 672,
           "num_of_registers": 2
         }
       ]
@@ -417,59 +417,149 @@
       "registers_verbose": [
         {
           "fcode": 4,
-          "start_register": 31005,
-          "num_of_registers": 5
+          "start_register": 1004,
+          "num_of_registers": 1
         },
         {
           "fcode": 4,
-          "start_register": 32001,
-          "num_of_registers": 125
+          "start_register": 1008,
+          "num_of_registers": 1
         },
         {
           "fcode": 4,
-          "start_register": 32129,
-          "num_of_registers": 17
+          "start_register": 2000,
+          "num_of_registers": 1
         },
         {
           "fcode": 4,
-          "start_register": 33065,
-          "num_of_registers": 82
-        },
-        {
-          "fcode": 4,
-          "start_register": 34065,
-          "num_of_registers": 70
-        },
-        {
-          "fcode": 4,
-          "start_register": 35001,
-          "num_of_registers": 4
-        },
-        {
-          "fcode": 4,
-          "start_register": 35065,
+          "start_register": 2016,
           "num_of_registers": 2
         },
         {
           "fcode": 4,
-          "start_register": 35101,
+          "start_register": 2032,
           "num_of_registers": 2
         },
         {
           "fcode": 4,
-          "start_register": 36001,
-          "num_of_registers": 100
+          "start_register": 2036,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2040,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2044,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2064,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2068,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2100,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2104,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2108,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2112,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2116,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2120,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2124,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2128,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2132,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2136,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2140,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 2144,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 5000,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 4,
+          "start_register": 5002,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 4,
+          "start_register": 5004,
+          "num_of_registers": 1
+        },
+        {
+          "fcode": 4,
+          "start_register": 5064,
+          "num_of_registers": 2
+        },
+        {
+          "fcode": 4,
+          "start_register": 5100,
+          "num_of_registers": 2
         }
       ],
       "registers": [
         {
           "fcode": 4,
-          "start_register": 32017,
+          "start_register": 2016,
           "num_of_registers": 2
         },
         {
           "fcode": 4,
-          "start_register": 35101,
+          "start_register": 5100,
           "num_of_registers": 2
         }
       ]

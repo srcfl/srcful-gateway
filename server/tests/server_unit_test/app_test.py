@@ -4,9 +4,7 @@ import queue
 from unittest.mock import MagicMock
 import pytest
 
-
 from server import app
-
 
 from server.app import main_loop
 from server.blackboard import BlackBoard

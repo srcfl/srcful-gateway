@@ -1,5 +1,5 @@
 import logging
-from server.inverters.inverter import Inverter
+from server.inverters.modbus import Modbus
 from server.blackboard import BlackBoard
 from .task import Task
 
@@ -22,7 +22,7 @@ class ModbusWriteTask(Task):
             super().__init__("pause")
             self.duration = duration
 
-    def __init__(self, event_time: int, bb: BlackBoard, inverter: Inverter, commands: list[Command]):
+    def __init__(self, event_time: int, bb: BlackBoard, inverter: Modbus, commands: list[Command]):
         super().__init__(event_time, bb)
         self.inverter = inverter
         self.current_command = 0

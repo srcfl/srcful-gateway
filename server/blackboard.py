@@ -3,7 +3,9 @@ import time
 import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
+from server.settings import Settings, ChangeSource
 import logging
+from server.inverters.ICom import ICom
 
 logger = logging.getLogger(__name__)
 
@@ -17,22 +19,26 @@ class BlackBoard:
     Tasks can be added to the blackboard and will be executed by the main loop. This makes it possible for non Task objects to create tasks.
     """
 
-    _inverters: "BlackBoard.Inverters"
+    _devices: "BlackBoard.Devices"
     _start_time: int
     _rest_server_port: int
     _rest_server_ip: str
     _messages: list[Message]
     _tasks: list[ITask]
     _chip_death_count: int
+    _settings: Settings
 
     def __init__(self):
-        self._inverters = BlackBoard.Inverters()
+        self._devices = BlackBoard.Devices()
         self._start_time = time.monotonic_ns()
         self._rest_server_port = 80
         self._rest_server_ip = "localhost"
         self._messages = []
         self._tasks = []
         self._chip_death_count = 0
+        self._settings = Settings()
+        self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
+        
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -60,6 +66,10 @@ class BlackBoard:
                 self._messages.remove(m)
                 return True
         return False
+    
+    @property
+    def settings(self) -> Settings:
+        return self._settings
 
     @property
     def messages(self) -> tuple[Message]:
@@ -120,15 +130,15 @@ class BlackBoard:
         self._rest_server_ip = ip
 
     @property
-    def inverters(self):
-        return self._inverters
+    def devices(self):
+        return self._devices
 
     @property
     def elapsed_time(self):
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.11.0"
+        return "0.13.2"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:
@@ -140,8 +150,8 @@ class BlackBoard:
     def time_ms(self):
         return time.time_ns() // 1_000_000
 
-    class Inverters:
-        """Observable list of inverters"""
+    class Devices:
+        """Observable list of communication objects"""
 
         def __init__(self):
             self.lst = []
@@ -153,15 +163,16 @@ class BlackBoard:
         def remove_listener(self, observer):
             self._observers.remove(observer)
 
-        def add(self, inverter):
-            self.lst.append(inverter)
+        def add(self, device:ICom):
+            assert device.is_open(), "Only open devices can be added to the blackboard"
+            self.lst.append(device)
             for o in self._observers:
-                o.add_inverter(inverter)
+                o.add_device(device)
 
-        def remove(self, inverter):
-            if inverter in self.lst:
-                self.lst.remove(inverter)
+        def remove(self, device:ICom):
+            if device in self.lst:
+                self.lst.remove(device)
                 for o in self._observers:
-                    o.remove_inverter(inverter)
+                    o.remove_device(device)
 
 

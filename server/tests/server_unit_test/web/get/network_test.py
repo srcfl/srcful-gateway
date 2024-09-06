@@ -8,6 +8,9 @@ from server.network.wifi import get_connection_configs
 from server.blackboard import BlackBoard
 from unittest.mock import patch
 
+# To-do: Break down the test cases into smaller test cases and in their respective classes 
+# (e.g. NetworkHandlerTest, AddressHandlerTest, ModbusScanHandlerTest)
+
 @pytest.fixture
 def request_data():
     bb = BlackBoard()
@@ -21,7 +24,7 @@ def test_network(request_data):
     status_code, response = handler.do_get(request_data)
     assert status_code == 200
     response = json.loads(response)
-    expected = json.loads(json.dumps({"connections":get_connection_configs()}))   # getConnectionConfigs() returns a list of dicts, so we need to convert it to JSON and back to a dict to compare   
+    expected = json.loads(json.dumps({handler.CONNECTIONS:get_connection_configs()}))   # getConnectionConfigs() returns a list of dicts, so we need to convert it to JSON and back to a dict to compare   
     assert response == expected
 
 
@@ -40,6 +43,11 @@ def test_network_address(request_data):
     assert response[handler.ETH0_MAC]
     assert response[handler.WLAN0_MAC]
 
+def test_parse_ports():
+    handler = ModbusScanHandler()
+    assert handler.parse_ports("80,443") == [80, 443]
+    assert handler.parse_ports("80-82,90") == [80, 81, 82, 90]
+
 @patch('server.web.handler.get.network.ModbusScanHandler.scan_ports')
 @patch('server.web.handler.get.network.ModbusScanHandler.scan_ip')
 def test_modbus_scan(mock_scan_ip, mock_scan_ports):
@@ -49,8 +57,8 @@ def test_modbus_scan(mock_scan_ip, mock_scan_ports):
     assert handler.parse_ports(ports) == [502]
 
     ports = "502,503-510,1502"
-    parsed_ports = [502, 503, 504, 505, 506, 507, 508, 509, 510, 1502]
-    assert handler.parse_ports(ports) == parsed_ports
+    parsed_ports = handler.parse_ports(ports)
+    assert parsed_ports == [502, 503, 504, 505, 506, 507, 508, 509, 510, 1502]
     
 
     # Mock the scan_ip method to return False
@@ -63,21 +71,20 @@ def test_modbus_scan(mock_scan_ip, mock_scan_ports):
 
     # We mock the scan_ports method to return an empty list
     mock_scan_ports.return_value = []
-    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {"ports": ports}, {}))
+    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {handler.PORTS: ports}, {}))
     assert status_code == 200
     response = json.loads(response)
 
-    assert "devices" in response
-    assert response["devices"] == []
+    assert handler.DEVICES in response
+    assert response[handler.DEVICES] == []
 
     # Now we mock the scan_ports method to return a list of one device
-    mock_scan_ports.return_value = [{"ip": "192.168.50.220"}]
-    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {"ports": ports}, {}))
+    mock_scan_ports.return_value = [{handler.IP: "192.168.50.220"}]
+    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {handler.PORTS: ports}, {}))
     assert status_code == 200
     response = json.loads(response)
 
-    assert "devices" in response
-    assert response["devices"] == [{"ip": "192.168.50.220"}]
+    assert handler.DEVICES in response
+    assert response[handler.DEVICES] == [{handler.IP: "192.168.50.220"}]
 
 
-    

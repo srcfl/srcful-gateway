@@ -54,7 +54,7 @@ class Handler(PostHandler):
                 {"status": "bad request", "message": "Missing commands in request"}
             )
 
-        if len(data.bb.inverters.lst) == 0:
+        if len(data.bb.devices.lst) == 0:
             return 400, json.dumps(
                 {"status": "error", "message": "No Modbus device initialized"}
             )
@@ -81,7 +81,7 @@ class Handler(PostHandler):
                     return 500, json.dumps({"status": "error", "message": error})
 
             # Add ModbusTask to task queue
-            data.bb.add_task(ModbusWriteTask(data.bb.time_ms() + 100, data.bb, data.bb.inverters.lst[0], command_objects))
+            data.bb.add_task(ModbusWriteTask(data.bb.time_ms() + 100, data.bb, data.bb.devices.lst[0], command_objects))
 
             return 200, json.dumps({"status": "ok"})
         except Exception as e:

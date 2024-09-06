@@ -11,105 +11,118 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+class Endpoints:
+    def __init__(self):
+        self.api_get_dict = {
+            "crypto": handler.get.crypto.Handler(),
+            "crypto/revive": handler.get.crypto.ReviveHandler(),
+            "hello": handler.get.hello.Handler(),
+            "name": handler.get.name.Handler(),
+            "logger": handler.get.logger.Handler(),
+            "inverter": handler.get.inverter.Handler(),
+            # "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
+            # "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
+            "inverter/modbus/scan": handler.get.network.ModbusScanHandler(),
+            "inverter/supported": handler.get.supported.Handler(),
+            "network": handler.get.network.NetworkHandler(),
+            "network/address": handler.get.network.AddressHandler(),
+            "uptime": handler.get.uptime.Handler(),
+            "wifi": handler.get.wifi.Handler(),
+            "wifi/scan": handler.get.wifi.ScanHandler(),
+            "version": handler.get.version.Handler(),
+            "supported": handler.get.supported.Handler(),
+            "notification": handler.get.notification.ListHandler(),
+            "notification/{id}": handler.get.notification.MessageHandler(),
+            "settings": handler.get.settings.Handler(),
+        }
+
+        self.api_post_dict = {
+            "invertertcp": handler.post.modbusTCP.Handler(),
+            "inverterrtu": handler.post.modbusRTU.Handler(),
+            "invertersolarman": handler.post.modbusSolarman.Handler(),
+            "modbus_device": handler.post.modbusDevice.Handler(),
+            "wifi": handler.post.wifi.Handler(),
+            "initialize": handler.post.initialize.Handler(),
+            "inverter/modbus": handler.post.modbus.Handler(),
+            "logger": handler.post.logger.Handler(),
+            "echo": handler.post.echo.Handler(),
+            "settings": handler.post.settings.Handler(),
+        }
+
+        self.api_delete_dict = {
+            "inverter": handler.delete.inverter.Handler(),
+            "notification/{id}": handler.delete.notification.Handler(),
+        }
+
+        self.api_get = Endpoints.convert_keys_to_regex(self.api_get_dict)
+        self.api_post = Endpoints.convert_keys_to_regex(self.api_post_dict)
+        self.api_delete = Endpoints.convert_keys_to_regex(self.api_delete_dict)
+        
+    @staticmethod
+    def query_2_dict(query_string: str):
+        return Endpoints.post_2_dict(query_string)
+
+    @staticmethod
+    def post_2_dict(post_data: str):
+        if "=" not in post_data:
+            return {}
+        return {
+            unquote_plus(k): unquote_plus(v)
+            for k, v in (x.split("=") for x in post_data.split("&"))
+        }
+
+    @staticmethod
+    def convert_keys_to_regex(api_dict):
+        regex_dict = {}
+        for key, value in api_dict.items():
+            key = re.sub(r"\{(.+?)\}", r"(?P<\1>.+)", key)
+            regex_dict[re.compile("^" + key + "$")] = value
+        return regex_dict
+
+    @staticmethod
+    def get_api_handler(path: str, api_root: str, api_handler_regex: dict):
+        if path.startswith(api_root):
+            for pattern, _handler in api_handler_regex.items():
+                match = pattern.match(path[len(api_root) :])
+                if match:
+                    return _handler, match.groupdict()
+        return None, None
+
+    @staticmethod
+    def get_data(headers: dict, rfile):
+        if "Content-Length" not in headers:
+            return {}
+        content_length = int(headers["Content-Length"])
+        content = rfile.read(content_length).decode("utf-8")
+
+        if content_length == 0 or len(content) == 0:
+            return {}
+
+        try:
+            post_data = json.loads(content)
+        except json.decoder.JSONDecodeError:
+            post_data = Endpoints.post_2_dict(content)
+        except Exception:
+            logger.exception("Failed to parse post json data: %s", content)
+            post_data = {}
+
+        return post_data
+    
+    @staticmethod
+    def pre_do(path: str):
+        parts = path.split("?")
+        query_string = parts[1] if len(parts) > 1 else ""
+        return parts[0], Endpoints.query_2_dict(query_string)
+
 
 def request_handler_factory(bb: BlackBoard):
     class Handler(BaseHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
 
             logger.info("initializing a request handler")
-
-            self.api_get_dict = {
-                "crypto": handler.get.crypto.Handler(),
-                "crypto/revive": handler.get.crypto.ReviveHandler(),
-                "hello": handler.get.hello.Handler(),
-                "name": handler.get.name.Handler(),
-                "logger": handler.get.logger.Handler(),
-                "inverter": handler.get.inverter.Handler(),
-                "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
-                "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
-                "inverter/modbus/scan": handler.get.network.ModbusScanHandler(),
-                "inverter/supported": handler.get.supported.Handler(),
-                "network": handler.get.network.NetworkHandler(),
-                "network/address": handler.get.network.AddressHandler(),
-                "uptime": handler.get.uptime.Handler(),
-                "wifi": handler.get.wifi.Handler(),
-                "wifi/scan": handler.get.wifi.ScanHandler(),
-                "version": handler.get.version.Handler(),
-                "supported": handler.get.supported.Handler(),
-                "notification": handler.get.notification.ListHandler(),
-                "notification/{id}": handler.get.notification.MessageHandler(),
-            }
-
-            self.api_post_dict = {
-                "invertertcp": handler.post.modbusTCP.Handler(),
-                "inverterrtu": handler.post.modbusRTU.Handler(),
-                "invertersolarman": handler.post.modbusSolarman.Handler(),
-                "wifi": handler.post.wifi.Handler(),
-                "initialize": handler.post.initialize.Handler(),
-                "inverter/modbus": handler.post.modbus.Handler(),
-                "logger": handler.post.logger.Handler(),
-                "echo": handler.post.echo.Handler(),
-            }
-
-            self.api_delete_dict = {
-                "inverter": handler.delete.inverter.Handler(),
-                "notification/{id}": handler.delete.notification.Handler(),
-            }
-
-            self.api_get = Handler.convert_keys_to_regex(self.api_get_dict)
-            self.api_post = Handler.convert_keys_to_regex(self.api_post_dict)
-            self.api_delete = Handler.convert_keys_to_regex(self.api_delete_dict)
+            self.endpoints = Endpoints()
+            
             super(Handler, self).__init__(*args, **kwargs)
-
-        @staticmethod
-        def query_2_dict(query_string: str):
-            return Handler.post_2_dict(query_string)
-
-        @staticmethod
-        def post_2_dict(post_data: str):
-            if "=" not in post_data:
-                return {}
-            return {
-                unquote_plus(k): unquote_plus(v)
-                for k, v in (x.split("=") for x in post_data.split("&"))
-            }
-
-        @staticmethod
-        def convert_keys_to_regex(api_dict):
-            regex_dict = {}
-            for key, value in api_dict.items():
-                key = re.sub(r"\{(.+?)\}", r"(?P<\1>.+)", key)
-                regex_dict[re.compile("^" + key + "$")] = value
-            return regex_dict
-
-        @staticmethod
-        def get_api_handler(path: str, api_root: str, api_handler_regex: dict):
-            if path.startswith(api_root):
-                for pattern, _handler in api_handler_regex.items():
-                    match = pattern.match(path[len(api_root) :])
-                    if match:
-                        return _handler, match.groupdict()
-            return None, None
-
-        @staticmethod
-        def get_data(headers: dict, rfile):
-            if "Content-Length" not in headers:
-                return {}
-            content_length = int(headers["Content-Length"])
-            content = rfile.read(content_length).decode("utf-8")
-
-            if content_length == 0 or len(content) == 0:
-                return {}
-
-            try:
-                post_data = json.loads(content)
-            except json.decoder.JSONDecodeError:
-                post_data = Handler.post_2_dict(content)
-            except Exception:
-                logger.exception("Failed to parse post json data: %s", content)
-                post_data = {}
-
-            return post_data
 
         def send_api_response(self, code: int, response: str):
             self.send_response(code)
@@ -119,18 +132,13 @@ def request_handler_factory(bb: BlackBoard):
             self.end_headers()
             self.wfile.write(response)
 
-        def pre_do(self, path: str):
-            parts = path.split("?")
-            query_string = parts[1] if len(parts) > 1 else ""
-            return parts[0], Handler.query_2_dict(query_string)
-
         # this needs to be POST as this is a direct mapping of the http method
         def do_POST(self):
-            path, query = self.pre_do(self.path)
+            path, query = Endpoints.pre_do(self.path)
 
-            api_handler, params = Handler.get_api_handler(path, "/api/", self.api_post)
+            api_handler, params = Endpoints.get_api_handler(path, "/api/", self.endpoints.api_post)
             if api_handler is not None:
-                post_data = Handler.get_data(self.headers, self.rfile)
+                post_data = Endpoints.get_data(self.headers, self.rfile)
 
                 rdata = handler.RequestData(bb, params, query, post_data)
 
@@ -150,14 +158,14 @@ def request_handler_factory(bb: BlackBoard):
 
         # this needs to be GET as this is a direct mapping of the http method
         def do_GET(self):
-            path, query = self.pre_do(self.path)
+            path, query = self.endpoints.pre_do(self.path)
 
             if path.startswith("/doc/") or path.endswith("/doc"):
                 schema = self.get_doc(path[4:])
                 self.send_api_response(200, schema)
                 return
 
-            api_handler, params = Handler.get_api_handler(path, "/api/", self.api_get)
+            api_handler, params = Endpoints.get_api_handler(path, "/api/", self.endpoints.api_get)
             rdata = handler.RequestData(bb, params, query, {})
 
             if api_handler is not None:
@@ -170,8 +178,8 @@ def request_handler_factory(bb: BlackBoard):
                 self.send_api_response(code, response)
             else:
                 # check if we have a post handler
-                api_handler, params = Handler.get_api_handler(
-                    path, "/api/", self.api_post
+                api_handler, params = self.endpoints.get_api_handler(
+                    path, "/api/", self.endpoints.api_post
                 )
                 if api_handler is not None:
                     self.send_api_response(200, api_handler.jsonSchema())
@@ -191,11 +199,9 @@ def request_handler_factory(bb: BlackBoard):
         def do_DELETE(self):
             path, query = self.pre_do(self.path)
 
-            api_handler, params = Handler.get_api_handler(
-                path, "/api/", self.api_delete
-            )
+            api_handler, params = Endpoints.get_api_handler(path, "/api/", self.endpoints.api_delete)
             if api_handler is not None:
-                post_data = Handler.get_data(self.headers, self.rfile)
+                post_data = Endpoints.get_data(self.headers, self.rfile)
 
                 rdata = handler.RequestData(bb, params, query, post_data)
 
@@ -221,9 +227,9 @@ def request_handler_factory(bb: BlackBoard):
 
         def get_doc(self, path: str):
             ret = {}
-            ret["GET"] = self.get_doc_dict(self.api_get_dict, path)
-            ret["POST"] = self.get_doc_dict(self.api_post_dict, path)
-            ret["DELETE"] = self.get_doc_dict(self.api_delete_dict, path)
+            ret["GET"] = self.get_doc_dict(self.endpoints.api_get_dict, path)
+            ret["POST"] = self.get_doc_dict(self.endpoints.api_post_dict, path)
+            ret["DELETE"] = self.get_doc_dict(self.endpoints.api_delete_dict, path)
             return json.dumps(ret, indent=3)
 
     return Handler

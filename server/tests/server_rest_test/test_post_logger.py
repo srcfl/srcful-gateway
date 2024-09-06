@@ -31,7 +31,7 @@ def set_log_level(logger, level):
     return response
 
 def test_logger_set_info():
-    logger = "server.inverters.inverter"
+    logger = "server.inverters.modbus"
 
     originial_level = get_log_level(logger).split(' ')[0] # removes the (inherited) part
 

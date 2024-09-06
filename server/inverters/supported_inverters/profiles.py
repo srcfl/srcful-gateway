@@ -10,7 +10,6 @@ inverters = []
 with open("server/inverters/supported_inverters/inverters/inverters.json") as f:
     data = json.load(f)
     for d in data["inverters"]:
-        print(d)
         inverters.append(d)
 
 
@@ -25,13 +24,13 @@ class InverterProfile:
     def __init__(self, inverter_profile):
         inverter_profile = json.loads(json.dumps(inverter_profile))
 
-        self.name = inverter_profile[ProfileKey.NAME.value]
-        self.version = inverter_profile[ProfileKey.VERSION.value]
-        self.verbose_always = inverter_profile[ProfileKey.VERBOSE_ALWAYS.value]
-        self.model_group = inverter_profile[ProfileKey.MODEL_GROUP.value]
-        self.display_name = inverter_profile[ProfileKey.DISPLAY_NAME.value]
-        self.protocol = inverter_profile[ProfileKey.PROTOCOL.value]
-        self.description = inverter_profile[ProfileKey.DESCRIPTION.value]
+        self.name: str = inverter_profile[ProfileKey.NAME.value]
+        self.version: str = inverter_profile[ProfileKey.VERSION.value]
+        self.verbose_always: bool = inverter_profile[ProfileKey.VERBOSE_ALWAYS.value]
+        self.model_group: str = inverter_profile[ProfileKey.MODEL_GROUP.value]
+        self.display_name: str = inverter_profile[ProfileKey.DISPLAY_NAME.value]
+        self.protocol: str = inverter_profile[ProfileKey.PROTOCOL.value]
+        self.description: str = inverter_profile[ProfileKey.DESCRIPTION.value]
 
         self.registers_verbose = []
         self.registers = []
@@ -62,12 +61,12 @@ class InverterProfile:
 
 class InverterProfiles:
     def __init__(self):
-        self.profiles = []
+        self.profiles: list[InverterProfile] = []
 
         for inverter in inverters:
             self.profiles.append(InverterProfile(inverter))
 
-    def get(self, name) -> InverterProfile:
+    def get(self, name: str) -> InverterProfile:
         for profile in self.profiles:
             if profile.name.lower() == name.lower():
                 return profile

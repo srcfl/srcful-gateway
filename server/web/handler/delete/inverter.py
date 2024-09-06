@@ -14,10 +14,10 @@ class Handler(DeleteHandler):
         )
 
     def do_delete(self, data: RequestData):
-        if len(data.bb.inverters.lst) > 0:
-            inverter = data.bb.inverters.lst[0]
+        if len(data.bb.ders.lst) > 0:
+            inverter = data.bb.ders.lst[0]
             inverter.terminate()
-            data.bb.inverters.remove(inverter)
+            data.bb.ders.remove(inverter)
 
             data = {
                 "isTerminated": inverter.isTerminated(),

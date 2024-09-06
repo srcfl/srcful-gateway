@@ -29,7 +29,7 @@ class Handler(PostHandler):
         return json.dumps(self.schema())
 
     def do_post(self, data: RequestData):
-        if len(data.bb.inverters.lst) > 0:
+        if len(data.bb.ders.lst) > 0:
             return 400, json.dumps({"error": "inverter not initialized"})
 
         if (
@@ -37,7 +37,7 @@ class Handler(PostHandler):
             and "size" in data.data
             and "registers" in data.data
         ):
-            inverter = data.bb.inverters.lst[0]
+            inverter = data.bb.ders.lst[0]
             if inverter.isOpen():
                 # create a new live log object
                 register_values = []
