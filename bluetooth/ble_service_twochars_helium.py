@@ -2,33 +2,27 @@ import logging
 import asyncio
 import threading
 import sys
-
 import argparse
 from typing import Any
 import requests
-
 import egwttp
-
-
 import macAddr
-
-
-# import wifiprov
-
 from bless import (  # type: ignore
     BlessServer,
     BlessGATTCharacteristic,
     GATTCharacteristicProperties,
     GATTAttributePermissions,
 )
-
-from gpioButton import GpioButton
+try:
+    from gpioButton import GpioButton
+except ImportError:
+    GpioButton = None
+from gateway import Gateway
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
 
-
-if sys.platform == "linux":
+if sys.platform == "linux" and GpioButton is not None:
     # if we are on a bluez backend then we add the start and stop advertising functions
     logger.info("Using bluez backend, adding start and stop advertising functions")
 
@@ -69,31 +63,35 @@ SERVICE_UUID = (
 REQUEST_CHAR = "51ff12bb-3ed8-46e5-b4f9-d64e2fec021b"  # clients write to this
 RESPONSE_CHAR = "51ff12bb-3ed8-46e5-b4f9-d64e2fec021c"  # client read from this
 API_URL = "localhost:5000"
-SERVICE_NAME = f"SrcFul Energy Gateway {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
+SERVICE_NAME = f"SrcFul Hotspot {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
 SERVER = None
-REQUEST_TIMEOUT = 20
+REQUEST_TIMEOUT = 5
+gateway = None
 
 
 def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
-    logger.debug("Reading %s", characteristic.value)
+    gateway.handle_read_request(characteristic)
+
     return characteristic.value
 
-
-def handle_response(path: str, method: str, reply: requests.Response, offset: int):
+def handle_response(path: str, method: str, reply: requests.Response, offset: int) -> bytes:
     egwttp_response = egwttp.construct_response(path, method, reply.text, offset)
     logger.debug("Reply: %s", egwttp_response)
     return egwttp_response
 
-
 def request_get(path: str, offset: int) -> bytes:
     return handle_response(path, "GET", requests.get(API_URL + path, timeout=REQUEST_TIMEOUT), offset)
-
 
 def request_post(path: str, content: str, offset: int) -> bytes:
     return handle_response(path, "POST", requests.post(API_URL + path, data=content, timeout=REQUEST_TIMEOUT), offset)
 
+def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs) -> None:
+    if gateway.handle_write_request(characteristic, value) != True:
+        threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
+    else: 
+        pass
 
-def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
+def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs) -> None:
     characteristic.value = value
     # if request_response and request_response.value:
     val = value.decode("utf-8")
@@ -132,23 +130,24 @@ def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **
     else:
         logger.debug("Not a EGWTTP request, doing nothing")
 
-
-def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
-    threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
-
-
 async def run(gpio_button_pin: int = -1):
     global SERVER
+    global gateway
     trigger.clear()
+    
     # Instantiate the server
     SERVER = BlessServer(name=SERVICE_NAME, name_overwrite=True)
+    gateway = Gateway(SERVER)
+
     SERVER.read_request_func = read_request
     SERVER.write_request_func = write_request
+
+    await gateway.init_gateway()
 
     # Add Service
     await SERVER.add_new_service(SERVICE_UUID)
     logger.debug(
-        "Service added with uuid %s and name %s.", SERVICE_UUID, SERVICE_NAME
+       "Service added with uuid %s and name %s.", SERVICE_UUID, SERVICE_NAME
     )
 
     # Add a Characteristic to the service
@@ -168,32 +167,12 @@ async def run(gpio_button_pin: int = -1):
     )
     permissions = GATTAttributePermissions.readable
     await SERVER.add_new_characteristic(
-        SERVICE_UUID,
-        RESPONSE_CHAR,
-        char_flags,
-        bytearray(b"Hello ble World"),
-        permissions,
+        SERVICE_UUID, RESPONSE_CHAR, char_flags, bytearray(b"Hello ble World"),permissions,
     )
 
     logger.debug(SERVER.get_characteristic(REQUEST_CHAR))
-
     logger.debug(SERVER.get_characteristic(RESPONSE_CHAR))
 
-    # bluez backend specific
-    # if g_server.app:
-    #  async def on_startNotify(characteristic: BlessGATTCharacteristic):
-    #    logger.debug("StartNotify called - client subscribed")
-    #    await g_server.app.stop_advertising(g_server.adapter)
-    #    logger.debug("Advertising stopped")
-    #    return True
-    #
-    #  async def on_stopNotify(characteristic: BlessGATTCharacteristic):
-    #    logger.debug("StopNotify called - client unsubscribed")
-    #    await g_server.app.start_advertising(g_server.adapter)
-    #    logger.debug("Advertising started")
-    #    return True
-    #  g_server.app.StartNotify = on_startNotify
-    #  g_server.app.StopNotify = on_stopNotify
 
     await SERVER.start()
 

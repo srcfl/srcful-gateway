@@ -35,6 +35,7 @@ def test_postInverter():
     deleteInverter()
 
     inverter_settings = {
+        "connection": settings.INVERTER_CONNECTION,
         "host": settings.INVERTER_HOST,
         "type": settings.INVERTER_TYPE,
         "address": settings.INVERTER_ADDRESS,
