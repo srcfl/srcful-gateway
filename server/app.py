@@ -5,6 +5,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from server.inverters.IComFactory import IComFactory
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
+from server.tasks.saveStateTask import SaveStatePerpetualTask
 import server.web.server
 from server.tasks.itask import ITask
 from server.tasks.openDeviceTask import OpenDeviceTask
@@ -153,7 +154,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     # bootstrap is deprecated so is should not listen to this anymore
     # bb.devices.add_listener(bootstrap)
 
-    tasks.put(StartupInfoTask(bb.time_ms(), bb))
+    tasks.put(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
+    tasks.put(StartupInfoTask(bb.time_ms() + 100, bb))
 
     # put some initial tasks in the queue
     tasks.put(GetSettingsTask(bb.time_ms() + 500, bb))
