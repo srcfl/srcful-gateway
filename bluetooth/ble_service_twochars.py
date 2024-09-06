@@ -64,7 +64,7 @@ trigger: asyncio.Event = asyncio.Event()
 
 # some global configuration constants
 SERVICE_UUID = (
-    "a07498ca-ad5b-474e-940d-16f1fbe7e8cd"  # this is the uuid of the service
+    "0fda92b2-44a2-4af2-84f5-fa682baa2b8d"  # this is the uuid of the service
 )
 REQUEST_CHAR = "51ff12bb-3ed8-46e5-b4f9-d64e2fec021b"  # clients write to this
 RESPONSE_CHAR = "51ff12bb-3ed8-46e5-b4f9-d64e2fec021c"  # client read from this
