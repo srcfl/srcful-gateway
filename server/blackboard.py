@@ -48,22 +48,34 @@ class BlackBoard:
         self._tasks = []
         return tasks
 
+    def _save_state(self):
+        from server.tasks.saveStateTask import SaveStateTask
+        self.add_task(SaveStateTask(self.time_ms() + 100, self))
+
     def add_error(self, message: str) -> Message:
-        return self._add_message(Message(message, Message.Type.Error, self.time_ms() // 1_000, self._get_message_id()))
+        ret = self._add_message(Message(message, Message.Type.Error, self.time_ms() // 1_000, self._get_message_id()))
+        self._save_state()
+        return ret
 
     def add_warning(self, message: str) -> Message:
-        return self._add_message(Message(message, Message.Type.Warning, self.time_ms() // 1_000, self._get_message_id()))
+        ret = self._add_message(Message(message, Message.Type.Warning, self.time_ms() // 1_000, self._get_message_id()))
+        self._save_state()
+        return ret
 
     def add_info(self, message: str) -> Message:
-        return self._add_message(Message(message, Message.Type.Info, self.time_ms() // 1_000, self._get_message_id()))
+        ret = self._add_message(Message(message, Message.Type.Info, self.time_ms() // 1_000, self._get_message_id()))
+        self._save_state()
+        return ret
 
     def clear_messages(self):
         self._messages = []
+        self._save_state()
     
     def delete_message(self, message_id: int):
         for m in self._messages:
             if m.id == message_id:
                 self._messages.remove(m)
+                self._save_state()
                 return True
         return False
     
@@ -134,7 +146,11 @@ class BlackBoard:
             from server.network.scan import WifiScanner
             s = WifiScanner()
             ssids = s.get_ssids()
-            return {"wifi": {"ssids": ssids}}
+
+            from server.web.handler.get.network import AddressHandler
+            address = AddressHandler().get(self.rest_server_port)
+
+            return {"wifi": {"ssids": ssids}, "address": address}
         except Exception as e:
             logger.error(e)
             return {"error": str(e)}

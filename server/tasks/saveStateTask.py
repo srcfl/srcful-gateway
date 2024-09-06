@@ -15,14 +15,10 @@ class SaveStateTask(ConfigurationMutationTask):
 
     def _on_200(self, reply):
         super()._on_200(reply)
-        if self.is_saved:
-            self.bb.add_info("State saved successfully")
-        else:
-            self.bb.add_warning("Failed to save state")
+
 
     def _on_error(self, reply):
         super()._on_error(reply)
-        self.bb.add_error("Error saving state")
         return 60000
     
     
