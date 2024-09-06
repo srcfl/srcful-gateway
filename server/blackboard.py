@@ -27,8 +27,9 @@ class BlackBoard:
     _tasks: list[ITask]
     _chip_death_count: int
     _settings: Settings
+    _crypto_state: dict
 
-    def __init__(self):
+    def __init__(self, crypto_state:dict = None):
         self._devices = BlackBoard.Devices()
         self._start_time = time.monotonic_ns()
         self._rest_server_port = 80
@@ -38,7 +39,7 @@ class BlackBoard:
         self._chip_death_count = 0
         self._settings = Settings()
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
-        
+        self._crypto_state = crypto_state if crypto_state is not None else {}
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -137,9 +138,8 @@ class BlackBoard:
         return ret
 
     def crypto_state(self) -> dict:
-        from server.web.handler.get.crypto import Handler as CryptoHandler
-        return CryptoHandler().get_crypto_state(self.chip_death_count)
-            
+        self._crypto_state['chipDeathCount'] = self.chip_death_count
+        return self._crypto_state
     
     def network_state(self) -> dict:
         try:

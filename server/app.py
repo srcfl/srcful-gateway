@@ -106,7 +106,14 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None): 
 
-    bb = BlackBoard()
+    from server.web.handler.get.crypto import Handler as CryptoHandler
+    try:
+        crypto_state = CryptoHandler().get_crypto_state(0)
+    except Exception as e:
+        logger.error(f"Failed to get crypto state: {e}")
+        crypto_state = {'error': 'no crypto key or chip'}
+    bb = BlackBoard(crypto_state)
+
     HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
 
     logger.info("eGW version: %s", bb.get_version())
