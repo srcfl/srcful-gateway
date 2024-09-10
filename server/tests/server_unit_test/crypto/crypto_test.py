@@ -24,7 +24,7 @@ def test_get_header_format():
             with patch('server.crypto.crypto.HardwareCrypto.atcab_get_pubkey', return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
                 with patch('server.crypto.crypto.HardwareCrypto.atcab_sign', return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
                     with crypto.Chip() as chip:
-                        header = chip.build_header("huawei")
+                        header = chip.build_header({"model": "volvo 240"})
                     assert "alg" in header
                     assert "typ" in header
                     assert "opr" in header
@@ -80,7 +80,7 @@ def test_build_header_contents():
             with patch('server.crypto.crypto.HardwareCrypto.atcab_get_pubkey', return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
                 with patch('server.crypto.crypto.HardwareCrypto.atcab_sign', return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
                     with crypto.Chip() as chip:
-                        header = chip.build_header("huawei")
+                        header = chip.build_header({"model": "volvo 240"})
                     assert header["alg"] == "ES256"
                     assert header["typ"] == "JWT"
                     assert header["opr"] == "production"
@@ -163,7 +163,7 @@ def test_get_jwt():
             with patch('server.crypto.crypto.HardwareCrypto.atcab_get_pubkey', return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
                 with patch('server.crypto.crypto.HardwareCrypto.atcab_sign', return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
                     with crypto.Chip() as chip:
-                        jwt = chip.build_jwt("Hello World!", "volvo")
+                        jwt = chip.build_jwt("Hello World!", {"car": "volvo 240"})
     assert jwt is not None
     assert len(jwt) > 0
     assert jwt.count('.') == 2

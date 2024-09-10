@@ -16,7 +16,7 @@ def test_create_harvest():
 
 
 def test_create_harvest_transport():
-    t = harvestTransport.HarvestTransport(0, BlackBoard(), {}, "huawei")
+    t = harvestTransport.HarvestTransport(0, BlackBoard(), {}, {"model": "huawei"})
     assert t is not None
 
 
@@ -273,7 +273,7 @@ def mock_init_chip():
 
 
 @pytest.fixture
-def mock_build_jwt(data, inverter_type):
+def mock_build_jwt(data, haeders):
     pass
 
 
@@ -285,28 +285,32 @@ def mock_release():
 @patch("server.crypto.crypto.Chip", autospec=True)
 def test_data_harvest_transport_jwt(mock_chip_class):
     barn = {"test": "test"}
-    inverter_type = "test"
+    
+    headers = {"model": "volvo 240", "dtype": "unknown"}
     
     mock_chip_instance = mock_chip_class.return_value.__enter__.return_value
-    mock_chip_instance.build_jwt.return_value = {str(barn), inverter_type}
+    mock_chip_instance.build_jwt.return_value = {str(barn), str(headers)}
 
-    instance = harvestTransport.HarvestTransport(0, {}, barn, inverter_type)
+    instance = harvestTransport.HarvestTransport(0, {}, barn, headers)
     jwt = instance._data()
-
-    mock_chip_instance.build_jwt.assert_called_once_with(instance.barn, "", 5)
-    assert jwt == {str(barn), inverter_type}
+    
+    mock_chip_instance.build_jwt.assert_called_once_with(instance.barn, headers, 5)
+    assert jwt == {str(barn), str(headers)}
 
 def test_on_200():
     # just make the call for now
     response = Mock()
+    headers = {"model": "volvo 240", "dtype": "unknown"}
 
-    instance = harvestTransport.HarvestTransport(0, {}, {}, "huawei")
+    instance = harvestTransport.HarvestTransport(0, {}, {}, headers)
     instance._on_200(response)
 
 
 def test_on_error():
     # just make the call for now
     response = Mock()
-    instance = harvestTransport.HarvestTransport(0, {}, {}, "huawei")
+    headers = {"model": "volvo 240", "dtype": "unknown"}
+    
+    instance = harvestTransport.HarvestTransport(0, {}, {}, headers)
     instance._on_error(response)
 

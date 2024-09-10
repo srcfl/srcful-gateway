@@ -12,7 +12,6 @@ from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
-from server.tasks.startupInfoTask import StartupInfoTask
 from server.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
@@ -162,7 +161,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     # bb.devices.add_listener(bootstrap)
 
     tasks.put(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
-    tasks.put(StartupInfoTask(bb.time_ms() + 100, bb))
 
     # put some initial tasks in the queue
     tasks.put(GetSettingsTask(bb.time_ms() + 500, bb))

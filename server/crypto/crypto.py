@@ -212,15 +212,19 @@ class Chip:
     #         "publicKey": self.get_public_key().hex(),
     #     }
 
-    def build_header(self, inverter_model="") -> dict:
+    def build_header(self, headers:dict) -> dict:
         self.ensure_chip_initialized()
-        return {
+        header_dict = {
             "alg": "ES256",
             "typ": "JWT",
             "device": self.get_serial_number().hex(),
-            "opr": "production",
-            "model": inverter_model,
+            "opr": "production"
         }
+        
+        for header_key in headers:
+            header_dict[header_key] = headers[header_key]
+
+        return header_dict
 
     def get_signature(self, data_to_sign, retries:int = 0) -> bytearray:
         self.ensure_chip_initialized()
@@ -235,9 +239,9 @@ class Chip:
         self._throw_on_error(code, "Failed to sign message")
         return signature
 
-    def build_jwt(self, data_2_sign, inverter_model:str, retries:int=0):
+    def build_jwt(self, data_2_sign, headers:dict, retries:int=0):
         self.ensure_chip_initialized()
-        header_base64 = jwtlify(self.build_header(inverter_model))
+        header_base64 = jwtlify(self.build_header(headers))
 
         payload_base64 = jwtlify(data_2_sign)
         header_and_payload = header_base64 + "." + payload_base64

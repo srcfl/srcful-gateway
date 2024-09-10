@@ -79,7 +79,16 @@ class Harvest(Task):
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
             for endpoint in endpoints:
                 log.info("Creating transport for %s", endpoint)
-                transport = self.transport_factory(event_time + 100, self.bb, self.barn, self.device)
+                
+                headers = {"model": ""}
+                headers["dtype"] = self.device.data_type
+                
+                if self.device.get_profile():
+                    headers["model"] = self.device.get_profile().name.lower()
+                    
+                
+                
+                transport = self.transport_factory(event_time + 100, self.bb, self.barn, headers)
                 transport.post_url = endpoint
             self.barn = {}
             ret.append(transport)
