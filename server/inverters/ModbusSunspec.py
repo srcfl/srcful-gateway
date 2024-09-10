@@ -1,4 +1,5 @@
 import sunspec2.modbus.client as client
+from sunspec2.modbus.client import SunSpecModbusClientError
 from typing_extensions import TypeAlias
 from .ICom import ICom, HarvestDataType
 import logging
@@ -89,7 +90,7 @@ class ModbusSunspec(ICom):
                 return payload
         except Exception as e:
             logger.error("Error reading harvest data: %s", e)
-            return {}
+            raise SunSpecModbusClientError(e)
     
     def get_harvest_data_type(self) -> str:
         return self.data_type
