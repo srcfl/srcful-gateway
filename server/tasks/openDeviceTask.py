@@ -45,8 +45,10 @@ class OpenDeviceTask(Task):
                 return None
         except Exception as e:
             logger.exception("Exception opening device: %s", e)
+            message = "Failed to open device: " + str(self.device.get_config())
+            self.bb.add_error(message)
             self.time = event_time + 10000
-            return self
+            return None
         
     def _is_open(self, device: ICom):
         for i in self.bb.devices.lst:
