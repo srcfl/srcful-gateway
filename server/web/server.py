@@ -198,7 +198,7 @@ def request_handler_factory(bb: BlackBoard):
 
         # this needs to be DELETE as this is a direct mapping of the http method
         def do_DELETE(self):
-            path, query = self.pre_do(self.path)
+            path, query = self.endpoints.pre_do(self.path)
 
             api_handler, params = Endpoints.get_api_handler(path, "/api/", self.endpoints.api_delete)
             if api_handler is not None:
