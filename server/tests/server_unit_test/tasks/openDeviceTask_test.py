@@ -77,5 +77,5 @@ def test_retry_on_exception():
     ret = task.execute(0)
 
     assert inverter.connect.called
-    assert ret is task
-    assert len(bb.purge_tasks()) == 0
+    assert ret is None
+    assert len(bb.purge_tasks()) == 1 # state save task added as error message is generated

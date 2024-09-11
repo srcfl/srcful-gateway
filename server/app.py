@@ -162,6 +162,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
                 for task in bootstrap.get_tasks(bb.time_ms() + 2000, bb):
                     tasks.put(task)
+                    
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
