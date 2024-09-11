@@ -68,7 +68,7 @@ class ModbusSunspec(ICom):
         self.disconnect() and self.connect()
         
     def is_open(self) -> bool:
-        return self.client.is_connected()
+        return bool(self.client.is_connected())
     
     def read_harvest_data(self, force_verbose=False) -> dict:
         try:
