@@ -164,7 +164,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 self.first_run = False
 
                 for task in self.bootstrap.get_tasks(bb.time_ms() + 2000, bb):
-                    tasks.put(task)
+                    self.blackboard.add_task(task)
             else:
                 logger.info("First run complete, not going for bootstrap")
 
