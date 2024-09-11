@@ -146,14 +146,23 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
             super().__init__(debounce_delay)
             self.blackboard = blackboard
+            self.first_run = True
 
         def _perform_action(self, source: ChangeSource):
             logger.info("SettingsDeviceListener detected a change, opening all devices")
             # Open all devices in the list
             for connection in self.blackboard.settings.devices.connections:
+                self.first_run = False
                 # TODO: if the device has been connected to before then it should be a perpetual task
                 self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.parse_and_create_com(connection)))
         
+            # if we have not got any devices on the first run then go for the bootstrap
+            if self.first_run:
+                self.first_run = False
+
+                for task in bootstrap.get_tasks(bb.time_ms() + 2000, bb):
+                    tasks.put(task)
+
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
 
@@ -168,8 +177,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     if inverter is not None:
         tasks.put(OpenDeviceTask(bb.time_ms(), bb, ModbusTCP(inverter)))
 
-    for task in bootstrap.get_tasks(bb.time_ms() + 2000, bb):
-        tasks.put(task)
+    
 
     tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
