@@ -143,9 +143,10 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                     logger.info("No need to save settings to backend as the source is the backend")
 
     class SettingsDeviceListener(DebouncedMonitorBase):
-        def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
+        def __init__(self, blackboard: BlackBoard, bootstrap: Bootstrap, debounce_delay: float = 0.5):
             super().__init__(debounce_delay)
             self.blackboard = blackboard
+            self.bootstrap = bootstrap
             self.first_run = True
 
         def _perform_action(self, source: ChangeSource):
@@ -160,12 +161,12 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
             if self.first_run:
                 self.first_run = False
 
-                for task in bootstrap.get_tasks(bb.time_ms() + 2000, bb):
+                for task in self.bootstrap.get_tasks(bb.time_ms() + 2000, bb):
                     tasks.put(task)
-                    
+
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
-    bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
+    bb.settings.devices.add_listener(SettingsDeviceListener(bb, bootstrap).on_change)
 
     # bootstrap is deprecated so is should not listen to this anymore
     # bb.devices.add_listener(bootstrap)
