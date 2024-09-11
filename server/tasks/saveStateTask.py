@@ -34,6 +34,7 @@ class SaveStatePerpetualTask(SaveStateTask  ):
     def _on_200(self, reply):
         super()._on_200(reply)
         self.time = self.time + 1000 * 60 * 5 # 5 minutes
+        self.state = self.bb.state
         return self
 
     def _on_error(self, reply):
