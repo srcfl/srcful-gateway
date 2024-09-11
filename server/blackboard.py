@@ -204,7 +204,7 @@ class BlackBoard:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.14.1"
+        return "0.14.2"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:
