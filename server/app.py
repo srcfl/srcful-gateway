@@ -153,16 +153,20 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
             logger.info("SettingsDeviceListener detected a change, opening all devices")
             # Open all devices in the list
             for connection in self.blackboard.settings.devices.connections:
+                logger.info("Opening device: %s", connection)
                 self.first_run = False
                 # TODO: if the device has been connected to before then it should be a perpetual task
                 self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.parse_and_create_com(connection)))
         
             # if we have not got any devices on the first run then go for the bootstrap
             if self.first_run:
+                logger.info("First run and no devices found, going for bootstrap")
                 self.first_run = False
 
                 for task in self.bootstrap.get_tasks(bb.time_ms() + 2000, bb):
                     tasks.put(task)
+            else:
+                logger.info("First run complete, not going for bootstrap")
 
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
