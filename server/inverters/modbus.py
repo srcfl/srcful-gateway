@@ -60,10 +60,6 @@ class Modbus(ICom):
         """Creates the Modbus client."""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def _get_backend_type(self) -> str:
-        """Returns the inverter's backend type"""
-        raise NotImplementedError("Subclass must implement abstract method")
-
     def _read_harvest_data(self, force_verbose) -> dict:
         if self._is_terminated():
             raise Exception("readHarvestData() - inverter is terminated")

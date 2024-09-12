@@ -106,7 +106,7 @@ class ModbusRTU(Modbus):
         return self.setup[4]
 
     def _get_type(self) -> str:
-        return self.setup[5]
+        return self.setup[5].lower()
 
     def _get_address(self) -> int:
         return self.setup[6]
@@ -134,9 +134,6 @@ class ModbusRTU(Modbus):
             "parity": self._get_parity(),
             "stopbits": self._get_stopbits(),
         }
-    
-    def _get_backend_type(self) -> str:
-        return self._get_type().lower()
     
     def _create_client(self, **kwargs) -> None:
         self.client = ModbusClient(

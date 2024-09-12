@@ -117,7 +117,7 @@ class ModbusSolarman(Modbus):
         return self.setup[2]
 
     def _get_type(self) -> str:
-        return self.setup[3]
+        return self.setup[3].lower()
     
     def _get_address(self) -> int:
         return self.setup[4]
@@ -141,9 +141,6 @@ class ModbusSolarman(Modbus):
             "host": self._get_host(),
             "port": self._get_port(),
         }
-
-    def _get_backend_type(self) -> str:
-        return self._get_type().lower()
     
     def _create_client(self, **kwargs) -> None:
         try:

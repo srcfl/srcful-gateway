@@ -2,7 +2,7 @@ TCP_CONFIG = {
     "connection": "TCP",
     "host": "localhost",
     "port": 502,
-    "type": "SOLAREDGE",
+    "type": "solaredge",
     "address": 4,
 }
 
@@ -22,7 +22,7 @@ SOLARMAN_CONFIG = {
     "host": "localhost",
     "serial": 1234567890,
     "port": 502,
-    "type": "DEYE",
+    "type": "deye",
     "address": 1
 }
 

@@ -89,7 +89,7 @@ class ModbusTCP(Modbus):
         return self.setup[1]
 
     def _get_type(self) -> str:
-        return self.setup[2]
+        return self.setup[2].lower()
 
     def _get_address(self) -> int:
         return self.setup[3]
@@ -111,9 +111,6 @@ class ModbusTCP(Modbus):
             "host": self._get_host(),
             "port": self._get_port(),
         }
-
-    def _get_backend_type(self) -> str:
-        return self._get_type().lower()
 
     def _create_client(self, **kwargs) -> None:
         self.client =  ModbusClient(host=self._get_host(), 
