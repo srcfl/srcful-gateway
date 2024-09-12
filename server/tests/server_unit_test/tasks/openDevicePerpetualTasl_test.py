@@ -46,7 +46,7 @@ def test_execute_invertert_could_not_open():
     assert inverter not in bb.devices.lst
     assert inverter.connect.called
     assert ret is task
-    assert len(bb.purge_tasks()) == 0
+    assert len(bb.purge_tasks()) == 1   # info message is added wich triggers a saveStateTask 
 
 
 def test_execute_new_inverter_added():

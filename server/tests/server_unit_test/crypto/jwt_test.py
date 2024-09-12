@@ -14,10 +14,10 @@ from server.crypto import crypto
 def test_build_jwt(capsys):
     # run with pytest -s server/tests/server_unit_test/crypto/jwt_test.py to see the output
     data_to_sign = {"test": "data"}
-    inverter_model = "test_model"
+    headers = {"model": "volvo 240"}
     
     with crypto.Chip(crypto_impl=crypto.SoftwareCrypto()) as chip:
-        jwt = chip.build_jwt(data_to_sign, inverter_model)
+        jwt = chip.build_jwt(data_to_sign, headers)
 
     print("\nGenerated JWT:")
     print(jwt)
@@ -40,7 +40,7 @@ def test_build_jwt(capsys):
     with crypto.Chip(crypto_impl=crypto.SoftwareCrypto()) as chip:
         assert header_json['device'] == chip.get_serial_number().hex()
     assert header_json['opr'] == 'production'
-    assert header_json['model'] == inverter_model
+    assert header_json['model'] == "volvo 240"
 
     # Assert payload contents
     assert payload_json == data_to_sign

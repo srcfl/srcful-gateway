@@ -65,14 +65,14 @@ class GraphQLSubscriptionClient(threading.Thread):
         logger.debug(f"Received pong: {message}")
 
     def on_message(self, ws, message):
-        data = json.loads(message)
         logger.info("Received message: %s", message)
+        
+        data = json.loads(message)
 
         if data.get('type') == 'connection_ack':
             logger.info("Connection acknowledged, sending subscription")
             self.subscribe_to_settings()
         elif data.get('type') == 'data':
-        
             # This is what we should do next
             if 'data' in data['payload'] and 'configurationDataChanges' in data['payload']['data']:
                 if data['payload']['data']['configurationDataChanges']['subKey'] == self.bb.settings.API_SUBKEY:

@@ -5,13 +5,13 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from server.inverters.IComFactory import IComFactory
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
+from server.tasks.saveStateTask import SaveStatePerpetualTask
 import server.web.server
 from server.tasks.itask import ITask
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
-from server.tasks.startupInfoTask import StartupInfoTask
 from server.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
@@ -105,7 +105,14 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None): 
 
-    bb = BlackBoard()
+    from server.web.handler.get.crypto import Handler as CryptoHandler
+    try:
+        crypto_state = CryptoHandler().get_crypto_state(0)
+    except Exception as e:
+        logger.error(f"Failed to get crypto state: {e}")
+        crypto_state = {'error': 'no crypto key or chip'}
+    bb = BlackBoard(crypto_state)
+
     HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
 
     logger.info("eGW version: %s", bb.get_version())
@@ -136,24 +143,39 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                     logger.info("No need to save settings to backend as the source is the backend")
 
     class SettingsDeviceListener(DebouncedMonitorBase):
-        def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
+        def __init__(self, blackboard: BlackBoard, bootstrap: Bootstrap, debounce_delay: float = 0.5):
             super().__init__(debounce_delay)
             self.blackboard = blackboard
+            self.bootstrap = bootstrap
+            self.first_run = True
 
         def _perform_action(self, source: ChangeSource):
             logger.info("SettingsDeviceListener detected a change, opening all devices")
             # Open all devices in the list
             for connection in self.blackboard.settings.devices.connections:
+                logger.info("Opening device: %s", connection)
+                self.first_run = False
                 # TODO: if the device has been connected to before then it should be a perpetual task
                 self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.parse_and_create_com(connection)))
         
+            # if we have not got any devices on the first run then go for the bootstrap
+            if self.first_run:
+                logger.info("First run and no devices found, going for bootstrap")
+                self.first_run = False
+
+                for task in self.bootstrap.get_tasks(bb.time_ms() + 2000, bb):
+                    self.blackboard.add_task(task)
+            else:
+                logger.info("First run complete, not going for bootstrap")
+
+
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
-    bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
+    bb.settings.devices.add_listener(SettingsDeviceListener(bb, bootstrap).on_change)
 
     # bootstrap is deprecated so is should not listen to this anymore
     # bb.devices.add_listener(bootstrap)
 
-    tasks.put(StartupInfoTask(bb.time_ms(), bb))
+    tasks.put(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
 
     # put some initial tasks in the queue
     tasks.put(GetSettingsTask(bb.time_ms() + 500, bb))
@@ -161,8 +183,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     if inverter is not None:
         tasks.put(OpenDeviceTask(bb.time_ms(), bb, ModbusTCP(inverter)))
 
-    for task in bootstrap.get_tasks(bb.time_ms() + 2000, bb):
-        tasks.put(task)
+    
 
     tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))

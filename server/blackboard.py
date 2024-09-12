@@ -27,8 +27,9 @@ class BlackBoard:
     _tasks: list[ITask]
     _chip_death_count: int
     _settings: Settings
+    _crypto_state: dict
 
-    def __init__(self):
+    def __init__(self, crypto_state:dict = None):
         self._devices = BlackBoard.Devices()
         self._start_time = time.monotonic_ns()
         self._rest_server_port = 80
@@ -38,7 +39,7 @@ class BlackBoard:
         self._chip_death_count = 0
         self._settings = Settings()
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
-        
+        self._crypto_state = crypto_state if crypto_state is not None else {}
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -48,22 +49,34 @@ class BlackBoard:
         self._tasks = []
         return tasks
 
+    def _save_state(self):
+        from server.tasks.saveStateTask import SaveStateTask
+        self.add_task(SaveStateTask(self.time_ms() + 100, self))
+
     def add_error(self, message: str) -> Message:
-        return self._add_message(Message(message, Message.Type.Error, self.time_ms() // 1_000, self._get_message_id()))
+        ret = self._add_message(Message(message, Message.Type.Error, self.time_ms() // 1_000, self._get_message_id()))
+        self._save_state()
+        return ret
 
     def add_warning(self, message: str) -> Message:
-        return self._add_message(Message(message, Message.Type.Warning, self.time_ms() // 1_000, self._get_message_id()))
+        ret = self._add_message(Message(message, Message.Type.Warning, self.time_ms() // 1_000, self._get_message_id()))
+        self._save_state()
+        return ret
 
     def add_info(self, message: str) -> Message:
-        return self._add_message(Message(message, Message.Type.Info, self.time_ms() // 1_000, self._get_message_id()))
+        ret = self._add_message(Message(message, Message.Type.Info, self.time_ms() // 1_000, self._get_message_id()))
+        self._save_state()
+        return ret
 
     def clear_messages(self):
         self._messages = []
+        self._save_state()
     
     def delete_message(self, message_id: int):
         for m in self._messages:
             if m.id == message_id:
                 self._messages.remove(m)
+                self._save_state()
                 return True
         return False
     
@@ -104,6 +117,60 @@ class BlackBoard:
         return message_id
 
     @property
+    def state(self) -> dict:
+        state = dict()
+        state['status'] = {'version': self.get_version(), 'uptime': self.elapsed_time, 'messages': self.message_state()}
+        state['timestamp'] = self.time_ms()
+        state['crypto'] = self.crypto_state()
+        state['network'] = self.network_state()
+        state['devices'] = self.devices_state()
+        return state
+    
+    def message_state(self) -> dict:
+        ret = []
+        for m in self.messages:
+            m_dict = {
+                "message": m.message,
+                "type": m.type.value,
+                "timestamp": m.timestamp,
+                "id": m.id
+            }
+            ret.append(m_dict)
+        return ret
+
+    def crypto_state(self) -> dict:
+        self._crypto_state['chipDeathCount'] = self.chip_death_count
+        return self._crypto_state
+    
+    def network_state(self) -> dict:
+        try:
+            from server.network.scan import WifiScanner
+            s = WifiScanner()
+            ssids = s.get_ssids()
+
+            from server.web.handler.get.network import AddressHandler
+            address = AddressHandler().get(self.rest_server_port)
+
+            return {"wifi": {"ssids": ssids}, "address": address}
+        except Exception as e:
+            logger.error(e)
+            return {"error": str(e)}
+    
+    def devices_state(self) -> list[dict]:
+        ret = {'configured': []}
+
+        for device in self._devices.lst:
+            device_state = {}
+            device_state['connection'] = device.get_config()
+            device_state['is_open'] = device.is_open()
+            ret['configured'].append(device_state)
+
+        import server.web.handler.get.supported as supported
+        ret['supported'] = supported.Handler().get_supported_inverters()
+        return ret
+    
+
+    @property
     def chip_death_count(self):
         return self._chip_death_count
 
@@ -138,7 +205,7 @@ class BlackBoard:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.13.2"
+        return "0.14.4"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:

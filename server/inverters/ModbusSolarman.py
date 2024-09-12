@@ -1,5 +1,5 @@
 from .modbus import Modbus
-from .ICom import ICom
+from .ICom import ICom, HarvestDataType
 from pysolarmanv5 import PySolarmanV5
 from typing_extensions import TypeAlias
 import logging
@@ -53,6 +53,7 @@ class ModbusSolarman(Modbus):
         log.info("Creating with: %s" % str(setup))
         self.setup = setup
         self.client = None
+        self.data_type = HarvestDataType.MODBUS_REGISTERS.value
         super().__init__()
 
     def _open(self, **kwargs) -> bool:
@@ -116,7 +117,7 @@ class ModbusSolarman(Modbus):
         return self.setup[2]
 
     def _get_type(self) -> str:
-        return self.setup[3]
+        return self.setup[3].lower()
     
     def _get_address(self) -> int:
         return self.setup[4]
@@ -140,9 +141,6 @@ class ModbusSolarman(Modbus):
             "host": self._get_host(),
             "port": self._get_port(),
         }
-
-    def _get_backend_type(self) -> str:
-        return self._get_type().lower()
     
     def _create_client(self, **kwargs) -> None:
         try:

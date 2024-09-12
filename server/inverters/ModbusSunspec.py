@@ -1,6 +1,7 @@
 import sunspec2.modbus.client as client
+from sunspec2.modbus.client import SunSpecModbusClientError
 from typing_extensions import TypeAlias
-from .ICom import ICom
+from .ICom import ICom, HarvestDataType
 import logging
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,7 @@ class ModbusSunspec(ICom):
         self.client = None
         self.common = None
         self.inveter = None
+        self.data_type = HarvestDataType.SUNSPEC.value
         
     def connect(self) -> bool:
         self.client = client.SunSpecModbusClientDeviceTCP(slave_id=self.slave_id, ipaddr=self.host, ipport=self.port)
@@ -66,7 +68,7 @@ class ModbusSunspec(ICom):
         self.disconnect() and self.connect()
         
     def is_open(self) -> bool:
-        return self.client.is_connected()
+        return bool(self.client.is_connected())
     
     def read_harvest_data(self, force_verbose=False) -> dict:
         try:
@@ -88,7 +90,7 @@ class ModbusSunspec(ICom):
                 return payload
         except Exception as e:
             logger.error("Error reading harvest data: %s", e)
-            return {}
+            raise SunSpecModbusClientError(e)
     
     def get_harvest_data_type(self) -> str:
         return self.data_type

@@ -1,5 +1,5 @@
 from .modbus import Modbus
-from .ICom import ICom
+from .ICom import ICom, HarvestDataType
 from pymodbus.client import ModbusSerialClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
 from pymodbus.exceptions import ModbusIOException
@@ -58,6 +58,7 @@ class ModbusRTU(Modbus):
         log.info("Creating with: %s" % str(setup))
         self.setup = setup
         self.client = None
+        self.data_type = HarvestDataType.MODBUS_REGISTERS.value
         super().__init__()
 
     def _open(self, **kwargs) -> bool:
@@ -105,7 +106,7 @@ class ModbusRTU(Modbus):
         return self.setup[4]
 
     def _get_type(self) -> str:
-        return self.setup[5]
+        return self.setup[5].lower()
 
     def _get_address(self) -> int:
         return self.setup[6]
@@ -133,9 +134,6 @@ class ModbusRTU(Modbus):
             "parity": self._get_parity(),
             "stopbits": self._get_stopbits(),
         }
-    
-    def _get_backend_type(self) -> str:
-        return self._get_type().lower()
     
     def _create_client(self, **kwargs) -> None:
         self.client = ModbusClient(

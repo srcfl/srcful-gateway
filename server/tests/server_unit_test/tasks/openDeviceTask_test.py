@@ -50,7 +50,7 @@ def test_execute_invertert_could_not_open():
     assert inverter.connect.called
     assert inverter.disconnect.called
     assert ret is None
-    assert len(bb.purge_tasks()) == 0
+    assert len(bb.purge_tasks()) == 1
 
 def test_execute_old_inverter_terminated():
     bb = BlackBoard()
@@ -77,5 +77,5 @@ def test_retry_on_exception():
     ret = task.execute(0)
 
     assert inverter.connect.called
-    assert ret is task
-    assert len(bb.purge_tasks()) == 0
+    assert ret is None
+    assert len(bb.purge_tasks()) == 1 # state save task added as error message is generated

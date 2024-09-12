@@ -65,4 +65,3 @@ class ConfigurationMutationTask(SrcfulAPICallTask):
     def _on_error(self, reply):
         logger.warning("Failed to mutate configuration %s", self.subkey)
         self.is_saved = False
-        return 0

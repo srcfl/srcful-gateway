@@ -11,9 +11,9 @@ log = logging.getLogger(__name__)
 
 
 class Harvest(Task):
-    def __init__(self, event_time: int, bb: BlackBoard, der: ICom, transport_factory: ITransportFactory):
+    def __init__(self, event_time: int, bb: BlackBoard, device: ICom, transport_factory: ITransportFactory):
         super().__init__(event_time, bb)
-        self.der = der
+        self.device = device
         self.barn = {}
         
         # incremental backoff stuff
@@ -27,11 +27,15 @@ class Harvest(Task):
         start_time = event_time
         elapsed_time_ms = 1000
 
-        if not self.der.is_open():
-            log.info("Inverter is terminated make the final transport if there is anything in the barn")
-            return self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
+        if not self.device.is_open():
+            log.info("This should never happen unless the device is unexpectedly closed. Inverter is terminated make the final transport if there is anything in the barn")
+            self.device.disconnect()
+            open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
+            transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
+            return [open_inverter] + transports
+        
         try:
-            harvest = self.der.read_harvest_data(force_verbose=len(self.barn) == 0)
+            harvest = self.device.read_harvest_data(force_verbose=len(self.barn) == 0)
             end_time = self.bb.time_ms()
 
             elapsed_time_ms = end_time - start_time
@@ -50,21 +54,12 @@ class Harvest(Task):
 
             log.debug("Handling exeption reading harvest: %s", str(e))
             
-            end_time = self.bb.time_ms()
-
-            elapsed_time_ms = end_time - start_time
-
-            if self.backoff_time >= self.max_backoff_time:
-                log.debug("Max timeout reached terminating inverter and issuing new reopen in 30 sec")
-                self.der.disconnect()
-                open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.der.clone())
-                self.time = event_time + 10000
-
-                # we return self so that in the next execute the last harvest will be transported
-                return [self, open_inverter]
-            else:
-                log.info("Incrementing backoff time to: %s", self.backoff_time)
-                self.backoff_time = min(self.backoff_time * 2, self.max_backoff_time)
+            log.debug("Kill everything, transport what is left and reopen in 30 seconds")
+            self.device.disconnect()
+            open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
+            transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
+    
+            return [open_inverter] + transports
             
         self.time = event_time + self.backoff_time
 
@@ -79,7 +74,16 @@ class Harvest(Task):
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
             for endpoint in endpoints:
                 log.info("Creating transport for %s", endpoint)
-                transport = self.transport_factory(event_time + 100, self.bb, self.barn, self.der)
+                
+                headers = {"model": ""}
+                headers["dtype"] = self.device.data_type
+                
+                if self.device.get_profile():
+                    headers["model"] = self.device.get_profile().name.lower()
+                    
+                
+                
+                transport = self.transport_factory(event_time + 100, self.bb, self.barn, headers)
                 transport.post_url = endpoint
             self.barn = {}
             ret.append(transport)

@@ -4,9 +4,9 @@ from enum import Enum
 
 # Enum for the type of harvest data
 
-class HarvestDataType:
+class HarvestDataType(Enum):
     MODBUS_REGISTERS = "modbus_registers"
-    JSON_DATA = "json_data"
+    SUNSPEC = "sunspec_json"
     UNDEFINED = "undefined"
 
 class DER_TYPE(Enum):

@@ -2,6 +2,7 @@ import logging
 
 from server.network.scan import WifiScanner
 from server.blackboard import BlackBoard
+from server.tasks.saveStateTask import SaveStateTask
 
 from .task import Task
 
@@ -19,7 +20,7 @@ class ScanWiFiTask(Task):
         try:
             s = WifiScanner()
             s.scan()
-            return None
+            return SaveStateTask(event_time + 1000 * 30, self.bb)
         except Exception as e:
             log.error("Failed to scan for WiFi networks")
             log.exception(e)

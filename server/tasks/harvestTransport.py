@@ -24,16 +24,15 @@ class ITransportFactory:
 class HarvestTransport(IHarvestTransport):
     do_increase_chip_death_count = True  # prevents excessive incrementing of chip death count
 
-    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, der_profile: InverterProfile):
+    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, headers: dict):
         super().__init__(event_time, bb)
         self.barn = barn
-        self.der_profile = der_profile
-
+        self.headers = headers
+            
     def _create_jwt(self):
         with crypto.Chip() as chip:
             try:
-                name = ""
-                jwt = chip.build_jwt(self.barn, name, 5)
+                jwt = chip.build_jwt(self.barn, self.headers, 5)
                 HarvestTransport.do_increase_chip_death_count = True
             except crypto.Chip.Error as e:
                 log.error("Error creating JWT: %s", e)
@@ -80,12 +79,12 @@ class HarvestTransportTimedSignature(HarvestTransport):
     _header = None
     _signature_base64 = None
 
-    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, der_profile: InverterProfile):
-        super().__init__(event_time, bb, barn, der_profile)
+    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, headers: dict):
+        super().__init__(event_time, bb, barn, headers)
 
     def _create_header(self):
         with crypto.Chip() as chip:
-            HarvestTransportTimedSignature._header = chip.build_header(self.der_profile.name.lower())
+            HarvestTransportTimedSignature._header = chip.build_header(self.headers["model"].lower())
             HarvestTransportTimedSignature._header["valid_until"] = self.bb.time_ms() + 60000 * 45  # 45 minutes from now is the time to live
 
             HarvestTransportTimedSignature._signature_base64 = chip.get_signature(crypto.Chip.jwtlify(HarvestTransportTimedSignature._header))
@@ -106,8 +105,8 @@ class HarvestTransportTimedSignature(HarvestTransport):
     
 class LocalHarvestTransportTimedSignature(HarvestTransportTimedSignature):
 
-    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, der_profile: InverterProfile):
-        super().__init__(event_time, bb, barn, der_profile)
+    def __init__(self, event_time: int, bb: BlackBoard, barn: dict, headers: dict):
+        super().__init__(event_time, bb, barn, headers)
     
     def _create_header(self):
         log.info("Creating New Header...")
@@ -127,13 +126,13 @@ class LocalHarvestTransportTimedSignature(HarvestTransportTimedSignature):
 
 # Some factories
 class DefaultHarvestTransportFactory(ITransportFactory):
-    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, der: DER) -> HarvestTransport:
-        return HarvestTransport(event_time, bb, barn, der.get_profile())
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, headers: dict) -> HarvestTransport:
+        return HarvestTransport(event_time, bb, barn, headers)
     
 class TimedSignatureHarvestTransportFactory(ITransportFactory):
-    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, der: DER) -> HarvestTransport:
-        return HarvestTransportTimedSignature(event_time, bb, barn, der.get_profile())
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, headers: dict) -> HarvestTransport:
+        return HarvestTransportTimedSignature(event_time, bb, barn, headers)
     
 class LocalTimedSignatureHarvestTransportFactory(ITransportFactory):
-    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, der: DER) -> HarvestTransport:
-        return LocalHarvestTransportTimedSignature(event_time, bb, barn, der.get_profile())
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, headers: dict) -> HarvestTransport:
+        return LocalHarvestTransportTimedSignature(event_time, bb, barn, headers)
