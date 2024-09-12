@@ -120,6 +120,7 @@ class BlackBoard:
     def state(self) -> dict:
         state = dict()
         state['status'] = {'version': self.get_version(), 'uptime': self.elapsed_time, 'messages': self.message_state()}
+        state['timestamp'] = self.time_ms()
         state['crypto'] = self.crypto_state()
         state['network'] = self.network_state()
         state['devices'] = self.devices_state()
@@ -204,7 +205,7 @@ class BlackBoard:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.14.2"
+        return "0.14.3"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:
