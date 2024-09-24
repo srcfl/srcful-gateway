@@ -14,13 +14,11 @@ from helium_gateway import HeliumGateway
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 # Move these one level up, e.g. in ble_service and pass as arguments? 
 srcful_gw = SrcfulGateway()
 helium_gw = HeliumGateway()
-
-
 
 class Gateway:
     def __init__(self, server: BlessServer) -> None:
@@ -38,17 +36,22 @@ class Gateway:
         gateway_wifi_ip = srcful_gw.get_wifi_ip()
         gateway_wifi_mac = srcful_gw.get_wifi_mac()
         
+        logger.debug(f"Gateway Swarm: {gateway_swarm}")
+        logger.debug(f"Gateway Eth IP: {gateway_eth_ip}")
+        logger.debug(f"Gateway Eth Mac: {gateway_eth_mac}")
+        logger.debug(f"Gateway Wifi IP: {gateway_wifi_ip}")
+        logger.debug(f"Gateway Wifi Mac: {gateway_wifi_mac}")
+        
         # To-Do: Read the onboarding and public key from the device and populate the characteristics
-        await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.ONBOARDING_KEY_UUID, char_flags, bytes(gateway_swarm, 'utf-8'), permissions)
-        await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.PUBLIC_KEY_UUID, char_flags, bytes(gateway_swarm, 'utf-8'), permissions)
-        await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.WIFI_MAC_UUID, char_flags, bytes(gateway_wifi_mac, 'utf-8'), permissions)
+        await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.ONBOARDING_KEY_UUID, char_flags, gateway_swarm.encode('utf-8'), permissions)
+        await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.PUBLIC_KEY_UUID, char_flags, gateway_swarm.encode('utf-8'), permissions)
+        await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.WIFI_MAC_UUID, char_flags, gateway_wifi_mac.encode('utf-8'), permissions)
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.LIGHTS_UUID, char_flags, b'n/a', permissions)
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.WIFI_SSID_UUID, char_flags, b'magic_ssid', permissions)
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.ETHERNET_ONLINE, char_flags, b'false', permissions)
 
         services = wifi_services_pb2.wifi_services_v1()
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.WIFI_SERVICES_UUID, char_flags, bytes(services.SerializeToString()), permissions)
-
 
         services = diagnostics_pb2.diagnostics_v1()
         services.diagnostics['Name:\n'] = 'AA'
@@ -60,14 +63,18 @@ class Gateway:
 
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.DIAGNOSTICS_UUID, char_flags, bytes(services.SerializeToString()), permissions)
 
-
         char_flags = GATTCharacteristicProperties.write | GATTCharacteristicProperties.read | GATTCharacteristicProperties.indicate
         permissions = GATTAttributePermissions.writeable | GATTAttributePermissions.readable
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.ADD_GATEWAY_UUID, char_flags, b'', permissions)
-
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.WIFI_CONNECT_UUID, char_flags, b'', permissions)
 
         logger.debug(f"Helium Service added with uuid {constants.SERVICE_UUID}")
+        
+        characteristic = self.server.get_characteristic('d083b2bd-be16-4600-b397-61512ca2f5ad')
+        if characteristic:
+            logger.debug(f"Characteristic d083b2bd-be16-4600-b397-61512ca2f5ad value: {characteristic.value}")
+        else:
+            logger.debug(f"Characteristic d083b2bd-be16-4600-b397-61512ca2f5ad not found")
 
 
     def handle_read_request(self, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:

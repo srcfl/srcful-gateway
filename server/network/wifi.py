@@ -3,6 +3,7 @@ import uuid
 import sys
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 try:
     import dbus

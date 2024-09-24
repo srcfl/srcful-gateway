@@ -19,10 +19,20 @@ class SrcfulGateway:
         network_json = self.get_network_info()
 
         # We should probably remove the hardcoded values
-        self.eth_ip = network_json['interfaces']['eth0']
         self.eth_mac = network_json['eth0_mac']
-        self.wifi_ip = network_json['interfaces']['wlan0']
         self.wifi_mac = network_json['wlan0_mac']
+        
+        try:
+            self.eth_ip = network_json['interfaces']['eth0']
+        except:
+            logger.error("Error getting eth ip")
+            self.eth_ip = "n/a"
+            
+        try:
+            self.wifi_ip = network_json['interfaces']['wlan0']
+        except:
+            logger.error("Error getting wifi ip")
+            self.wifi_ip = "n/a"
 
     def get_network_info(self) -> None:
         try:
