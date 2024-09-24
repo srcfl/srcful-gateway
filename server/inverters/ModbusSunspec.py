@@ -106,5 +106,7 @@ class ModbusSunspec(ICom):
     def get_profile(self):
         pass
     
-    def clone(self, host: str) -> 'ModbusSunspec':
+    def clone(self, host: str = None) -> 'ModbusSunspec':
+        if host is None:
+            host = self.host
         return ModbusSunspec((host, self.port, self.slave_id))
