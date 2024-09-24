@@ -89,11 +89,15 @@ def test_modbus_device_clone():
     tcp_conf = IComFactory.parse_connection_config_from_dict(cfg.TCP_CONFIG)
     rtu_conf = IComFactory.parse_connection_config_from_dict(cfg.RTU_CONFIG)
     solarman_conf = IComFactory.parse_connection_config_from_dict(cfg.SOLARMAN_CONFIG)
+    sunspec_conf = IComFactory.parse_connection_config_from_dict(cfg.SUNSPEC_CONFIG)
     
     devices.append(ModbusTCP(tcp_conf[1:]))
     devices.append(ModbusRTU(rtu_conf[1:]))
     devices.append(ModbusSolarman(solarman_conf[1:]))
+    sunspec = ModbusSunspec(sunspec_conf[1:])
     
     for device in devices:
         assert device.get_config() == device.clone().get_config()
         
+        
+    
