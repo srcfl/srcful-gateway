@@ -83,8 +83,7 @@ def remove_all_paired_devices():
     logger.info("Checking for known bluetooth devices...")
     for device_path in device_paths:
         props = dbus_get_all_properties(bus, "org.bluez", device_path, "org.bluez.Device1")
-        #print("checking.... - %s (%s)..." % (props["Name"], props["Address"]))
-        #print(props)
+
         if bool(props["Paired"]):
             logger.info("- Removing %s (%s)...", props["Name"], props["Address"])
 

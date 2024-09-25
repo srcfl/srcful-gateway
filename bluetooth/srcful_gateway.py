@@ -5,7 +5,8 @@ import time
 import logging
 import protos.wifi_connect_pb2 as wifi_connect_pb2
 import threading
-from typing import Any
+import egwttp
+import constants
 
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ class SrcfulGateway:
             if response.status_code == 200:
                 return response.json()
         except Exception as e:
-            logger.error(f"Error getting mac {e}")
+            logger.error(f"Error getting network info {e}")
     
     def get_eth_ip(self) -> str:
         return self.eth_ip
@@ -140,3 +141,22 @@ class SrcfulGateway:
         else:
             update_status_callback(constants.WIFI_ERROR)
         
+
+    def is_egwttp_request(self, data) -> bool:
+        return egwttp.is_request(data)
+    
+    def parse_egwttp_request(self, data) -> tuple[dict, str]:
+        return egwttp.parse_request(data)
+    
+    
+    def handle_response(self, path: str, method: str, reply: requests.Response, offset: int):
+        egwttp_response = egwttp.construct_response(path, method, reply.text, offset)
+        logger.debug("Reply: %s", egwttp_response)
+        return egwttp_response
+
+
+    def request_get(self, path: str, offset: int) -> bytes:
+        return self.handle_response(path, "GET", requests.get(constants.SRCFUL_GW_API_ENDPOINT + path, timeout=constants.SRCFUL_GW_API_REQUEST_TIMEOUT), offset)
+
+    def request_post(self, path: str, content: str, offset: int) -> bytes:
+        return self.handle_response(path, "POST", requests.post(constants.SRCFUL_GW_API_ENDPOINT + path, data=content, timeout=constants.SRCFUL_GW_API_REQUEST_TIMEOUT), offset)

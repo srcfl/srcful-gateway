@@ -137,7 +137,7 @@ if __name__ == "__main__":
   
 
   args = args.parse_args()
-  print("BLE service called with arguments: ", args)
+  logger.info("BLE service called with arguments: %s", args)
   g_service_uuid = args.service_uuid
   g_char_uuid = args.char_uuid
   g_api_url = "http://" + args.api_url

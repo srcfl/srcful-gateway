@@ -1,5 +1,5 @@
-from typing import Tuple
 import logging
+
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def is_response(data: str):
     return data.startswith("EGWTP/1.1 ")
 
 
-def parse_request(data: str) -> Tuple[dict, str]:
+def parse_request(data: str) -> tuple[dict, str]:
     # we parse a request similar to http
     # eg. GET /api/endpoint EGWTP/1.1
     #     Content-Type: text/json

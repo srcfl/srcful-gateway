@@ -75,7 +75,22 @@ class Gateway:
             logger.debug(f"Characteristic d083b2bd-be16-4600-b397-61512ca2f5ad value: {characteristic.value}")
         else:
             logger.debug(f"Characteristic d083b2bd-be16-4600-b397-61512ca2f5ad not found")
-
+            
+            
+            
+        # Add srcful specific services
+        char_flags = (GATTCharacteristicProperties.write_without_response | GATTCharacteristicProperties.write)
+        permissions = GATTAttributePermissions.writeable
+        await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.SRCFUL_REQUEST_CHAR, char_flags, b'', permissions)
+        
+        char_flags = (
+        GATTCharacteristicProperties.read | 
+        GATTCharacteristicProperties.notify | 
+        GATTCharacteristicProperties.indicate
+        )
+        permissions = GATTAttributePermissions.readable
+        await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.SRCFUL_RESPONSE_CHAR, char_flags, b'', permissions)
+        
 
     def handle_read_request(self, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
         logger.debug(f"################################################")
@@ -129,4 +144,32 @@ class Gateway:
             
             return True
         
+        elif characteristic.uuid == constants.SRCFUL_REQUEST_CHAR:
+            value = value.decode("utf-8")
+            if srcful_gw.is_egwttp_request(value):
+                logger.debug("Request received...")
+                header, content = srcful_gw.parse_egwttp_request(value)
+                logger.debug("Header: %s", header)
+                logger.debug("Content: %s", content)
+                if header["method"] == "GET" or header["method"] == "POST":
+                    response = (
+                        srcful_gw.request_get(header["path"], header["Offset"])
+                        if header["method"] == "GET"
+                        else srcful_gw.request_post(header["path"], content, header["Offset"])
+                    )
+                    response_char = self.server.get_characteristic(constants.SRCFUL_RESPONSE_CHAR)
+                    response_char.value = response
+                    logger.debug("Char value set to %s", response_char.value)
+                    if self.server.update_value(constants.SERVICE_UUID, constants.SRCFUL_RESPONSE_CHAR):
+                        logger.debug(
+                            "Value updated sent notifications to %s",
+                            str(len(self.server.app.subscribed_characteristics)),
+                        )
+                else:
+                    logger.debug("Value not updated")
+            else:
+                logger.debug("Not an EGWTP request")
+            
+            return True
+                        
         return False

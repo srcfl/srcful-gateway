@@ -7,7 +7,6 @@
 
 #body = json.dumps(request)
 
-#print(body)
 
 #def gatewayNameQuery(id):
 #  return """
@@ -22,7 +21,6 @@
 
  
 #response = requests.post(url=url, json={"query": gatewayNameQuery("wabi")})
-#print("response status code: ", response.status_code)
 #if response.status_code == 200:
-#    print("response : ", response.content)
+    # pass
 

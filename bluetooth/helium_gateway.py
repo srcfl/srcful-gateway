@@ -50,7 +50,6 @@ class HeliumGateway:
 
         response = requests.post(f"{constants.HELIUM_API_ENDPOINT}/add_gateway", data=value)
 
-        print()
         response_json = response.json()
 
         if response.status_code == 200:

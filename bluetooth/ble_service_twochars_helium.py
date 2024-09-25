@@ -222,7 +222,8 @@ if __name__ == "__main__":
     )
 
     args = args.parse_args()
-    print("BLE service called with arguments: ", args)
+    logger.info("BLE service called with arguments: %s", args)
+    
     API_URL = "http://" + args.api_url
     SERVICE_NAME = args.service_name
     if args.log_level not in logging.getLevelNamesMapping().keys():
