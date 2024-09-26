@@ -26,7 +26,8 @@ class Gateway:
     
     async def init_gateway(self):
         await self.server.add_new_service(constants.SERVICE_UUID)
-
+        logger.debug(f"Added service {constants.SERVICE_UUID}")
+        
         char_flags = GATTCharacteristicProperties.read
         permissions = GATTAttributePermissions.readable
 
@@ -90,7 +91,6 @@ class Gateway:
         )
         permissions = GATTAttributePermissions.readable
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.SRCFUL_RESPONSE_CHAR, char_flags, b'', permissions)
-        
 
     def handle_read_request(self, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
         logger.debug(f"################################################")
@@ -118,7 +118,6 @@ class Gateway:
         elif characteristic.uuid == constants.SRCFUL_RESPONSE_CHAR:
             return characteristic.value
         
-
     def handle_write_request(self, characteristic: BlessGATTCharacteristic, value: Any, **kwargs) -> bool:
         logger.debug(f"################################################")
         logger.debug(f"***** Write request {characteristic.uuid}, {value.decode('utf-8')}")
