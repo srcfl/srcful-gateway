@@ -25,6 +25,9 @@ class ModbusTCP(Modbus):
 
     CONNECTION = "TCP"
 
+
+    
+
     @staticmethod
     def list_to_tuple(config: list) -> tuple:
         assert config[ICom.CONNECTION_IX] == ModbusTCP.CONNECTION, "Invalid connection type"
@@ -42,6 +45,15 @@ class ModbusTCP(Modbus):
         inverter_type = config["type"]
         slave_id = int(config["address"])
         return (config[ICom.CONNECTION_KEY], ip, port, inverter_type, slave_id)
+
+    @staticmethod
+    def get_config_schema():
+        return {
+            "host": "string, IP address or hostname of the device",
+            "port": "int, port of the device",
+            "type": "string, type of the device",
+            "address": "int, Modbus address of the device",
+        }
         
     Setup: TypeAlias = tuple[str | bytes | bytearray, int, str, int]
 
@@ -49,7 +61,7 @@ class ModbusTCP(Modbus):
         log.info("Creating with: %s" % str(setup))
         self.setup = setup
         self.client = None
-        self.data_type = HarvestDataType.MODBUS_REGISTERS.value
+        self.data_type = HarvestDataType.MODBUS_REGISTERS
         super().__init__()
 
     def _open(self, **kwargs) -> bool:

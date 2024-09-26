@@ -42,6 +42,7 @@ class Endpoints:
             "inverterrtu": handler.post.modbusRTU.Handler(),
             "invertersolarman": handler.post.modbusSolarman.Handler(),
             "modbus_device": handler.post.modbusDevice.Handler(),
+            "device": handler.post.device.Handler(),
             "wifi": handler.post.wifi.Handler(),
             "initialize": handler.post.initialize.Handler(),
             "inverter/modbus": handler.post.modbus.Handler(),

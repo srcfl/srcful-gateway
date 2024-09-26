@@ -50,6 +50,18 @@ class ModbusRTU(Modbus):
         inverter_type = config["type"]
         slave_id = int(config["address"])
         return (config[ICom.CONNECTION_KEY], serial_port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
+    
+    @staticmethod
+    def get_config_schema():
+        return {
+            "port": "string, Serial port used for communication",
+            "baudrate": "int, Bits per second",
+            "bytesize": "int, Number of bits per byte 7-8",
+            "parity": "string, 'E'ven, 'O'dd or 'N'one",
+            "stopbits": "float, Number of stop bits 1, 1.5, 2",
+            "type": "string, solaredge, huawei or fronius etc...",
+            "address": "int, Modbus address of the inverter",
+        }
 
 
     Setup: TypeAlias = tuple[str, int, int, str, float, str, int]

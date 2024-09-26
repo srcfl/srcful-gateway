@@ -11,7 +11,10 @@ from server.settings import Settings, ChangeSource
 
 
 def test_create_harvest():
-    t = harvest.Harvest(0, BlackBoard(), None,  harvestTransport.DefaultHarvestTransportFactory())
+    mock_device = Mock()
+    mock_device.get_min_backoff_time.return_value = 1000
+
+    t = harvest.Harvest(0, BlackBoard(), mock_device,  harvestTransport.DefaultHarvestTransportFactory())
     assert t is not None
 
 
@@ -23,6 +26,8 @@ def test_create_harvest_transport():
 def test_inverter_terminated():
     mock_inverter = Mock()
     mock_inverter.is_open.return_value = False
+    mock_inverter.get_min_backoff_time.return_value = 1000
+
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
@@ -35,6 +40,8 @@ def test_execute_harvest():
     registers = {"1": "1717"}
     mock_inverter.read_harvest_data.return_value = registers
     mock_inverter.connect.return_value = True
+    mock_inverter.get_model_name.return_value = "test"
+    mock_inverter.get_min_backoff_time.return_value = 1000
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
@@ -48,6 +55,8 @@ def test_execute_harvest_x10():
     # the first 9 times we should get the same task back
     # the 10th time we should get a list of 2 tasks back
     mock_inverter = Mock()
+    mock_inverter.get_model_name.return_value = "test"
+    mock_inverter.get_min_backoff_time.return_value = 1000
     registers = [{"1": 1717 + x} for x in range(10)]
     bb = BlackBoard()
     bb.settings.harvest.clear_endpoints(ChangeSource.LOCAL)
@@ -157,6 +166,8 @@ def _create_mock_bb():
 def test_execute_harvest_no_transport():
     mock_inverter = Mock()
     mock_inverter.is_terminated.return_value = False
+    mock_inverter.get_model_name.return_value = "test"
+    mock_inverter.get_min_backoff_time.return_value = 1000
     registers = [{"1": 1717 + x} for x in range(10)]
 
     mock_bb = _create_mock_bb()
@@ -183,6 +194,8 @@ def test_execute_harvest_device_terminated():
     registers = {"1": "1717"}
     mock_inverter.read_harvest_data.return_value = registers
     mock_inverter.connect.return_value = True
+    mock_inverter.get_model_name.return_value = "test"
+    mock_inverter.get_min_backoff_time.return_value = 1000
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)

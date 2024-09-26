@@ -55,3 +55,12 @@ def test_postInverter():
 
     # restore previous inverter
     postInverter(previousInverter.json())
+
+def test_post_p1_device():
+    url = settings.API_URL + "device"
+    headers = {'user-agent': 'vscode-restclient'}
+
+    response = requests.request("POST", url, headers=headers, json={"HOMEWIZARD_P1": {"host": "localhost:8000"}})
+
+    assert response.status_code == 200
+

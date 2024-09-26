@@ -17,7 +17,7 @@ class Harvest(Task):
         self.barn = {}
         
         # incremental backoff stuff
-        self.min_backoff_time = 1000
+        self.min_backoff_time = device.get_min_backoff_time()
         self.backoff_time = self.min_backoff_time  # start with a 1-second backoff
         self.max_backoff_time = 256000 # max ~4.3-minute backoff
         self.transport_factory = transport_factory
@@ -76,15 +76,14 @@ class Harvest(Task):
                 log.info("Creating transport for %s", endpoint)
                 
                 headers = {"model": ""}
-                headers["dtype"] = self.device.data_type
+                headers["dtype"] = self.device.data_type.value
                 
-                if self.device.get_profile():
-                    headers["model"] = self.device.get_profile().name.lower()
-                    
-                
+                if self.device.get_model_name():
+                    headers["model"] = self.device.get_model_name().lower()
                 
                 transport = self.transport_factory(event_time + 100, self.bb, self.barn, headers)
                 transport.post_url = endpoint
+                ret.append(transport)
             self.barn = {}
-            ret.append(transport)
+            
         return ret

@@ -45,6 +45,15 @@ class ModbusSolarman(Modbus):
         verbose = False
         return (config[ICom.CONNECTION_KEY], ip, serial, port, inverter_type, slave_id, verbose)
     
+    @staticmethod
+    def get_config_schema():
+        return {
+            "host": "string, IP address or hostname of the device",
+            "serial": "int, serial number of the device",
+            "port": "int, port of the device",
+            "type": "string, solaredge, huawei or fronius etc...",
+            "address": "int, Modbus address of the inverter",
+        }
 
     # Address, Serial, Port, type, Slave_ID, verbose 
     Setup: TypeAlias = tuple[str | bytes | bytearray, int, int, str, int, int]
@@ -53,7 +62,7 @@ class ModbusSolarman(Modbus):
         log.info("Creating with: %s" % str(setup))
         self.setup = setup
         self.client = None
-        self.data_type = HarvestDataType.MODBUS_REGISTERS.value
+        self.data_type = HarvestDataType.MODBUS_REGISTERS
         super().__init__()
 
     def _open(self, **kwargs) -> bool:

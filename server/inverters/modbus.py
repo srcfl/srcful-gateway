@@ -13,6 +13,9 @@ class Modbus(ICom):
     def __init__(self):
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
         self.profile: InverterProfile = InverterProfiles().get(self._get_type())
+
+    def get_min_backoff_time(self) -> int:
+        return 1000
         
     def _get_type(self) -> str:
         """Returns the inverter's type."""
@@ -21,6 +24,7 @@ class Modbus(ICom):
     def _open(self) -> bool:
         """Opens the Modbus connection."""
         raise NotImplementedError("Subclass must implement abstract method")
+
 
     def _is_open(self) -> bool:
         """
@@ -152,6 +156,9 @@ class Modbus(ICom):
     
     def get_config(self) -> dict:
         return self._get_config_dict()
+
+    def get_model_name(self) -> str:
+        return self.profile.name
     
     def get_profile(self) -> InverterProfile:
         return self.profile

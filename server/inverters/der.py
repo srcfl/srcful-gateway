@@ -33,8 +33,8 @@ class DER:
     def get_config(self) -> dict:
         return self.com.get_config()
     
-    def get_profile(self) -> dict:
-        return self.com.get_profile()
+    def get_model_name(self) -> dict:
+        return self.com.get_model_name()
     
     def clone(self, host: str) -> 'DER':
         return self.com.clone(host)

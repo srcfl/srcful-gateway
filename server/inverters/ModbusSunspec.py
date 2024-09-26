@@ -32,6 +32,14 @@ class ModbusSunspec(ICom):
         port = int(config["port"])
         slave_id = int(config["address"])
         return (config[ICom.CONNECTION_KEY], ip, port, slave_id)
+
+    @staticmethod
+    def get_config_schema():
+        return {
+            "host": "string, IP address or hostname of the device",
+            "port": "int, port of the device",
+            "address": "int, Modbus address of the device",
+        }
     
     # Address, Serial, Port, type, Slave_ID, verbose 
     Setup: TypeAlias = tuple[str | bytes | bytearray, int, int]
@@ -46,7 +54,10 @@ class ModbusSunspec(ICom):
         self.client = None
         self.common = None
         self.inveter = None
-        self.data_type = HarvestDataType.SUNSPEC.value
+        self.data_type = HarvestDataType.SUNSPEC
+
+    def get_min_backoff_time(self) -> int:
+        return 1000
         
     def connect(self) -> bool:
         self.client = client.SunSpecModbusClientDeviceTCP(slave_id=self.slave_id, ipaddr=self.host, ipport=self.port)
@@ -104,6 +115,10 @@ class ModbusSunspec(ICom):
         }
         
     def get_profile(self):
+        pass
+
+    def get_model_name(self) -> str:
+        # TODO: add the model name for sunspec
         pass
     
     def clone(self, host: str = None) -> 'ModbusSunspec':

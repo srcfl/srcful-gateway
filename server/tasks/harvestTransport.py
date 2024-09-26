@@ -47,6 +47,7 @@ class HarvestTransport(IHarvestTransport):
         while retries > 0:
             try:
                 jwt = self._create_jwt()
+                log.debug("Harvest JWT: %s", jwt)
                 return jwt
             except crypto.Chip.Error as e:
                 exception = e
@@ -57,6 +58,7 @@ class HarvestTransport(IHarvestTransport):
             except Exception as e:
                 exception = e
                 log.error("Error creating JWT: %s", e)
+                raise e
 
         # if we end up here the chip has not been revived        
         if HarvestTransport.do_increase_chip_death_count:

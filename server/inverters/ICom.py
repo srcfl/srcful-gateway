@@ -7,6 +7,7 @@ from enum import Enum
 class HarvestDataType(Enum):
     MODBUS_REGISTERS = "modbus_registers"
     SUNSPEC = "sunspec_json"
+    HOMEWIZARD_P1 = "homewizard_p1_json"
     UNDEFINED = "undefined"
 
 class DER_TYPE(Enum):
@@ -23,8 +24,8 @@ class ICom(ABC):
     CONNECTION_KEY = "connection"
     CONNECTION_IX = 0
 
-
-    def get_der_types(self) -> list[DER_TYPE]:
+    @abstractmethod
+    def get_min_backoff_time(self) -> int:
         pass
 
     @abstractmethod
@@ -54,9 +55,9 @@ class ICom(ABC):
     @abstractmethod
     def get_config(self) -> dict:
         pass
-    
+
     @abstractmethod
-    def get_profile(self) -> InverterProfile:
+    def get_model_name(self) -> str:
         pass
     
     @abstractmethod

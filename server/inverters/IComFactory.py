@@ -1,3 +1,4 @@
+from server.inverters.HomeWizardP1 import HomeWizardP1
 from .ModbusRTU import ModbusRTU
 from .ModbusTCP import ModbusTCP
 from .ModbusSolarman import ModbusSolarman
@@ -13,6 +14,23 @@ class IComFactory:
     """
     IComFactory class
     """
+
+    @staticmethod
+    def get_supported_connections():
+        return [
+            ModbusTCP.CONNECTION,
+            ModbusRTU.CONNECTION,
+            ModbusSolarman.CONNECTION,
+            ModbusSunspec.CONNECTION,
+            HomeWizardP1.CONNECTION
+        ]
+
+    @staticmethod
+    def get_connection_configs():
+        return {
+            cls.CONNECTION: cls.get_config_schema()
+            for cls in [ModbusTCP, ModbusRTU, ModbusSolarman, ModbusSunspec, HomeWizardP1]
+        }
     
     @staticmethod
     def parse_connection_config_from_list(config: list) -> tuple:
@@ -28,6 +46,8 @@ class IComFactory:
                 return ModbusSolarman.list_to_tuple(config)
             case ModbusSunspec.CONNECTION:
                 return ModbusSunspec.list_to_tuple(config)
+            case HomeWizardP1.CONNECTION:
+                return HomeWizardP1.list_to_tuple(config)
             case _:
                 log.error("Unknown connection type: %s", config[0])
                 return None
@@ -44,6 +64,8 @@ class IComFactory:
                 return ModbusSolarman.dict_to_tuple(config)
             case ModbusSunspec.CONNECTION:
                 return ModbusSunspec.dict_to_tuple(config)
+            case HomeWizardP1.CONNECTION:
+                return HomeWizardP1.dict_to_tuple(config)
             case _:
                 log.error("Unknown connection type: %s", config[ICom.CONNECTION_KEY])
                 raise ValueError("Unknown connection type")
@@ -70,7 +92,7 @@ class IComFactory:
                 ('RTU', port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
                 ('SOLARMAN', host, serial, port, inverter_type, slave_id)
                 ('SUNSPEC', host, port, slave_id)
-
+                ('HOMEWIZARD_P1', host, serial)
         Returns:
             ICom: Communication object for the specified connection type.
 
@@ -95,6 +117,8 @@ class IComFactory:
                 return ModbusSolarman(connection_config)
             case ModbusSunspec.CONNECTION:
                 return ModbusSunspec(connection_config)
+            case HomeWizardP1.CONNECTION:
+                return HomeWizardP1(connection_config)
             case _:
                 log.error("Unknown connection type: %s", connection)
                 return None
