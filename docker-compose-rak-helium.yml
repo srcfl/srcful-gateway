@@ -38,7 +38,7 @@ services:
       io.balena.features.kernel-modules: 1 # why needed? test?
       io.balena.features.sysfs: 1 # needed to set the bluetooth parameters in bluetooth/docker_entrypoint.sh
     depends_on:
-      - "web"
+      - web
 
   gateway-rs:
     build: ./gateway-rs
