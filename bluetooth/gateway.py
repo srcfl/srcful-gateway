@@ -114,6 +114,9 @@ class Gateway:
             wifi_ssid = srcful_gw.get_connected_wifi_ssid()
             characteristic.value = bytes(wifi_ssid, "utf-8")
             self.server.update_value(constants.SERVICE_UUID, wifi_ssid)
+            
+        elif characteristic.uuid == constants.SRCFUL_RESPONSE_CHAR:
+            return characteristic.value
         
 
     def handle_write_request(self, characteristic: BlessGATTCharacteristic, value: Any, **kwargs) -> bool:
