@@ -71,14 +71,6 @@ class Gateway:
 
         logger.debug(f"Helium Service added with uuid {constants.SERVICE_UUID}")
         
-        characteristic = self.server.get_characteristic('d083b2bd-be16-4600-b397-61512ca2f5ad')
-        if characteristic:
-            logger.debug(f"Characteristic d083b2bd-be16-4600-b397-61512ca2f5ad value: {characteristic.value}")
-        else:
-            logger.debug(f"Characteristic d083b2bd-be16-4600-b397-61512ca2f5ad not found")
-            
-            
-            
         # Add srcful specific services
         char_flags = (GATTCharacteristicProperties.write_without_response | GATTCharacteristicProperties.write)
         permissions = GATTAttributePermissions.writeable
@@ -91,6 +83,8 @@ class Gateway:
         )
         permissions = GATTAttributePermissions.readable
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.SRCFUL_RESPONSE_CHAR, char_flags, b'', permissions)
+        
+        logger.debug(f"Added srcful characteristics")
 
     def handle_read_request(self, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
         logger.debug(f"################################################")

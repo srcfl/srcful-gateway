@@ -11,10 +11,12 @@ except ImportError:
     GpioButton = None
 from gateway import Gateway
 import constants
-import macAddr 
+import macAddr
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(name=__name__)
+
+SERVICE_NAME = f"SrcFul Energy Gateway {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
 
 if sys.platform == "linux" and GpioButton is not None:
     # if we are on a bluez backend then we add the start and stop advertising functions
@@ -64,7 +66,17 @@ async def run(gpio_button_pin: int = -1):
     SERVER.read_request_func = gateway.handle_read_request
     SERVER.write_request_func = gateway.handle_write_request
 
-    await SERVER.start()
+    logger.info("Starting server...")
+    try:
+        started = await SERVER.start()
+        if not started:
+            logger.error("Failed to start server")
+            raise RuntimeError("Failed to start server")
+    except Exception as e:
+        logger.error(f"Error starting server: {e}")
+        raise  # Re-raise the exception to stop execution
+
+    logger.info("Server started successfully!")
 
     # if we are using the bluez backend and gpio buttin is set then we stop advertising after 3 minutes and also set up the button
     if sys.platform == "linux" and gpio_button_pin >= 0:
@@ -78,15 +90,19 @@ async def run(gpio_button_pin: int = -1):
             gpio_button_pin,
         )
 
-    await trigger.wait()
-
-    await SERVER.stop()
+    try:
+        # Run indefinitely or until interrupted
+        while True:
+            await asyncio.sleep(1)
+    except asyncio.CancelledError:
+        logger.info("Server operation cancelled")
+    finally:
+        logger.info("Stopping server...")
+        await SERVER.stop()
 
 
 if __name__ == "__main__":
     logger.info("Starting ble service... ")
-    
-    SERVICE_NAME = f"SrcFul Energy Gateway {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
 
     args = argparse.ArgumentParser()
     args.add_argument(
@@ -124,5 +140,8 @@ if __name__ == "__main__":
         )
     else:
         logger.setLevel(logging.getLevelName(args.log_level))
+    
+    # Add this line to ensure you're seeing all INFO messages
+    logging.getLogger().setLevel(logging.INFO)
 
     asyncio.run(run(args.gpio_button_pin))
