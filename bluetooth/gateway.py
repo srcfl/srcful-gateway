@@ -1,4 +1,5 @@
 import logging 
+import asyncio
 from typing import Any
 from bless import (  # type: ignore
     BlessServer,
@@ -11,31 +12,36 @@ import protos.wifi_services_pb2 as wifi_services_pb2
 import protos.diagnostics_pb2 as diagnostics_pb2
 from srcful_gateway import SrcfulGateway
 from helium_gateway import HeliumGateway
+import sys
 
+# Configure the root logger
+logging.basicConfig(level=logging.DEBUG, 
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    stream=sys.stdout)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Move these one level up, e.g. in ble_service and pass as arguments? 
-srcful_gw = SrcfulGateway()
-helium_gw = HeliumGateway()
+
 
 class Gateway:
     def __init__(self, server: BlessServer) -> None:
         self.server = server
+        # Move these one level up, e.g. in ble_service and pass as arguments? 
+        self.srcful_gw = SrcfulGateway()
+        self.helium_gw = HeliumGateway()
+        logger.debug("Gatewat Created")
+        
     
     async def init_gateway(self):
-        await self.server.add_new_service(constants.SERVICE_UUID)
-        logger.debug(f"Added service {constants.SERVICE_UUID}")
-        
         char_flags = GATTCharacteristicProperties.read
         permissions = GATTAttributePermissions.readable
 
-        gateway_swarm = srcful_gw.get_swarm_id()
-        gateway_eth_ip = srcful_gw.get_eth_ip()
-        gateway_eth_mac = srcful_gw.get_eth_mac()
-        gateway_wifi_ip = srcful_gw.get_wifi_ip()
-        gateway_wifi_mac = srcful_gw.get_wifi_mac()
+        gateway_swarm = self.srcful_gw.get_swarm_id()
+        gateway_eth_ip = self.srcful_gw.get_eth_ip()
+        gateway_eth_mac = self.srcful_gw.get_eth_mac()
+        gateway_wifi_ip = self.srcful_gw.get_wifi_ip()
+        gateway_wifi_mac = self.srcful_gw.get_wifi_mac()
         
         logger.debug(f"Gateway Swarm: {gateway_swarm}")
         logger.debug(f"Gateway Eth IP: {gateway_eth_ip}")
@@ -92,7 +98,7 @@ class Gateway:
         logger.debug(f"################################################")
         
         if characteristic.uuid == constants.WIFI_SERVICES_UUID:
-            wifi_ssids = srcful_gw.get_wifi_ssids()
+            wifi_ssids = self.srcful_gw.get_wifi_ssids()
             logger.debug(f"Got wifi ssids {wifi_ssids}")
 
             services = wifi_services_pb2.wifi_services_v1()
@@ -105,13 +111,12 @@ class Gateway:
         
         elif characteristic.uuid == constants.WIFI_MAC_UUID:
             logger.debug(f"Getting current wifi ssid")
-            wifi_ssid = srcful_gw.get_connected_wifi_ssid()
+            wifi_ssid = self.srcful_gw.get_connected_wifi_ssid()
             characteristic.value = bytes(wifi_ssid, "utf-8")
             self.server.update_value(constants.SERVICE_UUID, wifi_ssid)
             
         return characteristic.value
             
-        
     def handle_write_request(self, characteristic: BlessGATTCharacteristic, value: Any, **kwargs) -> bool:
         logger.debug(f"################################################")
         logger.debug(f"***** Write request {characteristic.uuid}, {value.decode('utf-8')}")
@@ -120,7 +125,7 @@ class Gateway:
             
             # Seems like the timing of return here is critical. 
             # If the return is too early, the value is not updated
-            add_gateway_txn = helium_gw.create_add_gateway_txn(value)
+            add_gateway_txn = self.helium_gw.create_add_gateway_txn(value)
 
             characteristic.value = add_gateway_txn
             if self.server.update_value(constants.SERVICE_UUID, constants.ADD_GATEWAY_UUID):
@@ -137,22 +142,22 @@ class Gateway:
                 characteristic.value = bytes(status, "utf-8")
                 self.server.update_value(constants.SERVICE_UUID, constants.WIFI_CONNECT_UUID)
             
-            srcful_gw.connect_wifi(value, update_status_callback)
+            self.srcful_gw.connect_wifi(value, update_status_callback)
             
             return True
         
         elif characteristic.uuid == constants.SRCFUL_REQUEST_CHAR:
             value = value.decode("utf-8")
-            if srcful_gw.is_egwttp_request(value):
+            if self.srcful_gw.is_egwttp_request(value):
                 logger.debug("Request received...")
-                header, content = srcful_gw.parse_egwttp_request(value)
+                header, content = self.srcful_gw.parse_egwttp_request(value)
                 logger.debug("Header: %s", header)
                 logger.debug("Content: %s", content)
                 if header["method"] == "GET" or header["method"] == "POST":
                     response = (
-                        srcful_gw.request_get(header["path"], header["Offset"])
+                        self.srcful_gw.request_get(header["path"], header["Offset"])
                         if header["method"] == "GET"
-                        else srcful_gw.request_post(header["path"], content, header["Offset"])
+                        else self.srcful_gw.request_post(header["path"], content, header["Offset"])
                     )
                     response_char = self.server.get_characteristic(constants.SRCFUL_RESPONSE_CHAR)
                     response_char.value = response
@@ -170,3 +175,25 @@ class Gateway:
             return True
                         
         return False
+    
+    
+    async def start_advertising(self):
+        logging.info("Starting advertising")
+        # we depend on that we are now on a bluez backend
+        await self.app.start_advertising(self.server.adapter)
+        # we don't create a new task as the button loop should be blocked until we have stoped advertising
+        await self.stop_advertising()
+        
+    async def stop_advertising(self):
+        logging.info("Stopping advertising in 3 minutes")
+        await asyncio.sleep(60 * 3)
+        logging.info("Stopping advertising...")
+
+        # we depend on that we are now on a bluez backend
+        adv = self.server.app.advertisements[0]
+        await self.server.app.stop_advertising(self.server.adapter)
+
+        # we also need to remove the exported advertisement endpoint
+        # this is a hack to get bless start advertising to work
+        self.server.app.bus.unexport(adv.path, adv)
+        logging.info("Stopped advertising")

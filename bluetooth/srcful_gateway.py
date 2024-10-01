@@ -10,7 +10,7 @@ import constants
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class SrcfulGateway:
@@ -38,7 +38,9 @@ class SrcfulGateway:
             self.wifi_ip = network_json['interfaces']['wlan0']
         except:
             self.wifi_ip = "n/a"
-            logger.warning("Could not get wifi ip")
+            logger.warning("Could not get wifi ipp")
+            
+        logger.warning("Srcful Gateway initialized")
 
     def get_network_info(self) -> None:
         try:
@@ -47,6 +49,8 @@ class SrcfulGateway:
                 return response.json()
         except Exception as e:
             raise Exception(f"Error getting network info {e}")
+        
+        logger.info("Network info retrieved")
     
     def get_eth_ip(self) -> str:
         return self.eth_ip
@@ -64,17 +68,22 @@ class SrcfulGateway:
         try:
             response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/api/crypto", timeout=10)
             if response.status_code == 200:
+                logger.info("Swarm id retrieved")
                 return response.json()['compactKey']
             else:
+                logger.warning("Could not get swarm id")
                 return "n/a"
+            
         except Exception as e:
             raise Exception(f"Error getting swarm id {e}")
-
+    
     def scan_wifi(self) -> None:
         try:
             requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/api/wifi/scan", timeout=10)
         except Exception as e:
             raise Exception(f"Error scanning wifi {e}")
+        
+        logger.info("Wifi scanned")
     
     def get_wifi_ssids(self) -> list:
         try:

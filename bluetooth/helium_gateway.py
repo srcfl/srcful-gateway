@@ -7,11 +7,12 @@ import protos.add_gateway_pb2 as add_gateway_pb2
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class HeliumGateway:
     def __init__(self):
+        logger.warning("Helium Gateway initialized")
         pass
 
     def bytes_to_dbus_byte_array(self, str) -> list[dbus.Byte]:

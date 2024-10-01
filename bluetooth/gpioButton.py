@@ -26,6 +26,7 @@ class GpioButton:
         while True:
             if not self.is_pressed():
                 if self.click_count == 2 and self.when_double_clicked:
+                    logger.info("Double click detected")
                     await self.when_double_clicked()
                 self.click_count = 0
             else:

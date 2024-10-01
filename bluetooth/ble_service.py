@@ -1,24 +1,33 @@
 import logging
 import asyncio
+import threading
 import sys
+
 import argparse
-from bless import (  # type: ignore
-    BlessServer
-)
-try:
-    from gpioButton import GpioButton
-except ImportError:
-    GpioButton = None
-from gateway import Gateway
-import constants
+from typing import Any
+import requests
+
+import egwttp
+
+
 import macAddr
 
-logging.basicConfig(level=logging.INFO)
+
+# import wifiprov
+
+from bless import (  # type: ignore
+    BlessServer,
+    BlessGATTCharacteristic,
+    GATTCharacteristicProperties,
+    GATTAttributePermissions,
+)
+
+from gpioButton import GpioButton
+
 logger = logging.getLogger(name=__name__)
 
-SERVICE_NAME = f"SrcFul Energy Gateway {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
 
-if sys.platform == "linux" and GpioButton is not None:
+if sys.platform == "linux":
     # if we are on a bluez backend then we add the start and stop advertising functions
     logger.info("Using bluez backend, adding start and stop advertising functions")
 
@@ -51,32 +60,124 @@ else:
 
 # this trigger is never used atm but could be used to signal the main thread that a request has been received
 trigger: asyncio.Event = asyncio.Event()
-gateway = None
+
+# some global configuration constants
+SERVICE_UUID = (
+    "0fda92b2-44a2-4af2-84f5-fa682baa2b8d"  # this is the uuid of the service
+)
+REQUEST_CHAR = "51ff12bb-3ed8-46e5-b4f9-d64e2fec021b"  # clients write to this
+RESPONSE_CHAR = "51ff12bb-3ed8-46e5-b4f9-d64e2fec021c"  # client read from this
+API_URL = "localhost:5000"
+SERVICE_NAME = f"SrcFul Energy Gateway {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
+SERVER = None
+REQUEST_TIMEOUT = 20
+
+
+def read_request(characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
+    logger.debug("Reading %s", characteristic.value)
+    return characteristic.value
+
+
+def handle_response(path: str, method: str, reply: requests.Response, offset: int):
+    egwttp_response = egwttp.construct_response(path, method, reply.text, offset)
+    logger.debug("Reply: %s", egwttp_response)
+    return egwttp_response
+
+
+def request_get(path: str, offset: int) -> bytes:
+    return handle_response(path, "GET", requests.get(API_URL + path, timeout=REQUEST_TIMEOUT), offset)
+
+
+def request_post(path: str, content: str, offset: int) -> bytes:
+    return handle_response(path, "POST", requests.post(API_URL + path, data=content, timeout=REQUEST_TIMEOUT), offset)
+
+
+def handle_write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
+    characteristic.value = value
+    # if request_response and request_response.value:
+    val = value.decode("utf-8")
+
+    logger.debug("Chars value set to %s", val)
+
+    if egwttp.is_request(val):
+        logger.debug("Request received...")
+        header, content = egwttp.parse_request(val)
+        logger.debug("Header: %s", header)
+        logger.debug("Content: %s", content)
+
+        if header["method"] == "GET" or header["method"] == "POST":
+            response = (
+                request_get(header["path"], header["Offset"])
+                if header["method"] == "GET"
+                else request_post(header["path"], content, header["Offset"])
+            )
+            response_char = SERVER.get_characteristic(RESPONSE_CHAR)
+            response_char.value = response
+            logger.debug("Char value set to %s", response_char.value)
+            if SERVER.update_value(SERVICE_UUID, RESPONSE_CHAR):
+                logger.debug(
+                    "Value updated sent notifications to %s",
+                    str(len(SERVER.app.subscribed_characteristics)),
+                )
+            else:
+                logger.debug("Value not updated")
+        else:
+            logger.debug("Not a GET or POST request, doing nothing")
+
+        # await post_request(header['path'], content)
+
+        # transfer the request to a http request to the server
+        # when the response is received, transfer it to a egwttp response
+    else:
+        logger.debug("Not a EGWTTP request, doing nothing")
+
+
+def write_request(characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
+    threading.Thread(target=handle_write_request, args=(characteristic, value)).start()
+
 
 async def run(gpio_button_pin: int = -1):
     global SERVER
-    global gateway
     trigger.clear()
-    
     # Instantiate the server
     SERVER = BlessServer(name=SERVICE_NAME, name_overwrite=True)
-    gateway = Gateway(SERVER)
-    await gateway.init_gateway()
+    SERVER.read_request_func = read_request
+    SERVER.write_request_func = write_request
 
-    SERVER.read_request_func = gateway.handle_read_request
-    SERVER.write_request_func = gateway.handle_write_request
+    # Add Service
+    await SERVER.add_new_service(SERVICE_UUID)
+    logger.debug(
+        "Service added with uuid %s and name %s.", SERVICE_UUID, SERVICE_NAME
+    )
 
-    logger.info("Starting server...")
-    try:
-        started = await SERVER.start()
-        if not started:
-            logger.error("Failed to start server")
-            raise RuntimeError("Failed to start server")
-    except Exception as e:
-        logger.error(f"Error starting server: {e}")
-        raise  # Re-raise the exception to stop execution
+    # Add a Characteristic to the service
+    char_flags = (
+        GATTCharacteristicProperties.write_without_response
+        | GATTCharacteristicProperties.write
+    )
+    permissions = GATTAttributePermissions.writeable
+    await SERVER.add_new_characteristic(
+        SERVICE_UUID, REQUEST_CHAR, char_flags, None, permissions
+    )
 
-    logger.info("Server started successfully!")
+    char_flags = (
+        GATTCharacteristicProperties.read
+        | GATTCharacteristicProperties.notify
+        | GATTCharacteristicProperties.indicate
+    )
+    permissions = GATTAttributePermissions.readable
+    await SERVER.add_new_characteristic(
+        SERVICE_UUID,
+        RESPONSE_CHAR,
+        char_flags,
+        bytearray(b"Hello ble World"),
+        permissions,
+    )
+
+    logger.debug(SERVER.get_characteristic(REQUEST_CHAR))
+    logger.debug(SERVER.get_characteristic(RESPONSE_CHAR))
+
+    await SERVER.start()
 
     # if we are using the bluez backend and gpio buttin is set then we stop advertising after 3 minutes and also set up the button
     if sys.platform == "linux" and gpio_button_pin >= 0:
@@ -90,15 +191,8 @@ async def run(gpio_button_pin: int = -1):
             gpio_button_pin,
         )
 
-    try:
-        # Run indefinitely or until interrupted
-        while True:
-            await asyncio.sleep(1)
-    except asyncio.CancelledError:
-        logger.info("Server operation cancelled")
-    finally:
-        logger.info("Stopping server...")
-        await SERVER.stop()
+    await trigger.wait()
+    await SERVER.stop()
 
 
 if __name__ == "__main__":
@@ -107,8 +201,8 @@ if __name__ == "__main__":
     args = argparse.ArgumentParser()
     args.add_argument(
         "-api_url",
-        help=f"The url of the API endpoint, default: {constants.SRCFUL_GW_API_ENDPOINT}",
-        default=constants.SRCFUL_GW_API_ENDPOINT,
+        help=f"The url of the API endpoint, default: {API_URL}",
+        default=API_URL,
     )
 
     args.add_argument(
@@ -130,8 +224,7 @@ if __name__ == "__main__":
     )
 
     args = args.parse_args()
-    logger.info("BLE service called with arguments: %s", args)
-    
+    print("BLE service called with arguments: ", args)
     API_URL = "http://" + args.api_url
     SERVICE_NAME = args.service_name
     if args.log_level not in logging.getLevelNamesMapping().keys():
@@ -139,9 +232,6 @@ if __name__ == "__main__":
             "Invalid log level %s continuing with default log level.", args.log_level
         )
     else:
-        logger.setLevel(logging.getLevelName(args.log_level))
-    
-    # Add this line to ensure you're seeing all INFO messages
-    logging.getLogger().setLevel(logging.INFO)
+        logger.setLevel(logging.getLevelName(level=logging.DEBUG))
 
     asyncio.run(run(args.gpio_button_pin))
