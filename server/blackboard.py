@@ -40,7 +40,6 @@ class BlackBoard:
         self._settings = Settings()
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
         self._settings.entropy.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
-        self._entropy.entropy.do_mine = False
         self._crypto_state = crypto_state if crypto_state is not None else {}
 
 
