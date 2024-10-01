@@ -25,3 +25,7 @@ class CryptoInterface(ABC):
     @abstractmethod
     def atcab_sign(self, key_id, message):
         pass
+
+    @abstractmethod
+    def atcab_random(self):
+        pass

@@ -20,6 +20,7 @@ try:
         atcab_sign,
         atcab_read_serial_number,
         atcab_get_pubkey,
+        atcab_random
     )
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes
@@ -35,6 +36,7 @@ except Exception:
         atcab_sign,
         atcab_read_serial_number,
         atcab_get_pubkey,
+        atcab_random
     )
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes
@@ -56,7 +58,7 @@ class HardwareCrypto(CryptoInterface):
         self._atcab_read_serial_number = atcab_read_serial_number
         self._atcab_get_pubkey = atcab_get_pubkey
         self._atcab_sign = atcab_sign
-
+        self._atcab_random = atcab_random
     def atcab_init(self, cfg):
         return self._atcab_init(cfg)
 
@@ -82,8 +84,11 @@ class HardwareCrypto(CryptoInterface):
         signature = bytearray(64)
         status = self._atcab_sign(key_id, message, signature)
         return status, bytes(signature)
-
-
+    
+    def atcab_random(self):
+        random_bytes = bytearray(32)
+        status = self._atcab_random(random_bytes)
+        return status, bytes(random_bytes)
 
 def base64_url_encode(data):
     return urlsafe_b64encode(data).rstrip(b"=")
@@ -172,6 +177,12 @@ class Chip:
     def ensure_chip_initialized(self):
         if self._lock_count != 1:
             raise RuntimeError("Chip must be initialized before use!")
+        
+    def get_random(self):
+        self.ensure_chip_initialized()
+        code, random_bytes = self.crypto_impl.atcab_random()
+        self._throw_on_error(code, "Failed to get random bytes")
+        return random_bytes
 
     def get_device_name(self):
         self.ensure_chip_initialized()

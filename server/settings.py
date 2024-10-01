@@ -75,7 +75,7 @@ class Settings(Observable):
         super().__init__()
         self._harvest = self.Harvest(self)
         self._devices = self.Devices(self)
-
+        self._entropy = self.Entropy(self)
     @property
     def API_SUBKEY(self):
         return "settings"
@@ -93,18 +93,23 @@ class Settings(Observable):
     @property
     def devices(self) -> 'Settings.Devices':
         return self._devices
+    
+    @property
+    def entropy(self) -> 'Settings.Entropy':
+        return self._entropy
 
     def update_from_dict(self, data: dict, source: ChangeSource):
         if data and self.SETTINGS in data:
             settings_data = data[self.SETTINGS]
             self.harvest.update_from_dict(settings_data.get(self.harvest.HARVEST, {}), source)
             self.devices.from_dict(settings_data.get(self.devices.DEVICES, {}), source)
-
+            self.entropy.update_from_dict(settings_data.get(self.entropy.ENTROPHY, {}), source)
     def to_dict(self) -> dict:
         return {
             self.SETTINGS: {
                 self.harvest.HARVEST: self._harvest.to_dict(),
-                self.devices.DEVICES: self.devices.to_dict()
+                self.devices.DEVICES: self.devices.to_dict(),
+                self.entropy.ENTROPHY: self.entropy.to_dict()
             }
         }
 
@@ -200,6 +205,57 @@ class Settings(Observable):
                 self._endpoints.clear()
                 self.notify_listeners(source)   
 
+    class Entropy(Observable):
+        def __init__(self, parent: Optional[Observable] = None):
+            super().__init__(parent)
+            self._endpoints = []
+            self._do_mine = False
+        @property
+        def ENTROPHY(self):
+            return "entropy"
+        
+        @property
+        def ENDPOINTS(self):
+            return "endpoints"
+        
+        @property
+        def DO_MINE(self):
+            return "do_mine"
+
+        def update_from_dict(self, data: dict, source: ChangeSource ):
+            if self.ENDPOINTS in data:
+                self._endpoints = data[self.ENDPOINTS]
+                self._do_mine = data[self.DO_MINE]
+                self.notify_listeners(source)
+                
+        def to_dict(self) -> dict:
+            return {
+                self.ENDPOINTS: self._endpoints,
+                self.DO_MINE: self._do_mine
+            }
+
+        @property
+        def endpoints(self):
+            return self._endpoints.copy()
+
+        @property
+        def do_mine(self):
+            return self._do_mine
+
+        def add_endpoint(self, endpoint: str, source: ChangeSource):
+            if endpoint not in self._endpoints:
+                self._endpoints.append(endpoint)
+                self.notify_listeners(source)
+
+        def remove_endpoint(self, endpoint: str, source: ChangeSource):
+            if endpoint in self._endpoints:
+                self._endpoints.remove(endpoint)
+                self.notify_listeners(source)
+
+        def clear_endpoints(self, source: ChangeSource):
+            if len(self._endpoints) > 0:
+                self._endpoints.clear()
+                self.notify_listeners(source)
 
 
     def subscribe_all(self, listener: Callable[[ChangeSource], None]):

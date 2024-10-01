@@ -3,7 +3,7 @@ from cryptography.hazmat.primitives.asymmetric import ec, utils
 from cryptography.utils import int_to_bytes
 from cryptography.hazmat.primitives import hashes
 from .crypto_interface import CryptoInterface
-
+import random
 
 
 def load_env_file(file_path):
@@ -66,3 +66,8 @@ class SoftwareCrypto(CryptoInterface):
         (r, s) = utils.decode_dss_signature(signature)
         result = int_to_bytes(r, 32) + int_to_bytes(s, 32)
         return 0, bytes(result)
+    
+    def atcab_random(self):
+        # generate a list of 32 random bytes
+        random_data = [random.randint(0, 255) for _ in range(32)]
+        return 0, bytearray(random_data)

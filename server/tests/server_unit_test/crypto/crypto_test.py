@@ -184,3 +184,15 @@ def test_compact_key():
     compact = crypto.public_key_to_compact(bytearray.fromhex(pubkey))
     expected = "112EsRY1kgy7RD3mu4UU1U3EzBJq364pALxazcEyvxTTGVJtvpFZ"
     assert compact.decode("utf-8") == expected
+
+def test_get_random():
+    software_crypto = crypto.SoftwareCrypto()
+    code, random_bytes = software_crypto.atcab_random()
+    assert code == crypto.ATCA_SUCCESS
+    assert len(random_bytes) == 32
+
+    with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
+        with patch('server.crypto.crypto.HardwareCrypto.atcab_random', return_value=(crypto.ATCA_SUCCESS, random_bytes)):
+            with crypto.Chip() as chip:
+                random_bytes = chip.get_random()
+    assert len(random_bytes) == 32
