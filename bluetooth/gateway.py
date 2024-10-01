@@ -41,7 +41,7 @@ class Gateway:
         gateway_eth_ip = self.srcful_gw.get_eth_ip()
         gateway_eth_mac = self.srcful_gw.get_eth_mac()
         gateway_wifi_ip = self.srcful_gw.get_wifi_ip()
-        gateway_wifi_mac = self.srcful_gw.get_wifi_mac()
+        gateway_wifi_mac = self.srcful_gw.get_wifi_mac()    
         
         logger.debug(f"Gateway Swarm: {gateway_swarm}")
         logger.debug(f"Gateway Eth IP: {gateway_eth_ip}")
