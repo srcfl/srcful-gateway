@@ -242,6 +242,11 @@ class Settings(Observable):
         def do_mine(self):
             return self._do_mine
 
+        
+        def set_do_mine(self, do_mine: bool, source: ChangeSource):
+            self._do_mine = do_mine
+            self.notify_listeners(source)
+
         def add_endpoint(self, endpoint: str, source: ChangeSource):
             if endpoint not in self._endpoints:
                 self._endpoints.append(endpoint)

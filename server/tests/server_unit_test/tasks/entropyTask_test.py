@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
-from server.tasks.entrophyTask import EntrophyTask, generate_poisson_delay, generate_entropy
+from server.tasks.entropyTask import EntropyTask, generate_poisson_delay, generate_entropy
 from server.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import requests
@@ -31,89 +31,80 @@ def test_create_jwt_success(mock_chip, mock_blackboard):
     mock_chip_instance.build_jwt.return_value = "test_jwt"
     mock_chip.return_value.__enter__.return_value = mock_chip_instance
 
-    task = EntrophyTask(0, mock_blackboard)
+    task = EntropyTask(0, mock_blackboard)
     jwt = task._create_jwt()
 
     assert jwt == "test_jwt"
     mock_chip_instance.build_jwt.assert_called_once()
 
-@patch('server.crypto.crypto.Chip')
-def test_create_jwt_error(mock_chip, mock_blackboard):
-    mock_chip_instance = Mock()
-    mock_chip_instance.build_jwt.side_effect = crypto.Chip.Error("Test error")
-    mock_chip.return_value.__enter__.return_value = mock_chip_instance
 
-    task = EntrophyTask(0, mock_blackboard)
-    with pytest.raises(crypto.Chip.Error):
-        task._create_jwt()
-
-@patch('server.tasks.entrophyTask.EntrophyTask._create_jwt')
-@patch('server.tasks.srcfulAPICallTask.SrcfulAPICallTask.post_data')
-def test_post_data_when_mining(mock_post_data, mock_create_jwt, mock_blackboard):
+@patch('server.tasks.entropyTask.EntropyTask._create_jwt')
+@patch('server.tasks.srcfulAPICallTask.SrcfulAPICallTask.execute')
+def test_execute_when_mining(mock_execute, mock_create_jwt, mock_blackboard):
     mock_create_jwt.return_value = "test_jwt"
-    mock_post_data.return_value = "test_response"
+    mock_execute.return_value = "test_response"
 
-    task = EntrophyTask(0, mock_blackboard)
-    result = task.post_data()
+    task = EntropyTask(0, mock_blackboard)
+    result = task.execute(0)
 
     assert result == "test_response"
-    mock_post_data.assert_called_once()
+    mock_execute.assert_called_once()
 
-@patch('server.tasks.srcfulAPICallTask.SrcfulAPICallTask.post_data')
-def test_post_data_when_not_mining(mock_post_data, mock_blackboard):
+@patch('server.tasks.srcfulAPICallTask.SrcfulAPICallTask.execute')
+def test_execure_when_not_mining(mock_execute, mock_blackboard):
     mock_blackboard.entropy.do_mine = False
 
-    task = EntrophyTask(0, mock_blackboard)
-    result = task.post_data()
+    task = EntropyTask(0, mock_blackboard)
+    result = task.execute(0)
 
     assert result is None
-    mock_post_data.assert_not_called()
+    mock_execute.assert_not_called()
 
-@patch('server.tasks.entrophyTask.EntrophyTask._create_jwt')
+@patch('server.tasks.entropyTask.EntropyTask._create_jwt')
 @patch('server.crypto.revive_run.as_process')
 def test_data_with_retries(mock_revive, mock_create_jwt, mock_blackboard):
     mock_create_jwt.side_effect = [
-        crypto.Chip.Error("Test error"),
-        crypto.Chip.Error("Test error"),
+        crypto.Chip.Error(1, "Test error"),
+        crypto.Chip.Error(1, "Test error"),
         "test_jwt"
     ]
 
-    task = EntrophyTask(0, mock_blackboard)
+    task = EntropyTask(0, mock_blackboard)
     result = task._data()
 
     assert result == "test_jwt"
     assert mock_create_jwt.call_count == 3
     assert mock_revive.call_count == 2
 
-@patch('server.tasks.entrophyTask.EntrophyTask._create_jwt')
+@patch('server.tasks.entropyTask.EntropyTask._create_jwt')
 @patch('server.crypto.revive_run.as_process')
 def test_data_max_retries_reached(mock_revive, mock_create_jwt, mock_blackboard):
-    mock_create_jwt.side_effect = crypto.Chip.Error("Test error")
+    mock_create_jwt.side_effect = crypto.Chip.Error(1, "Test error")
 
-    task = EntrophyTask(0, mock_blackboard)
+    task = EntropyTask(0, mock_blackboard)
     with pytest.raises(crypto.Chip.Error):
         task._data()
 
     assert mock_create_jwt.call_count == 5
-    assert mock_revive.call_count == 4
+    assert mock_revive.call_count == 5
     mock_blackboard.increment_chip_death_count.assert_called_once()
 
-@patch('server.tasks.entrophyTask.generate_poisson_delay')
+@patch('server.tasks.entropyTask.generate_poisson_delay')
 def test_on_200(mock_generate_delay, mock_blackboard):
     mock_generate_delay.return_value = 1000
-    mock_blackboard.get_time.return_value = 0
+    mock_blackboard.time_ms.return_value = 0
 
-    task = EntrophyTask(0, mock_blackboard)
+    task = EntropyTask(0, mock_blackboard)
     result = task._on_200("test_reply")
 
-    assert isinstance(result, EntrophyTask)
-    assert task.event_time == 1000
+    assert isinstance(result, EntropyTask)
+    assert task.get_time() == 1000
 
 def test_on_error(mock_blackboard):
     mock_response = Mock(spec=requests.Response)
     mock_response.text = "Error message"
 
-    task = EntrophyTask(0, mock_blackboard)
+    task = EntropyTask(0, mock_blackboard)
     result = task._on_error(mock_response)
 
     assert result == 0

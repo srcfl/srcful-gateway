@@ -40,6 +40,7 @@ class BlackBoard:
         self._settings = Settings()
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
         self._settings.entropy.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
+        self._settings.entropy.set_do_mine(True, ChangeSource.LOCAL)
         self._crypto_state = crypto_state if crypto_state is not None else {}
 
 
@@ -219,22 +220,6 @@ class BlackBoard:
 
     def time_ms(self):
         return time.time_ns() // 1_000_000
-    
-    @property
-    def entropy(self):
-        return self._entropy
-    
-    class Entropy:
-        _do_mine: bool
-        _endpoints: list[str]
-
-        @property
-        def endpoint(self):
-            return self._endpoints
-        
-        @property
-        def do_mine(self):
-            return self._do_mine
 
     class Devices:
         """Observable list of communication objects"""

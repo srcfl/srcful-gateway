@@ -17,7 +17,7 @@ from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.bootstrap import Bootstrap
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
-
+import server.tasks.entropyTask as entropy
 
 from server.blackboard import BlackBoard
 
@@ -167,10 +167,22 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                     self.blackboard.add_task(task)
             else:
                 logger.info("First run complete, not going for bootstrap")
+    
+    class SettingsEntropyListener(DebouncedMonitorBase):
+        def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
+            super().__init__(debounce_delay)
+            self.blackboard = blackboard
 
+        def _perform_action(self, source: ChangeSource):
+            logger.info("SettingsEntropyListener detected a change, adding entropy task")
+            if self.blackboard.entropy.do_mine:
+                self.blackboard.add_task(entropy.EntropyTask(self.blackboard.time_ms() + entropy.generate_poisson_delay(), self.blackboard))
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb, bootstrap).on_change)
+    bb.settings.entropy.add_listener(SettingsEntropyListener(bb).on_change)
+
+    tasks.put(entropy.EntropyTask(bb.time_ms() + entropy.generate_poisson_delay(), bb))
 
     # bootstrap is deprecated so is should not listen to this anymore
     # bb.devices.add_listener(bootstrap)
