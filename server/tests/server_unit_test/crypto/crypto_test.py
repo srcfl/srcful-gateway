@@ -34,7 +34,7 @@ def test_get_header_format():
 def test_init_throws_error():
 
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=1), patch('server.crypto.software.SoftwareCrypto.atcab_init', return_value=1):
-        with pytest.raises(crypto.Chip.Error) as excinfo:
+        with pytest.raises(crypto.ChipError) as excinfo:
             with crypto.Chip() as chip:
                 pass
         assert excinfo.value.code == 1
@@ -43,7 +43,7 @@ def test_sign_throws_error():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
         with patch('server.crypto.crypto.HardwareCrypto.atcab_sign', return_value=(1, b'')), patch('server.crypto.software.SoftwareCrypto.atcab_sign', return_value=(1, b'')):
             with crypto.Chip() as chip:
-                with pytest.raises(crypto.Chip.Error) as excinfo:
+                with pytest.raises(crypto.ChipError) as excinfo:
                     chip.get_signature("Hello World!")
                 assert excinfo.value.code == 1
 
@@ -51,7 +51,7 @@ def test_error_recovery():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):    
         with crypto.Chip() as chip:
             with patch('server.crypto.crypto.HardwareCrypto.atcab_sign', return_value=(1, b'')), patch('server.crypto.software.SoftwareCrypto.atcab_sign', return_value=(1, b'')):
-                with pytest.raises(crypto.Chip.Error) as excinfo:
+                with pytest.raises(crypto.ChipError) as excinfo:
                     chip.get_signature("Hello World!")
                 assert excinfo.value.code == 1
             with patch('server.crypto.crypto.HardwareCrypto.atcab_sign', return_value=(crypto.ATCA_SUCCESS, b'0000000000000000000000000000000000000000000000000000000000000000')):
@@ -62,7 +62,7 @@ def test_get_pubkey_throws_error():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
         with patch('server.crypto.crypto.HardwareCrypto.atcab_get_pubkey', return_value=(1, b'')), patch('server.crypto.software.SoftwareCrypto.atcab_get_pubkey', return_value=(1, b'')):
             with crypto.Chip() as chip:
-                with pytest.raises(crypto.Chip.Error) as excinfo:
+                with pytest.raises(crypto.ChipError) as excinfo:
                     chip.get_public_key()
                 assert excinfo.value.code == 1
 
@@ -70,7 +70,7 @@ def test_serial_number_throws_error():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
         with patch('server.crypto.crypto.HardwareCrypto.atcab_read_serial_number', return_value=(1, b'')), patch('server.crypto.software.SoftwareCrypto.atcab_read_serial_number', return_value=(1, b'')):
             with crypto.Chip() as chip:
-                with pytest.raises(crypto.Chip.Error) as excinfo:
+                with pytest.raises(crypto.ChipError) as excinfo:
                     chip.get_serial_number()
                 assert excinfo.value.code == 1
 

@@ -18,7 +18,7 @@ class GetNameTask(SrcfulAPICallTask):
         try:
             with crypto.Chip() as chip:
                 serial = chip.get_serial_number().hex()
-        except crypto.Chip.Error:
+        except crypto.ChipError:
             serial = "0000000000000000"
 
         q = """{

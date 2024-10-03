@@ -175,7 +175,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
         def _perform_action(self, source: ChangeSource):
             logger.info("SettingsEntropyListener detected a change, adding entropy task")
-            if self.blackboard.entropy.do_mine:
+            if self.blackboard.settings.entropy.do_mine:
                 self.blackboard.add_task(entropy.EntropyTask(self.blackboard.time_ms() + entropy.generate_poisson_delay(), self.blackboard))
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)

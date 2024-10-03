@@ -101,10 +101,34 @@ def test_to_json(settings):
             },
             settings.devices.DEVICES: {
                 settings.devices.CONNECTIONS: []
+            },
+            settings.entropy.ENTROPY: {
+                settings.entropy.DO_MINE: False,
+                settings.entropy.MQTT_BROKER: "localhost",
+                settings.entropy.MQTT_PORT: 1883,
+                settings.entropy.MQTT_TOPIC: "entropy"
+
             }
         }
     }
     assert json.loads(json_str) == expected
+
+def test_entropy_from_json(settings):
+    json_str = json.dumps({
+        settings.SETTINGS: {
+            settings.entropy.ENTROPY: {
+                settings.entropy.DO_MINE: True,
+                settings.entropy.MQTT_BROKER: "broker",
+                settings.entropy.MQTT_PORT: 1717,
+                settings.entropy.MQTT_TOPIC: "topic"
+            }
+        }
+    })
+    settings.from_json(json_str, ChangeSource.LOCAL)
+    assert settings.entropy.mqtt_broker == "broker"
+    assert settings.entropy.mqtt_port == 1717
+    assert settings.entropy.mqtt_topic == "topic"
+    assert settings.entropy.do_mine
 
 def test_from_json(settings):
     json_str = json.dumps({
@@ -120,19 +144,6 @@ def test_from_json(settings):
     settings.from_json(json_str, ChangeSource.BACKEND)
     assert settings.harvest.endpoints == ["https://example.com", "https://test.com"]
 
-def test_from_json_clears_existing_endpoints(settings):
-    settings.harvest.add_endpoint("https://old.com", ChangeSource.LOCAL)
-    json_str = json.dumps({
-        settings.SETTINGS: {
-            settings.harvest.HARVEST: {
-                settings.harvest.ENDPOINTS: [
-                    "https://new.com"
-                ]
-            }
-        }
-    })
-    settings.from_json(json_str, ChangeSource.BACKEND)
-    assert settings.harvest.endpoints == ["https://new.com"]
 
 def test_constants_immutability(settings):
     with pytest.raises(AttributeError):

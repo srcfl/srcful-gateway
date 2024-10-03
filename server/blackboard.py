@@ -39,8 +39,10 @@ class BlackBoard:
         self._chip_death_count = 0
         self._settings = Settings()
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
-        self._settings.entropy.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
         self._settings.entropy.set_do_mine(True, ChangeSource.LOCAL)
+        self._settings.entropy.set_mqtt_broker("aumwfe410clfv-ats.iot.us-east-1.amazonaws.com", ChangeSource.LOCAL)
+        self._settings.entropy.set_mqtt_port(8833, ChangeSource.LOCAL)
+        self._settings.entropy.set_mqtt_topic("entropy/srcful", ChangeSource.LOCAL)
         self._crypto_state = crypto_state if crypto_state is not None else {}
 
 

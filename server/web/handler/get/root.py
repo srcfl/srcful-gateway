@@ -13,7 +13,7 @@ class Handler(GetHandler):
 
         try:
             ret += f"<p>ChipInfo: {data.bb.get_chip_info()} (This should not be all zeros)</p>"
-        except crypto.Chip.Error as e:
+        except crypto.ChipError as e:
             ret += f"<p>ChipInfo gave Exception: {str(e)}</p>"
 
         elapsed_time = data.bb.elapsed_time

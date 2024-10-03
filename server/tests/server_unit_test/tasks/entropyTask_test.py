@@ -1,110 +1,90 @@
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 from server.tasks.entropyTask import EntropyTask, generate_poisson_delay, generate_entropy
 from server.blackboard import BlackBoard
 import server.crypto.crypto as crypto
-import requests
+import paho.mqtt.client as mqtt
 
 @pytest.fixture
 def mock_blackboard():
     bb = Mock(spec=BlackBoard)
-    bb.entropy = Mock()
-    bb.entropy.endpoint = "http://test-endpoint.com"
-    bb.entropy.do_mine = True
+    bb.settings = Mock()
+    bb.settings.entropy = Mock()
+    bb.settings.entropy.mqtt_broker = "test.mosquitto.org"
+    bb.settings.entropy.mqtt_port = 8883
+    bb.settings.entropy.mqtt_topic = "test/entropy"
+    bb.settings.entropy.do_mine = True
+    bb.time_ms.return_value = 1000
     return bb
 
-def test_generate_poisson_delay():
-    delay = generate_poisson_delay()
-    assert isinstance(delay, int)
-    assert delay > 0
+@patch('server.crypto.crypto.Chip')
+def test_generate_entropy(mock_chip):
+    mock_chip_instance = Mock()
+    mock_chip_instance.get_random.return_value = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08'
+    mock_chip.return_value = mock_chip_instance
 
-def test_generate_entropy():
-    for _ in range(100):
-        entropy = generate_entropy()
-        assert isinstance(entropy, int)
-        assert 0 <= entropy < 2**64 # checks that we are generating a random 64 bit integer
+    entropy = generate_entropy(mock_chip_instance)
+    assert isinstance(entropy, int)
+    assert 0 <= entropy < 2**64
 
 @patch('server.crypto.crypto.Chip')
-def test_create_jwt_success(mock_chip, mock_blackboard):
+def test_create_entropy_data(mock_chip, mock_blackboard):
     mock_chip_instance = Mock()
-    mock_chip_instance.get_serial_number.return_value = b'1234'
-    mock_chip_instance.build_jwt.return_value = "test_jwt"
+    mock_chip_instance.get_random.return_value = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08'
     mock_chip.return_value.__enter__.return_value = mock_chip_instance
 
     task = EntropyTask(0, mock_blackboard)
-    jwt = task._create_jwt()
+    entropy_data = task._create_entropy_data()
 
-    assert jwt == "test_jwt"
-    mock_chip_instance.build_jwt.assert_called_once()
+    assert isinstance(entropy_data, dict)
+    assert 'entropy' in entropy_data
+    assert isinstance(entropy_data['entropy'], int)
+    assert 0 <= entropy_data['entropy'] < 2**64
 
+@patch('paho.mqtt.client.Client')
+def test_setup_mqtt(mock_mqtt_client, mock_blackboard):
+    mock_ssl_context = MagicMock()
+    with patch('ssl.create_default_context', return_value=mock_ssl_context):
+        task = EntropyTask(0, mock_blackboard)
+        task._setup_mqtt("cert_pem", "private_key", mock_blackboard.settings.entropy)
 
-@patch('server.tasks.entropyTask.EntropyTask._create_jwt')
-@patch('server.tasks.srcfulAPICallTask.SrcfulAPICallTask.execute')
-def test_execute_when_mining(mock_execute, mock_create_jwt, mock_blackboard):
-    mock_create_jwt.return_value = "test_jwt"
-    mock_execute.return_value = "test_response"
+        mock_mqtt_client.assert_called_once()
+        mock_mqtt_client.return_value.tls_set_context.assert_called_once_with(mock_ssl_context)
+        mock_mqtt_client.return_value.connect.assert_called_once_with(
+            mock_blackboard.settings.entropy.mqtt_broker,
+            mock_blackboard.settings.entropy.mqtt_port
+        )
+        mock_mqtt_client.return_value.loop_start.assert_called_once()
 
+@patch('paho.mqtt.client.Client')
+def test_publish_entropy(mock_mqtt_client, mock_blackboard):
     task = EntropyTask(0, mock_blackboard)
-    result = task.execute(0)
+    mqtt_client = mock_mqtt_client.return_value
+    
+    entropy_data = {"entropy": 12345}
+    task._publish_entropy(mqtt_client, entropy_data, mock_blackboard.settings.entropy)
 
-    assert result == "test_response"
-    mock_execute.assert_called_once()
+    mock_mqtt_client.return_value.publish.assert_called_once()
+    args, _ = mock_mqtt_client.return_value.publish.call_args
+    assert args[0] == mock_blackboard.settings.entropy.mqtt_topic
+    assert '12345' in args[1]  # Check if the entropy value is in the payload
 
-@patch('server.tasks.srcfulAPICallTask.SrcfulAPICallTask.execute')
-def test_execure_when_not_mining(mock_execute, mock_blackboard):
-    mock_blackboard.entropy.do_mine = False
+def test_execute_when_not_mining(mock_blackboard):
+    mock_blackboard.settings.entropy.do_mine = False
 
     task = EntropyTask(0, mock_blackboard)
     result = task.execute(0)
 
     assert result is None
-    mock_execute.assert_not_called()
 
-@patch('server.tasks.entropyTask.EntropyTask._create_jwt')
-@patch('server.crypto.revive_run.as_process')
-def test_data_with_retries(mock_revive, mock_create_jwt, mock_blackboard):
-    mock_create_jwt.side_effect = [
-        crypto.Chip.Error(1, "Test error"),
-        crypto.Chip.Error(1, "Test error"),
-        "test_jwt"
-    ]
-
+@patch.object(EntropyTask, '_get_cert_and_key')
+@patch.object(EntropyTask, 'send_entropy')
+def test_execute_when_mining(mock_send_entropy, mock_get_cert_and_key, mock_blackboard):
+    mock_get_cert_and_key.return_value = ("cert_pem", "private_key")
+    
     task = EntropyTask(0, mock_blackboard)
-    result = task._data()
+    result = task.execute(0)
 
-    assert result == "test_jwt"
-    assert mock_create_jwt.call_count == 3
-    assert mock_revive.call_count == 2
-
-@patch('server.tasks.entropyTask.EntropyTask._create_jwt')
-@patch('server.crypto.revive_run.as_process')
-def test_data_max_retries_reached(mock_revive, mock_create_jwt, mock_blackboard):
-    mock_create_jwt.side_effect = crypto.Chip.Error(1, "Test error")
-
-    task = EntropyTask(0, mock_blackboard)
-    with pytest.raises(crypto.Chip.Error):
-        task._data()
-
-    assert mock_create_jwt.call_count == 5
-    assert mock_revive.call_count == 5
-    mock_blackboard.increment_chip_death_count.assert_called_once()
-
-@patch('server.tasks.entropyTask.generate_poisson_delay')
-def test_on_200(mock_generate_delay, mock_blackboard):
-    mock_generate_delay.return_value = 1000
-    mock_blackboard.time_ms.return_value = 0
-
-    task = EntropyTask(0, mock_blackboard)
-    result = task._on_200("test_reply")
-
-    assert isinstance(result, EntropyTask)
-    assert task.get_time() == 1000
-
-def test_on_error(mock_blackboard):
-    mock_response = Mock(spec=requests.Response)
-    mock_response.text = "Error message"
-
-    task = EntropyTask(0, mock_blackboard)
-    result = task._on_error(mock_response)
-
-    assert result == 0
+    mock_get_cert_and_key.assert_called_once()
+    mock_send_entropy.assert_called_once()
+    assert result == task

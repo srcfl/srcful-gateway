@@ -34,7 +34,7 @@ class HarvestTransport(IHarvestTransport):
             try:
                 jwt = chip.build_jwt(self.barn, self.headers, 5)
                 HarvestTransport.do_increase_chip_death_count = True
-            except crypto.Chip.Error as e:
+            except crypto.ChipError as e:
                 log.error("Error creating JWT: %s", e)
                 raise e
         
@@ -48,7 +48,7 @@ class HarvestTransport(IHarvestTransport):
             try:
                 jwt = self._create_jwt()
                 return jwt
-            except crypto.Chip.Error as e:
+            except crypto.ChipError as e:
                 exception = e
                 if retries > 0:
                     retries -= 1
@@ -119,7 +119,7 @@ class LocalHarvestTransportTimedSignature(HarvestTransportTimedSignature):
             jwt = self._data()
             log.debug("No sending in local harvest burning that barn!")
             #log.info("JWT: %s", jwt)
-        except crypto.Chip.Error as e:
+        except crypto.ChipError as e:
             log.error("Error creating JWT: %s", e)
             return 0
 

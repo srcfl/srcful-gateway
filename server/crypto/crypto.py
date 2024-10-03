@@ -103,7 +103,14 @@ def public_key_to_compact(pub_key:bytearray) -> bytes:
 
     return x_as_b58_encoded
 
+class ChipError(Exception):
+        def __init__(self, code, message):
+            self.code = code
+            self.message = message
+            super().__init__(self.message)
 
+        def __str__(self) -> str:
+            return super().__str__() + f" cryptauthlib error code: {self.code}"
 
 class Chip:
     _lock = threading.Lock()
@@ -114,14 +121,7 @@ class Chip:
     # def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto()):
         self.crypto_impl = crypto_impl
 
-    class Error(Exception):
-        def __init__(self, code, message):
-            self.code = code
-            self.message = message
-            super().__init__(self.message)
-
-        def __str__(self) -> str:
-            return super().__str__() + f" cryptauthlib error code: {self.code}"
+    
 
     def __enter__(self):
         """Prepare the chip. Automatically run at the start of `with` block."""
@@ -164,7 +164,7 @@ class Chip:
         if code != ATCA_SUCCESS:
             # we do not want to release as there may caught exceptions
             # self._lock.release()
-            raise Chip.Error(code, message)
+            raise ChipError(code, message)
 
     def _release(self) -> bool:
         ret = self.crypto_impl.atcab_release()

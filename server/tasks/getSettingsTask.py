@@ -37,6 +37,43 @@ def handle_settings(bb: BlackBoard, raw_json_data_from_api: dict):
         log.error("Wrong json format: %s", raw_json_data_from_api)
         return None
 
+def create_query_json(chip: crypto.Chip, subkey: str):
+    unix_timestamp = int(time.time())
+
+    dt = datetime.fromtimestamp(unix_timestamp, tz=timezone.utc)
+
+    # Format datetime as ISO 8601 string
+    # should be something like 2024-08-26T13:02:00
+    iso_timestamp = dt.isoformat().replace('+00:00', '')
+
+    serial = chip.get_serial_number().hex()
+    timestamp = iso_timestamp
+    message = f"{serial}:{timestamp}"
+    signature = chip.get_signature(message).hex()
+
+    q = """
+        {
+            gatewayConfiguration {
+                configuration(deviceAuth: {
+                    id: $serial,
+                    timestamp: $timestamp,
+                    signedIdAndTimestamp: $signature,
+                    subKey: $subKey
+                }) {
+                data
+                }
+            }
+        }
+    """
+
+    q = q.replace("$timestamp", f'"{timestamp}"')
+    q = q.replace("$serial", f'"{serial}"')
+    q = q.replace("$signature", f'"{signature}"')
+    q = q.replace("$subKey", f'"{subkey}"')
+
+    return {"query": q}
+
+
 class GetSettingsTask(SrcfulAPICallTask):
     """Task to get the configuration from the server using the crypto chip"""
 
@@ -46,44 +83,10 @@ class GetSettingsTask(SrcfulAPICallTask):
         self.post_url = "https://api.srcful.dev/"
 
     def _json(self):
-
-        unix_timestamp = int(time.time())
-
-        # Convert Unix timestamp to datetime object
-
-        dt = datetime.fromtimestamp(unix_timestamp, tz=timezone.utc)
-
-        # Format datetime as ISO 8601 string
-        # should be something like 2024-08-26T13:02:00
-        iso_timestamp = dt.isoformat().replace('+00:00', '')
-
         with crypto.Chip() as chip:
-            serial = chip.get_serial_number().hex()
-            timestamp = iso_timestamp
-            message = f"{serial}:{timestamp}"
-            signature = chip.get_signature(message).hex()
-
-        q = """
-            {
-                gatewayConfiguration {
-                    configuration(deviceAuth: {
-                        id: $serial,
-                        timestamp: $timestamp,
-                        signedIdAndTimestamp: $signature,
-                        subKey: $subKey
-                    }) {
-                    data
-                    }
-                }
-            }
-        """
-
-        q = q.replace("$timestamp", f'"{timestamp}"')
-        q = q.replace("$serial", f'"{serial}"')
-        q = q.replace("$signature", f'"{signature}"')
-        q = q.replace("$subKey", f'"{self.bb.settings.API_SUBKEY}"')
-
-        return {"query": q}
+            query = create_query_json(chip, self.bb.settings.API_SUBKEY)
+        return query
+        
 
 
     def _on_error(self, reply: requests.Response) -> Union[int, Tuple[int, Union[List[ITask], ITask, None]]]:
