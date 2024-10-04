@@ -5,7 +5,11 @@ from protos import blockchain_txn_add_gateway_v1_pb2, \
 from exceptions import MinerMalformedAddGatewayTxn
 import logging
 
-logging.basicConfig(level=logging.INFO)
+# change the logging level to debug from root level
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(name=__name__)
 
 
@@ -113,9 +117,9 @@ class GatewayClient(object):
         payer = base58.b58decode_check(payer_address)[1:]
 
         # Log owner, payer and staking_mode
-        logger.debug(f"Owner: {owner_address} -> {owner}")
-        logger.debug(f"Payer: {payer_address} -> {payer}")
-        logger.debug(f"Staking Mode: {staking_mode}")
+        logger.info(f"Owner: {owner_address} -> {owner}")
+        logger.info(f"Payer: {payer_address} -> {payer}")
+        logger.info(f"Staking Mode: {staking_mode}")
 
         response = self.stub.add_gateway(local_pb2.add_gateway_req(
             owner=owner,

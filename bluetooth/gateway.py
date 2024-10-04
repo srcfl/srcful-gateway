@@ -49,6 +49,8 @@ class Gateway:
         logger.debug(f"Gateway Wifi IP: {gateway_wifi_ip}")
         logger.debug(f"Gateway Wifi Mac: {gateway_wifi_mac}")
         
+        await self.helium_gw.fetch_payer(gateway_swarm)
+        
         # To-Do: Read the onboarding and public key from the device and populate the characteristics
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.ONBOARDING_KEY_UUID, char_flags, gateway_swarm.encode('utf-8'), permissions)
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.PUBLIC_KEY_UUID, char_flags, gateway_swarm.encode('utf-8'), permissions)
@@ -63,6 +65,8 @@ class Gateway:
         services = diagnostics_pb2.diagnostics_v1()
         services.diagnostics['Name:\n'] = 'AA'
         services.diagnostics['\nPublic Key:\n'] = gateway_swarm
+        services.diagnostics['\nPayer Name:\n'] = self.helium_gw.payer_name
+        services.diagnostics['\nPayer Address:\n'] = self.helium_gw.payer_address
         services.diagnostics['\nEthernet IP:\n'] = gateway_eth_ip
         services.diagnostics['\nEtherner Mac:\n'] = gateway_eth_mac
         services.diagnostics['\nWiFi IP:\n'] = gateway_wifi_ip
