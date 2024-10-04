@@ -76,6 +76,7 @@ class Settings(Observable):
         self._harvest = self.Harvest(self)
         self._devices = self.Devices(self)
         self._entropy = self.Entropy(self)
+        self._api = self.API(self)
     @property
     def API_SUBKEY(self):
         return "settings"
@@ -83,8 +84,6 @@ class Settings(Observable):
     @property
     def SETTINGS(self):
         return "settings"
-
-
 
     @property
     def harvest(self) -> 'Settings.Harvest':
@@ -97,6 +96,10 @@ class Settings(Observable):
     @property
     def entropy(self) -> 'Settings.Entropy':
         return self._entropy
+
+    @property
+    def api(self) -> 'Settings.API':
+        return self._api
 
     def update_from_dict(self, data: dict, source: ChangeSource):
         if data and self.SETTINGS in data:
@@ -120,6 +123,44 @@ class Settings(Observable):
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
+    
+    class API(Observable):
+        def __init__(self, parent: Optional[Observable] = None):
+            super().__init__(parent)
+            self._gql_endpoint = "https://api.srcful.dev"
+            self._gql_timeout = 5
+        @property
+        def gql_endpoint(self):
+            return self._gql_endpoint
+        
+        @property
+        def gql_timeout(self):
+            return self._gql_timeout
+        
+        @property
+        def GQL_ENDPOINT(self):
+            return "gql_endpoint"
+        
+        @property
+        def GQL_TIMEOUT(self):
+            return "gql_timeout"
+        
+        def to_dict(self) -> dict:
+            return {
+                self.GQL_ENDPOINT: self._gql_endpoint,
+                self.GQL_TIMEOUT: self._gql_timeout
+            }
+        
+        def update_from_dict(self, data: dict, source: ChangeSource):
+            notify = False
+            if self.GQL_ENDPOINT in data:
+                self._gql_endpoint = data[self.GQL_ENDPOINT]
+                notify = True
+            if self.GQL_TIMEOUT in data:
+                self._gql_timeout = data[self.GQL_TIMEOUT]
+                notify = True
+            if notify:
+                self.notify_listeners(source)
         
     class Devices(Observable):
         def __init__(self, parent: Optional[Observable] = None):

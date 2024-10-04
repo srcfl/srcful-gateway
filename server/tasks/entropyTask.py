@@ -8,6 +8,13 @@ import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run
 import random
 import math
+import tempfile
+
+
+from cryptography import x509
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.backends import default_backend
 
 from server.settings import Settings
 
@@ -18,6 +25,7 @@ from typing import Optional
 import paho.mqtt.client as mqtt
 import ssl
 import json
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +39,7 @@ def generate_poisson_delay():
         U = random.random()
 
     delay_minutes = -AVERAGE_DELAY_MINUTES * math.log(U)
-    #return 5000
+    # return 5000
     return int(delay_minutes * 60 * 1000)
 
 def generate_entropy(chip: crypto.Chip):
@@ -58,23 +66,49 @@ class EntropyTask(Task):
         with crypto.Chip() as chip:
             entropy = generate_entropy(chip)
         return {"entropy": entropy}
+
+
+    def create_ssl_context(self, cert_string, key_string):
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        
+        # Create temporary files for the certificate and key
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as cert_file, \
+            tempfile.NamedTemporaryFile(mode='w', delete=False) as key_file:
+        
+            cert_file.write(cert_string)
+            key_file.write(key_string)
+        
+            # Ensure the data is written to the files
+            cert_file.flush()
+            key_file.flush()
+        
+            # Get the file paths
+            cert_path = cert_file.name
+            key_path = key_file.name
     
+        try:
+            # Load the certificate chain from the temporary files
+            context.load_cert_chain(certfile=cert_path, keyfile=key_path)
+        finally:
+            # Clean up the temporary files
+            os.unlink(cert_path)
+            os.unlink(key_path)
+        
+        return context
 
     def _setup_mqtt(self, cert_pem, cert_private_key, config:Settings.Entropy) -> mqtt.Client:
 
-        mqtt_config = self.bb.settings.entropy.mqtt_config
         mqtt_client = mqtt.Client()
 
         # Set up TLS with in-memory certificates
-        ssl_context = ssl.create_default_context()
-        ssl_context.load_cert_chain_from_buffer(
-            certfile=cert_pem,
-            keyfile=cert_private_key
-        )
-
+        ssl_context = self.create_ssl_context(cert_pem, cert_private_key)
+ 
         mqtt_client.tls_set_context(ssl_context)
 
         # Connect to the broker
+        logger.debug(f"Connecting to MQTT broker {config.mqtt_broker}:{config.mqtt_port}")
         mqtt_client.connect(config.mqtt_broker, config.mqtt_port)
         mqtt_client.loop_start()
 
@@ -89,36 +123,40 @@ class EntropyTask(Task):
     
     def send_entropy(self, entropy_data:dict, cert_pem, cert_private_key):
         try:
-            client = self._setup_mqtt(cert_pem, cert_private_key)
+            client = self._setup_mqtt(cert_pem, cert_private_key, self.bb.settings.entropy)
         except Exception as e:
             logger.error(f"Failed to set up MQTT client: {e}")
             self.adjust_time(self.bb.time_ms() + 60000)
             return 
         
         try:
-            self._publish_entropy(client, entropy_data)
+            self._publish_entropy(client, entropy_data, self.bb.settings.entropy)
             self.adjust_time(self.bb.time_ms() + generate_poisson_delay())
             self.bb.add_info("Generating Entropy...")
         except Exception as e:
-            logger.error(f"Failed to set up MQTT client: {e}")
+            logger.error(f"Failed to publish entropy: {e}")
             self.adjust_time(self.bb.time_ms() + 60000)
 
         client.disconnect()
         
     
     def _get_cert_and_key(self):
-        q = create_settings_query_json(self.SUBKEY)
+        with crypto.Chip() as chip:
+            q = create_settings_query_json(chip, self.SUBKEY)
 
-        res = requests.post(self.post_url, json=q, timeout=5)
+        res = requests.post(self.bb.settings.api.gql_endpoint, json=q, timeout=self.bb.settings.api.gql_timeout)
 
-        if self.reply.status_code == 200:
+        if res.status_code == 200:
             data = res.json()
 
-            if 'data' in data['payload'] and 'configurationDataChanges' in data['payload']['data']:
-                if data['payload']['data']['configurationDataChanges']['subKey'] == self.SUBKEY:
-                    data = data['payload']['data']['configurationDataChanges']['data']
-                    if 'cert_pem' in data and 'cert_private_key' in data:
-                        return data["cert_pem"], data["cert_private_key"]
+            
+
+            entropy_cert_data = data.get("data",{}).get("gatewayConfiguration", {}).get("configuration", {}).get("data", {})
+            entropy_cert_data = json.loads(entropy_cert_data)
+            logger.info(f"entropy cert: {entropy_cert_data}")
+
+            if 'cert_pem' in entropy_cert_data and 'cert_private_key' in entropy_cert_data:
+                return entropy_cert_data["cert_pem"], entropy_cert_data["cert_private_key"]
         
         raise Exception("Failed to get certificate and key") 
         
