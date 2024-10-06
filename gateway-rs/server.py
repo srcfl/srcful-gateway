@@ -96,7 +96,7 @@ def add_gateway():
         txn = json_payload['txn']
             
         logger.info(f"Transaction created: {txn}")
-        return jsonify({"txn": base58.b58encode(txn).decode('utf-8')}), 200
+        return jsonify({"txn": txn}), 200
     
     except Exception as e:
         logger.error(f"Error adding gateway: {str(e)}")

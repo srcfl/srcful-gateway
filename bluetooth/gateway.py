@@ -27,7 +27,7 @@ class Gateway:
         # Move these one level up, e.g. in ble_service and pass as arguments? 
         self.srcful_gw = SrcfulGateway()
         self.helium_gw = HeliumGateway()
-        logger.debug("Gatewat Created")
+        logger.debug("Gateway Created")
         
     def update_diagnostics(self, characteristic: BlessGATTCharacteristic):        
         services = diagnostics_pb2.diagnostics_v1()
@@ -127,7 +127,7 @@ class Gateway:
             
             # Seems like the timing of return here is critical. 
             # If the return is too early, the value is not updated
-            add_gateway_txn = self.helium_gw.create_add_gateway_txn(value)
+            add_gateway_txn = self.helium_gw.create_add_gateway_txn(self.srcful_gw.get_swarm_id(), value)
 
             characteristic.value = add_gateway_txn
             if self.server.update_value(constants.SERVICE_UUID, constants.ADD_GATEWAY_UUID):

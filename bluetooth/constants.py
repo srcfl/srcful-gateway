@@ -19,6 +19,7 @@ WIFI_CONNECT_UUID = '398168aa-0111-4ec0-b1fa-171671270608'
 
 HELIUM_API_ENDPOINT = "http://localhost:3000"
 HELIUM_ONBOARDING_ENDPOINT = "https://onboarding.dewi.org"
+HELIUM_TRANSACTION_ENDPOINT = "https://onboarding.dewi.org/api/v2/transactions/pay"
 
 SRCFUL_GW_API_ENDPOINT = "http://localhost"
 SRCFUL_GW_API_REQUEST_TIMEOUT = 20
