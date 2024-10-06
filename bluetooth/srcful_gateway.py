@@ -20,33 +20,33 @@ class SrcfulGateway:
         while True:
             try:
                 self.scan_wifi() # Initial scan upon object creation
-                network_json = self.get_network_info()
+                self._fetch_network_info() # Fetch network info
+                self._fetch_swarm_id() # Fetch swarm id
                 break
             except Exception as e:
                 logger.error(f"Error initializing srcful gateway: {e}")
 
-        # We should probably remove the hardcoded values
-        self.eth_mac = network_json['eth0_mac']
-        self.wifi_mac = network_json['wlan0_mac']
-        
-        try:
-            self.eth_ip = network_json['interfaces']['eth0']
-        except:
-            self.eth_ip = "n/a"
-            logger.warning("Could not get eth ip")
-        try:
-            self.wifi_ip = network_json['interfaces']['wlan0']
-        except:
-            self.wifi_ip = "n/a"
-            logger.warning("Could not get wifi ipp")
-            
-        logger.warning("Srcful Gateway initialized")
-
-    def get_network_info(self) -> None:
+    def _fetch_network_info(self) -> None:
         try:
             response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/api/network/address", timeout=10)
             if response.status_code == 200:
-                return response.json()
+                network_json = response.json()
+                # We should probably remove the hardcoded values
+                self.eth_mac = network_json['eth0_mac']
+                self.wifi_mac = network_json['wlan0_mac']
+                
+                try:
+                    self.eth_ip = network_json['interfaces']['eth0']
+                except:
+                    self.eth_ip = "n/a"
+                    logger.warning("Could not get eth ip")
+                try:
+                    self.wifi_ip = network_json['interfaces']['wlan0']
+                except:
+                    self.wifi_ip = "n/a"
+                    logger.warning("Could not get wifi ipp")
+                    
+                logger.warning("Srcful Gateway initialized")
         except Exception as e:
             raise Exception(f"Error getting network info {e}")
         
@@ -65,14 +65,17 @@ class SrcfulGateway:
         return self.wifi_mac
 
     def get_swarm_id(self) -> str:
+        return self.swarm_id
+    
+    def _fetch_swarm_id(self) -> None:
         try:
             response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/api/crypto", timeout=10)
             if response.status_code == 200:
                 logger.info("Swarm id retrieved")
-                return response.json()['compactKey']
+                self.swarm_id = response.json()['compactKey']
             else:
                 logger.warning("Could not get swarm id")
-                return "n/a"
+                self.swarm_id = "n/a"
             
         except Exception as e:
             raise Exception(f"Error getting swarm id {e}")

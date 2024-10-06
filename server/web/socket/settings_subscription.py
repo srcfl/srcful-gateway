@@ -66,7 +66,7 @@ class GraphQLSubscriptionClient(threading.Thread):
         logger.debug(f"Received pong: {message}")
 
     def on_message(self, ws, message):
-        logger.info("Received message: %s", message)
+        logger.debug("Received message: %s", message)
         
         data = json.loads(message)
 

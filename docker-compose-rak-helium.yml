@@ -22,6 +22,7 @@ services:
       io.balena.features.supervisor-api: 1 # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
     volumes:
       - srcful-data:/data/srcful
+      - /var/run/dbus:/host/run/dbus
 
   bluetooth:
     build: ./bluetooth
@@ -39,9 +40,14 @@ services:
       io.balena.features.sysfs: 1 # needed to set the bluetooth parameters in bluetooth/docker_entrypoint.sh
     depends_on:
       - web
+    volumes:
+      - /var/run/dbus:/host/run/dbus
+      - /sys:/sys
+      - /lib/modules:/lib/modules
 
   gateway-rs:
     build: ./gateway-rs
+    network_mode: host
     devices:
       - /dev/i2c-1
     expose:
@@ -50,7 +56,6 @@ services:
       - GATEWAY_SETTINGS=/app/settings.toml
     depends_on:
       - packet-forwarder
-    network_mode: host
 
   packet-forwarder:
     # Use pre-defined image

@@ -49,7 +49,7 @@ class ConfigurationMutationTask(SrcfulAPICallTask):
 
         mutation = mutation.replace("$jwt", f'"{jwt}"')
 
-        logger.info("Preparing configuration mutation with jwt %s", jwt)
+        logger.debug("Preparing configuration mutation with jwt %s", jwt)
         logger.debug("Query: %s", mutation)
 
         return {"query": mutation}

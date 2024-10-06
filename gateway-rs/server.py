@@ -5,10 +5,13 @@ import signal
 import json
 import logging
 from client import GatewayClient
-from protos import add_gateway_pb2
 import base58 
 
-logging.basicConfig(level=logging.INFO)
+# change the logging level to debug from root level
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(name=__name__)
 
 app = Flask(__name__)
@@ -24,11 +27,9 @@ gateway = None
 @app.route('/start_gateway', methods=['POST'])
 def start_gateway():
     global gateway_process
-    global gateway
     try:
         # Start the helium_gateway with the specified config file
         gateway_process = subprocess.Popen(['./helium_gateway', '-c', settings_path, 'server'])
-        gateway = GatewayClient()
         logger.info(f"helium_gateway started with PID: {gateway_process.pid}")
         return jsonify({"message": "helium_gateway started successfully"}), 200
     except Exception as e:
@@ -52,7 +53,6 @@ def stop_gateway():
 
 @app.route('/onboading_keys', methods=['GET'])
 def get_info():
-    global gateway
     try:
         # Get info from the helium_gateway
         result = subprocess.run(['./helium_gateway', '-c', settings_path, 'key', 'info'], capture_output=True, text=True)
@@ -65,34 +65,47 @@ def get_info():
 
 @app.route('/add_gateway', methods=['POST'])
 def add_gateway():
-    global gateway
-
-    data = request.data
     
+    data = request.get_json()
+    data = json.loads(data)
+    logger.info(f"Request data: {type(data)}")
     logger.info(f"Request data: {data}")
-
-    add_gw_details = add_gateway_pb2.add_gateway_v1()
-    add_gw_details.ParseFromString(bytes(data))
-
-    logger.info(f"add gateway owner {add_gw_details.owner}, fee {add_gw_details.fee} "
-                         f"amount {add_gw_details.amount}, payer {add_gw_details.payer}")
+    owner = data.get('owner')
+    payer = data.get('payer')
+    logger.info(f"add gateway owner {owner} payer {payer}")
+    
+    result = subprocess.run([
+            './helium_gateway', '-c', settings_path, 'add',
+            '--owner', owner,
+            '--payer', payer,
+            '--mode', 'full'
+        ], capture_output=True, text=True)
 
     try:
-        txn = gateway.create_add_gateway_txn(
-            owner_address=add_gw_details.owner,
-            payer_address='14h2zf1gEr9NmvDb2U53qucLN2jLrKU1ECBoxGnSnQ6tiT6V2kM'
-        )
         
+        json_payload = json.loads(result.stdout)
+        logger.info(f"Json payload {json_payload}")
+        
+        # log address, mode, owner, payer and txn 
+        logger.info(f"Address: {json_payload['address']}")
+        logger.info(f"Mode: {json_payload['mode']}")
+        logger.info(f"Owner: {json_payload['owner']}")
+        logger.info(f"Payer: {json_payload['payer']}")
+        logger.info(f"Txn: {json_payload['txn']}")
+        
+        txn = json_payload['txn']
+            
+        logger.info(f"Transaction created: {txn}")
         return jsonify({"txn": base58.b58encode(txn).decode('utf-8')}), 200
     
     except Exception as e:
+        logger.error(f"Error adding gateway: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
 def create_app():
     global gateway_process
-    global gateway
-
+    
     # Start the helium_gateway with the specified config file
     gateway_process = subprocess.Popen(['./helium_gateway', '-c', settings_path, 'server'])
     gateway = GatewayClient()
