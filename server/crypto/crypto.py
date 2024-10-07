@@ -117,8 +117,8 @@ class Chip:
     _lock_count = 0
 
     
-    def __init__(self, crypto_impl: CryptoInterface = SoftwareCrypto()):
-    # def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto()):
+    # def __init__(self, crypto_impl: CryptoInterface = SoftwareCrypto()):
+    def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto()):
         self.crypto_impl = crypto_impl
 
     
@@ -187,7 +187,7 @@ class Chip:
     def get_device_name(self):
         self.ensure_chip_initialized()
         code, info = self.crypto_impl.atcab_info()
-        return atcab_get_device_name(info)  # this one does not access the hardware chiop at all so we do not need to inject it, but it could be nice to do in the future
+        return atcab_get_device_name(info)  # this one does not access the hardware chip at all so we do not need to inject it, but it could be nice to do in the future
 
     def get_serial_number(self, retries:int=0) -> bytearray:
         self.ensure_chip_initialized()
