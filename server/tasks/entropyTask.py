@@ -29,6 +29,8 @@ import os
 
 logger = logging.getLogger(__name__)
 
+_LAST_INSTANCE_ID = 0
+
 def generate_poisson_delay():
     AVERAGE_DELAY_MINUTES = 60
     """Generate exponentially distributed delay"""
@@ -57,9 +59,12 @@ class EntropyTask(Task):
         return "entropy"
 
     def __init__(self, event_time: int, bb: BlackBoard):
+        global _LAST_INSTANCE_ID
         super().__init__(event_time, bb)
         self.cert_pem = None
         self.cert_private_key = None
+        _LAST_INSTANCE_ID = _LAST_INSTANCE_ID + 1
+        self.instance_id = _LAST_INSTANCE_ID
     
             
     def _create_entropy_data(self):
@@ -149,8 +154,6 @@ class EntropyTask(Task):
         if res.status_code == 200:
             data = res.json()
 
-            
-
             entropy_cert_data = data.get("data",{}).get("gatewayConfiguration", {}).get("configuration", {}).get("data", {})
             entropy_cert_data = json.loads(entropy_cert_data)
             logger.info(f"entropy cert: {entropy_cert_data}")
@@ -162,7 +165,10 @@ class EntropyTask(Task):
         
     
     def execute(self, event_time):
-
+        if self.instance_id != _LAST_INSTANCE_ID:
+            logger.info(f"Running version {self.instance_id} is not the last instance id {_LAST_INSTANCE_ID}, Terminating")
+            return None
+        
         if self.bb.settings.entropy.do_mine:
             if self.cert_pem is None or self.cert_private_key is None:
                 # fetch the cert and key from the settings with subkey entropy
@@ -176,8 +182,6 @@ class EntropyTask(Task):
             
             # this sends and sets a new time for rescheduling.
             self.send_entropy(self._get_entropy_data(), self.cert_pem, self.cert_private_key)
-
-            # close the mqtt client
             
             return self
         else:

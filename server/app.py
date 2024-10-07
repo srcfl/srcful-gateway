@@ -176,13 +176,12 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         def _perform_action(self, source: ChangeSource):
             logger.info("SettingsEntropyListener detected a change, adding entropy task")
             if self.blackboard.settings.entropy.do_mine:
+                logger.info("Entropy mining is enabled, adding entropy task")
                 self.blackboard.add_task(entropy.EntropyTask(self.blackboard.time_ms() + entropy.generate_poisson_delay(), self.blackboard))
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb, bootstrap).on_change)
     bb.settings.entropy.add_listener(SettingsEntropyListener(bb).on_change)
-
-    tasks.put(entropy.EntropyTask(bb.time_ms() + entropy.generate_poisson_delay(), bb))
 
     # bootstrap is deprecated so is should not listen to this anymore
     # bb.devices.add_listener(bootstrap)

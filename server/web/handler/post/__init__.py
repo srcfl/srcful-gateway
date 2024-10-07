@@ -8,3 +8,4 @@ from . import settings
 from . import modbusTCP
 from . import modbusRTU
 from . import modbusSolarman
+from . import entropy
