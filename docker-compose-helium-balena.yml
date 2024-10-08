@@ -1,4 +1,4 @@
-# SOLARIS
+# Srcful & Helium Gateway
 
 version: "2.4"
 
@@ -64,7 +64,9 @@ services:
       USE_LIBGPIOD: 0
       RESET_GPIO: 25
       HAS_GPS: 0
-      # GPS_DEV: /dev/ttyAMA0 # To confirm that it messes up the egw-ble service
+
+      # Set GPS_DEV to a dummy value to prevent the packet forwarder from trying to initialize the GPS
+      GPS_DEV: /dev/null
 
       # Helium settings
       SERVER_HOST: 127.0.0.1
