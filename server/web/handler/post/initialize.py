@@ -31,7 +31,7 @@ class Handler(PostHandler):
             t.execute(0)
 
             if t.is_initialized is None:
-                return t.reply.status, json.dumps({"body": t.reply.body})
+                return t.reply.status_code, json.dumps({"body": t.reply.body})
 
             return 200, json.dumps({"initialized": t.is_initialized})
         else:
