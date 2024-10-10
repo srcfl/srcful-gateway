@@ -21,6 +21,12 @@ class Handler(GetHandler):
         t.execute(0)
 
         if t.name is None:
-            return t.reply.status, json.dumps({"body": t.reply.body})
+            # Then the output can also be {"exception": "'Response' object has no attribute 'status'", "endpoint": "/api/name"} 
+            # If the gateway is offline and can not reach the endpoint
+            # So we need to return a 504 error
+            if hasattr(t.reply, 'status'):
+                return t.reply.status, json.dumps({"body": t.reply.body})
+            else:
+                return 504, json.dumps({"body": t.reply})
 
         return 200, json.dumps({"name": t.name})
