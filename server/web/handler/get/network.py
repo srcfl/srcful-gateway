@@ -8,7 +8,7 @@ import ipaddress
 import socket
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 class NetworkHandler(GetHandler):
     @property
     def CONNECTIONS(self):
@@ -89,8 +89,8 @@ class AddressHandler(GetHandler):
     def do_get(self, data: RequestData):
         
         return 200, json.dumps(self.get(data.bb.rest_server_port))
-
-
+    
+    
 # A class to scan for modbus devices on the network
 class ModbusScanHandler(GetHandler):
 
@@ -126,6 +126,23 @@ class ModbusScanHandler(GetHandler):
                 }
         }
 
+    # a function that takes an array dictionaries of ip addresses and their ports and returns an updated list of dictionaries with the mac address added
+    def update_ips_with_macs(self, ips: list[dict[str, str]]) -> list[dict[str, str]]:
+        logger.info("Scanning ARP table")
+        with open('/proc/net/arp', 'r') as f:
+            lines = f.readlines()[1:]  # Skip the header line
+        
+        arp_table = [
+            dict(zip(['ip', 'hw', 'flags', 'mac', 'mask', 'device'], line.split()))
+            for line in lines
+        ]
+        
+        for ip in ips:
+            for entry in arp_table:
+                if entry['ip'] == ip['ip']:
+                    ip['mac'] = entry['mac']
+        return ips
+        
     def parse_ports(self, ports_str) -> list[int]:
         """Parse a string of ports and port ranges into a list of integers."""
         ports = []
@@ -173,7 +190,11 @@ class ModbusScanHandler(GetHandler):
 
         if not modbus_devices:
             logger.info(f"No IPs with given port(s) {ports} open found in the subnet {subnet}")
-
+            return []
+        
+        logger.info(f"Updating IPs with MACs: {modbus_devices}")
+        modbus_devices = self.update_ips_with_macs(modbus_devices)
+        logger.info(f"Updated IPs with MACs: {modbus_devices}")
         return modbus_devices
 
 
@@ -182,7 +203,7 @@ class ModbusScanHandler(GetHandler):
         
         ports = data.query_params.get(self.PORTS, "502,1502,6607,8899")
         ports = self.parse_ports(ports)
-        timeout = data.query_params.get(self.TIMEOUT, 0.01) # 10ms may be too short for some networks? 
+        timeout = data.query_params.get(self.TIMEOUT, 0.01) # 10ms may be too short for some networks?
 
         modbus_devices = self.scan_ports(ports=ports, timeout=timeout)
         
