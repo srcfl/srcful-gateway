@@ -2,7 +2,6 @@ from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
 from unittest.mock import MagicMock, patch
-from server.inverters.ModbusSolarman import ModbusSolarman
 import pytest
 
 def test_execute_invertert_added():
@@ -33,19 +32,25 @@ def test_retry_on_exception():
     assert ret is task
     assert len(bb.purge_tasks()) == 0
 
-
-def test_execute_invertert_could_not_open():
+@patch('server.network.network_utils.NetworkUtils')
+def test_execute_invertert_could_not_open(mock_network_utils):
     bb = BlackBoard()
     HarvestFactory(bb)
     
     inverter = MagicMock()
     inverter.connect.return_value = False
+    
+    mock_network_utils.get_hosts.return_value = [{'ip': '192.168.50.1'}]
+
     task = DevicePerpetualTask(0, bb, inverter)
     ret = task.execute(0)
 
     assert inverter not in bb.devices.lst
     assert inverter.connect.called
     assert ret is task
+    # assert that clone inside the task was called
+    assert inverter.clone.called
+    
     assert len(bb.purge_tasks()) == 1   # info message is added wich triggers a saveStateTask 
 
 
@@ -66,9 +71,9 @@ def test_execute_new_inverter_added():
     assert inverter not in bb.devices.lst
     assert inverter2 in bb.devices.lst
 
- 
-@patch('server.web.handler.get.network.ModbusScanHandler')
-def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
+
+@patch('server.tasks.openDevicePerpetualTask.NetworkUtils')
+def test_execute_new_inverter_added_after_rescan(mock_network_utils):
     bb = BlackBoard()
     inverter = MagicMock()
     
@@ -78,13 +83,10 @@ def test_execute_new_inverter_added_after_rescan(mock_modbus_scan_handler):
     task.execute(event_time=0)
 
     assert len(task.bb.devices.lst) == 0
-    
-    # Create a mock for the scanner
-    mock_scanner = mock_modbus_scan_handler.return_value
-    mock_scanner.scan_ports.return_value = [{'ip': '192.168.50.1'}]
+
 
     # Inject the mock scanner into the task
-    task.scanner = mock_scanner
+    task.scanner = mock_network_utils.get_hosts.return_value = [{'ip': '192.168.50.1'}]
 
     task.execute(event_time=1)
 

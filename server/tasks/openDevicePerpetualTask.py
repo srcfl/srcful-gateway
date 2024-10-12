@@ -1,8 +1,8 @@
 import logging
 from server.blackboard import BlackBoard
-from server.web.handler.get.network import ModbusScanHandler
 from .task import Task
 from server.inverters.ICom import ICom
+from server.network.network_utils import NetworkUtils
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,6 @@ class DevicePerpetualTask(Task):
     def __init__(self, event_time: int, bb: BlackBoard, device: ICom):
         super().__init__(event_time, bb)
         self.device = device
-        self.scanner = ModbusScanHandler()
 
     def execute(self, event_time):
         
@@ -35,13 +34,15 @@ class DevicePerpetualTask(Task):
             
             else:
                 port = self.device.get_config()['port'] # get the port from the previous inverter config
-                hosts = self.scanner.scan_ports([int(port)], 0.01) # overwrite hosts with the new result of the scan
+                
+                hosts = NetworkUtils.get_hosts([int(port)], 0.01)
                 
                 if len(hosts) > 0:
                     # At least one device was found on the port
                     self.device = self.device.clone(hosts[0]['ip'])
                     logger.info("Found inverter at %s, retry in 5 seconds...", hosts[0]['ip']) 
                     self.time = event_time + 5000
+                    self.bb.add_info("Found inverter at " + hosts[0]['ip'] + ", retry in 5 seconds...")
                 else:
                     # possibly we should create a new device object. We have previously had trouble with reconnecting in the Harvester
                     message = "Failed to open inverter, retry in 5 minutes: " + str(self.device.get_config())
