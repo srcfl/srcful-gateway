@@ -15,7 +15,6 @@ from server.tasks.harvestFactory import HarvestFactory
 from server.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
-from server.bootstrap import Bootstrap
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
 
 
@@ -103,7 +102,7 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     scheduler.main_loop()
 
 
-def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None, bootstrap_file: str | None = None): 
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None): 
 
     from server.web.handler.get.crypto import Handler as CryptoHandler
     try:
@@ -127,8 +126,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     tasks = queue.PriorityQueue()
 
-    bootstrap = Bootstrap(bootstrap_file)
-
     class BackendSettingsSaver(DebouncedMonitorBase):
             """ Monitors settings changes and schedules a save to the backend, ignores changes from the backend """
             def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
@@ -143,10 +140,9 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                     logger.info("No need to save settings to backend as the source is the backend")
 
     class SettingsDeviceListener(DebouncedMonitorBase):
-        def __init__(self, blackboard: BlackBoard, bootstrap: Bootstrap, debounce_delay: float = 0.5):
+        def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
             super().__init__(debounce_delay)
             self.blackboard = blackboard
-            self.bootstrap = bootstrap
             self.first_run = True
 
         def _perform_action(self, source: ChangeSource):
@@ -157,23 +153,10 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 self.first_run = False
                 # TODO: if the device has been connected to before then it should be a perpetual task
                 self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
-        
-            # if we have not got any devices on the first run then go for the bootstrap
-            if self.first_run:
-                logger.info("First run and no devices found, going for bootstrap")
-                self.first_run = False
-
-                for task in self.bootstrap.get_tasks(bb.time_ms() + 2000, bb):
-                    self.blackboard.add_task(task)
-            else:
-                logger.info("First run complete, not going for bootstrap")
 
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
-    bb.settings.devices.add_listener(SettingsDeviceListener(bb, bootstrap).on_change)
-
-    # bootstrap is deprecated so is should not listen to this anymore
-    # bb.devices.add_listener(bootstrap)
+    bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
 
     tasks.put(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
 
@@ -214,4 +197,4 @@ if __name__ == "__main__":
     # logging.root.addHandler(handler)
     logging.root.setLevel(logging.INFO)
     modbus_tcp = ModbusTCP("192.168.1.100", "00:00:00:00:00:00", 502, "huawei", 1)
-    main(("localhost", 5000), ("localhost", 5000), modbus_tcp, "bootstrap.txt")
+    main(("localhost", 5000), ("localhost", 5000), modbus_tcp)

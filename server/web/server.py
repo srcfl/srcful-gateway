@@ -51,7 +51,7 @@ class Endpoints:
         }
 
         self.api_delete_dict = {
-            "inverter": handler.delete.inverter.Handler(),
+            "inverter": handler.delete.modbusDevice.Handler(),
             "notification/{id}": handler.delete.notification.Handler(),
         }
 
