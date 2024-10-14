@@ -31,6 +31,7 @@ SOLARMAN_CONFIG = {
 SUNSPEC_CONFIG = {
     "connection": "SUNSPEC",
     "host": "localhost",
+    "mac": "00:00:00:00:00:00",
     "port": 502,
     "address": 1
 }

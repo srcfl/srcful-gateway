@@ -21,28 +21,31 @@ class ModbusSunspec(ICom):
     def list_to_tuple(config: list) -> tuple:
         assert config[ICom.CONNECTION_IX] == ModbusSunspec.CONNECTION, "Invalid connection type"
         ip = config[1]
-        port = int(config[2])
-        slave_id = int(config[3])
-        return (config[ICom.CONNECTION_IX], ip, port, slave_id)
+        mac = config[2]
+        port = int(config[3])
+        slave_id = int(config[4])
+        return (config[ICom.CONNECTION_IX], ip, mac, port, slave_id)
     
     @staticmethod
     def dict_to_tuple(config: dict) -> tuple:
         assert config[ICom.CONNECTION_KEY] == ModbusSunspec.CONNECTION, "Invalid connection type"
         ip = config["host"]
+        mac = config["mac"]
         port = int(config["port"])
         slave_id = int(config["address"])
-        return (config[ICom.CONNECTION_KEY], ip, port, slave_id)
+        return (config[ICom.CONNECTION_KEY], ip, mac, port, slave_id)
     
     # Address, Serial, Port, type, Slave_ID, verbose 
-    Setup: TypeAlias = tuple[str | bytes | bytearray, int, int]
+    Setup: TypeAlias = tuple[str | bytes | bytearray, str, int, int]
     
     def __init__(self, setup: Setup) -> None:
         """
         Constructor
         """
         self.host = setup[0]
-        self.port = setup[1]
-        self.slave_id = setup[2]
+        self.mac = setup[1]
+        self.port = setup[2]
+        self.slave_id = setup[3]
         self.client = None
         self.common = None
         self.inveter = None
@@ -99,6 +102,7 @@ class ModbusSunspec(ICom):
         return {
             ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
             "host": self.host,
+            "mac": self.mac,
             "port": self.port,
             "address": self.slave_id
         }
@@ -109,4 +113,4 @@ class ModbusSunspec(ICom):
     def clone(self, host: str = None) -> 'ModbusSunspec':
         if host is None:
             host = self.host
-        return ModbusSunspec((host, self.port, self.slave_id))
+        return ModbusSunspec((host, self.mac, self.port, self.slave_id))
