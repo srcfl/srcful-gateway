@@ -4,7 +4,6 @@ from pymodbus.client import ModbusTcpClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
 from pymodbus.exceptions import ModbusIOException
 from pymodbus import pymodbus_apply_logging_config
-from typing_extensions import TypeAlias
 import logging
 
 log = logging.getLogger(__name__)
@@ -16,15 +15,34 @@ pymodbus_apply_logging_config("INFO")
 class ModbusTCP(Modbus):
 
     """
-    ip: string, IP address of the inverter,
-    mac: string, MAC address of the inverter,
-    port: int, Port of the inverter,
-    type: string, solaredge, huawei or fronius etc...,
-    address: int, Modbus address of the inverter
+    ip: string, IP address of the Modbus TCP device,
+    mac: string, MAC address of the Modbus TCP device,
+    port: int, Port of the Modbus TCP device,
+    device_type: string, solaredge, huawei or fronius etc...,
+    address: int, Modbus address of the Modbus TCP device
     """
 
-
     CONNECTION = "TCP"
+    
+    @property
+    def IP(self) -> str:
+        return "ip"
+
+    @property
+    def MAC(self) -> str:
+        return "mac"
+    
+    @property
+    def PORT(self) -> int:
+        return "port"
+    
+    @property
+    def DEVICE_TYPE(self) -> str:
+        return "device_type"
+    
+    @property
+    def SLAVE_ID(self) -> int:
+        return "slave_id"
 
     @staticmethod
     def list_to_tuple(config: list) -> tuple:
@@ -32,25 +50,32 @@ class ModbusTCP(Modbus):
         ip = config[1]
         mac = config[2]
         port = int(config[3])
-        inverter_type = config[4]
+        device_type = config[4]
         slave_id = int(config[5])
-        return (config[ICom.CONNECTION_IX], ip, mac, port, inverter_type, slave_id)
+        return (config[ICom.CONNECTION_IX], ip, mac, port, device_type, slave_id)
     
     @staticmethod
     def dict_to_tuple(config: dict) -> tuple:
         assert config[ICom.CONNECTION_KEY] == ModbusTCP.CONNECTION, "Invalid connection type"
-        ip = config["host"]
+        ip = config["ip"]
         mac = config["mac"]
         port = int(config["port"])
-        inverter_type = config["type"]
-        slave_id = int(config["address"])
-        return (config[ICom.CONNECTION_KEY], ip, mac, port, inverter_type, slave_id)
-        
-    Setup: TypeAlias = tuple[str | bytes | bytearray, str, int, str, int]
+        device_type = config["device_type"]
+        slave_id = int(config["slave_id"])
+        return (config[ICom.CONNECTION_KEY], ip, mac, port, device_type, slave_id)
 
-    def __init__(self, setup: Setup) -> None:
-        log.info("Creating with: %s" % str(setup))
-        self.setup = setup
+    def __init__(self, 
+                 ip: str = None, 
+                 mac: str = "00:00:00:00:00:00", 
+                 port: int = None, 
+                 device_type: str = None, 
+                 slave_id: int = None) -> None:
+        log.info("Creating with: %s %s %s %s %s" % (ip, mac, port, device_type, slave_id))
+        self.ip = ip
+        self.mac = mac
+        self.port = port
+        self.device_type = device_type
+        self.slave_id = slave_id
         self.client = None
         self.data_type = HarvestDataType.MODBUS_REGISTERS.value
         super().__init__()
@@ -59,7 +84,7 @@ class ModbusTCP(Modbus):
         if not self._is_terminated():
             self._create_client(**kwargs)
             if not self.client.connect():
-                log.error("FAILED to open inverter: %s", self._get_type())
+                log.error("FAILED to open Modbus TCP device: %s", self._get_type())
             return bool(self.client.socket)
         else:
             return False
@@ -78,52 +103,52 @@ class ModbusTCP(Modbus):
     def _is_terminated(self) -> bool:
         return self._isTerminated
 
-    def _clone(self, host: str = None) -> 'ModbusTCP':
-        if host is None:
-            host = self._get_host()
+    def _clone(self, ip: str = None) -> 'ModbusTCP':
+        if ip is None:
+            ip = self._get_ip()
 
-        return ModbusTCP((host, self._get_mac(), self._get_port(),
-                            self._get_type(), self._get_address()))
+        return ModbusTCP(ip, self._get_mac(), self._get_port(),
+                            self._get_type(), self._get_slave_id())
 
-    def _get_host(self) -> str:
-        return self.setup[0]
+    def _get_ip(self) -> str:
+        return self.ip
     
     def _get_mac(self) -> str:
-        return self.setup[1]
+        return self.mac
 
     def _get_port(self) -> int:
-        return self.setup[2]
+        return self.port
 
     def _get_type(self) -> str:
-        return self.setup[3].lower()
+        return self.device_type
 
-    def _get_address(self) -> int:
-        return self.setup[4]
+    def _get_slave_id(self) -> int:
+        return self.slave_id
 
     def _get_config(self) -> tuple[str, str, int, str, int]:
         return (
             ModbusTCP.CONNECTION,
-            self._get_host(),
+            self._get_ip(),
             self._get_mac(),
             self._get_port(),
             self._get_type(),
-            self._get_address(),
+            self._get_slave_id(),
         )
 
     def _get_config_dict(self) -> dict:
         return {
             ICom.CONNECTION_KEY: ModbusTCP.CONNECTION,
-            "type": self._get_type(),
-            "mac": self._get_mac(),
-            "address": self._get_address(),
-            "host": self._get_host(),
-            "port": self._get_port(),
+            self.DEVICE_TYPE: self._get_type(),
+            self.MAC: self._get_mac(),
+            self.SLAVE_ID: self._get_slave_id(),
+            self.IP: self._get_ip(),
+            self.PORT: self._get_port(),
         }
 
     def _create_client(self, **kwargs) -> None:
-        self.client =  ModbusClient(host=self._get_host(),
+        self.client =  ModbusClient(host=self._get_ip(),
                                     port=self._get_port(), 
-                                    unit_id=self._get_address(),
+                                    unit_id=self._get_slave_id(),
                                     **kwargs
         )
 
@@ -131,9 +156,9 @@ class ModbusTCP(Modbus):
         resp = None
         
         if operation == 0x04:
-            resp = self.client.read_input_registers(scan_start, scan_range, slave=self._get_address())
+            resp = self.client.read_input_registers(scan_start, scan_range, slave=self._get_slave_id())
         elif operation == 0x03:
-            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self._get_address())
+            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self._get_slave_id())
 
         # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
         # We solve this by raising the exception manually
@@ -147,7 +172,7 @@ class ModbusTCP(Modbus):
         Write a range of holding registers from a start address
         """
         resp = self.client.write_registers(
-            starting_register, values, slave=self._get_address()
+            starting_register, values, slave=self._get_slave_id()
         )
         log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
         

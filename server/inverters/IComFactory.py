@@ -51,16 +51,18 @@ class IComFactory:
     @staticmethod
     def parse_and_create_com(config) -> ICom:
         if isinstance(config, list):
+            raise ValueError("Invalid config type")
             return IComFactory.create_com(IComFactory.parse_connection_config_from_list(config))
         elif isinstance(config, dict):
             return IComFactory.create_com(IComFactory.parse_connection_config_from_dict(config))
         elif isinstance(config, tuple):
+            raise ValueError("Invalid config type")
             return IComFactory.create_com(config)
         else:
             raise ValueError("Invalid config type")
         
     @staticmethod
-    def create_com(config: tuple) -> ICom:
+    def create_com(config: dict) -> ICom:
         """
         Create an ICom object for device communication.
 
@@ -77,24 +79,24 @@ class IComFactory:
         Raises:
             ValueError: If the connection type (first element of the tuple) is unsupported.
         """
-                    
-        connection = config[ICom.CONNECTION_IX]
-        connection_config = [c for c in config if c != connection]
-        # connection_config = IComFactory.parse_connection_config_from_list(config)
+
+        connection = config[ICom.CONNECTION_KEY]
+        stripped_config = {k: v for k, v in config.items() if k != ICom.CONNECTION_KEY}
+        
         log.info("####################################################")
         log.info("Creating ICom object for connection connection: %s", connection)
-        log.info("Connection config: %s", connection_config)
+        log.info("Connection config: %s", stripped_config)
         log.info("####################################################")
         
         match connection:
             case ModbusTCP.CONNECTION:
-                return ModbusTCP(connection_config)
+                return ModbusTCP(**stripped_config)
             case ModbusRTU.CONNECTION:
-                return ModbusRTU(connection_config)
+                return ModbusRTU(**stripped_config)
             case ModbusSolarman.CONNECTION:
-                return ModbusSolarman(connection_config)
+                return ModbusSolarman(**stripped_config)
             case ModbusSunspec.CONNECTION:
-                return ModbusSunspec(connection_config)
+                return ModbusSunspec(**stripped_config)
             case _:
                 log.error("Unknown connection type: %s", connection)
                 return None

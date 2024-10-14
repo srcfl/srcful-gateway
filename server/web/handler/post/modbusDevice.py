@@ -5,9 +5,9 @@ from ..requestData import RequestData
 import logging
 from server.inverters.IComFactory import IComFactory
 from server.inverters.ICom import ICom
-from server.inverters.der import DER
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Handler(PostHandler):
@@ -42,14 +42,13 @@ class Handler(PostHandler):
             if ICom.CONNECTION_KEY not in data.data:
                 return 400, json.dumps({"status": "connection field is required"})
             
-            conf = IComFactory.parse_connection_config_from_dict(data.data)
-            com = IComFactory.create_com(conf)
-            logger.info(f"Created a Modbus {conf[0]} connection")
+            # conf = IComFactory.parse_connection_config_from_dict(data.data)
+            com = IComFactory.create_com(data.data)
             
             data.bb.add_task(OpenDeviceTask(data.bb.time_ms() + 100, data.bb, com))
-            return 200, json.dumps({"status": "ok"})    
+            return 200, json.dumps({"status": "ok"})
             
         except Exception as e:
-            logger.error(f"Failed to open a Modbus {conf[0]} connection: {conf}")
+            logger.error(f"Failed to open a Modbus {data.data[ICom.CONNECTION_KEY]} connection: {data.data}")
             logger.error(e)
             return 500, json.dumps({"status": "error", "message": str(e)})

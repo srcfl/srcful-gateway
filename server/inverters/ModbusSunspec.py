@@ -1,6 +1,5 @@
 import sunspec2.modbus.client as client
 from sunspec2.modbus.client import SunSpecModbusClientError
-from typing_extensions import TypeAlias
 from .ICom import ICom, HarvestDataType
 import logging
 
@@ -8,14 +7,37 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-
-
 class ModbusSunspec(ICom):
     """
-    ModbusSunspec class
+    ip: string, IP address of the Modbus TCP device,
+    mac: string, MAC address of the Modbus TCP device,
+    port: int, Port of the Modbus TCP device,
+    device_type: string, solaredge, huawei or fronius etc...,
+    slave_id: int, Modbus address of the Modbus TCP device
     """
 
     CONNECTION = "SUNSPEC"
+    
+    @property
+    def IP(self) -> str:
+        return "ip"
+    
+    @property
+    def MAC(self) -> str:
+        return "mac"
+    
+    @property
+    def PORT(self) -> int:
+        return "port"
+    
+    @property
+    def DEVICE_TYPE(self) -> str:
+        return "device_type"
+    
+    @property
+    def SLAVE_ID(self) -> int:
+        return "slave_id"
+    
 
     @staticmethod
     def list_to_tuple(config: list) -> tuple:
@@ -35,17 +57,19 @@ class ModbusSunspec(ICom):
         slave_id = int(config["address"])
         return (config[ICom.CONNECTION_KEY], ip, mac, port, slave_id)
     
-    # Address, Serial, Port, type, Slave_ID, verbose 
-    Setup: TypeAlias = tuple[str | bytes | bytearray, str, int, int]
-    
-    def __init__(self, setup: Setup) -> None:
+    def __init__(self, 
+                 ip: str, 
+                 mac: str, 
+                 port: int, 
+                 slave_id: int, 
+                 verbose: bool = False) -> None:
         """
         Constructor
         """
-        self.host = setup[0]
-        self.mac = setup[1]
-        self.port = setup[2]
-        self.slave_id = setup[3]
+        self.host = ip
+        self.mac = mac
+        self.port = port
+        self.slave_id = slave_id
         self.client = None
         self.common = None
         self.inveter = None
@@ -101,16 +125,16 @@ class ModbusSunspec(ICom):
     def get_config(self):
         return {
             ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
-            "host": self.host,
-            "mac": self.mac,
-            "port": self.port,
-            "address": self.slave_id
+            self.IP: self.host,
+            self.MAC: self.mac,
+            self.PORT: self.port,
+            self.SLAVE_ID: self.slave_id
         }
         
     def get_profile(self):
         pass
     
-    def clone(self, host: str = None) -> 'ModbusSunspec':
-        if host is None:
-            host = self.host
-        return ModbusSunspec((host, self.mac, self.port, self.slave_id))
+    def clone(self, ip: str = None) -> 'ModbusSunspec':
+        if ip is None:
+            ip = self.host
+        return ModbusSunspec(ip, self.mac, self.port, self.slave_id)

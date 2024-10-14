@@ -103,7 +103,7 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     scheduler.main_loop()
 
 
-def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None): 
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None, bootstrap_file: str | None = None): 
 
     from server.web.handler.get.crypto import Handler as CryptoHandler
     try:
@@ -181,7 +181,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     tasks.put(GetSettingsTask(bb.time_ms() + 500, bb))
 
     if inverter is not None:
-        tasks.put(OpenDeviceTask(bb.time_ms(), bb, ModbusTCP(inverter)))
+        tasks.put(OpenDeviceTask(bb.time_ms(), bb, inverter))
 
     
 
@@ -213,5 +213,5 @@ if __name__ == "__main__":
     # handler = logging.StreamHandler(sys.stdout)
     # logging.root.addHandler(handler)
     logging.root.setLevel(logging.INFO)
-    # main(('localhost', 5000), ("localhost", 502, "huawei", 1), 'bootstrap.txt')
-    main(("localhost", 5000), ("localhost", 5000), None, "bootstrap.txt")
+    modbus_tcp = ModbusTCP("192.168.1.100", "00:00:00:00:00:00", 502, "huawei", 1)
+    main(("localhost", 5000), ("localhost", 5000), modbus_tcp, "bootstrap.txt")

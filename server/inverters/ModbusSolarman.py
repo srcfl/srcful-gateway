@@ -1,12 +1,11 @@
 from .modbus import Modbus
 from .ICom import ICom, HarvestDataType
 from pysolarmanv5 import PySolarmanV5
-from typing_extensions import TypeAlias
 import logging
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 
@@ -19,10 +18,37 @@ class ModbusSolarman(Modbus):
     type: string, solaredge, huawei or fronius etc...,
     address: int, Modbus address of the inverter
     verbose: int, 0 or 1 for verbose logging
-
     """
 
     CONNECTION = "SOLARMAN"
+    
+    @property
+    def IP(self) -> str:
+        return "ip"
+
+    @property
+    def MAC(self) -> str:
+        return "mac"
+    
+    @property
+    def SERIAL(self) -> int:
+        return "serial"
+    
+    @property
+    def PORT(self) -> int:
+        return "port"
+    
+    @property
+    def DEVICE_TYPE(self) -> str:
+        return "device_type"
+    
+    @property
+    def SLAVE_ID(self) -> int:
+        return "slave_id"
+    
+    @property
+    def VERBOSE(self) -> int:
+        return "verbose"
 
     @staticmethod
     def list_to_tuple(config: list) -> tuple:
@@ -31,10 +57,10 @@ class ModbusSolarman(Modbus):
         mac = config[2]
         serial = int(config[3])
         port = int(config[4])
-        inverter_type = config[5]
+        device_type = config[5]
         slave_id = int(config[6])
         verbose = False
-        return (config[0], ip, mac, serial, port, inverter_type, slave_id, verbose)
+        return (config[0], ip, mac, serial, port, device_type, slave_id, verbose)
     
     @staticmethod
     def dict_to_tuple(config: dict) -> tuple:
@@ -43,18 +69,27 @@ class ModbusSolarman(Modbus):
         mac = config["mac"]
         serial = int(config["serial"])
         port = int(config["port"])
-        inverter_type = config["type"]
+        device_type = config["type"]
         slave_id = int(config["address"])
         verbose = False
-        return (config[ICom.CONNECTION_KEY], ip, mac, serial, port, inverter_type, slave_id, verbose)
-    
+        return (config[ICom.CONNECTION_KEY], ip, mac, serial, port, device_type, slave_id, verbose)
 
-    # Address, MAC, Serial, Port, type, Slave_ID, verbose 
-    Setup: TypeAlias = tuple[str | bytes | bytearray, str, int, int, str, int, int]
-
-    def __init__(self, setup: Setup) -> None:
-        log.info("Creating with: %s" % str(setup))
-        self.setup = setup
+    def __init__(self, 
+                 ip: str = None, 
+                 mac: str = None, 
+                 serial: int = None, 
+                 port: int = None, 
+                 device_type: str = None, 
+                 slave_id: int = None, 
+                 verbose: int = None) -> None:
+        log.info("Creating with: %s %s %s %s %s %s %s" % (ip, mac, serial, port, device_type, slave_id, verbose))
+        self.ip = ip
+        self.mac = mac
+        self.serial = serial
+        self.port = port
+        self.device_type = device_type
+        self.slave_id = slave_id
+        self.verbose = verbose
         self.client = None
         self.data_type = HarvestDataType.MODBUS_REGISTERS.value
         super().__init__()
@@ -97,39 +132,39 @@ class ModbusSolarman(Modbus):
     def _is_terminated(self) -> bool:
         return self._isTerminated
 
-    def _clone(self, host: str = None) -> 'ModbusSolarman':
-        if host is None:
-            host = self._get_host()
+    def _clone(self, ip: str = None) -> 'ModbusSolarman':
+        if ip is None:
+            ip = self._get_host()
 
         return ModbusSolarman(
-            (host, 
-             self._get_mac(),
-             self._get_serial(),
-             self._get_port(), 
-             self._get_type(), 
-             self._get_address(), 
-             self.setup[6])
+            ip, 
+            self._get_mac(),
+            self._get_serial(),
+            self._get_port(), 
+            self._get_type(), 
+            self._get_address(), 
+            self.verbose
         )
 
     def _get_host(self) -> str:
-        return self.setup[0]
+        return self.ip
     
     def _get_mac(self) -> str:
-        return self.setup[1]
+        return self.mac
 
     def _get_serial(self) -> int:
-        return self.setup[2]
+        return self.serial
     
     def _get_port(self) -> int:
-        return self.setup[3]
+        return self.port
 
     def _get_type(self) -> str:
-        return self.setup[4].lower()
+        return self.device_type.lower()
     
     def _get_address(self) -> int:
-        return self.setup[5]
+        return self.slave_id
 
-    def _get_config(self) -> tuple[str, str, str, int, int, str, int]:
+    def _get_config(self) -> tuple[str, str, str, int, int, str, int, int]:
         return (
             ModbusSolarman.CONNECTION,
             self._get_host(),
@@ -138,17 +173,19 @@ class ModbusSolarman(Modbus):
             self._get_port(),
             self._get_type(),
             self._get_address(),
+            self.verbose
         )
 
     def _get_config_dict(self) -> dict:
         return {
             ICom.CONNECTION_KEY: "SOLARMAN",
-            "type": self._get_type(),
-            "serial": self._get_serial(),
-            "address": self._get_address(),
-            "host": self._get_host(),
-            "mac": self._get_mac(),
-            "port": self._get_port(),
+            self.DEVICE_TYPE: self._get_type(),
+            self.SERIAL: self._get_serial(),
+            self.SLAVE_ID: self._get_address(),
+            self.IP: self._get_host(),
+            self.MAC: self._get_mac(),
+            self.PORT: self._get_port(),
+            self.VERBOSE: self.verbose
         }
     
     def _create_client(self, **kwargs) -> None:
@@ -158,7 +195,7 @@ class ModbusSolarman(Modbus):
                             port=self._get_port(),
                             mb_slave_id=self._get_address(),
                             v5_error_correction=False,
-                            verbose=self.setup[5],
+                            verbose=self.verbose,
                             **kwargs)
         except Exception as e:
             log.error("Error creating client: %s", e)

@@ -20,7 +20,6 @@ def test_post_create_inverter_tcp():
     assert len(tasks) == 1
     task = tasks[0]
     assert isinstance(task, OpenDeviceTask)
-    c = task.device.get_config()
     assert task.device.get_config() == conf
     
 
