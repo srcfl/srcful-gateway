@@ -1,16 +1,17 @@
 from .modbus import Modbus
 from .ICom import ICom, HarvestDataType
 from pymodbus.client import ModbusTcpClient as ModbusClient
-from pymodbus.pdu import ExceptionResponse
 from pymodbus.exceptions import ModbusIOException
+from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
+from server.network.network_utils import NetworkUtils
 import logging
+
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 pymodbus_apply_logging_config("INFO")
-
 
 class ModbusTCP(Modbus):
 
@@ -105,12 +106,12 @@ class ModbusTCP(Modbus):
 
     def _clone(self, ip: str = None) -> 'ModbusTCP':
         if ip is None:
-            ip = self._get_ip()
+            ip = self._get_host()
 
         return ModbusTCP(ip, self._get_mac(), self._get_port(),
                             self._get_type(), self._get_slave_id())
 
-    def _get_ip(self) -> str:
+    def _get_host(self) -> str:
         return self.ip
     
     def _get_mac(self) -> str:
@@ -128,7 +129,7 @@ class ModbusTCP(Modbus):
     def _get_config(self) -> tuple[str, str, int, str, int]:
         return (
             ModbusTCP.CONNECTION,
-            self._get_ip(),
+            self._get_host(),
             self._get_mac(),
             self._get_port(),
             self._get_type(),
@@ -141,17 +142,17 @@ class ModbusTCP(Modbus):
             self.DEVICE_TYPE: self._get_type(),
             self.MAC: self._get_mac(),
             self.SLAVE_ID: self._get_slave_id(),
-            self.IP: self._get_ip(),
+            self.IP: self._get_host(),
             self.PORT: self._get_port(),
         }
 
     def _create_client(self, **kwargs) -> None:
-        self.client =  ModbusClient(host=self._get_ip(),
+        self.client =  ModbusClient(host=self._get_host(),
                                     port=self._get_port(), 
                                     unit_id=self._get_slave_id(),
                                     **kwargs
         )
-
+        self.mac = NetworkUtils.get_mac_from_ip(self._get_host())
     def _read_registers(self, operation, scan_start, scan_range) -> list:
         resp = None
         

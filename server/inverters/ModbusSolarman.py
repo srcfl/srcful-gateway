@@ -1,6 +1,7 @@
 from .modbus import Modbus
 from .ICom import ICom, HarvestDataType
 from pysolarmanv5 import PySolarmanV5
+from server.network.network_utils import NetworkUtils
 import logging
 
 
@@ -197,6 +198,7 @@ class ModbusSolarman(Modbus):
                             v5_error_correction=False,
                             verbose=self.verbose,
                             **kwargs)
+            self.mac = NetworkUtils.get_mac_from_ip(self._get_host())
         except Exception as e:
             log.error("Error creating client: %s", e)
 

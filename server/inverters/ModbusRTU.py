@@ -10,6 +10,8 @@ import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+pymodbus_apply_logging_config("INFO")
+
 
 class ModbusRTU(Modbus):
 

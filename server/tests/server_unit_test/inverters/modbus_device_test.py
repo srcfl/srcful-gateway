@@ -1,10 +1,10 @@
 from server.inverters.ModbusTCP import ModbusTCP
 from server.inverters.ModbusRTU import ModbusRTU
-from server.inverters.ModbusSolarman import ModbusSolarman
 from server.inverters.ModbusSunspec import ModbusSunspec
+from server.inverters.ModbusSolarman import ModbusSolarman
 from server.inverters.modbus import Modbus
+from server.inverters.ICom import ICom
 import server.tests.config_defaults as cfg
-from server.inverters.IComFactory import IComFactory
 from unittest.mock import patch
 import pytest 
 
@@ -23,7 +23,7 @@ def modbus_devices():
     devices.append(ModbusSolarman(**solarman_conf))
 
     return devices
-    
+            
                 
 def test_open_and_is_open(modbus_devices):
     
@@ -60,8 +60,8 @@ def test_read_harvest_data_terminated_exception(modbus_devices):
 def test_get_config(modbus_devices):
     
     assert modbus_devices[0].get_config() == cfg.TCP_CONFIG
-    # assert modbus_devices[1].get_config() == cfg.RTU_CONFIG
-    # assert modbus_devices[2].get_config() == cfg.SOLARMAN_CONFIG
+    assert modbus_devices[1].get_config() == cfg.RTU_CONFIG
+    assert modbus_devices[2].get_config() == cfg.SOLARMAN_CONFIG
 
 
 def test_modbus_device_clone(modbus_devices):
@@ -73,22 +73,26 @@ def test_modbus_device_clone(modbus_devices):
         assert left == right
         
 
-# def test_modbus_device_mac_not_present():
-#     new_tcp_conf = cfg.TCP_CONFIG
-#     new_tcp_conf.pop("mac")
-#     tcp_conf = IComFactory.parse_connection_config_from_dict(new_tcp_conf)
+def test_modbus_device_mac_not_present(modbus_devices):
 
-#     new_solarman_conf = cfg.SOLARMAN_CONFIG
-#     new_solarman_conf.pop("mac")
-#     solarman_conf = IComFactory.parse_connection_config_from_dict(new_solarman_conf)
+   for device in modbus_devices:
+        config = device.get_config()
+       
+        if config[ICom.CONNECTION_KEY] == "TCP":
+            config.pop(ICom.CONNECTION_KEY)
+            device = ModbusTCP(**config)
+        elif config[ICom.CONNECTION_KEY] == "SOLARMAN":
+            config.pop(ICom.CONNECTION_KEY)
+            device = ModbusSolarman(**config)
+        elif config[ICom.CONNECTION_KEY] == "SUNSPEC":
+            config.pop(ICom.CONNECTION_KEY)
+            device = ModbusSunspec(**config)
+        else: 
+            continue # Not an IP-based connection
+            
+        config = device.get_config()
+        assert device.mac is not None
+        assert config["mac"] == "00:00:00:00:00:00"
     
-#     new_sunspec_conf = cfg.SUNSPEC_CONFIG
-#     new_sunspec_conf.pop("mac")
-#     sunspec_conf = IComFactory.parse_connection_config_from_dict(new_sunspec_conf)
     
-#     devices = [ModbusTCP(tcp_conf[1:]), ModbusSolarman(solarman_conf[1:]), ModbusSunspec(sunspec_conf[1:])]
-    
-#     # for device in devices:
-        
-        
     

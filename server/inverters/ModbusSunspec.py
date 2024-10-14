@@ -2,6 +2,7 @@ import sunspec2.modbus.client as client
 from sunspec2.modbus.client import SunSpecModbusClientError
 from .ICom import ICom, HarvestDataType
 import logging
+from server.network.network_utils import NetworkUtils
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -66,7 +67,7 @@ class ModbusSunspec(ICom):
         """
         Constructor
         """
-        self.host = ip
+        self.ip = ip
         self.mac = mac
         self.port = port
         self.slave_id = slave_id
@@ -76,7 +77,8 @@ class ModbusSunspec(ICom):
         self.data_type = HarvestDataType.SUNSPEC.value
         
     def connect(self) -> bool:
-        self.client = client.SunSpecModbusClientDeviceTCP(slave_id=self.slave_id, ipaddr=self.host, ipport=self.port)
+        self.client = client.SunSpecModbusClientDeviceTCP(slave_id=self.slave_id, ipaddr=self.ip, ipport=self.port)
+        self.mac = NetworkUtils.get_mac_from_ip(self.ip)
         self.client.scan()
         self.client.connect()
         
@@ -125,7 +127,7 @@ class ModbusSunspec(ICom):
     def get_config(self):
         return {
             ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
-            self.IP: self.host,
+            self.IP: self.ip,
             self.MAC: self.mac,
             self.PORT: self.port,
             self.SLAVE_ID: self.slave_id
@@ -136,5 +138,5 @@ class ModbusSunspec(ICom):
     
     def clone(self, ip: str = None) -> 'ModbusSunspec':
         if ip is None:
-            ip = self.host
+            ip = self.ip
         return ModbusSunspec(ip, self.mac, self.port, self.slave_id)
