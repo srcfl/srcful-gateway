@@ -117,7 +117,6 @@ def test_execute_new_inverter_added_after_rescan(mock_network_utils):
     mock_network_utils.IP_KEY = 'ip'
     mock_network_utils.MAC_KEY = 'mac'
     mock_network_utils.PORT_KEY = 'port'
-    # Inject the mock scanner into the task
     mock_network_utils.get_hosts.return_value = [{mock_network_utils.IP_KEY: '192.168.50.1', 
                                                     mock_network_utils.MAC_KEY: '00:00:00:00:00:00', 
                                                     mock_network_utils.PORT_KEY: 502}]
@@ -131,3 +130,34 @@ def test_execute_new_inverter_added_after_rescan(mock_network_utils):
 
     assert len(task.bb.devices.lst) == 1
 
+
+@patch('server.tasks.openDevicePerpetualTask.NetworkUtils')
+def test_reconnect_does_not_find_known_device(mock_network_utils):
+    bb = BlackBoard()
+    HarvestFactory(bb)
+    
+    inverter = MagicMock()
+    inverter.get_config.return_value = cfg.TCP_CONFIG
+    inverter.connect.return_value = False
+    task = DevicePerpetualTask(0, bb, inverter)
+    
+    mock_network_utils.IP_KEY = 'ip'
+    mock_network_utils.MAC_KEY = 'mac'
+    mock_network_utils.PORT_KEY = 'port'
+    
+    # two random devices on the network, with different mac addresses than,
+    # the one we are trying to connect to (00:00:00:00:00:00 in cfg.TCP_CONFIG)
+    mock_network_utils.get_hosts.return_value = [
+        {mock_network_utils.IP_KEY: '192.168.50.1',
+         mock_network_utils.MAC_KEY: '00:00:00:00:00:01',
+         mock_network_utils.PORT_KEY: 502},
+        {mock_network_utils.IP_KEY: '192.168.50.2',
+         mock_network_utils.MAC_KEY: '00:00:00:00:00:02',
+         mock_network_utils.PORT_KEY: 502}
+    ]
+    
+    task.execute(event_time=0)
+    
+    assert inverter.clone.call_count == 0 # We did not try to clone the devices above
+    
+    assert len(task.bb.devices.lst) == 0
