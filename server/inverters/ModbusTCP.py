@@ -17,6 +17,7 @@ class ModbusTCP(Modbus):
 
     """
     ip: string, IP address of the inverter,
+    mac: string, MAC address of the inverter,
     port: int, Port of the inverter,
     type: string, solaredge, huawei or fronius etc...,
     address: int, Modbus address of the inverter
@@ -29,21 +30,23 @@ class ModbusTCP(Modbus):
     def list_to_tuple(config: list) -> tuple:
         assert config[ICom.CONNECTION_IX] == ModbusTCP.CONNECTION, "Invalid connection type"
         ip = config[1]
-        port = int(config[2])
-        inverter_type = config[3]
-        slave_id = int(config[4])
-        return (config[ICom.CONNECTION_IX], ip, port, inverter_type, slave_id)
+        mac = config[2]
+        port = int(config[3])
+        inverter_type = config[4]
+        slave_id = int(config[5])
+        return (config[ICom.CONNECTION_IX], ip, mac, port, inverter_type, slave_id)
     
     @staticmethod
     def dict_to_tuple(config: dict) -> tuple:
         assert config[ICom.CONNECTION_KEY] == ModbusTCP.CONNECTION, "Invalid connection type"
         ip = config["host"]
+        mac = config["mac"]
         port = int(config["port"])
         inverter_type = config["type"]
         slave_id = int(config["address"])
-        return (config[ICom.CONNECTION_KEY], ip, port, inverter_type, slave_id)
+        return (config[ICom.CONNECTION_KEY], ip, mac, port, inverter_type, slave_id)
         
-    Setup: TypeAlias = tuple[str | bytes | bytearray, int, str, int]
+    Setup: TypeAlias = tuple[str | bytes | bytearray, str, int, str, int]
 
     def __init__(self, setup: Setup) -> None:
         log.info("Creating with: %s" % str(setup))
@@ -79,25 +82,29 @@ class ModbusTCP(Modbus):
         if host is None:
             host = self._get_host()
 
-        return ModbusTCP((host, self._get_port(),
+        return ModbusTCP((host, self._get_mac(), self._get_port(),
                             self._get_type(), self._get_address()))
 
     def _get_host(self) -> str:
         return self.setup[0]
-
-    def _get_port(self) -> int:
+    
+    def _get_mac(self) -> str:
         return self.setup[1]
 
+    def _get_port(self) -> int:
+        return self.setup[2]
+
     def _get_type(self) -> str:
-        return self.setup[2].lower()
+        return self.setup[3].lower()
 
     def _get_address(self) -> int:
-        return self.setup[3]
+        return self.setup[4]
 
     def _get_config(self) -> tuple[str, str, int, str, int]:
         return (
             ModbusTCP.CONNECTION,
             self._get_host(),
+            self._get_mac(),
             self._get_port(),
             self._get_type(),
             self._get_address(),
@@ -107,13 +114,14 @@ class ModbusTCP(Modbus):
         return {
             ICom.CONNECTION_KEY: ModbusTCP.CONNECTION,
             "type": self._get_type(),
+            "mac": self._get_mac(),
             "address": self._get_address(),
             "host": self._get_host(),
             "port": self._get_port(),
         }
 
     def _create_client(self, **kwargs) -> None:
-        self.client =  ModbusClient(host=self._get_host(), 
+        self.client =  ModbusClient(host=self._get_host(),
                                     port=self._get_port(), 
                                     unit_id=self._get_address(),
                                     **kwargs

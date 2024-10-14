@@ -1,6 +1,7 @@
 TCP_CONFIG = {
     "connection": "TCP",
     "host": "localhost",
+    "mac": "00:00:00:00:00:00",
     "port": 502,
     "type": "solaredge",
     "address": 4,

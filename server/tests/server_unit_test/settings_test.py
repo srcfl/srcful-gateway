@@ -10,7 +10,11 @@ def settings():
 
 @pytest.fixture
 def com():
-    return ModbusTCP(("192.168.1.1", 502, "solaredge", 17))
+    return ModbusTCP(("192.168.1.1", "00:00:00:00:00:00", 502, "solaredge", 17))
+
+@pytest.fixture
+def com2():
+    return ModbusTCP(("192.168.1.1", "00:00:00:00:00:00", 502, "solaredge", 17))
 
 def test_constants(settings):
     assert settings.SETTINGS == "settings"
@@ -29,8 +33,7 @@ def test_devices_add_connection(settings, com):
     assert settings.devices.connections[0]["host"] == "192.168.1.1"
     assert settings.devices.to_dict()[settings.devices.CONNECTIONS][0] == expected_connection
 
-def test_add_duplicate_device_but_different_casing(settings, com):
-    com2 = ModbusTCP(("192.168.1.1", 502, "SolarEdge", 17))
+def test_add_duplicate_device_but_different_casing(settings, com, com2):
     settings.devices.add_connection(com, ChangeSource.LOCAL)
     settings.devices.add_connection(com2, ChangeSource.LOCAL)
     assert len(settings.devices.connections) == 1

@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 class Handler(PostHandler):
     def schema(self):
+        # TODO: Let's change this schema to not be this confusing
         return self.create_schema(
             "Open an inverter and start harvesting the data",
             required={
@@ -19,6 +20,7 @@ class Handler(PostHandler):
             },
             optional={
                 "ip": "string, IP address of the inverter (for TCP, SOLARMAN, SUNSPEC)",
+                "mac": "string, MAC address of the inverter (for TCP, SOLARMAN, SUNSPEC)",
                 "port": "int, port of the inverter (for TCP, SOLARMAN, SUNSPEC)",
                 "serial_port": "string, serial port of the inverter (for RTU)",
                 "serial": "string, serial number (for SOLARMAN)",
