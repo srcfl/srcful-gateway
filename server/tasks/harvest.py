@@ -76,7 +76,8 @@ class Harvest(Task):
                 log.info("Creating transport for %s", endpoint)
                 
                 headers = {"model": ""}
-                headers["dtype"] = self.device.data_type
+                headers["dtype"] = self.device.get_harvest_data_type()
+                headers["sn"] = self.device.get_SN()
                 
                 if self.device.get_profile():
                     headers["model"] = self.device.get_profile().name.lower()

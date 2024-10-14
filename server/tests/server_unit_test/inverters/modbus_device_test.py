@@ -95,4 +95,14 @@ def test_modbus_device_mac_not_present(modbus_devices):
         assert config["mac"] == "00:00:00:00:00:00"
     
     
+def test_get_SN(modbus_devices):
     
+    modbus_tcp = modbus_devices[0]
+    modbus_rtu = modbus_devices[1]
+    modbus_solarman = modbus_devices[2]
+    
+    assert modbus_tcp.get_SN() == "00:00:00:00:00:00" # Modbus Device MAC-Address
+    assert modbus_rtu.get_SN() == "N/A" # Not implemented yet
+    assert modbus_solarman.get_SN() == 1234567890 # Stick Logger SN
+        
+        

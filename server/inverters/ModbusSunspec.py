@@ -74,6 +74,7 @@ class ModbusSunspec(ICom):
         self.client = None
         self.common = None
         self.inveter = None
+        self.SN = None
         self.data_type = HarvestDataType.SUNSPEC.value
         
     def connect(self) -> bool:
@@ -83,6 +84,8 @@ class ModbusSunspec(ICom):
         self.client.connect()
         
         logger.info("Models: %s", self.client.models)
+        
+        self.SN = self.client.models[0].SN
         
         if 'inverter' in self.client.models:
             self.inverter = self.client.inverter[0]
@@ -135,6 +138,9 @@ class ModbusSunspec(ICom):
         
     def get_profile(self):
         pass
+    
+    def _get_SN(self) -> str:
+        return self.SN
     
     def clone(self, ip: str = None) -> 'ModbusSunspec':
         if ip is None:

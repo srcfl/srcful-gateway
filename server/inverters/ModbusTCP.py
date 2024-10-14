@@ -125,6 +125,9 @@ class ModbusTCP(Modbus):
 
     def _get_slave_id(self) -> int:
         return self.slave_id
+    
+    def _get_SN(self) -> str:
+        return self.mac
 
     def _get_config(self) -> tuple[str, str, int, str, int]:
         return (

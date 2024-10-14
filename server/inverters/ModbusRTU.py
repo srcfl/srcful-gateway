@@ -152,6 +152,9 @@ class ModbusRTU(Modbus):
 
     def _get_slave_id(self) -> int:
         return self.slave_id
+    
+    def _get_SN(self) -> str:
+        return "N/A"
 
     def _get_config(self) -> tuple[str, str, int, int, str, float, str, int]:
         return (

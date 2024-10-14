@@ -164,6 +164,9 @@ class ModbusSolarman(Modbus):
     
     def _get_address(self) -> int:
         return self.slave_id
+    
+    def _get_SN(self) -> str:
+        return self.serial
 
     def _get_config(self) -> tuple[str, str, str, int, int, str, int, int]:
         return (

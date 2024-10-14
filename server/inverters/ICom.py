@@ -62,3 +62,7 @@ class ICom(ABC):
     @abstractmethod
     def clone(self, host: str) -> 'ICom':
         pass
+    
+    @abstractmethod
+    def get_SN(self) -> str:
+        pass
