@@ -33,16 +33,17 @@ class DevicePerpetualTask(Task):
                 return
             
             else:
-                port = self.device.get_config()['port'] # get the port from the previous inverter config
+                port = self.device.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config
                 
                 hosts = NetworkUtils.get_hosts([int(port)], 0.01)
                 
                 if len(hosts) > 0:
                     # At least one device was found on the port
-                    self.device = self.device.clone(hosts[0]['ip'])
-                    logger.info("Found inverter at %s, retry in 5 seconds...", hosts[0]['ip']) 
+                    asd = NetworkUtils.IP_KEY
+                    self.device = self.device.clone(hosts[0][NetworkUtils.IP_KEY])
+                    logger.info("Found inverter at %s, retry in 5 seconds...", hosts[0][NetworkUtils.IP_KEY]) 
                     self.time = event_time + 5000
-                    self.bb.add_info("Found inverter at " + hosts[0]['ip'] + ", retry in 5 seconds...")
+                    self.bb.add_info("Found inverter at " + hosts[0][NetworkUtils.IP_KEY] + ", retry in 5 seconds...")
                 else:
                     # possibly we should create a new device object. We have previously had trouble with reconnecting in the Harvester
                     message = "Failed to open inverter, retry in 5 minutes: " + str(self.device.get_config())

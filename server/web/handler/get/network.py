@@ -95,31 +95,15 @@ class AddressHandler(GetHandler):
 class ModbusScanHandler(GetHandler):
 
     @property
-    def IP(self) -> str:
-        return "ip"
-    
-    @property
-    def PORT(self) -> str:
-        return "port"
-
-    @property
     def DEVICES(self) -> str:
         return "devices"
     
-    @property
-    def PORTS(self) -> str:
-        return "ports"
-    
-    @property
-    def TIMEOUT(self) -> str:
-        return "timeout"
-
     def schema(self) -> dict:
         return {
             "description": "Scans the network for modbus devices",
             "optional": {
-                self.PORTS: "string, containing a comma separated list of ports to scan for modbus devices.",
-                self.TIMEOUT: "float, the timeout in seconds for each ip:port scan. Default is 0.01 (10ms)."
+                NetworkUtils.PORTS_KEY: "string, containing a comma separated list of ports to scan for modbus devices.",
+                NetworkUtils.TIMEOUT_KEY: "float, the timeout in seconds for each ip:port scan. Default is 0.01 (10ms)."
             },
             "returns": {
                 self.DEVICES: "a list of JSON Objects: {'host': host ip, 'port': host port}."
@@ -129,9 +113,9 @@ class ModbusScanHandler(GetHandler):
     def do_get(self, data: RequestData):
         """Scan the network for modbus devices."""
         
-        ports = data.query_params.get(self.PORTS, "502,1502,6607,8899")
+        ports = data.query_params.get(NetworkUtils.PORTS_KEY, "502,1502,6607,8899")
         ports = NetworkUtils.parse_ports(ports)
-        timeout = data.query_params.get(self.TIMEOUT, 0.01) # 10ms may be too short for some networks?
+        timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, 0.01) # 10ms may be too short for some networks?
 
         ip_port_mac_dict = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         

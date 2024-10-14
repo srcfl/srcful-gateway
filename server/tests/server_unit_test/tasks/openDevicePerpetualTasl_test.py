@@ -2,7 +2,6 @@ from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
 from unittest.mock import MagicMock, patch
-import pytest
 
 def test_execute_invertert_added():
     bb = BlackBoard()
@@ -40,6 +39,7 @@ def test_execute_invertert_could_not_open(mock_network_utils):
     inverter = MagicMock()
     inverter.connect.return_value = False
     
+    mock_network_utils.IP_KEY = 'ip'
     mock_network_utils.get_hosts.return_value = [{'ip': '192.168.50.1'}]
 
     task = DevicePerpetualTask(0, bb, inverter)
@@ -83,8 +83,8 @@ def test_execute_new_inverter_added_after_rescan(mock_network_utils):
     task.execute(event_time=0)
 
     assert len(task.bb.devices.lst) == 0
-
-
+    
+    mock_network_utils.IP_KEY = 'ip'
     # Inject the mock scanner into the task
     task.scanner = mock_network_utils.get_hosts.return_value = [{'ip': '192.168.50.1'}]
 

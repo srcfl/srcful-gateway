@@ -12,8 +12,19 @@ class NetworkUtils:
     
     _arp_table: Optional[list[dict[str, str, str, str, str, str]]] = None
     
+    IP_KEY = 'ip'
+    PORT_KEY = 'port'
+    PORTS_KEY = 'ports'
+    MAC_KEY = 'mac'
+    HW_KEY = 'hw'
+    FLAGS_KEY = 'flags'
+    MASK_KEY = 'mask'
+    DEVICE_KEY = 'device'
+    TIMEOUT_KEY = 'timeout'
+    
     def __init__(self):
         raise NotImplementedError("This class shouldn't be instantiated.")
+
     
     # Method to get the arp table   
     @staticmethod
@@ -24,7 +35,12 @@ class NetworkUtils:
                 lines = f.readlines()[1:]  # Skip the header line
             
             arp_table = [
-                dict(zip(['ip', 'hw', 'flags', 'mac', 'mask', 'device'], line.split()))
+                dict(zip([NetworkUtils.IP_KEY, 
+                          NetworkUtils.HW_KEY, 
+                          NetworkUtils.FLAGS_KEY, 
+                          NetworkUtils.MAC_KEY, 
+                          NetworkUtils.MASK_KEY, 
+                          NetworkUtils.DEVICE_KEY], line.split()))
                 for line in lines
             ]
             NetworkUtils._arp_table = arp_table
@@ -38,8 +54,8 @@ class NetworkUtils:
         if NetworkUtils._arp_table is None:
             NetworkUtils.refresh_arp_table()
         for entry in NetworkUtils._arp_table:
-            if entry['ip'] == ip:
-                return entry['mac']
+            if entry[NetworkUtils.IP_KEY] == ip:
+                return entry[NetworkUtils.MAC_KEY]
         return None
     
     @staticmethod
@@ -88,9 +104,9 @@ class NetworkUtils:
             for port in ports:
                 if NetworkUtils.is_port_open(ip, port, float(timeout)):
                     ip_port = {
-                        "ip": ip,
-                        "port": port,
-                        "mac": NetworkUtils.get_mac_from_ip(ip)
+                        NetworkUtils.IP_KEY: ip,
+                        NetworkUtils.PORT_KEY: port,
+                        NetworkUtils.MAC_KEY: NetworkUtils.get_mac_from_ip(ip)
                     }
                     ip_port_dict.append(ip_port)
 
