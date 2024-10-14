@@ -13,6 +13,7 @@ log.setLevel(logging.DEBUG)
 class ModbusSolarman(Modbus):
     """
     ip: string, IP address of the inverter,
+    mac: string, MAC address of the inverter,
     serial: int, Serial number of the logger stick,
     port: int, Port of the inverter,
     type: string, solaredge, huawei or fronius etc...,
@@ -27,27 +28,29 @@ class ModbusSolarman(Modbus):
     def list_to_tuple(config: list) -> tuple:
         assert config[ICom.CONNECTION_IX] == ModbusSolarman.CONNECTION, "Invalid connection type"
         ip = config[1]
-        serial = int(config[2])
-        port = int(config[3])
-        inverter_type = config[4]
-        slave_id = int(config[5])
+        mac = config[2]
+        serial = int(config[3])
+        port = int(config[4])
+        inverter_type = config[5]
+        slave_id = int(config[6])
         verbose = False
-        return (config[0], ip, serial, port, inverter_type, slave_id, verbose)
+        return (config[0], ip, mac, serial, port, inverter_type, slave_id, verbose)
     
     @staticmethod
     def dict_to_tuple(config: dict) -> tuple:
         assert config[ICom.CONNECTION_KEY] == ModbusSolarman.CONNECTION, "Invalid connection type"
         ip = config["host"]
+        mac = config["mac"]
         serial = int(config["serial"])
         port = int(config["port"])
         inverter_type = config["type"]
         slave_id = int(config["address"])
         verbose = False
-        return (config[ICom.CONNECTION_KEY], ip, serial, port, inverter_type, slave_id, verbose)
+        return (config[ICom.CONNECTION_KEY], ip, mac, serial, port, inverter_type, slave_id, verbose)
     
 
-    # Address, Serial, Port, type, Slave_ID, verbose 
-    Setup: TypeAlias = tuple[str | bytes | bytearray, int, int, str, int, int]
+    # Address, MAC, Serial, Port, type, Slave_ID, verbose 
+    Setup: TypeAlias = tuple[str | bytes | bytearray, str, int, int, str, int, int]
 
     def __init__(self, setup: Setup) -> None:
         log.info("Creating with: %s" % str(setup))
@@ -100,32 +103,37 @@ class ModbusSolarman(Modbus):
 
         return ModbusSolarman(
             (host, 
-             self._get_serial(), 
+             self._get_mac(),
+             self._get_serial(),
              self._get_port(), 
              self._get_type(), 
              self._get_address(), 
-             self.setup[5])
+             self.setup[6])
         )
 
     def _get_host(self) -> str:
         return self.setup[0]
+    
+    def _get_mac(self) -> str:
+        return self.setup[1]
 
     def _get_serial(self) -> int:
-        return self.setup[1]
+        return self.setup[2]
     
     def _get_port(self) -> int:
-        return self.setup[2]
+        return self.setup[3]
 
     def _get_type(self) -> str:
-        return self.setup[3].lower()
+        return self.setup[4].lower()
     
     def _get_address(self) -> int:
-        return self.setup[4]
+        return self.setup[5]
 
-    def _get_config(self) -> tuple[str, str, int, str, int]:
+    def _get_config(self) -> tuple[str, str, str, int, int, str, int]:
         return (
             ModbusSolarman.CONNECTION,
             self._get_host(),
+            self._get_mac(),
             self._get_serial(),
             self._get_port(),
             self._get_type(),
@@ -139,15 +147,16 @@ class ModbusSolarman(Modbus):
             "serial": self._get_serial(),
             "address": self._get_address(),
             "host": self._get_host(),
+            "mac": self._get_mac(),
             "port": self._get_port(),
         }
     
     def _create_client(self, **kwargs) -> None:
         try:
-            self.client = PySolarmanV5(address=self._get_host(), 
-                            serial=self._get_serial(), 
-                            port=self._get_port(), 
-                            mb_slave_id=self._get_address(), 
+            self.client = PySolarmanV5(address=self._get_host(),
+                            serial=self._get_serial(),
+                            port=self._get_port(),
+                            mb_slave_id=self._get_address(),
                             v5_error_correction=False,
                             verbose=self.setup[5],
                             **kwargs)

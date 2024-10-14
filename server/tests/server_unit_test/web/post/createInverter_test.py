@@ -2,12 +2,13 @@ from server.web.handler.post.modbusDevice import Handler as ModbusDeviceHandler
 from server.web.handler.requestData import RequestData
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.blackboard import BlackBoard
+import server.tests.config_defaults as cfg
 
 import queue
 
 
 def test_post_create_inverter_tcp():
-    conf = {"connection": "TCP", "host": "192.168.10.20", "port": 502, "type": "solaredge", "address": 1}
+    conf = cfg.TCP_CONFIG
 
     handler = ModbusDeviceHandler()
     rd = RequestData(BlackBoard(), {}, {}, conf)
@@ -24,16 +25,7 @@ def test_post_create_inverter_tcp():
     
 
 def test_post_create_inverter_rtu():
-    conf = {
-        "connection": "RTU",
-        "port": "/dev/ttyUSB0",
-        "baudrate": 115200,
-        "bytesize": 8,
-        "parity": "N",
-        "stopbits": 1,
-        "type": "solaredge",
-        "address": 1,
-    }
+    conf = cfg.RTU_CONFIG
 
     handler = ModbusDeviceHandler()
     rd = RequestData(BlackBoard(), {}, {}, conf)
@@ -49,14 +41,7 @@ def test_post_create_inverter_rtu():
 
 
 def test_post_create_inverter_solarman():
-    conf = {
-        "connection": "SOLARMAN",
-        "type": "deye",
-        "serial": 1234567890,
-        "address": 1,
-        "host":"192.168.10.20",
-        "port": 502
-    }
+    conf = cfg.SOLARMAN_CONFIG
     
     handler = ModbusDeviceHandler()
     rd = RequestData(BlackBoard(), {}, {}, conf)

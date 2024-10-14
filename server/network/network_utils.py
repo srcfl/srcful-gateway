@@ -85,7 +85,19 @@ class NetworkUtils:
         
     @staticmethod
     def get_hosts(ports: list[int], timeout: float) -> list[dict[str, str, str]]:
-        """Scan the local network for modbus devices on the given ports."""
+        """
+        Scan the local network for modbus devices on the given ports.
+        
+        Returns a list of dictionaries with the IP, port, and MAC address of the devices in the format:
+        [
+            {
+                NetworkUtils.IP_KEY: str,
+                NetworkUtils.PORT_KEY: int,
+                NetworkUtils.MAC_KEY: str
+            },
+            ...
+        ]
+        """
         
         local_ip = get_ip_address()
         # Refresh the ARP table

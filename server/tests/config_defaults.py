@@ -20,6 +20,7 @@ RTU_CONFIG = {
 SOLARMAN_CONFIG = {
     "connection": "SOLARMAN",
     "host": "localhost",
+    "mac": "00:00:00:00:00:00",
     "serial": 1234567890,
     "port": 502,
     "type": "deye",

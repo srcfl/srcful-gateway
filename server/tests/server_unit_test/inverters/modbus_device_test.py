@@ -5,9 +5,9 @@ from server.inverters.ModbusSunspec import ModbusSunspec
 from server.inverters.modbus import Modbus
 import server.tests.config_defaults as cfg
 from server.inverters.IComFactory import IComFactory
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 import pytest
-from server.inverters.ICom import ICom
+
                 
                 
 def test_open_and_is_open():
@@ -97,7 +97,9 @@ def test_modbus_device_clone():
     sunspec = ModbusSunspec(sunspec_conf[1:])
     
     for device in devices:
-        assert device.get_config() == device.clone().get_config()
+        left = device.get_config()
+        right = device.clone().get_config()
+        assert left == right
         
         
     

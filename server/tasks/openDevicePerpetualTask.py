@@ -37,9 +37,11 @@ class DevicePerpetualTask(Task):
                 
                 hosts = NetworkUtils.get_hosts([int(port)], 0.01)
                 
+                
+                
+                
                 if len(hosts) > 0:
                     # At least one device was found on the port
-                    asd = NetworkUtils.IP_KEY
                     self.device = self.device.clone(hosts[0][NetworkUtils.IP_KEY])
                     logger.info("Found inverter at %s, retry in 5 seconds...", hosts[0][NetworkUtils.IP_KEY]) 
                     self.time = event_time + 5000
