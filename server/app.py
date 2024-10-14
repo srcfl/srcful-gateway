@@ -156,7 +156,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 logger.info("Opening device: %s", connection)
                 self.first_run = False
                 # TODO: if the device has been connected to before then it should be a perpetual task
-                self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.parse_and_create_com(connection)))
+                self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
         
             # if we have not got any devices on the first run then go for the bootstrap
             if self.first_run:

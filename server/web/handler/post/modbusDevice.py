@@ -42,9 +42,7 @@ class Handler(PostHandler):
             if ICom.CONNECTION_KEY not in data.data:
                 return 400, json.dumps({"status": "connection field is required"})
             
-            # conf = IComFactory.parse_connection_config_from_dict(data.data)
             com = IComFactory.create_com(data.data)
-            
             data.bb.add_task(OpenDeviceTask(data.bb.time_ms() + 100, data.bb, com))
             return 200, json.dumps({"status": "ok"})
             
