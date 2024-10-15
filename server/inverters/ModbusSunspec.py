@@ -112,21 +112,25 @@ class ModbusSunspec(ICom):
             else:
                 payload_verbose = self.inverter.get_dict()
                 payload = {}
+
+                # SF seems to not always be present so we try/except only SF readings
                 payload["Hz"] = payload_verbose["Hz"]
-                payload["Hz_SF"] = payload_verbose["Hz_SF"]
                 payload["W"] = payload_verbose["W"]
-                payload["W_SF"] = payload_verbose["W_SF"]
                 payload["DCW"] = payload_verbose["DCW"]
-                payload["DCW_SF"] = payload_verbose["DCW_SF"]
                 
+                # SF seems to not always be present so we try to get with a default value of 1
+                payload["Hz_SF"] = payload_verbose.get("Hz_SF", 1)
+                payload["W_SF"] = payload_verbose.get("W_SF", 1)
+                payload["DCW_SF"] = payload_verbose.get("DCW_SF", 1)
+
                 return payload
         except Exception as e:
             logger.error("Error reading harvest data: %s", e)
             raise SunSpecModbusClientError(e)
-    
+
     def get_harvest_data_type(self) -> str:
         return self.data_type
-    
+
     def get_config(self):
         return {
             ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
