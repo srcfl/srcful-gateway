@@ -1,10 +1,10 @@
 import json
+import logging
 from server.network.wifi import get_connection_configs, is_connected, get_ip_address, get_ip_addresses_with_interfaces
 from server.network import macAddr
-from server.network.network_utils import NetworkUtils
 from ..handler import GetHandler
 from ..requestData import RequestData
-import logging
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -25,7 +25,6 @@ class NetworkHandler(GetHandler):
 
 
 class AddressHandler(GetHandler):
-
 
     @property
     def IP(self):
@@ -87,37 +86,5 @@ class AddressHandler(GetHandler):
 
 
     def do_get(self, data: RequestData):
-        
+
         return 200, json.dumps(self.get(data.bb.rest_server_port))
-    
-    
-# A class to scan for modbus devices on the network
-class ModbusScanHandler(GetHandler):
-
-    @property
-    def DEVICES(self) -> str:
-        return "devices"
-    
-    def schema(self) -> dict:
-        return {
-            "description": "Scans the network for modbus devices",
-            "optional": {
-                NetworkUtils.PORTS_KEY: "string, containing a comma separated list of ports to scan for modbus devices.",
-                NetworkUtils.TIMEOUT_KEY: "float, the timeout in seconds for each ip:port scan. Default is 0.01 (10ms)."
-            },
-            "returns": {
-                self.DEVICES: "a list of JSON Objects: {'host': host ip, 'port': host port}."
-                }
-        }
-
-    def do_get(self, data: RequestData):
-        """Scan the network for modbus devices."""
-        
-        ports = data.query_params.get(NetworkUtils.PORTS_KEY, "502,1502,6607,8899")
-        ports = NetworkUtils.parse_ports(ports)
-        timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, 0.01) # 10ms may be too short for some networks?
-
-        ip_port_mac_dict = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
-        
-        return 200, json.dumps({self.DEVICES:ip_port_mac_dict})
-

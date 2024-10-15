@@ -1,4 +1,4 @@
-from server.web.handler.post.modbusDevice import Handler as ModbusDeviceHandler
+from server.web.handler.post.modbus_create import Handler as ModbusDeviceHandler
 from server.web.handler.requestData import RequestData
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.blackboard import BlackBoard

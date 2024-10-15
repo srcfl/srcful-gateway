@@ -3,7 +3,8 @@ from . import hello
 from . import name
 from . import logger
 from . import root
-from . import modbus
+from . import modbus_scan
+from . import modbus_read
 from . import network
 from . import inverter
 from . import uptime

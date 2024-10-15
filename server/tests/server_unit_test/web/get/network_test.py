@@ -3,7 +3,7 @@ import json
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.network import NetworkHandler
 from server.web.handler.get.network import AddressHandler
-from server.web.handler.get.network import ModbusScanHandler
+from server.web.handler.get.modbus_scan import ModbusScanHandler
 from server.network.wifi import get_connection_configs
 from server.blackboard import BlackBoard
 from unittest.mock import patch
@@ -48,7 +48,7 @@ def test_parse_ports():
     assert NetworkUtils.parse_ports("80,443") == [80, 443]
     assert NetworkUtils.parse_ports("80-82,90") == [80, 81, 82, 90]
 
-@patch('server.web.handler.get.network.NetworkUtils')
+@patch('server.web.handler.get.modbus_scan.NetworkUtils')
 def test_modbus_scan(mock_network_utils):
     handler = ModbusScanHandler()
     ports = "502"
