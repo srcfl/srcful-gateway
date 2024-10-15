@@ -35,4 +35,6 @@ class ModbusScanHandler(GetHandler):
 
         ip_port_mac_dict = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         
-        return 200, json.dumps({self.DEVICES:ip_port_mac_dict})
+        data.bb.set_modbus_devices_cache(ip_port_mac_dict)
+        
+        return 200, json.dumps({self.DEVICES: ip_port_mac_dict})
