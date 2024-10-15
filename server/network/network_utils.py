@@ -1,17 +1,20 @@
 import logging
+from typing import Optional
 import socket
 import ipaddress
 from server.network.wifi import get_ip_address
-from typing import Optional
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
 class NetworkUtils:
-    
+    """
+    Utility class for network-related operations.
+    """
+
     _arp_table: Optional[list[dict[str, str, str, str, str, str]]] = None
-    
     IP_KEY = 'ip'
     PORT_KEY = 'port'
     PORTS_KEY = 'ports'
@@ -23,17 +26,17 @@ class NetworkUtils:
     TIMEOUT_KEY = 'timeout'
     DEFAULT_MODBUS_PORTS = "502,1502,6607,8899"
     DEFAULT_TIMEOUT = 0.01
-    
+
     def __init__(self):
         raise NotImplementedError("This class shouldn't be instantiated.")
 
-    
     # Method to get the arp table   
     @staticmethod
     def refresh_arp_table() -> None:
+        """Refresh the ARP table from the system."""
         logger.info("Scanning ARP table")
         try:
-            with open('/proc/net/arp', 'r') as f:
+            with open('/proc/net/arp', 'r', encoding='utf-8') as f:
                 lines = f.readlines()[1:]  # Skip the header line
             
             arp_table = [
@@ -53,6 +56,7 @@ class NetworkUtils:
     
     @staticmethod
     def get_mac_from_ip(ip: str) -> Optional[str]:
+        """Get the MAC address from the ARP table for a given IP address."""
         if NetworkUtils._arp_table is None:
             NetworkUtils.refresh_arp_table()
         for entry in NetworkUtils._arp_table:
@@ -100,8 +104,18 @@ class NetworkUtils:
             ...
         ]
         """
-        
         local_ip = get_ip_address()
+        
+        try:
+            local_ip = get_ip_address()
+        except Exception as e:
+            logger.error("Failed to get IP address: %s", str(e))
+            return []
+
+        if not local_ip:
+            logger.warning("No active network connection found.")
+            return []
+        
         # Refresh the ARP table
         NetworkUtils.refresh_arp_table()
         
@@ -109,7 +123,7 @@ class NetworkUtils:
         network_prefix = ".".join(local_ip.split(".")[:-1]) + ".0/24"
         subnet = ipaddress.ip_network(network_prefix)
         
-        logger.info(f"Scanning subnet {subnet} for modbus devices on ports {ports} with timeout {timeout}.")
+        logger.info("Scanning subnet %s for modbus devices on ports %s with timeout %s", subnet, ports, timeout)
         
         ip_port_dict = []
 
@@ -123,9 +137,9 @@ class NetworkUtils:
                         NetworkUtils.MAC_KEY: NetworkUtils.get_mac_from_ip(ip)
                     }
                     ip_port_dict.append(ip_port)
-
         if not ip_port_dict:
-            logger.info(f"No IPs with given port(s) {ports} open found in the subnet {subnet}")
+            logger.info("No IPs with given port(s) %s open found in the subnet %s", ports, subnet)
             return []
         
         return ip_port_dict
+
