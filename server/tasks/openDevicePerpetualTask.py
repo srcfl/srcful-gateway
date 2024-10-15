@@ -22,6 +22,15 @@ class DevicePerpetualTask(Task):
             return
         try:
             if self.device.connect():
+                
+                # Ensure that the device is on the local network
+                if self.device.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
+                    self.device.disconnect()
+                    message = "Failed to open device: " + str(self.device.get_config())
+                    logger.error(message)
+                    self.bb.add_error(message)
+                    return None
+                
                 # terminate and remove all devices from the blackboard
                 logger.debug("Removing all devices from the blackboard after opening a new device")
                 for i in self.bb.devices.lst:

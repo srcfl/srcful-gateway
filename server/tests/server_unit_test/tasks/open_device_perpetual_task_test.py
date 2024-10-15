@@ -161,3 +161,22 @@ def test_reconnect_does_not_find_known_device(mock_network_utils):
     assert inverter.clone.call_count == 0 # We did not try to clone the devices above
     
     assert len(task.bb.devices.lst) == 0
+    
+    
+def test_execute_inverter_not_on_local_network():
+    bb = BlackBoard()
+    inverter = MagicMock()
+    inverter.connect.return_value = True
+    inverter.get_config.return_value = cfg.TCP_CONFIG # MAC is 00:00:00:00:00:00, so probably not on the local network
+
+    task = DevicePerpetualTask(0, bb, inverter)
+    assert task.execute(0) is None
+
+    assert inverter not in bb.devices.lst
+    assert inverter.connect.called
+    assert inverter.disconnect.called
+
+    assert len(bb.devices.lst) == 0 # Not on the local network, so not added
+
+    assert len(bb.purge_tasks()) == 1 # state save task added as error message is generated
+

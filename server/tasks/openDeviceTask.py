@@ -1,9 +1,9 @@
 import logging
 
 from server.blackboard import BlackBoard
-from server.inverters.modbus import Modbus
 from .task import Task
 from ..inverters.ICom import ICom
+from ..network.network_utils import NetworkUtils
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,15 @@ class OpenDeviceTask(Task):
                 return None
             
             if self.device.connect():
+                
+                # Ensure that the device is on the local network
+                if self.device.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
+                    self.device.disconnect()
+                    message = "Failed to open device: " + str(self.device.get_config())
+                    logger.error(message)
+                    self.bb.add_error(message)
+                    return None
+                
                 logger.info("Opening: %s", self.device.get_config())
                 
                 # terminate and remove all inverters from the blackboard
