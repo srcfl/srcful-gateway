@@ -56,11 +56,11 @@ def test_modbus_scan(mock_network_utils):
     
     assert NetworkUtils.is_port_open(ip="localhost", port=502, timeout=0.01) == False
 
-    mock_network_utils.get_hosts.return_value = [{NetworkUtils.PORT_KEY: "192.168.50.220", 
+    mock_network_utils.get_hosts.return_value = [{NetworkUtils.IP_KEY: "192.168.50.220",
                                                   NetworkUtils.PORT_KEY: 502}]
 
     status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {NetworkUtils.PORTS_KEY: ports}, {}))
     assert status_code == 200
     response = json.loads(response)
-    assert response[handler.DEVICES] == [{NetworkUtils.PORT_KEY: "192.168.50.220", 
+    assert response[handler.DEVICES] == [{NetworkUtils.IP_KEY: "192.168.50.220",
                                           NetworkUtils.PORT_KEY: 502}]

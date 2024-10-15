@@ -105,7 +105,7 @@ class Chip:
     _lock_count = 0
 
     
-    #def __init__(self, crypto_impl: CryptoInterface = SoftwareCrypto()):
+    # def __init__(self, crypto_impl: CryptoInterface = SoftwareCrypto()):
     def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto()):
         self.crypto_impl = crypto_impl
 
