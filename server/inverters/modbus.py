@@ -158,3 +158,7 @@ class Modbus(ICom):
     
     def clone(self, host: str = None) -> 'ICom':
         return self._clone(host)
+    
+    def get_SN(self) -> str:
+        return self._get_SN()
+

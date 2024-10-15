@@ -34,6 +34,6 @@ class ITask:
         raise NotImplementedError("Subclass must implement abstract method")
 
     def execute(self, event_time) -> Union[List[ITask], ITask, None]:
-        """execute the task, return None a single Task or a list of tasks to be added to the scheduler"""
+        """execute the task, return None, a single Task, or a list of tasks to be added to the scheduler"""
         # throw a not implemented exception
         raise NotImplementedError("Subclass must implement abstract method")

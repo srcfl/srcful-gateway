@@ -16,6 +16,7 @@ class Handler(PostHandler):
             "type": "post",
             "description": "open an inverter",
             "required": {
+                ICom.CONNECTION_KEY: "string, should be RTU",
                 "port": "string, Serial port used for communication",
                 "baudrate": "int, Bits per second",
                 "bytesize": "int, Number of bits per byte 7-8",
@@ -38,14 +39,11 @@ class Handler(PostHandler):
             if ICom.CONNECTION_KEY not in data.data:
                 return 400, json.dumps({"status": "connection field is required"})
             
-            conf = IComFactory.parse_connection_config_from_dict(data.data)
-            com = IComFactory.create_com(conf)
-            logger.info(f"Created a Modbus {conf[0]} connection")
-            
+            com = IComFactory.create_com(data.data)
             data.bb.add_task(OpenDeviceTask(data.bb.time_ms() + 100, data.bb, com))
             return 200, json.dumps({"status": "ok"})    
             
         except Exception as e:
-            logger.error(f"Failed to open a Modbus {conf[0]} connection: {conf}")
+            logger.error(f"Failed to open a Modbus {data.data[ICom.CONNECTION_KEY]} connection: {data.data}")
             logger.error(e)
             return 500, json.dumps({"status": "error", "message": str(e)})

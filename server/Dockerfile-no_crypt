@@ -8,4 +8,4 @@ RUN pip install typing-extensions
 EXPOSE 5000
 
 ENTRYPOINT ["python"]
-CMD ["-m", "server", "-b", "/var/srcful/bootstrap.txt"]
+CMD ["-m", "server"]

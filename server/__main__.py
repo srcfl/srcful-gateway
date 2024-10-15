@@ -1,6 +1,5 @@
 import argparse
 import server.app as app
-
 import logging
 import os
 import socket
@@ -43,8 +42,6 @@ if __name__ == "__main__":
     logging.root.addHandler(handler)
 
     log = logging.getLogger(__name__)
-
-    # logging.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
     # parse arguments from command line
     parser = argparse.ArgumentParser(description="Srcful Energy Gateway")
@@ -104,13 +101,6 @@ if __name__ == "__main__":
         default=1,
         help="modbus address of the inverter (default=1).",
     )
-    parser.add_argument(
-        "-b",
-        "--bootstrap",
-        type=str,
-        help="bootstrap file if it does not exist it will be created.",
-        default="bootstrap.txt",
-    )
 
     args = parser.parse_args()
 
@@ -134,4 +124,4 @@ if __name__ == "__main__":
             args.inverter_type,
             args.inverter_address,
         )
-    app.main((args.host_ip, args.host_port), (args.web_host, args.web_port), inverter, args.bootstrap)
+    app.main((args.host_ip, args.host_port), (args.web_host, args.web_port), inverter)

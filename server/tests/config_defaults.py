@@ -1,9 +1,10 @@
 TCP_CONFIG = {
     "connection": "TCP",
-    "host": "localhost",
+    "ip": "localhost",
+    "mac": "00:00:00:00:00:00",
     "port": 502,
-    "type": "solaredge",
-    "address": 4,
+    "device_type": "solaredge",
+    "slave_id": 4,
 }
 
 RTU_CONFIG = {
@@ -13,22 +14,25 @@ RTU_CONFIG = {
     "bytesize": 8,
     "parity": "N",
     "stopbits": 1,
-    "type": "lqt40s",
-    "address": 1,
+    "device_type": "lqt40s",
+    "slave_id": 1,
 }
 
 SOLARMAN_CONFIG = {
     "connection": "SOLARMAN",
-    "host": "localhost",
+    "ip": "localhost",
+    "mac": "00:00:00:00:00:00",
     "serial": 1234567890,
     "port": 502,
-    "type": "deye",
-    "address": 1
+    "device_type": "deye",
+    "slave_id": 1,
+    "verbose": True
 }
 
 SUNSPEC_CONFIG = {
     "connection": "SUNSPEC",
-    "host": "localhost",
+    "ip": "localhost",
+    "mac": "00:00:00:00:00:00",
     "port": 502,
-    "address": 1
+    "slave_id": 1
 }

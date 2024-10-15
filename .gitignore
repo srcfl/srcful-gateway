@@ -36,11 +36,8 @@ node_modules
 
 __pycache__
 
-
 htmlcov
 .coverage
-
-bootstrap.txt
 
 venv 
 .venv

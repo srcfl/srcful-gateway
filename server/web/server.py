@@ -22,7 +22,7 @@ class Endpoints:
             "inverter": handler.get.inverter.Handler(),
             # "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
             # "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
-            "inverter/modbus/scan": handler.get.network.ModbusScanHandler(),
+            "inverter/modbus/scan": handler.get.modbus_scan.ModbusScanHandler(),
             "inverter/supported": handler.get.supported.Handler(),
             "network": handler.get.network.NetworkHandler(),
             "network/address": handler.get.network.AddressHandler(),
@@ -41,17 +41,17 @@ class Endpoints:
             "invertertcp": handler.post.modbusTCP.Handler(),
             "inverterrtu": handler.post.modbusRTU.Handler(),
             "invertersolarman": handler.post.modbusSolarman.Handler(),
-            "modbus_device": handler.post.modbusDevice.Handler(),
+            "modbus_device": handler.post.modbus_create.Handler(),
             "wifi": handler.post.wifi.Handler(),
             "initialize": handler.post.initialize.Handler(),
-            "inverter/modbus": handler.post.modbus.Handler(),
+            "inverter/modbus": handler.post.modbus_read_write.Handler(),
             "logger": handler.post.logger.Handler(),
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),
         }
 
         self.api_delete_dict = {
-            "inverter": handler.delete.inverter.Handler(),
+            "inverter": handler.delete.modbusDevice.Handler(),
             "notification/{id}": handler.delete.notification.Handler(),
         }
 
