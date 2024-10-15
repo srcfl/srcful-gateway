@@ -110,7 +110,6 @@ class ModbusSunspec(ICom):
         
     def disconnect(self) -> None:
         self.client.disconnect()
-        self._isTerminated = True
     
     def reconnect(self) -> None:
         self.disconnect() and self.connect()
