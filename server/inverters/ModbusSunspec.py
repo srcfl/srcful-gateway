@@ -73,7 +73,9 @@ class ModbusSunspec(ICom):
         self.slave_id = slave_id
         self.client = None
         self.common = None
-        self.inveter = None
+        self.inverter = None
+        self.ac_model = None
+        self.dc_model = None
         self.SN = None
         self.data_type = HarvestDataType.SUNSPEC.value
         
@@ -85,10 +87,24 @@ class ModbusSunspec(ICom):
         
         logger.info("Models: %s", self.client.models)
         
-        self.SN = self.client.models[0].SN
-        
+        try:
+            self.SN = self.client.common[0].SN.value
+        except KeyError:
+            logger.warning("Could not get serial number, using MAC address as fallback")
+            self.SN = NetworkUtils.get_mac_from_ip(self.ip)
+
         if 'inverter' in self.client.models:
             self.inverter = self.client.inverter[0]
+            
+        if 'DERMeasureAC' in self.client.models:
+            self.ac_model = self.client.DERMeasureAC[0]
+        elif 701 in self.client.models:
+            self.ac_model = self.client.models[701][0]
+            
+        if 'DERMeasureDC' in self.client.models:
+            self.dc_model = self.client.DERMeasureDC[0]
+        elif 714 in self.client.models:
+            self.dc_model = self.client.models[714][0]
             
         return len(self.client.models) > 0
         
@@ -104,28 +120,42 @@ class ModbusSunspec(ICom):
     
     def read_harvest_data(self, force_verbose=False) -> dict:
         try:
-            self.inverter.read()
+            if self.inverter is not None:
+                self.inverter.read()
+            if self.ac_model is not None:
+                self.ac_model.read()
+            if self.dc_model is not None:
+                self.dc_model.read()
             
             if force_verbose:
                 payload_verbose = self.client.get_dict()
                 return payload_verbose
             else:
-                payload_verbose = self.inverter.get_dict()
-                payload = {}
-
-                # SF seems to not always be present so we try/except only SF readings
-                payload["Hz"] = payload_verbose["Hz"]
-                payload["W"] = payload_verbose["W"]
-                payload["DCW"] = payload_verbose["DCW"]
                 
-                # SF seems to not always be present so we try to get with a default value of 1
+                payload_verbose = {}
+                
+                # the inverter would include W, Hz, and DCW, but it is not always available
+                if self.inverter is not None:
+                    payload_verbose = self.inverter.get_dict()
+                else: 
+                    if self.ac_model is not None:
+                        payload_verbose = {**payload_verbose, **self.ac_model.get_dict()}
+                    if self.dc_model is not None:
+                        payload_verbose = {**payload_verbose, **self.dc_model.get_dict()}
+                
+                payload = {}
+                
+                # Get value and scale factor, if not present, set to 0 and 1 respectively (should not happen for Hz, W and DCW)
+                payload["Hz"] = payload_verbose.get("Hz", 0)
                 payload["Hz_SF"] = payload_verbose.get("Hz_SF", 1)
+                payload["W"] = payload_verbose.get("W", 0)
                 payload["W_SF"] = payload_verbose.get("W_SF", 1)
+                payload["DCW"] = payload_verbose.get("DCW", 0)
                 payload["DCW_SF"] = payload_verbose.get("DCW_SF", 1)
 
                 return payload
         except Exception as e:
-            logger.error("Error reading harvest data: %s", e)
+            logger.error("Error reading data: %s", e)
             raise SunSpecModbusClientError(e)
 
     def get_harvest_data_type(self) -> str:
@@ -143,7 +173,7 @@ class ModbusSunspec(ICom):
     def get_profile(self):
         pass
     
-    def _get_SN(self) -> str:
+    def get_SN(self) -> str:
         return self.SN
     
     def clone(self, ip: str = None) -> 'ModbusSunspec':
