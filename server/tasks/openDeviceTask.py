@@ -24,16 +24,12 @@ class OpenDeviceTask(Task):
                 return None
 
             if self.device.connect():
-
-                # Ensure that the device is on the local network
-                if self.device.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
+                if not self.device.is_valid():
                     self.device.disconnect()
                     message = "Failed to open device: " + str(self.device.get_config())
                     logger.error(message)
                     self.bb.add_error(message)
                     return None
-                
-                logger.info("Opening: %s", self.device.get_config())
                 
                 # terminate and remove all inverters from the blackboard
                 for i in self.bb.devices.lst:
@@ -49,7 +45,7 @@ class OpenDeviceTask(Task):
             else:
                 self.device.disconnect()
                 message = "Failed to open device: " + str(self.device.get_config())
-                logger.info(message)
+                logger.error(message)
                 self.bb.add_error(message)
                 return None
             

@@ -17,12 +17,13 @@ class DevicePerpetualTask(Task):
         if len(self.bb.devices.lst) > 0 and self.bb.devices.lst[0].is_open():
             logger.debug("A device is already open, removing self.device from the blackboard")
             self.bb.devices.remove(self.device)
+            
             if self.device.is_open():
                 self.device.disconnect()
+                self.bb.add_info("Device removed from blackboard")
             return
         try:
             if self.device.connect():
-                
                 if not self.device.is_valid():
                     self.device.disconnect()
                     message = "Failed to open device: " + str(self.device.get_config())

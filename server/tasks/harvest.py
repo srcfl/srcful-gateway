@@ -30,6 +30,7 @@ class Harvest(Task):
         if not self.device.is_open():
             log.info("This should never happen unless the device is unexpectedly closed. Inverter is terminated make the final transport if there is anything in the barn")
             self.device.disconnect()
+            self.bb.add_warning("Device unexpectedly closed")
             open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
             transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
             return [open_inverter] + transports
@@ -51,11 +52,11 @@ class Harvest(Task):
         except Exception as e:
             
             # To-Do: Solarmanv5 can raise ConnectionResetError, so handle it!
-
             log.debug("Handling exeption reading harvest: %s", str(e))
-            
             log.debug("Kill everything, transport what is left and reopen in 30 seconds")
+            
             self.device.disconnect()
+            self.bb.add_error("Exception reading harvest, device unexpectedly closed")
             open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
             transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
     
@@ -82,8 +83,6 @@ class Harvest(Task):
                 if self.device.get_profile():
                     headers["model"] = self.device.get_profile().name.lower()
                     
-                
-                
                 transport = self.transport_factory(event_time + 100, self.bb, self.barn, headers)
                 transport.post_url = endpoint
             self.barn = {}
