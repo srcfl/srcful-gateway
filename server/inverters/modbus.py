@@ -4,8 +4,8 @@ from .supported_inverters.profiles import InverterProfiles, InverterProfile
 from .ICom import ICom
 from server.network.network_utils import NetworkUtils
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Modbus(ICom):
@@ -94,7 +94,7 @@ class Modbus(ICom):
         # Zip the registers and values together convert them into a dictionary
         res = dict(zip(regs, vals))
 
-        log.debug("OK - Reading Harvest Data: %s", str(res))
+        logger.debug("OK - Reading Harvest Data: %s", str(res))
 
         if res:
             return res
@@ -119,15 +119,15 @@ class Modbus(ICom):
         
         try:
             resp = self._read_registers(operation, scan_start, scan_range)
-            log.debug("OK - Reading: %s - %s", str(scan_start), str(scan_range))
+            logger.debug("OK - Reading: %s - %s", str(scan_start), str(scan_range))
 
         except ModbusException as me:
             # Decide whether to break or continue based on the type of ModbusException
             if isinstance(me, ConnectionException):
-                log.error("ConnectionException occurred: %s", str(me))
+                logger.error("ConnectionException occurred: %s", str(me))
                 
             if isinstance(me, ModbusIOException):
-                log.error("ModbusIOException occurred: %s", str(me))
+                logger.error("ModbusIOException occurred: %s", str(me))
 
         return resp
 
@@ -143,9 +143,6 @@ class Modbus(ICom):
     def is_valid(self) -> bool:
         # Ensure that the device is on the local network
         if self.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
-            self.disconnect()
-            message = "Failed to open device: " + str(self.get_config())
-            log.error(message)
             return False
         return True
     

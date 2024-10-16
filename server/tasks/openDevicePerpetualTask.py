@@ -23,8 +23,7 @@ class DevicePerpetualTask(Task):
         try:
             if self.device.connect():
                 
-                # Ensure that the device is on the local network
-                if self.device.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
+                if not self.device.is_valid():
                     self.device.disconnect()
                     message = "Failed to open device: " + str(self.device.get_config())
                     logger.error(message)

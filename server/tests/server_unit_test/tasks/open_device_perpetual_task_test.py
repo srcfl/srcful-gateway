@@ -149,7 +149,7 @@ def test_execute_inverter_not_on_local_network():
     inverter = MagicMock()
     inverter.connect.return_value = True
     inverter.get_config.return_value = cfg.TCP_CONFIG # MAC is 00:00:00:00:00:00, so probably not on the local network
-
+    inverter.is_valid.return_value = False
     task = DevicePerpetualTask(0, bb, inverter)
     assert task.execute(0) is None
 
