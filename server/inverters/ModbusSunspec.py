@@ -172,10 +172,20 @@ class ModbusSunspec(ICom):
     def get_profile(self):
         pass
     
-    def get_SN(self) -> str:
-        return self.SN
-    
     def clone(self, ip: str = None) -> 'ModbusSunspec':
         if ip is None:
             ip = self.ip
         return ModbusSunspec(ip, self.mac, self.port, self.slave_id)
+    
+    def find_device(self) -> 'ICom':
+        port = self.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config
+        hosts = NetworkUtils.get_hosts([int(port)], 0.01)
+        
+        if len(hosts) > 0:
+            for host in hosts:
+                if host[NetworkUtils.MAC_KEY] == self.get_config()[NetworkUtils.MAC_KEY]:
+                    return self.clone(host[NetworkUtils.IP_KEY])
+        return None
+    
+    def get_SN(self) -> str:
+        return self.SN

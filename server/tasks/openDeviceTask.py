@@ -22,9 +22,9 @@ class OpenDeviceTask(Task):
             if self._is_open(self.device):
                 logger.info("Device already open: %s", self.device.get_config())
                 return None
-            
+
             if self.device.connect():
-                
+
                 # Ensure that the device is on the local network
                 if self.device.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
                     self.device.disconnect()
@@ -52,6 +52,7 @@ class OpenDeviceTask(Task):
                 logger.info(message)
                 self.bb.add_error(message)
                 return None
+            
         except Exception as e:
             logger.exception("Exception opening device: %s", e)
             message = "Failed to open device: " + str(self.device.get_config())

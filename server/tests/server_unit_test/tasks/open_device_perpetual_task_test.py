@@ -50,36 +50,23 @@ def test_retry_on_exception():
     assert ret is task
     assert len(bb.purge_tasks()) == 0
 
-@patch('server.tasks.openDevicePerpetualTask.NetworkUtils')
-def test_execute_invertert_could_not_open(mock_network_utils):
+def test_execute_inverter_not_found():
     bb = BlackBoard()
     HarvestFactory(bb)
     
-    inverter = MagicMock()
-    inverter.connect.return_value = False
-    inverter.get_config.return_value = cfg.TCP_CONFIG
-    
-    mock_network_utils.IP_KEY = 'ip'
-    mock_network_utils.MAC_KEY = 'mac'
-    mock_network_utils.PORT_KEY = 'port'
-    mock_network_utils.get_hosts.return_value = [{mock_network_utils.IP_KEY: '192.168.50.1',
-                                                    mock_network_utils.MAC_KEY: '00:00:00:00:00:00',
-                                                    mock_network_utils.PORT_KEY: 502}]
+    device = MagicMock()
+    device.connect.return_value = False
+    device.get_config.return_value = cfg.TCP_CONFIG
 
-    task = DevicePerpetualTask(0, bb, inverter)
+    device.find_device.return_value = None # Device not found on the network
+    
+    task = DevicePerpetualTask(0, bb, device)
     ret = task.execute(0)
-
     
-    inverter.clone.assert_called_once_with('192.168.50.1')
-    
-    
-    
-    assert inverter not in bb.devices.lst
-    assert inverter.connect.called
     assert ret is task
-
+    assert task.time == 300000 # execute run again in 5 minutes
     
-    assert len(bb.purge_tasks()) == 1   # info message is added wich triggers a saveStateTask 
+    assert len(bb.purge_tasks()) == 1   # info message is added wich triggers a saveStateTask
 
 
 def test_execute_new_inverter_added():
@@ -99,37 +86,31 @@ def test_execute_new_inverter_added():
     assert inverter not in bb.devices.lst
     assert inverter2 in bb.devices.lst
 
-
-@patch('server.tasks.openDevicePerpetualTask.NetworkUtils')
-def test_execute_new_inverter_added_after_rescan(mock_network_utils):
+def test_execute_new_inverter_added_after_rescan():
     bb = BlackBoard()
     inverter = MagicMock()
-    
     inverter.get_config.return_value = cfg.TCP_CONFIG
-    
     inverter.connect.return_value = False
+    
     task = DevicePerpetualTask(0, bb, inverter)
 
     task.execute(event_time=0)
-
-    assert len(task.bb.devices.lst) == 0
     
-    mock_network_utils.IP_KEY = 'ip'
-    mock_network_utils.MAC_KEY = 'mac'
-    mock_network_utils.PORT_KEY = 'port'
-    mock_network_utils.get_hosts.return_value = [{mock_network_utils.IP_KEY: '192.168.50.1', 
-                                                    mock_network_utils.MAC_KEY: '00:00:00:00:00:00', 
-                                                    mock_network_utils.PORT_KEY: 502}]
-
-    task.execute(event_time=1)
-
-    inverter.clone.assert_called_once_with('192.168.50.1')
     inverter.connect.return_value = True
+    
+    ret = task.execute(event_time=500)
+    
+    assert ret is None
+    assert len(bb.devices.lst) == 1
+    
+    
+    
+    
+    
+    
+    
 
-    task.execute(event_time=5001)
-
-    assert len(task.bb.devices.lst) == 1
-
+    
 
 @patch('server.tasks.openDevicePerpetualTask.NetworkUtils')
 def test_reconnect_does_not_find_known_device(mock_network_utils):

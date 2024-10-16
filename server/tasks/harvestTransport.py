@@ -1,8 +1,6 @@
 import logging
 import requests
-from server.inverters.supported_inverters.profiles import InverterProfile
-from server.inverters.der import DER
-from server.inverters.modbus import Modbus
+from server.inverters.ICom import ICom
 from server.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run
@@ -17,7 +15,7 @@ class IHarvestTransport(SrcfulAPICallTask):
 
 
 class ITransportFactory:
-    def __call__(self, event_time: int, bb: BlackBoard, der: DER, barn: dict) -> IHarvestTransport:
+    def __call__(self, event_time: int, bb: BlackBoard, icom: ICom, barn: dict) -> IHarvestTransport:
         pass
 
 
@@ -116,9 +114,9 @@ class LocalHarvestTransportTimedSignature(HarvestTransportTimedSignature):
 
     def execute(self, event_time):
         try:
-            jwt = self._data()
-            log.debug("No sending in local harvest burning that barn!")
-            #log.info("JWT: %s", jwt)
+            # jwt = self._data()
+            # log.info("JWT: %s", jwt)
+            log.debug("No sending in local harvest, burning that barn!")
         except crypto.Chip.Error as e:
             log.error("Error creating JWT: %s", e)
             return 0

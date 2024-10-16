@@ -153,6 +153,9 @@ class ModbusRTU(Modbus):
     def _get_slave_id(self) -> int:
         return self.slave_id
     
+    def find_device(self) -> 'ICom':
+        raise NotImplementedError("find_device is not implemented for ModbusRTU")
+    
     def _get_SN(self) -> str:
         return "N/A"
 

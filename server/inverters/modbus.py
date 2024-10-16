@@ -2,6 +2,7 @@ import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from .supported_inverters.profiles import InverterProfiles, InverterProfile
 from .ICom import ICom
+from server.network.network_utils import NetworkUtils
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -58,6 +59,10 @@ class Modbus(ICom):
 
     def _create_client(self, **kwargs) -> None:
         """Creates the Modbus client."""
+        raise NotImplementedError("Subclass must implement abstract method")
+    
+    def _get_SN(self) -> str:
+        """Returns the inverter's serial number."""
         raise NotImplementedError("Subclass must implement abstract method")
 
     def _read_harvest_data(self, force_verbose) -> dict:
@@ -158,6 +163,17 @@ class Modbus(ICom):
     
     def clone(self, host: str = None) -> 'ICom':
         return self._clone(host)
+    
+    def find_device(self) -> 'ICom':
+        
+        port = self.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config
+        hosts = NetworkUtils.get_hosts([int(port)], 0.01)
+        
+        if len(hosts) > 0:
+            for host in hosts:
+                if host[NetworkUtils.MAC_KEY] == self.get_config()[NetworkUtils.MAC_KEY]:
+                    return self._clone(host[NetworkUtils.IP_KEY])
+        return None
     
     def get_SN(self) -> str:
         return self._get_SN()

@@ -5,7 +5,7 @@ from ..requestData import RequestData
 import logging
 from server.inverters.IComFactory import IComFactory
 from server.inverters.ICom import ICom
-from server.inverters.der import DER
+
 
 logger = logging.getLogger(__name__)
 

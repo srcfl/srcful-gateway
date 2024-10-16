@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 from .supported_inverters.profiles import InverterProfile
 from enum import Enum
 
-# Enum for the type of harvest data
-
 class HarvestDataType(Enum):
     MODBUS_REGISTERS = "modbus_registers"
     SUNSPEC = "sunspec_json"
@@ -61,6 +59,10 @@ class ICom(ABC):
     
     @abstractmethod
     def clone(self, ip: str) -> 'ICom':
+        pass
+    
+    @abstractmethod
+    def find_device(self) -> 'ICom':
         pass
     
     @abstractmethod

@@ -39,36 +39,21 @@ class DevicePerpetualTask(Task):
 
                 self.bb.devices.add(self.device)
                 self.bb.add_info("Inverter opened: " + str(self.device.get_config()))
-                return
+                return None
             
             else:
-                port = self.device.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config
+                self.device = self.device.find_device() # find the device on the network
                 
-                hosts = NetworkUtils.get_hosts([int(port)], 0.01)
-                
-                if len(hosts) > 0:
-                    # At least one device was found on the port
-                    # check if the device found has the same mac address as the device we are trying to open
-                    for host in hosts:
-                        if host[NetworkUtils.MAC_KEY] == self.device.get_config()[NetworkUtils.MAC_KEY]:
-                            self.device = self.device.clone(host[NetworkUtils.IP_KEY])
-                            logger.info("Found inverter at %s, retry in 5 seconds...", host[NetworkUtils.IP_KEY]) 
-                            self.time = event_time + 5000
-                            self.bb.add_info("Found inverter at " + host[NetworkUtils.IP_KEY] + ", retry in 5 seconds...")
-                            break
-                    else:
-                        # no device was found with the same mac address
-                        message = "Failed to open inverter, retry in 5 minutes: " + str(self.device.get_config())
-                        logger.info(message)
-                        self.bb.add_error(message)
-                        self.time = event_time + 60000 * 5
+                if self.device is not None:
+                    logger.info("Found inverter at %s, retry in 5 seconds...", self.device.get_config()[NetworkUtils.IP_KEY])
+                    self.time = event_time + 5000
+                    self.bb.add_info("Found inverter at " + self.device.get_config()[NetworkUtils.IP_KEY] + ", retry in 5 seconds...")
                 else:
-                    # possibly we should create a new device object. We have previously had trouble with reconnecting in the Harvester
-                    message = "Failed to open inverter, retry in 5 minutes: " + str(self.device.get_config())
+                    message = "Failed to find inverter, rescan and retry in 5 minutes"
                     logger.info(message)
                     self.bb.add_error(message)
                     self.time = event_time + 60000 * 5
-
+                    
             return self
         
         except Exception as e:
