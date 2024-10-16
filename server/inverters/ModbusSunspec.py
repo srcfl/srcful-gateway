@@ -107,12 +107,21 @@ class ModbusSunspec(ICom):
             self.dc_model = self.client.models[714][0]
             
         return len(self.client.models) > 0
-        
+    
+    def is_valid(self) -> bool:
+        # Ensure that the device is on the local network
+        if self.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
+            self.disconnect()
+            message = "Failed to open device: " + str(self.get_config())
+            logger.error(message)
+            return False
+        return True
+    
     def disconnect(self) -> None:
         self.client.disconnect()
     
-    def reconnect(self) -> None:
-        self.disconnect() and self.connect()
+    def reconnect(self) -> bool:
+        return self.disconnect() and self.connect()
         
     def is_open(self) -> bool:
         return bool(self.client.is_connected())

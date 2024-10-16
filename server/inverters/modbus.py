@@ -140,6 +140,15 @@ class Modbus(ICom):
     def connect(self) -> bool:
         return self._open()
     
+    def is_valid(self) -> bool:
+        # Ensure that the device is on the local network
+        if self.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
+            self.disconnect()
+            message = "Failed to open device: " + str(self.get_config())
+            log.error(message)
+            return False
+        return True
+    
     def disconnect(self) -> None:
         return self._terminate()
     

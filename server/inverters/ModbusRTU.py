@@ -4,7 +4,6 @@ from pymodbus.client import ModbusSerialClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
 from pymodbus.exceptions import ModbusIOException
 from pymodbus import pymodbus_apply_logging_config
-from typing_extensions import TypeAlias
 import logging
 
 log = logging.getLogger(__name__)
@@ -221,3 +220,6 @@ class ModbusRTU(Modbus):
         if isinstance(resp, ExceptionResponse):
             raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
         return resp
+
+    def is_valid(self) -> bool:
+        raise NotImplementedError("is_valid is not implemented for ModbusRTU")

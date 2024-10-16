@@ -28,7 +28,11 @@ class ICom(ABC):
     @abstractmethod
     def connect(self) -> bool:
         pass
-
+    
+    @abstractmethod
+    def is_valid(self) -> bool:
+        pass
+    
     @abstractmethod
     def disconnect(self) -> None:
         pass
@@ -42,7 +46,7 @@ class ICom(ABC):
         pass
     
     @abstractmethod
-    def read_harvest_data(self, DER_TYPE, force_verbose) -> dict:
+    def read_harvest_data(self, force_verbose) -> dict:
         pass
     
     @abstractmethod
