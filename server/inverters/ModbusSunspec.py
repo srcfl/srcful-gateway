@@ -39,24 +39,6 @@ class ModbusSunspec(ICom):
     def SLAVE_ID(self) -> int:
         return "slave_id"
     
-
-    @staticmethod
-    def list_to_tuple(config: list) -> tuple:
-        assert config[ICom.CONNECTION_IX] == ModbusSunspec.CONNECTION, "Invalid connection type"
-        ip = config[1]
-        mac = config[2]
-        port = int(config[3])
-        slave_id = int(config[4])
-        return (config[ICom.CONNECTION_IX], ip, mac, port, slave_id)
-    
-    @staticmethod
-    def dict_to_tuple(config: dict) -> tuple:
-        assert config[ICom.CONNECTION_KEY] == ModbusSunspec.CONNECTION, "Invalid connection type"
-        ip = config["host"]
-        mac = config["mac"]
-        port = int(config["port"])
-        slave_id = int(config["address"])
-        return (config[ICom.CONNECTION_KEY], ip, mac, port, slave_id)
     
     def __init__(self, 
                  ip: str, 

@@ -54,29 +54,6 @@ class ModbusRTU(Modbus):
     def SLAVE_ID(self) -> int:
         return "slave_id"
     
-    
-
-    def list_to_tuple(config: list) -> tuple:
-        assert config[ICom.CONNECTION_IX] == ModbusRTU.CONNECTION, "Invalid connection type"
-        port = config[1]
-        baudrate = int(config[2])
-        bytesize = int(config[3])
-        parity = config[4]
-        stopbits = float(config[5])
-        inverter_type = config[6]
-        slave_id = int(config[7])
-        return (config[0], port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
-    
-    def dict_to_tuple(config: dict) -> tuple:
-        assert config[ICom.CONNECTION_KEY] == ModbusRTU.CONNECTION, "Invalid connection type"
-        serial_port = config["port"]
-        baudrate = int(config["baudrate"])
-        bytesize = int(config["bytesize"])
-        parity = config["parity"]
-        stopbits = float(config["stopbits"])
-        inverter_type = config["type"]
-        slave_id = int(config["address"])
-        return (config[ICom.CONNECTION_KEY], serial_port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
 
     def __init__(self, 
                  port: str = None, 

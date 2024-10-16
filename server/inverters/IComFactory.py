@@ -13,53 +13,6 @@ class IComFactory:
     """
     IComFactory class
     """
-    
-    @staticmethod
-    def parse_connection_config_from_list(config: list) -> tuple:
-        
-        logging.debug("Parsing connection config from list: %s", config)
-        
-        match config[0]:
-            case ModbusTCP.CONNECTION:
-                return ModbusTCP.list_to_tuple(config)
-            case ModbusRTU.CONNECTION:
-                return ModbusRTU.list_to_tuple(config)
-            case ModbusSolarman.CONNECTION:
-                return ModbusSolarman.list_to_tuple(config)
-            case ModbusSunspec.CONNECTION:
-                return ModbusSunspec.list_to_tuple(config)
-            case _:
-                log.error("Unknown connection type: %s", config[0])
-                return None
-        
-    @staticmethod
-    def parse_connection_config_from_dict(config: dict) -> tuple:
-        
-        match config[ICom.CONNECTION_KEY]:
-            case ModbusTCP.CONNECTION:
-                return ModbusTCP.dict_to_tuple(config)
-            case ModbusRTU.CONNECTION:
-                return ModbusRTU.dict_to_tuple(config)
-            case ModbusSolarman.CONNECTION:
-                return ModbusSolarman.dict_to_tuple(config)
-            case ModbusSunspec.CONNECTION:
-                return ModbusSunspec.dict_to_tuple(config)
-            case _:
-                log.error("Unknown connection type: %s", config[ICom.CONNECTION_KEY])
-                raise ValueError("Unknown connection type")
-
-    @staticmethod
-    def parse_and_create_com(config) -> ICom:
-        if isinstance(config, list):
-            raise ValueError("Invalid config type")
-            return IComFactory.create_com(IComFactory.parse_connection_config_from_list(config))
-        elif isinstance(config, dict):
-            return IComFactory.create_com(IComFactory.parse_connection_config_from_dict(config))
-        elif isinstance(config, tuple):
-            raise ValueError("Invalid config type")
-            return IComFactory.create_com(config)
-        else:
-            raise ValueError("Invalid config type")
         
     @staticmethod
     def create_com(config: dict) -> ICom:

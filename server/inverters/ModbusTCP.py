@@ -45,33 +45,14 @@ class ModbusTCP(Modbus):
     def SLAVE_ID(self) -> int:
         return "slave_id"
 
-    @staticmethod
-    def list_to_tuple(config: list) -> tuple:
-        assert config[ICom.CONNECTION_IX] == ModbusTCP.CONNECTION, "Invalid connection type"
-        ip = config[1]
-        mac = config[2]
-        port = int(config[3])
-        device_type = config[4]
-        slave_id = int(config[5])
-        return (config[ICom.CONNECTION_IX], ip, mac, port, device_type, slave_id)
-    
-    @staticmethod
-    def dict_to_tuple(config: dict) -> tuple:
-        assert config[ICom.CONNECTION_KEY] == ModbusTCP.CONNECTION, "Invalid connection type"
-        ip = config["ip"]
-        mac = config["mac"]
-        port = int(config["port"])
-        device_type = config["device_type"]
-        slave_id = int(config["slave_id"])
-        return (config[ICom.CONNECTION_KEY], ip, mac, port, device_type, slave_id)
 
-    def __init__(self, 
-                 ip: str = None, 
-                 mac: str = "00:00:00:00:00:00", 
+    def __init__(self,
+                 ip: str = None,
+                 mac: str = "00:00:00:00:00:00",
                  port: int = None, 
                  device_type: str = None, 
                  slave_id: int = None) -> None:
-        log.info("Creating with: %s %s %s %s %s" % (ip, mac, port, device_type, slave_id))
+        log.info("Creating with: %s %s %s %s %s", ip, mac, port, device_type, slave_id)
         self.ip = ip
         self.mac = mac
         self.port = port
