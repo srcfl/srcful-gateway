@@ -104,14 +104,6 @@ def test_execute_new_inverter_added_after_rescan():
     assert len(bb.devices.lst) == 1
     
     
-    
-    
-    
-    
-    
-
-    
-
 @patch('server.tasks.openDevicePerpetualTask.NetworkUtils')
 def test_reconnect_does_not_find_known_device(mock_network_utils):
     bb = BlackBoard()
