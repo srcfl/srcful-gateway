@@ -37,18 +37,18 @@ class DevicePerpetualTask(Task):
                     self.bb.devices.remove(i)
 
                 self.bb.devices.add(self.device)
-                self.bb.add_info("Inverter opened: " + str(self.device.get_config()))
+                self.bb.add_info("Device opened: " + str(self.device.get_config()))
                 return None
             
             else:
                 self.device = self.device.find_device() # find the device on the network
                 
                 if self.device is not None:
-                    logger.info("Found inverter at %s, retry in 5 seconds...", self.device.get_config()[NetworkUtils.IP_KEY])
+                    logger.info("Found a device at %s, retry in 5 seconds...", self.device.get_config()[NetworkUtils.IP_KEY])
                     self.time = event_time + 5000
-                    self.bb.add_info("Found inverter at " + self.device.get_config()[NetworkUtils.IP_KEY] + ", retry in 5 seconds...")
+                    self.bb.add_info("Found a device at " + self.device.get_config()[NetworkUtils.IP_KEY] + ", retry in 5 seconds...")
                 else:
-                    message = "Failed to find inverter, rescan and retry in 5 minutes"
+                    message = "Failed to find a device, rescan and retry in 5 minutes"
                     logger.info(message)
                     self.bb.add_error(message)
                     self.time = event_time + 60000 * 5
@@ -56,6 +56,6 @@ class DevicePerpetualTask(Task):
             return self
         
         except Exception as e:
-            logger.exception("Exception opening inverter: %s", e)
+            logger.exception("Exception opening a device: %s", e)
             self.time = event_time + 10000
             return self
