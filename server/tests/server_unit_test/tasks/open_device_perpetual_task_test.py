@@ -67,24 +67,7 @@ def test_execute_inverter_not_found():
     assert task.time == 300000 # execute run again in 5 minutes
     
     assert len(bb.purge_tasks()) == 1   # info message is added wich triggers a saveStateTask
-
-
-def test_execute_new_inverter_added():
-    bb = BlackBoard()
-    inverter = MagicMock()
-    inverter.connect.return_value = False
-    task = DevicePerpetualTask(0, bb, inverter)
     
-    inverter2 = MagicMock()
-    inverter2.is_open.return_value = True
-    
-    bb.devices.add(inverter2)
-
-    task.execute(0)
-
-    assert inverter.disconnect.called
-    assert inverter not in bb.devices.lst
-    assert inverter2 in bb.devices.lst
 
 def test_execute_new_inverter_added_after_rescan():
     bb = BlackBoard()
@@ -134,8 +117,8 @@ def test_reconnect_does_not_find_known_device(mock_network_utils):
     assert inverter.clone.call_count == 0 # We did not try to clone the devices above
     
     assert len(task.bb.devices.lst) == 0
-    
-    
+
+
 def test_execute_inverter_not_on_local_network():
     bb = BlackBoard()
     inverter = MagicMock()
@@ -152,4 +135,32 @@ def test_execute_inverter_not_on_local_network():
     assert len(bb.devices.lst) == 0 # Not on the local network, so not added
 
     assert len(bb.purge_tasks()) == 1 # state save task added as error message is generated
+    
+
+def test_add_multiple_devices():
+    bb = BlackBoard()
+    device1 = MagicMock()
+    device1.connect.return_value = True
+    device1.is_open.return_value = True
+    
+
+    device2 = MagicMock()
+    device2.connect.return_value = True
+    device2.is_open.return_value = True
+    
+    task1 = DevicePerpetualTask(0, bb, device1)
+    task2 = DevicePerpetualTask(0, bb, device2)
+    
+    task1.execute(0)
+    task2.execute(0)
+    
+    assert device1 in bb.devices.lst
+    assert device2 in bb.devices.lst
+    
+    assert device1.connect.called
+    assert device2.connect.called
+    
+    assert len(bb.devices.lst) == 2
+    
+    
 

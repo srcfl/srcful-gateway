@@ -13,15 +13,14 @@ class DevicePerpetualTask(Task):
 
     def execute(self, event_time):
         
-        # has a device been opened? This is needed as some other task may open a device before this task is executed
-        if len(self.bb.devices.lst) > 0 and self.bb.devices.lst[0].is_open():
-            logger.debug("A device is already open, removing self.device from the blackboard")
-            self.bb.devices.remove(self.device)
-            
-            if self.device.is_open():
-                self.device.disconnect()
-                self.bb.add_info("Device removed from blackboard")
-            return
+        logger.info("*************************************************************")
+        logger.info("******************** DevicePerpetualTask ********************")
+        logger.info("*************************************************************")
+        
+        if self.bb.devices.contains(self.device):
+            logger.debug("Device is already in the blackboard, no action needed")
+            return None
+        
         try:
             if self.device.connect():
                 if not self.device.is_valid():
@@ -30,12 +29,7 @@ class DevicePerpetualTask(Task):
                     logger.error(message)
                     self.bb.add_error(message)
                     return None
-                
-                # terminate and remove all devices from the blackboard
-                # for i in self.bb.devices.lst:
-                #     i.disconnect()
-                #     self.bb.devices.remove(i)
-                    
+
                 message = "Device opened: " + str(self.device.get_config())
                 logger.info(message)
                 self.bb.devices.add(self.device)

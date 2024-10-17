@@ -23,12 +23,12 @@ def test_execute_inverter_already_open():
     bb = BlackBoard()
     device = MagicMock()
     device.is_open.return_value = True
-    device.get_config.return_value = {"port": "COM1"}
+    device.get_config.return_value = cfg.TCP_CONFIG
     bb.devices.add(device)
 
     new_device = MagicMock()
     new_device.is_open.return_value = True
-    new_device.get_config.return_value = {"port": "COM1"}
+    new_device.get_config.return_value = cfg.TCP_CONFIG
 
     task = OpenDeviceTask(0, bb, new_device)
     task.execute(0)
@@ -73,6 +73,27 @@ def test_second_inverter_opened():
     assert ret is None
     
     assert len(bb.devices.lst) == 2
+    
+
+##########################################################################################
+# CONTINUE HERE 
+##########################################################################################
+def test_remove_device():
+    bb = BlackBoard()
+    device = MagicMock()
+    device.connect.return_value = True
+    task = OpenDeviceTask(0, bb, device)
+    ret = task.execute(0)
+    
+    assert device in bb.devices.lst
+    assert device.connect.called
+    
+    bb.devices.remove(device)
+    
+    assert device not in bb.devices.lst
+    
+    # assert device.disconnect.called
+    
 
 def test_retry_on_exception():
     bb = BlackBoard()
@@ -106,3 +127,27 @@ def test_execute_inverter_not_on_local_network():
     assert len(bb.purge_tasks()) == 1 # state save task added as error message is generated
 
 
+def test_add_multiple_devices():
+    bb = BlackBoard()
+    device1 = MagicMock()
+    device1.connect.return_value = True
+    device1.is_open.return_value = True
+    
+
+    device2 = MagicMock()
+    device2.connect.return_value = True
+    device2.is_open.return_value = True
+    
+    task1 = OpenDeviceTask(0, bb, device1)
+    task2 = OpenDeviceTask(0, bb, device2)
+    
+    task1.execute(0)
+    task2.execute(0)
+    
+    assert device1 in bb.devices.lst
+    assert device2 in bb.devices.lst
+    
+    assert device1.connect.called
+    assert device2.connect.called
+    
+    assert len(bb.devices.lst) == 2

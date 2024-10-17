@@ -6,7 +6,7 @@ from server.tasks.itask import ITask
 from server.settings import Settings, ChangeSource
 import logging
 from server.inverters.ICom import ICom
-
+from server.network.network_utils import NetworkUtils
 logger = logging.getLogger(__name__)
 
 
@@ -236,6 +236,15 @@ class BlackBoard:
 
         def remove_listener(self, observer):
             self._observers.remove(observer)
+            
+        def contains(self, device: ICom) -> bool:
+            try:
+                for d in self.lst:
+                    if d.get_config()[NetworkUtils.MAC_KEY] == device.get_config()[NetworkUtils.MAC_KEY]:
+                        return True
+            except (KeyError, AttributeError) as e:
+                logger.error("Error checking device: %s", e)
+                return False
 
         def add(self, device:ICom):
             assert device.is_open(), "Only open devices can be added to the blackboard"

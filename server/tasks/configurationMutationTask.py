@@ -7,6 +7,7 @@ from server.tasks.srcfulAPICallTask import SrcfulAPICallTask
 import server.crypto.crypto as crypto
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class ConfigurationMutationTask(SrcfulAPICallTask):
     def __init__(self, event_time: int, bb: BlackBoard, subkey: str, data: Dict[str, Any]):

@@ -17,12 +17,12 @@ class OpenDeviceTask(Task):
         logger.info("##########################################################")
         logger.info("#################### OpenDeviceTask ####################")
         logger.info("##########################################################")
+        
+        if self.bb.devices.contains(self.device): 
+            logger.debug("Device is already in the blackboard, no action needed")
+            return None
+        
         try:
-
-            if self._is_open(self.device):
-                logger.info("Device already open: %s", self.device.get_config())
-                return None
-
             if self.device.connect():
                 if not self.device.is_valid():
                     self.device.disconnect()
@@ -30,11 +30,6 @@ class OpenDeviceTask(Task):
                     logger.error(message)
                     self.bb.add_error(message)
                     return None
-                
-                # terminate and remove all inverters from the blackboard
-                # for i in self.bb.devices.lst:
-                #     i.disconnect()
-                #     self.bb.devices.remove(i)
                     
                 message = "Device opened: " + str(self.device.get_config())
                 logger.info(message)

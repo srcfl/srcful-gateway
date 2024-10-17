@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from .supported_inverters.profiles import InverterProfile
 from enum import Enum
+from server.network.network_utils import NetworkUtils
 
 class HarvestDataType(Enum):
     MODBUS_REGISTERS = "modbus_registers"
@@ -24,6 +25,9 @@ class ICom(ABC):
 
     def get_der_types(self) -> list[DER_TYPE]:
         pass
+    
+    # def __eq__(self, other: 'ICom') -> bool:
+    #     return self.get_config()[NetworkUtils.MAC_KEY] == other.get_config()[NetworkUtils.MAC_KEY]
 
     @abstractmethod
     def connect(self) -> bool:

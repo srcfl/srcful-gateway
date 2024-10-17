@@ -3,9 +3,11 @@ import server.tasks.harvestTransport as harvestTransport
 import server.tasks.openDevicePerpetualTask as oit
 from unittest.mock import Mock, patch
 import pytest
-
+from unittest.mock import MagicMock
 from server.blackboard import BlackBoard
 from server.settings import Settings, ChangeSource
+from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
+from server.tasks.openDeviceTask import OpenDeviceTask
 
 
 
@@ -182,3 +184,142 @@ def test_on_error():
     instance = harvestTransport.HarvestTransport(0, {}, {}, headers)
     instance._on_error(response)
 
+
+# Test creating a device task, then harvesting from it. Then the device unexpectedly closes and removed from the blackboard
+# Then we should restart the device
+def test_execute_harvests_from_two_devices():
+    bb = BlackBoard()
+    device = MagicMock()
+    device.connect.return_value = True
+    device.is_open.return_value = True
+    task = DevicePerpetualTask(0, bb, device)
+    task.execute(0)
+    
+    assert device in bb.devices.lst
+    
+    assert task.execute(0) is None # It is already in the blackboard
+    
+    # We add a second device
+    device2 = MagicMock()
+    device2.connect.return_value = True
+    device2.is_open.return_value = True
+    task2 = DevicePerpetualTask(0, bb, device2)
+    task2.execute(0)
+    
+    assert device2 in bb.devices.lst
+    
+    assert task2.execute(0) is None # It is already in the blackboard
+    
+    
+    # Now we create a harvest task
+    harvest_task = harvest.Harvest(0, bb, device, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task.execute(0)
+    
+    assert device.read_harvest_data.called
+    
+    harvest_task2 = harvest.Harvest(0, bb, device2, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task2.execute(0)
+    
+    assert device2.read_harvest_data.called
+    
+
+def test_execute_harvests_from_two_devices_and_one_no_longer_open():
+    bb = BlackBoard()
+    device = MagicMock()
+    device.connect.return_value = True
+    device.is_open.return_value = True
+    task = DevicePerpetualTask(0, bb, device)
+    task.execute(0)
+    
+    assert device in bb.devices.lst
+    
+    assert task.execute(0) is None # It is already in the blackboard
+    
+    # We add a second device
+    device2 = MagicMock()
+    device2.connect.return_value = True
+    device2.is_open.return_value = True
+    task2 = DevicePerpetualTask(0, bb, device2)
+    task2.execute(0)
+    
+    
+    assert device2 in bb.devices.lst
+    
+    assert task2.execute(0) is None # It is already in the blackboard
+    
+    # Now we create a harvest task
+    harvest_task = harvest.Harvest(0, bb, device, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task.execute(0)
+    
+    assert device.read_harvest_data.called
+    
+    harvest_task2 = harvest.Harvest(0, bb, device2, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task2.execute(0)
+    
+    assert device2.read_harvest_data.called
+    
+    
+    # Now the first device is no longer open
+    device.is_open.return_value = False
+    
+    assert device in bb.devices.lst
+    
+    harvest_task.execute(0)
+    
+    assert device.disconnect.called
+    assert device not in bb.devices.lst
+    
+    harvest_task2.execute(0)
+    
+    assert device2.read_harvest_data.called
+    
+
+def test_execute_harvests_from_two_devices_and_one_raises_exception():
+    bb = BlackBoard()
+    device = MagicMock()
+    device.connect.return_value = True
+    device.is_open.return_value = True
+    task = DevicePerpetualTask(0, bb, device)
+    task.execute(0)
+    
+    assert device in bb.devices.lst
+    
+    assert task.execute(0) is None # It is already in the blackboard
+    
+    # We add a second device
+    device2 = MagicMock()
+    device2.connect.return_value = True
+    device2.is_open.return_value = True
+    task2 = DevicePerpetualTask(0, bb, device2)
+    task2.execute(0)
+    
+    
+    assert device2 in bb.devices.lst
+    
+    assert task2.execute(0) is None # It is already in the blackboard
+    
+    # Now we create a harvest task
+    harvest_task = harvest.Harvest(0, bb, device, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task.execute(0)
+    
+    assert device.read_harvest_data.called
+    
+    harvest_task2 = harvest.Harvest(0, bb, device2, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task2.execute(0)
+    
+    assert device2.read_harvest_data.called
+    
+    
+    # Now the first device raises an exception
+    device.read_harvest_data.side_effect = Exception("mocked exception")
+    
+    assert device in bb.devices.lst
+    
+    harvest_task.execute(0)
+    
+    assert device.disconnect.called
+    assert device not in bb.devices.lst
+    
+    harvest_task2.execute(0)
+    
+    assert device2.read_harvest_data.called

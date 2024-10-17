@@ -30,7 +30,8 @@ class Harvest(Task):
         if not self.device.is_open():
             log.info("This should never happen unless the device is unexpectedly closed. Inverter is terminated make the final transport if there is anything in the barn")
             self.device.disconnect()
-            self.bb.add_warning("Device unexpectedly closed")
+            self.bb.devices.remove(self.device)
+            self.bb.add_warning("Device unexpectedly closed, removing from blackboard and starting a new open device perpetual task")
             open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
             transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
             return [open_inverter] + transports
@@ -40,7 +41,7 @@ class Harvest(Task):
             end_time = self.bb.time_ms()
 
             elapsed_time_ms = end_time - start_time
-            log.debug("Harvest took %s ms", elapsed_time_ms)
+            log.debug("Harvest from [%s] took %s ms", self.device.get_SN(), elapsed_time_ms)
 
             self.min_backoff_time = max(elapsed_time_ms * 2, 1000)
 
@@ -56,6 +57,7 @@ class Harvest(Task):
             log.debug("Kill everything, transport what is left and reopen in 30 seconds")
             
             self.device.disconnect()
+            self.bb.devices.remove(self.device)
             self.bb.add_error("Exception reading harvest, device unexpectedly closed")
             open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
             transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)

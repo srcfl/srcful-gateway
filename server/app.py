@@ -184,6 +184,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     finally:
         for i in bb.devices.lst:
             i.disconnect()
+        
+        bb.devices.lst.clear()
         web_server.close()
         graphql_client.stop()
         graphql_client.join()
