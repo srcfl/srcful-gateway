@@ -141,7 +141,13 @@ class Modbus(ICom):
         return self._open()
     
     def is_valid(self) -> bool:
+        """
+        Check if the device is valid by checking if the MAC address is not 00:00:00:00:00:00,
+        this is a simple check to make sure the device is on the local network. 
+        More sophisticated checks may be added later.
+        """
         # Ensure that the device is on the local network
+        # There can be other checks to make sure the device is valid, but this is a good start.
         if self.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
             return False
         return True

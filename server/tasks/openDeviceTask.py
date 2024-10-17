@@ -6,6 +6,7 @@ from ..inverters.ICom import ICom
 from ..network.network_utils import NetworkUtils
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class OpenDeviceTask(Task):
@@ -18,15 +19,18 @@ class OpenDeviceTask(Task):
         logger.info("#################### OpenDeviceTask ####################")
         logger.info("##########################################################")
         
-        if self.bb.devices.contains(self.device): 
-            logger.debug("Device is already in the blackboard, no action needed")
-            return None
-        
         try:
             if self.device.connect():
+                
                 if not self.device.is_valid():
                     self.device.disconnect()
                     message = "Failed to open device: " + str(self.device.get_config())
+                    logger.error(message)
+                    self.bb.add_error(message)
+                    return None
+
+                if self.bb.devices.contains(self.device):
+                    message = "Device is already in the blackboard, no action needed"
                     logger.error(message)
                     self.bb.add_error(message)
                     return None

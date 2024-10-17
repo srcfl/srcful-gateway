@@ -240,6 +240,7 @@ class BlackBoard:
         def contains(self, device: ICom) -> bool:
             try:
                 for d in self.lst:
+                    logger.debug("Comparing %s with %s", d.get_config()[NetworkUtils.MAC_KEY], device.get_config()[NetworkUtils.MAC_KEY])
                     if d.get_config()[NetworkUtils.MAC_KEY] == device.get_config()[NetworkUtils.MAC_KEY]:
                         return True
             except (KeyError, AttributeError) as e:
