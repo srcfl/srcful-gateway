@@ -32,14 +32,14 @@ class OpenDeviceTask(Task):
                     return None
                 
                 # terminate and remove all inverters from the blackboard
-                for i in self.bb.devices.lst:
-                    i.disconnect()
-                    self.bb.devices.remove(i)
-                
-                logger.info("Device opened: %s", self.device.get_config())
-
+                # for i in self.bb.devices.lst:
+                #     i.disconnect()
+                #     self.bb.devices.remove(i)
+                    
+                message = "Device opened: " + str(self.device.get_config())
+                logger.info(message)
                 self.bb.devices.add(self.device)
-                self.bb.add_info("Device opened: " + str(self.device.get_config()))
+                self.bb.add_info(message)
 
                 return None
             else:

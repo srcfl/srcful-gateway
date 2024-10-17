@@ -15,7 +15,7 @@ class HarvestFactory:
         # now we have an open device, lets create a harvest task and save it to the settings
         if com.is_open():
             self.bb.add_task(Harvest(self.bb.time_ms() + 1000, self.bb, com,  DefaultHarvestTransportFactory()))
-            self.bb.settings.devices.add_connection(com, ChangeSource.LOCAL)    
+            self.bb.settings.devices.add_connection(com, ChangeSource.LOCAL)
     
     def remove_device(self, inverter):
         pass

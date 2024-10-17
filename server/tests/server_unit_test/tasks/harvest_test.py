@@ -3,7 +3,6 @@ import server.tasks.harvestTransport as harvestTransport
 import server.tasks.openDevicePerpetualTask as oit
 from unittest.mock import Mock, patch
 import pytest
-from server.inverters.supported_inverters.profiles import InverterProfile
 
 from server.blackboard import BlackBoard
 from server.settings import Settings, ChangeSource

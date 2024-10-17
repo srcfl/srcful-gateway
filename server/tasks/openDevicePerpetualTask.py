@@ -32,13 +32,14 @@ class DevicePerpetualTask(Task):
                     return None
                 
                 # terminate and remove all devices from the blackboard
-                logger.debug("Removing all devices from the blackboard after opening a new device")
-                for i in self.bb.devices.lst:
-                    i.disconnect()
-                    self.bb.devices.remove(i)
-
+                # for i in self.bb.devices.lst:
+                #     i.disconnect()
+                #     self.bb.devices.remove(i)
+                    
+                message = "Device opened: " + str(self.device.get_config())
+                logger.info(message)
                 self.bb.devices.add(self.device)
-                self.bb.add_info("Device opened: " + str(self.device.get_config()))
+                self.bb.add_info(message)
                 return None
             
             else:
