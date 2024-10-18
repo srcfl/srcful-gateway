@@ -3,8 +3,8 @@ from .task import Task
 from server.blackboard import BlackBoard
 from server.network.network_utils import NetworkUtils
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class DiscoverModbusDevicesTask(Task):
     """
@@ -14,7 +14,7 @@ class DiscoverModbusDevicesTask(Task):
         super().__init__(event_time, bb)
         
     def execute(self, event_time):
-        log.info("Discovering modbus devices")
+        logger.info("Discovering modbus devices")
         
         ports = NetworkUtils.DEFAULT_MODBUS_PORTS
         ports = NetworkUtils.parse_ports(ports)
