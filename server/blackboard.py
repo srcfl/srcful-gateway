@@ -5,7 +5,7 @@ from server.message import Message
 from server.tasks.itask import ITask
 from server.settings import Settings, ChangeSource
 import logging
-from server.inverters.ICom import ICom
+from server.devices.ICom import ICom
 from server.network.network_utils import NetworkUtils
 logger = logging.getLogger(__name__)
 
@@ -240,8 +240,7 @@ class BlackBoard:
         def contains(self, device: ICom) -> bool:
             try:
                 for d in self.lst:
-                    logger.debug("Comparing %s with %s", d.get_config()[NetworkUtils.MAC_KEY], device.get_config()[NetworkUtils.MAC_KEY])
-                    if d.get_config()[NetworkUtils.MAC_KEY] == device.get_config()[NetworkUtils.MAC_KEY]:
+                    if d.get_SN() == device.get_SN():
                         return True
             except (KeyError, AttributeError) as e:
                 logger.error("Error checking device: %s", e)
@@ -249,7 +248,18 @@ class BlackBoard:
 
         def add(self, device:ICom):
             assert device.is_open(), "Only open devices can be added to the blackboard"
-            self.lst.append(device)
+            
+            exists = False
+            # Check if the device is already in the list by MAC address
+            for d in self.lst:
+                if d.get_SN() == device.get_SN():
+                    d = device # We just update the device, no need to re-add it
+                    exists = True
+                    break
+                
+            if not exists:
+                self.lst.append(device)
+                
             for o in self._observers:
                 o.add_device(device)
 
@@ -258,5 +268,7 @@ class BlackBoard:
                 self.lst.remove(device)
                 for o in self._observers:
                     o.remove_device(device)
+                    
+                    
 
 

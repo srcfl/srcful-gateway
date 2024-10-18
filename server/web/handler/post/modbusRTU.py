@@ -3,8 +3,8 @@ from server.tasks.openDeviceTask import OpenDeviceTask
 from ..handler import PostHandler
 from ..requestData import RequestData
 import logging
-from server.inverters.IComFactory import IComFactory
-from server.inverters.ICom import ICom
+from server.devices.IComFactory import IComFactory
+from server.devices.ICom import ICom
 
 logger = logging.getLogger(__name__)
 

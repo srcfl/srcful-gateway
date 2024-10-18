@@ -2,10 +2,10 @@ from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
 from unittest.mock import MagicMock, patch
-from server.inverters.modbus import Modbus
-from server.inverters.ModbusTCP import ModbusTCP
-from server.inverters.ModbusRTU import ModbusRTU
-from server.inverters.ModbusSolarman import ModbusSolarman
+from server.devices.modbus import Modbus
+from server.devices.ModbusTCP import ModbusTCP
+from server.devices.ModbusRTU import ModbusRTU
+from server.devices.ModbusSolarman import ModbusSolarman
 import server.tests.config_defaults as cfg
 import pytest 
 

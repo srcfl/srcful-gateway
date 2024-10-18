@@ -2,8 +2,7 @@ import logging
 
 from server.blackboard import BlackBoard
 from .task import Task
-from ..inverters.ICom import ICom
-from ..network.network_utils import NetworkUtils
+from ..devices.ICom import ICom
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

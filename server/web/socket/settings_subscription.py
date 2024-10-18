@@ -14,6 +14,7 @@ from server.tasks.requestResponseTask import handle_request_task, RequestTask
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class GraphQLSubscriptionClient(threading.Thread):
     def __init__(self, bb: BlackBoard, url: str):
@@ -65,7 +66,7 @@ class GraphQLSubscriptionClient(threading.Thread):
         logger.debug(f"Received pong: {message}")
 
     def on_message(self, ws, message):
-        logger.info("Received message: %s", message)
+        logger.debug("Received message: %s", message)
         
         data = json.loads(message)
 

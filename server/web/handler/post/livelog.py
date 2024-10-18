@@ -1,6 +1,6 @@
 # this is the inverter live log post handler
 import json
-import server.inverters.registerValue as RegisterValue
+import server.devices.registerValue as RegisterValue
 
 
 from ..handler import PostHandler

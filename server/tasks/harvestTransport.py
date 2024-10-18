@@ -1,6 +1,6 @@
 import logging
 import requests
-from server.inverters.ICom import ICom
+from server.devices.ICom import ICom
 from server.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run

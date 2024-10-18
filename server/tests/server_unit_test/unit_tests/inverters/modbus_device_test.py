@@ -1,9 +1,9 @@
-from server.inverters.ModbusTCP import ModbusTCP
-from server.inverters.ModbusRTU import ModbusRTU
-from server.inverters.ModbusSunspec import ModbusSunspec
-from server.inverters.ModbusSolarman import ModbusSolarman
-from server.inverters.modbus import Modbus
-from server.inverters.ICom import ICom
+from server.devices.ModbusTCP import ModbusTCP
+from server.devices.ModbusRTU import ModbusRTU
+from server.devices.ModbusSunspec import ModbusSunspec
+from server.devices.ModbusSolarman import ModbusSolarman
+from server.devices.modbus import Modbus
+from server.devices.ICom import ICom
 import server.tests.config_defaults as cfg
 from unittest.mock import patch
 import pytest 

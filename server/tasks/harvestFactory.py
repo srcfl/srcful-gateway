@@ -23,7 +23,7 @@ class HarvestFactory:
             self.bb.settings.devices.add_connection(com, ChangeSource.LOCAL)
     
     def remove_device(self, com):
-        """Remove the device from the blackboard and disconnect it"""
+        """Disconnect the device and remove it from the blackboard settings"""
         try:
             com.disconnect()
         except ValueError:
