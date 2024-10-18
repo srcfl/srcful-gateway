@@ -58,6 +58,7 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     
     # Simulate device reconnection
     ret[0].device.connect.return_value = True
+    ret[0].device.is_open.return_value = True
     ret = ret[0].execute(0)
     
     assert ret is None  # Device successfully reopened
@@ -65,3 +66,6 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     # Verify final state
     assert len(bb.devices.lst) == 2
     assert len(bb.settings.devices._connections) == 2
+    
+    assert bb.devices.lst[0].is_open()
+    assert bb.devices.lst[1].is_open()

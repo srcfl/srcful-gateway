@@ -7,7 +7,8 @@ from .task import Task
 from .harvestTransport import ITransportFactory
 from server.devices.ICom import ICom
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
 
 
 class Harvest(Task):
@@ -28,7 +29,7 @@ class Harvest(Task):
         elapsed_time_ms = 1000
 
         if not self.device.is_open():
-            log.info("This should never happen unless the device is unexpectedly closed. Inverter is terminated make the final transport if there is anything in the barn")
+            logger.info("This should never happen unless the device is unexpectedly closed. Inverter is terminated make the final transport if there is anything in the barn")
             self.device.disconnect()
             # self.bb.devices.remove(self.device)
             # self.bb.add_warning("Device unexpectedly closed, removing from blackboard and starting a new open device perpetual task")
@@ -41,7 +42,7 @@ class Harvest(Task):
             end_time = self.bb.time_ms()
 
             elapsed_time_ms = end_time - start_time
-            log.debug("Harvest from [%s] took %s ms", self.device.get_SN(), elapsed_time_ms)
+            logger.debug("Harvest from [%s] took %s ms", self.device.get_SN(), elapsed_time_ms)
 
             self.min_backoff_time = max(elapsed_time_ms * 2, 1000)
 
@@ -53,8 +54,8 @@ class Harvest(Task):
         except Exception as e:
             
             # To-Do: Solarmanv5 can raise ConnectionResetError, so handle it!
-            log.debug("Handling exeption reading harvest: %s", str(e))
-            log.debug("Kill everything, transport what is left and reopen in 30 seconds")
+            logger.debug("Handling exeption reading harvest: %s", str(e))
+            logger.debug("Kill everything, transport what is left and reopen in 30 seconds")
             
             self.device.disconnect()
             # self.bb.devices.remove(self.device) # Remove or not remove...
@@ -76,7 +77,7 @@ class Harvest(Task):
         ret = []
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
             for endpoint in endpoints:
-                log.info("Creating transport for %s", endpoint)
+                logger.info("Creating transport for %s", endpoint)
                 
                 headers = {"model": ""}
                 headers["dtype"] = self.device.get_harvest_data_type()

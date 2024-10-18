@@ -1,5 +1,4 @@
 import logging
-
 from server.blackboard import BlackBoard
 from .task import Task
 from ..devices.ICom import ICom
@@ -28,7 +27,7 @@ class OpenDeviceTask(Task):
                     self.bb.add_error(message)
                     return None
 
-                if self.bb.devices.contains(self.device):
+                if self.bb.devices.contains(self.device) and not self.device.is_open():
                     message = "Device is already in the blackboard, no action needed"
                     logger.error(message)
                     self.bb.add_error(message)
@@ -38,7 +37,6 @@ class OpenDeviceTask(Task):
                 logger.info(message)
                 self.bb.devices.add(self.device)
                 self.bb.add_info(message)
-
                 return None
             else:
                 self.device.disconnect()
@@ -53,9 +51,4 @@ class OpenDeviceTask(Task):
             self.bb.add_error(message)
             self.time = event_time + 10000
             return None
-        
-    def _is_open(self, device: ICom):
-        for i in self.bb.devices.lst:
-            if i.get_config() == device.get_config() and i.is_open():
-                return True
-        return False
+

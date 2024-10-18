@@ -3,7 +3,6 @@ from server.blackboard import BlackBoard
 from .task import Task
 from server.devices.ICom import ICom
 from server.network.network_utils import NetworkUtils
-from server.settings import ChangeSource
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ class DevicePerpetualTask(Task):
                     self.bb.add_error(message)
                     return None
                 
-                if self.bb.devices.contains(self.device):
+                if self.bb.devices.contains(self.device) and not self.device.is_open():
                     message = "Device is already in the blackboard, no action needed"
                     logger.error(message)
                     self.bb.add_error(message)

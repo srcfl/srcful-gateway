@@ -1,8 +1,7 @@
+import logging
 from server.blackboard import BlackBoard
-from server.settings import Settings
 from .configurationMutationTask import ConfigurationMutationTask
 
-import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

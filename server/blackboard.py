@@ -1,13 +1,14 @@
 import random
 import time
+import logging
 import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
 from server.settings import Settings, ChangeSource
-import logging
 from server.devices.ICom import ICom
-from server.network.network_utils import NetworkUtils
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class BlackBoard:
@@ -251,12 +252,13 @@ class BlackBoard:
             
             exists = False
             # Check if the device is already in the list by MAC address
-            for d in self.lst:
+            for index, d in enumerate(self.lst):
                 if d.get_SN() == device.get_SN():
-                    d = device # We just update the device, no need to re-add it
+                    logger.info("Device already in the list, updating it. Open status: %s", device.is_open())
+                    self.lst[index] = device # We just update the device, no need to re-add it
                     exists = True
                     break
-                
+            
             if not exists:
                 self.lst.append(device)
                 

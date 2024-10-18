@@ -157,6 +157,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 for device in self.blackboard.devices.lst:
                     # Check if the device already exists in the blackboard
                     # Then check if the device is open, if not, then start a perpetual task to open it
+                    # TODO: This might start another DevicePerpetualTask in addition to one that might
+                    # already be running from the blackboard. Consider reworking this logic
                     if device.get_config()[NetworkUtils.MAC_KEY] == connection_mac:
                         if not device.is_open():
                             logger.info("Device %s from settings was found in the blackboard, but not open", connection_mac)
