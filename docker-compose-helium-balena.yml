@@ -41,37 +41,37 @@ services:
     depends_on:
       - web
 
-  # gateway-rs:
-  #   build: ./gateway-rs
-  #   network_mode: host
-  #   devices:
-  #     - /dev/i2c-1
-  #   expose:
-  #     - "1680"
-  #   environment:
-  #     - GATEWAY_SETTINGS=/app/settings.toml
-  #   depends_on:
-  #     - packet-forwarder
+  gateway-rs:
+    build: ./gateway-rs
+    network_mode: host
+    devices:
+      - /dev/i2c-1
+    expose:
+      - "1680"
+    environment:
+      - GATEWAY_SETTINGS=/app/settings.toml
+    depends_on:
+      - packet-forwarder
 
-  # packet-forwarder:
-  #   # Use pre-defined image
-  #   image: rakwireless/udp-packet-forwarder:latest
-  #   restart: unless-stopped
-  #   privileged: true # set this to true or define the required devices to share with the container under the `devices` tag below
-  #   network_mode: host # required to read host interface MAC instead of virtual one, you don't need this if you set the GATEWAY_EUI manually
+  packet-forwarder:
+    # Use pre-defined image
+    image: rakwireless/udp-packet-forwarder:latest
+    restart: unless-stopped
+    privileged: true # set this to true or define the required devices to share with the container under the `devices` tag below
+    network_mode: host # required to read host interface MAC instead of virtual one, you don't need this if you set the GATEWAY_EUI manually
 
-  #   environment:
-  #     MODEL: "RAK7248"
-  #     USE_LIBGPIOD: 0
-  #     RESET_GPIO: 25
-  #     HAS_GPS: 0
+    environment:
+      MODEL: "RAK7248"
+      USE_LIBGPIOD: 0
+      RESET_GPIO: 25
+      HAS_GPS: 0
 
-  #     # Set GPS_DEV to a dummy value to prevent the packet forwarder from trying to initialize the GPS
-  #     GPS_DEV: /dev/null
+      # Set GPS_DEV to a dummy value to prevent the packet forwarder from trying to initialize the GPS
+      GPS_DEV: /dev/null
 
-  #     # Helium settings
-  #     SERVER_HOST: 127.0.0.1
-  #     SERVER_PORT: 1680
+      # Helium settings
+      SERVER_HOST: 127.0.0.1
+      SERVER_PORT: 1680
 
 volumes:
   srcful-data:
