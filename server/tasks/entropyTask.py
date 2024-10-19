@@ -41,8 +41,8 @@ def generate_poisson_delay():
         U = random.random()
 
     delay_minutes = -AVERAGE_DELAY_MINUTES * math.log(U)
-    # return 5000
-    return int(delay_minutes * 60 * 1000)
+    return 1000 * 60
+    # return int(delay_minutes * 60 * 1000)
 
 def generate_entropy(chip: crypto.Chip):
         random_bytes = chip.get_random()
@@ -136,6 +136,7 @@ class EntropyTask(Task):
         
         try:
             self._publish_entropy(client, entropy_data, self.bb.settings.entropy)
+            logger.info("Published entropy: %s", entropy_data)
             self.adjust_time(self.bb.time_ms() + generate_poisson_delay())
             self.bb.add_info("Generating Entropy...")
         except Exception as e:
