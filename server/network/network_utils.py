@@ -62,7 +62,7 @@ class NetworkUtils:
         for entry in NetworkUtils._arp_table:
             if entry[NetworkUtils.IP_KEY] == ip:
                 return entry[NetworkUtils.MAC_KEY]
-        return None
+        return "00:00:00:00:00:00"
     
     @staticmethod
     def parse_ports(ports_str: str) -> list[int]:

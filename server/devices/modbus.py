@@ -10,6 +10,10 @@ logger.setLevel(logging.INFO)
 
 class Modbus(ICom):
     """Base class for all inverters."""
+    
+    @property
+    def SN(self) -> str:
+        return "sn"
 
     def __init__(self):
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
@@ -31,6 +35,10 @@ class Modbus(ICom):
         but they both have a socket attribute that is None if the connection is closed, 
         so we use that to check if the connection is open.
         """
+        raise NotImplementedError("Subclass must implement abstract method")
+    
+    def _is_valid(self) -> bool:
+        """Returns True if the inverter is valid."""
         raise NotImplementedError("Subclass must implement abstract method")
 
     def _close(self) -> None:
@@ -137,16 +145,7 @@ class Modbus(ICom):
         return self._open()
     
     def is_valid(self) -> bool:
-        """
-        Check if the device is valid by checking if the MAC address is not 00:00:00:00:00:00,
-        this is a simple check to make sure the device is on the local network. 
-        More sophisticated checks may be added later.
-        """
-        # Ensure that the device is on the local network
-        # There can be other checks to make sure the device is valid, but this is a good start.
-        if self.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
-            return False
-        return True
+        return self._is_valid()
     
     def disconnect(self) -> None:
         return self._terminate()

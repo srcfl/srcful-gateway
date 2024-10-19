@@ -13,9 +13,9 @@ import pytest
 def modbus_devices():
     devices: list[Modbus] = []
     
-    tcp_config = {k: v for k, v in cfg.TCP_CONFIG.items() if k != 'connection'}
-    rtu_conf = {k: v for k, v in cfg.RTU_CONFIG.items() if k != 'connection'}
-    solarman_conf = {k: v for k, v in cfg.SOLARMAN_CONFIG.items() if k != 'connection'}
+    tcp_config = {k: v for k, v in cfg.TCP_ARGS.items() if k != 'connection'}
+    rtu_conf = {k: v for k, v in cfg.RTU_ARGS.items() if k != 'connection'}
+    solarman_conf = {k: v for k, v in cfg.SOLARMAN_ARGS.items() if k != 'connection'}
     
     devices.append(ModbusTCP(**tcp_config))
     devices.append(ModbusRTU(**rtu_conf))
@@ -56,7 +56,7 @@ def test_execute_inverter_not_found():
     
     device = MagicMock()
     device.connect.return_value = False
-    device.get_config.return_value = cfg.TCP_CONFIG
+    device.get_config.return_value = cfg.TCP_ARGS
 
     device.find_device.return_value = None # Device not found on the network
     
@@ -72,7 +72,7 @@ def test_execute_inverter_not_found():
 def test_execute_new_inverter_added_after_rescan():
     bb = BlackBoard()
     inverter = MagicMock()
-    inverter.get_config.return_value = cfg.TCP_CONFIG
+    inverter.get_config.return_value = cfg.TCP_ARGS
     inverter.connect.return_value = False
     
     task = DevicePerpetualTask(0, bb, inverter)
@@ -93,7 +93,7 @@ def test_reconnect_does_not_find_known_device(mock_network_utils):
     HarvestFactory(bb)
     
     inverter = MagicMock()
-    inverter.get_config.return_value = cfg.TCP_CONFIG
+    inverter.get_config.return_value = cfg.TCP_ARGS
     inverter.connect.return_value = False
     task = DevicePerpetualTask(0, bb, inverter)
     
@@ -123,7 +123,7 @@ def test_execute_inverter_not_on_local_network():
     bb = BlackBoard()
     inverter = MagicMock()
     inverter.connect.return_value = True
-    inverter.get_config.return_value = cfg.TCP_CONFIG # MAC is 00:00:00:00:00:00, so probably not on the local network
+    inverter.get_config.return_value = cfg.TCP_ARGS # MAC is 00:00:00:00:00:00, so probably not on the local network
     inverter.is_valid.return_value = False
     task = DevicePerpetualTask(0, bb, inverter)
     assert task.execute(0) is None

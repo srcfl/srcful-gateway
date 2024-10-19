@@ -14,9 +14,9 @@ import pytest
 def modbus_devices():
     devices: list[Modbus] = []
     
-    tcp_config = {k: v for k, v in cfg.TCP_CONFIG.items() if k != 'connection'}
-    rtu_conf = {k: v for k, v in cfg.RTU_CONFIG.items() if k != 'connection'}
-    solarman_conf = {k: v for k, v in cfg.SOLARMAN_CONFIG.items() if k != 'connection'}
+    tcp_config = {k: v for k, v in cfg.TCP_ARGS.items() if k != 'connection'}
+    rtu_conf = {k: v for k, v in cfg.RTU_ARGS.items() if k != 'connection'}
+    solarman_conf = {k: v for k, v in cfg.SOLARMAN_ARGS.items() if k != 'connection'}
     
     devices.append(ModbusTCP(**tcp_config))
     devices.append(ModbusRTU(**rtu_conf))
@@ -76,7 +76,10 @@ def test_modbus_device_clone(modbus_devices):
 def test_modbus_device_mac_not_present(modbus_devices):
 
    for device in modbus_devices:
-        config = device.get_config()
+        config = device.get_config() 
+        
+        # remove the sn key
+        config.pop("sn") # sn is initialized in the device class and only present in the config after the device is created
        
         if config[ICom.CONNECTION_KEY] == "TCP":
             config.pop(ICom.CONNECTION_KEY)

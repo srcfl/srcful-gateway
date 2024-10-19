@@ -39,12 +39,16 @@ class ModbusSunspec(ICom):
     def SLAVE_ID(self) -> int:
         return "slave_id"
     
+    @property
+    def SN(self) -> str:
+        return "sn"
     
-    def __init__(self, 
-                 ip: str, 
-                 mac: str, 
-                 port: int, 
-                 slave_id: int, 
+    
+    def __init__(self,
+                 ip: str,
+                 mac: str = "00:00:00:00:00:00",
+                 port: int = 502,
+                 slave_id: int = 1,
                  verbose: bool = False) -> None:
         """
         Constructor
@@ -58,7 +62,7 @@ class ModbusSunspec(ICom):
         self.inverter = None
         self.ac_model = None
         self.dc_model = None
-        self.SN = None
+        self.sn = None
         self.data_type = HarvestDataType.SUNSPEC.value
         
     def connect(self) -> bool:
@@ -70,10 +74,10 @@ class ModbusSunspec(ICom):
         logger.info("Models: %s", self.client.models)
         
         try:
-            self.SN = self.client.common[0].SN.value
+            self.sn = self.client.common[0].SN.value
         except KeyError:
             logger.warning("Could not get serial number, using MAC address as fallback")
-            self.SN = NetworkUtils.get_mac_from_ip(self.ip)
+            self.sn = NetworkUtils.get_mac_from_ip(self.ip)
 
         if 'inverter' in self.client.models:
             self.inverter = self.client.inverter[0]
@@ -91,10 +95,7 @@ class ModbusSunspec(ICom):
         return len(self.client.models) > 0
     
     def is_valid(self) -> bool:
-        # Ensure that the device is on the local network
-        if self.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
-            return False
-        return True
+        return self.get_SN() is not None and self.mac != "00:00:00:00:00:00"
     
     def disconnect(self) -> None:
         self.client.disconnect()
@@ -154,7 +155,8 @@ class ModbusSunspec(ICom):
             self.IP: self.ip,
             self.MAC: self.mac,
             self.PORT: self.port,
-            self.SLAVE_ID: self.slave_id
+            self.SLAVE_ID: self.slave_id,
+            self.SN: self.get_SN()
         }
         
     def get_profile(self):
@@ -176,4 +178,4 @@ class ModbusSunspec(ICom):
         return None
     
     def get_SN(self) -> str:
-        return self.SN
+        return self.sn

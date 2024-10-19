@@ -54,7 +54,7 @@ class ModbusSolarman(Modbus):
 
     def __init__(self, 
                  ip: str = None, 
-                 mac: str = None, 
+                 mac: str = "00:00:00:00:00:00", 
                  serial: int = None, 
                  port: int = None, 
                  device_type: str = None, 
@@ -93,6 +93,9 @@ class ModbusSolarman(Modbus):
             log.error("Error checking if inverter is open: %s", self._get_type())
             log.error(e)
             return False
+        
+    def _is_valid(self) -> bool:
+        return self.get_SN() is not None
 
     def _close(self) -> None:
         try:
@@ -154,7 +157,8 @@ class ModbusSolarman(Modbus):
             self.IP: self._get_host(),
             self.MAC: self._get_mac(),
             self.PORT: self._get_port(),
-            self.VERBOSE: self.verbose
+            self.VERBOSE: self.verbose,
+            self.SN: self._get_SN()
         }
     
     def _create_client(self, **kwargs) -> None:

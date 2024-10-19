@@ -73,6 +73,9 @@ class ModbusTCP(Modbus):
 
     def _is_open(self) -> bool:
         return bool(self.client) and bool(self.client.socket)
+    
+    def _is_valid(self) -> bool:
+        return self.mac != "00:00:00:00:00:00"
 
     def _close(self) -> None:
         log.info("Closing client ModbusTCP %s", self._get_mac())
@@ -118,6 +121,7 @@ class ModbusTCP(Modbus):
             self.SLAVE_ID: self._get_slave_id(),
             self.IP: self._get_host(),
             self.PORT: self._get_port(),
+            self.SN: self._get_SN()
         }
 
     def _create_client(self, **kwargs) -> None:

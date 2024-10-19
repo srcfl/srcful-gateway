@@ -135,18 +135,6 @@ class ModbusRTU(Modbus):
     def _get_SN(self) -> str:
         return "N/A"
 
-    def _get_config(self) -> tuple[str, str, int, int, str, float, str, int]:
-        return (
-            ModbusRTU.CONNECTION,
-            self._get_host(),
-            self._get_baudrate(),
-            self._get_bytesize(),
-            self._get_parity(),
-            self._get_stopbits(),
-            self._get_type(),
-            self._get_slave_id(),
-        )
-
     def _get_config_dict(self) -> dict:
         return {
             ICom.CONNECTION_KEY: ModbusRTU.CONNECTION,
@@ -157,6 +145,7 @@ class ModbusRTU(Modbus):
             self.BYTESIZE: self._get_bytesize(),
             self.PARITY: self._get_parity(),
             self.STOPBITS: self._get_stopbits(),
+            self.SN: self._get_SN()
         }
     
     def _create_client(self, **kwargs) -> None:
@@ -198,5 +187,5 @@ class ModbusRTU(Modbus):
             raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
         return resp
 
-    def is_valid(self) -> bool:
-        raise NotImplementedError("is_valid is not implemented for ModbusRTU")
+    def _is_valid(self) -> bool:
+        raise NotImplementedError("_is_valid is not implemented for ModbusRTU")

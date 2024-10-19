@@ -8,7 +8,7 @@ from .harvestTransport import ITransportFactory
 from server.devices.ICom import ICom
 
 logger = logging.getLogger(__name__)
-logger.setLevel(level=logging.INFO)
+logger.setLevel(level=logging.DEBUG)
 
 
 class Harvest(Task):
@@ -30,9 +30,9 @@ class Harvest(Task):
 
         if not self.device.is_open():
             logger.info("This should never happen unless the device is unexpectedly closed. Inverter is terminated make the final transport if there is anything in the barn")
+            
             self.device.disconnect()
-            # self.bb.devices.remove(self.device)
-            # self.bb.add_warning("Device unexpectedly closed, removing from blackboard and starting a new open device perpetual task")
+            
             open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
             transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
             return [open_inverter] + transports
@@ -58,8 +58,7 @@ class Harvest(Task):
             logger.debug("Kill everything, transport what is left and reopen in 30 seconds")
             
             self.device.disconnect()
-            # self.bb.devices.remove(self.device) # Remove or not remove...
-            # self.bb.add_error("Exception reading harvest, device unexpectedly closed")
+            
             open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
             transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
     
