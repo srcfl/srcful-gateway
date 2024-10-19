@@ -50,30 +50,7 @@ class ModbusSolarman(Modbus):
     @property
     def VERBOSE(self) -> int:
         return "verbose"
-
-    @staticmethod
-    def list_to_tuple(config: list) -> tuple:
-        assert config[ICom.CONNECTION_IX] == ModbusSolarman.CONNECTION, "Invalid connection type"
-        ip = config[1]
-        mac = config[2]
-        serial = int(config[3])
-        port = int(config[4])
-        device_type = config[5]
-        slave_id = int(config[6])
-        verbose = False
-        return (config[0], ip, mac, serial, port, device_type, slave_id, verbose)
     
-    @staticmethod
-    def dict_to_tuple(config: dict) -> tuple:
-        assert config[ICom.CONNECTION_KEY] == ModbusSolarman.CONNECTION, "Invalid connection type"
-        ip = config["host"]
-        mac = config["mac"]
-        serial = int(config["serial"])
-        port = int(config["port"])
-        device_type = config["type"]
-        slave_id = int(config["address"])
-        verbose = False
-        return (config[ICom.CONNECTION_KEY], ip, mac, serial, port, device_type, slave_id, verbose)
 
     def __init__(self, 
                  ip: str = None, 
@@ -167,18 +144,6 @@ class ModbusSolarman(Modbus):
     
     def _get_SN(self) -> str:
         return self.serial
-
-    def _get_config(self) -> tuple[str, str, str, int, int, str, int, int]:
-        return (
-            ModbusSolarman.CONNECTION,
-            self._get_host(),
-            self._get_mac(),
-            self._get_serial(),
-            self._get_port(),
-            self._get_type(),
-            self._get_address(),
-            self.verbose
-        )
 
     def _get_config_dict(self) -> dict:
         return {

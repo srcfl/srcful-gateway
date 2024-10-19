@@ -39,24 +39,6 @@ class ModbusSunspec(ICom):
     def SLAVE_ID(self) -> int:
         return "slave_id"
     
-
-    @staticmethod
-    def list_to_tuple(config: list) -> tuple:
-        assert config[ICom.CONNECTION_IX] == ModbusSunspec.CONNECTION, "Invalid connection type"
-        ip = config[1]
-        mac = config[2]
-        port = int(config[3])
-        slave_id = int(config[4])
-        return (config[ICom.CONNECTION_IX], ip, mac, port, slave_id)
-    
-    @staticmethod
-    def dict_to_tuple(config: dict) -> tuple:
-        assert config[ICom.CONNECTION_KEY] == ModbusSunspec.CONNECTION, "Invalid connection type"
-        ip = config["host"]
-        mac = config["mac"]
-        port = int(config["port"])
-        slave_id = int(config["address"])
-        return (config[ICom.CONNECTION_KEY], ip, mac, port, slave_id)
     
     def __init__(self, 
                  ip: str, 
@@ -107,12 +89,18 @@ class ModbusSunspec(ICom):
             self.dc_model = self.client.models[714][0]
             
         return len(self.client.models) > 0
-        
+    
+    def is_valid(self) -> bool:
+        # Ensure that the device is on the local network
+        if self.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
+            return False
+        return True
+    
     def disconnect(self) -> None:
         self.client.disconnect()
     
-    def reconnect(self) -> None:
-        self.disconnect() and self.connect()
+    def reconnect(self) -> bool:
+        return self.disconnect() and self.connect()
         
     def is_open(self) -> bool:
         return bool(self.client.is_connected())
@@ -172,10 +160,20 @@ class ModbusSunspec(ICom):
     def get_profile(self):
         pass
     
-    def get_SN(self) -> str:
-        return self.SN
-    
     def clone(self, ip: str = None) -> 'ModbusSunspec':
         if ip is None:
             ip = self.ip
         return ModbusSunspec(ip, self.mac, self.port, self.slave_id)
+    
+    def find_device(self) -> 'ICom':
+        port = self.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config
+        hosts = NetworkUtils.get_hosts([int(port)], 0.01)
+        
+        if len(hosts) > 0:
+            for host in hosts:
+                if host[NetworkUtils.MAC_KEY] == self.get_config()[NetworkUtils.MAC_KEY]:
+                    return self.clone(host[NetworkUtils.IP_KEY])
+        return None
+    
+    def get_SN(self) -> str:
+        return self.SN

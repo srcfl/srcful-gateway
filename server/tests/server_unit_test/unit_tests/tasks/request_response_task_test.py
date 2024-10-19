@@ -130,3 +130,25 @@ def test_handle_request_task_wrong_subkey(blackboard):
     result = handle_request_task(blackboard, data)
 
     assert result is None
+
+# test when the api handler is not found
+def test_handle_request_task_api_handler_not_found(blackboard):
+
+    nonexistent_path = '/api/nonexistent'
+
+    data = {
+        'subKey': RequestTask.SUBKEY,
+        'data': json.dumps({
+            'method': 'GET',
+            'path': nonexistent_path,
+            'headers': {},
+            'body': {},
+            'query': {},
+            'timestamp': blackboard.time_ms() // 1000,
+            'id': 'test_id'
+        })
+    }
+
+    result = handle_request_task(blackboard, data)
+    assert isinstance(result, ResponseTask)
+    assert result.data['error'] == f"API handler not found for path {nonexistent_path}"

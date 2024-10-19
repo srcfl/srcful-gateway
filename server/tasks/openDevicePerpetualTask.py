@@ -1,8 +1,9 @@
 import logging
 from server.blackboard import BlackBoard
 from .task import Task
-from server.inverters.ICom import ICom
+from server.devices.ICom import ICom
 from server.network.network_utils import NetworkUtils
+
 
 logger = logging.getLogger(__name__)
 
@@ -12,66 +13,52 @@ class DevicePerpetualTask(Task):
         self.device = device
 
     def execute(self, event_time):
+        logger.info("*************************************************************")
+        logger.info("******************** DevicePerpetualTask ********************")
+        logger.info("*************************************************************")
         
-        # has a device been opened? This is needed as some other task may open a device before this task is executed
-        if len(self.bb.devices.lst) > 0 and self.bb.devices.lst[0].is_open():
-            logger.debug("A device is already open, removing self.device from the blackboard")
-            self.bb.devices.remove(self.device)
-            if self.device.is_open():
-                self.device.disconnect()
-            return
         try:
             if self.device.connect():
                 
-                # Ensure that the device is on the local network
-                if self.device.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
+                if not self.device.is_valid():
                     self.device.disconnect()
                     message = "Failed to open device: " + str(self.device.get_config())
                     logger.error(message)
                     self.bb.add_error(message)
                     return None
                 
-                # terminate and remove all devices from the blackboard
-                logger.debug("Removing all devices from the blackboard after opening a new device")
-                for i in self.bb.devices.lst:
-                    i.disconnect()
-                    self.bb.devices.remove(i)
+                if self.bb.devices.contains(self.device) and not self.device.is_open():
+                    message = "Device is already in the blackboard, no action needed"
+                    logger.error(message)
+                    self.bb.add_error(message)
+                    return None
 
+                message = "Device opened: " + str(self.device.get_config())
+                logger.info(message)
+
+                # self.bb.devices.remove_by_mac(self.device.get_config()[NetworkUtils.MAC_KEY], ChangeSource.LOCAL)
                 self.bb.devices.add(self.device)
-                self.bb.add_info("Inverter opened: " + str(self.device.get_config()))
-                return
+                self.bb.add_info(message)
+                return None
             
             else:
-                port = self.device.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config
                 
-                hosts = NetworkUtils.get_hosts([int(port)], 0.01)
+                tmp_device = self.device.find_device() # find the device on the network
                 
-                if len(hosts) > 0:
-                    # At least one device was found on the port
-                    # check if the device found has the same mac address as the device we are trying to open
-                    for host in hosts:
-                        if host[NetworkUtils.MAC_KEY] == self.device.get_config()[NetworkUtils.MAC_KEY]:
-                            self.device = self.device.clone(host[NetworkUtils.IP_KEY])
-                            logger.info("Found inverter at %s, retry in 5 seconds...", host[NetworkUtils.IP_KEY]) 
-                            self.time = event_time + 5000
-                            self.bb.add_info("Found inverter at " + host[NetworkUtils.IP_KEY] + ", retry in 5 seconds...")
-                            break
-                    else:
-                        # no device was found with the same mac address
-                        message = "Failed to open inverter, retry in 5 minutes: " + str(self.device.get_config())
-                        logger.info(message)
-                        self.bb.add_error(message)
-                        self.time = event_time + 60000 * 5
+                if tmp_device is not None:
+                    self.device = tmp_device
+                    logger.info("Found a device at %s, retry in 5 seconds...", self.device.get_config()[NetworkUtils.IP_KEY])
+                    self.time = event_time + 5000
+                    self.bb.add_info("Found a device at " + self.device.get_config()[NetworkUtils.IP_KEY] + ", retry in 5 seconds...")
                 else:
-                    # possibly we should create a new device object. We have previously had trouble with reconnecting in the Harvester
-                    message = "Failed to open inverter, retry in 5 minutes: " + str(self.device.get_config())
+                    message = "Failed to find %s, rescan and retry in 5 minutes", self.device.get_SN()
                     logger.info(message)
                     self.bb.add_error(message)
                     self.time = event_time + 60000 * 5
-
+                    
             return self
         
         except Exception as e:
-            logger.exception("Exception opening inverter: %s", e)
+            logger.exception("Exception opening a device: %s", e)
             self.time = event_time + 10000
             return self

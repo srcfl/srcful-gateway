@@ -1,7 +1,6 @@
 import json
 import logging
 from typing import Dict, Any
-
 from server.blackboard import BlackBoard
 from server.tasks.task import Task
 import server.crypto.crypto as crypto
@@ -86,6 +85,9 @@ def handle_request(bb: BlackBoard, request_data: Dict[str, Any]):
             return ResponseTask(bb.time_ms() + 500, bb, id, {"error": f"Method {method} not allowed"})
         
         api_handler, params = endpoints.get_api_handler(path, "/api/", endpoints_dict)
+        if api_handler is None:
+            return ResponseTask(bb.time_ms() + 500, bb, id, {"error": f"API handler not found for path {path}"})
+        
         rdata = handler.RequestData(bb, params, query, body)
         return RequestTask(bb.time_ms() + 500, bb, id, api_handler, rdata)
 

@@ -1,13 +1,14 @@
 import random
 import time
+import logging
 import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
 from server.settings import Settings, ChangeSource
-import logging
-from server.inverters.ICom import ICom
+from server.devices.ICom import ICom
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class BlackBoard:
@@ -212,7 +213,7 @@ class BlackBoard:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.15.0"
+        return "0.15.1"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:
@@ -236,10 +237,31 @@ class BlackBoard:
 
         def remove_listener(self, observer):
             self._observers.remove(observer)
+            
+        def contains(self, device: ICom) -> bool:
+            try:
+                for d in self.lst:
+                    if d.get_SN() == device.get_SN():
+                        return True
+            except (KeyError, AttributeError) as e:
+                logger.error("Error checking device: %s", e)
+                return False
 
         def add(self, device:ICom):
             assert device.is_open(), "Only open devices can be added to the blackboard"
-            self.lst.append(device)
+            
+            exists = False
+            # Check if the device is already in the list by MAC address
+            for index, d in enumerate(self.lst):
+                if d.get_SN() == device.get_SN():
+                    logger.info("Device already in the list, updating it. Open status: %s", device.is_open())
+                    self.lst[index] = device # We just update the device, no need to re-add it
+                    exists = True
+                    break
+            
+            if not exists:
+                self.lst.append(device)
+                
             for o in self._observers:
                 o.add_device(device)
 
@@ -248,5 +270,7 @@ class BlackBoard:
                 self.lst.remove(device)
                 for o in self._observers:
                     o.remove_device(device)
+                    
+                    
 
 

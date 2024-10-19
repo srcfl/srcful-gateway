@@ -1,5 +1,4 @@
 import logging
-
 from server.network.wifi import WiFiHandler
 from server.blackboard import BlackBoard
 

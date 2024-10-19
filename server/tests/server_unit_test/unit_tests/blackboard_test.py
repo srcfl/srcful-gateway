@@ -1,7 +1,7 @@
 from server.blackboard import BlackBoard
 from unittest.mock import MagicMock
 from server.message import Message
-from server.inverters.ICom import ICom
+from server.devices.ICom import ICom
 import pytest
 import time
 

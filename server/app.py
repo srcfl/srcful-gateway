@@ -3,20 +3,22 @@ import sys
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from server.inverters.IComFactory import IComFactory
+from server.devices.IComFactory import IComFactory
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 from server.tasks.saveStateTask import SaveStatePerpetualTask
 import server.web.server
 from server.tasks.itask import ITask
+from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
-from server.inverters.ModbusTCP import ModbusTCP
+from server.devices.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
+from server.network.network_utils import NetworkUtils
 
 
 from server.blackboard import BlackBoard
@@ -144,16 +146,31 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
             super().__init__(debounce_delay)
             self.blackboard = blackboard
-            self.first_run = True
 
+        # TODO: This is a bit of a hack, but it works for now
         def _perform_action(self, source: ChangeSource):
-            logger.info("SettingsDeviceListener detected a change, opening all devices")
-            # Open all devices in the list
+    
             for connection in self.blackboard.settings.devices.connections:
-                logger.info("Opening device: %s", connection)
-                self.first_run = False
-                # TODO: if the device has been connected to before then it should be a perpetual task
-                self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
+                
+                connection_mac = connection[NetworkUtils.MAC_KEY]
+                
+                for device in self.blackboard.devices.lst:
+                    # Check if the device already exists in the blackboard
+                    # Then check if the device is open, if not, then start a perpetual task to open it
+                    # TODO: This might start another DevicePerpetualTask in addition to one that might
+                    # already be running from the blackboard. Consider reworking this logic
+                    if device.get_config()[NetworkUtils.MAC_KEY] == connection_mac:
+                        if not device.is_open():
+                            logger.info("Device %s from settings was found in the blackboard, but not open", connection_mac)
+                            logger.info("Removing %s from the blackboard and opening a perpetual task to connect it", connection_mac)
+                            self.blackboard.devices.remove(device)
+                            self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
+                        break
+                else:
+                    # Device not found in the blackboard, but apperantly exists in the settings,
+                    # which means it was previously connected So we try to open it again
+                    logger.info("Device %s from settings was not found in the blackboard, opening a perpetual task to connect it", connection_mac)
+                    self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
 
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
@@ -184,6 +201,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     finally:
         for i in bb.devices.lst:
             i.disconnect()
+        
+        bb.devices.lst.clear()
         web_server.close()
         graphql_client.stop()
         graphql_client.join()

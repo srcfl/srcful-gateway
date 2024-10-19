@@ -1,8 +1,8 @@
 import json
 from ..handler import GetHandler
 from ..requestData import RequestData
-from ....inverters.supported_inverters.profiles import InverterProfiles
-from ....inverters.enums import ProtocolKey
+from ....devices.supported_inverters.profiles import InverterProfiles
+from ....devices.enums import ProtocolKey
 
 class Handler(GetHandler):
     def schema(self):

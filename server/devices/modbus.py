@@ -2,9 +2,10 @@ import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from .supported_inverters.profiles import InverterProfiles, InverterProfile
 from .ICom import ICom
+from server.network.network_utils import NetworkUtils
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Modbus(ICom):
@@ -48,16 +49,16 @@ class Modbus(ICom):
         """Returns a clone of the inverter. This clone will only have the configuration and not the connection."""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def _get_config(self) -> tuple:
-        """Returns the inverter's setup as a tuple."""
-        raise NotImplementedError("Subclass must implement abstract method")
-
     def _get_config_dict(self) -> dict:
         """Returns the inverter's setup as a dictionary."""
         raise NotImplementedError("Subclass must implement abstract method")
 
     def _create_client(self, **kwargs) -> None:
         """Creates the Modbus client."""
+        raise NotImplementedError("Subclass must implement abstract method")
+    
+    def _get_SN(self) -> str:
+        """Returns the inverter's serial number."""
         raise NotImplementedError("Subclass must implement abstract method")
 
     def _read_harvest_data(self, force_verbose) -> dict:
@@ -89,7 +90,7 @@ class Modbus(ICom):
         # Zip the registers and values together convert them into a dictionary
         res = dict(zip(regs, vals))
 
-        log.debug("OK - Reading Harvest Data: %s", str(res))
+        logger.debug("OK - Reading Harvest Data: %s", str(res))
 
         if res:
             return res
@@ -114,15 +115,15 @@ class Modbus(ICom):
         
         try:
             resp = self._read_registers(operation, scan_start, scan_range)
-            log.debug("OK - Reading: %s - %s", str(scan_start), str(scan_range))
+            logger.debug("OK - Reading: %s - %s", str(scan_start), str(scan_range))
 
         except ModbusException as me:
             # Decide whether to break or continue based on the type of ModbusException
             if isinstance(me, ConnectionException):
-                log.error("ConnectionException occurred: %s", str(me))
+                logger.error("ConnectionException occurred: %s", str(me))
                 
             if isinstance(me, ModbusIOException):
-                log.error("ModbusIOException occurred: %s", str(me))
+                logger.error("ModbusIOException occurred: %s", str(me))
 
         return resp
 
@@ -134,6 +135,18 @@ class Modbus(ICom):
     
     def connect(self) -> bool:
         return self._open()
+    
+    def is_valid(self) -> bool:
+        """
+        Check if the device is valid by checking if the MAC address is not 00:00:00:00:00:00,
+        this is a simple check to make sure the device is on the local network. 
+        More sophisticated checks may be added later.
+        """
+        # Ensure that the device is on the local network
+        # There can be other checks to make sure the device is valid, but this is a good start.
+        if self.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
+            return False
+        return True
     
     def disconnect(self) -> None:
         return self._terminate()
@@ -158,6 +171,17 @@ class Modbus(ICom):
     
     def clone(self, host: str = None) -> 'ICom':
         return self._clone(host)
+    
+    def find_device(self) -> 'ICom':
+        
+        port = self.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config
+        hosts = NetworkUtils.get_hosts([int(port)], 0.01)
+        
+        if len(hosts) > 0:
+            for host in hosts:
+                if host[NetworkUtils.MAC_KEY] == self.get_config()[NetworkUtils.MAC_KEY]:
+                    return self._clone(host[NetworkUtils.IP_KEY])
+        return None
     
     def get_SN(self) -> str:
         return self._get_SN()

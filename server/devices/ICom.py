@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
 from .supported_inverters.profiles import InverterProfile
 from enum import Enum
-
-# Enum for the type of harvest data
+from server.network.network_utils import NetworkUtils
 
 class HarvestDataType(Enum):
     MODBUS_REGISTERS = "modbus_registers"
@@ -19,6 +18,7 @@ class ICom(ABC):
     
     # HarvestDataType Enum
     data_type = HarvestDataType.UNDEFINED
+    SN = "N/A"
 
     CONNECTION_KEY = "connection"
     CONNECTION_IX = 0
@@ -26,11 +26,18 @@ class ICom(ABC):
 
     def get_der_types(self) -> list[DER_TYPE]:
         pass
+    
+    # def __eq__(self, other: 'ICom') -> bool:
+    #     return self.get_config()[NetworkUtils.MAC_KEY] == other.get_config()[NetworkUtils.MAC_KEY]
 
     @abstractmethod
     def connect(self) -> bool:
         pass
-
+    
+    @abstractmethod
+    def is_valid(self) -> bool:
+        pass
+    
     @abstractmethod
     def disconnect(self) -> None:
         pass
@@ -44,7 +51,7 @@ class ICom(ABC):
         pass
     
     @abstractmethod
-    def read_harvest_data(self, DER_TYPE, force_verbose) -> dict:
+    def read_harvest_data(self, force_verbose) -> dict:
         pass
     
     @abstractmethod
@@ -61,6 +68,10 @@ class ICom(ABC):
     
     @abstractmethod
     def clone(self, ip: str) -> 'ICom':
+        pass
+    
+    @abstractmethod
+    def find_device(self) -> 'ICom':
         pass
     
     @abstractmethod

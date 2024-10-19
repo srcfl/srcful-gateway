@@ -5,9 +5,10 @@ from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.blackboard import BlackBoard
 from .task import Task
 from .harvestTransport import ITransportFactory
-from server.inverters.ICom import ICom
+from server.devices.ICom import ICom
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
 
 
 class Harvest(Task):
@@ -28,8 +29,10 @@ class Harvest(Task):
         elapsed_time_ms = 1000
 
         if not self.device.is_open():
-            log.info("This should never happen unless the device is unexpectedly closed. Inverter is terminated make the final transport if there is anything in the barn")
+            logger.info("This should never happen unless the device is unexpectedly closed. Inverter is terminated make the final transport if there is anything in the barn")
             self.device.disconnect()
+            # self.bb.devices.remove(self.device)
+            # self.bb.add_warning("Device unexpectedly closed, removing from blackboard and starting a new open device perpetual task")
             open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
             transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
             return [open_inverter] + transports
@@ -39,7 +42,7 @@ class Harvest(Task):
             end_time = self.bb.time_ms()
 
             elapsed_time_ms = end_time - start_time
-            log.debug("Harvest took %s ms", elapsed_time_ms)
+            logger.debug("Harvest from [%s] took %s ms", self.device.get_SN(), elapsed_time_ms)
 
             self.min_backoff_time = max(elapsed_time_ms * 2, 1000)
 
@@ -51,11 +54,12 @@ class Harvest(Task):
         except Exception as e:
             
             # To-Do: Solarmanv5 can raise ConnectionResetError, so handle it!
-
-            log.debug("Handling exeption reading harvest: %s", str(e))
+            logger.debug("Handling exeption reading harvest: %s", str(e))
+            logger.debug("Kill everything, transport what is left and reopen in 30 seconds")
             
-            log.debug("Kill everything, transport what is left and reopen in 30 seconds")
             self.device.disconnect()
+            # self.bb.devices.remove(self.device) # Remove or not remove...
+            # self.bb.add_error("Exception reading harvest, device unexpectedly closed")
             open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
             transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
     
@@ -73,7 +77,7 @@ class Harvest(Task):
         ret = []
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
             for endpoint in endpoints:
-                log.info("Creating transport for %s", endpoint)
+                logger.info("Creating transport for %s", endpoint)
                 
                 headers = {"model": ""}
                 headers["dtype"] = self.device.get_harvest_data_type()
@@ -82,8 +86,6 @@ class Harvest(Task):
                 if self.device.get_profile():
                     headers["model"] = self.device.get_profile().name.lower()
                     
-                
-                
                 transport = self.transport_factory(event_time + 100, self.bb, self.barn, headers)
                 transport.post_url = endpoint
             self.barn = {}

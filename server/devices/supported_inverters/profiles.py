@@ -7,7 +7,7 @@ import json
 inverters = []
 
 # Load all inverters
-with open("server/inverters/supported_inverters/inverters/inverters.json") as f:
+with open("server/devices/supported_inverters/inverters/inverters.json") as f:
     data = json.load(f)
     for d in data["inverters"]:
         inverters.append(d)

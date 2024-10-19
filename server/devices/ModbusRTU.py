@@ -4,7 +4,6 @@ from pymodbus.client import ModbusSerialClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
 from pymodbus.exceptions import ModbusIOException
 from pymodbus import pymodbus_apply_logging_config
-from typing_extensions import TypeAlias
 import logging
 
 log = logging.getLogger(__name__)
@@ -55,29 +54,6 @@ class ModbusRTU(Modbus):
     def SLAVE_ID(self) -> int:
         return "slave_id"
     
-    
-
-    def list_to_tuple(config: list) -> tuple:
-        assert config[ICom.CONNECTION_IX] == ModbusRTU.CONNECTION, "Invalid connection type"
-        port = config[1]
-        baudrate = int(config[2])
-        bytesize = int(config[3])
-        parity = config[4]
-        stopbits = float(config[5])
-        inverter_type = config[6]
-        slave_id = int(config[7])
-        return (config[0], port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
-    
-    def dict_to_tuple(config: dict) -> tuple:
-        assert config[ICom.CONNECTION_KEY] == ModbusRTU.CONNECTION, "Invalid connection type"
-        serial_port = config["port"]
-        baudrate = int(config["baudrate"])
-        bytesize = int(config["bytesize"])
-        parity = config["parity"]
-        stopbits = float(config["stopbits"])
-        inverter_type = config["type"]
-        slave_id = int(config["address"])
-        return (config[ICom.CONNECTION_KEY], serial_port, baudrate, bytesize, parity, stopbits, inverter_type, slave_id)
 
     def __init__(self, 
                  port: str = None, 
@@ -153,6 +129,9 @@ class ModbusRTU(Modbus):
     def _get_slave_id(self) -> int:
         return self.slave_id
     
+    def find_device(self) -> 'ICom':
+        raise NotImplementedError("find_device is not implemented for ModbusRTU")
+    
     def _get_SN(self) -> str:
         return "N/A"
 
@@ -218,3 +197,6 @@ class ModbusRTU(Modbus):
         if isinstance(resp, ExceptionResponse):
             raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
         return resp
+
+    def is_valid(self) -> bool:
+        raise NotImplementedError("is_valid is not implemented for ModbusRTU")

@@ -3,7 +3,7 @@ from ..handler import GetHandler
 
 from ..requestData import RequestData
 
-from server.inverters.registerValue import RegisterValue
+from server.devices.registerValue import RegisterValue
 
 # Example query: inverter/modbus/holding/40069?size=2&type=float&endianess=big
 

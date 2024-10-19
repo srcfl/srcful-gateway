@@ -1,15 +1,12 @@
 from __future__ import annotations
-
 import json
 import logging
 import threading
-
 from enum import Enum
 from typing import Callable, List
-
 from abc import ABC, abstractmethod
 from typing import Optional
-from server.inverters.ICom import ICom
+from server.devices.ICom import ICom
 
 
 logger = logging.getLogger(__name__)
@@ -123,16 +120,17 @@ class Settings(Observable):
 
 
         def add_connection(self, connection: ICom, source: ChangeSource):
-            dict = connection.get_config()
-            if dict not in self._connections:
-                self._connections.append(dict)
+            config = connection.get_config()
+            if config not in self._connections:
+                self._connections.append(config)
                 self.notify_listeners(source)
 
         def remove_connection(self, connection: ICom, source: ChangeSource):
-            data = connection.get_config()
-            if data in self._connections:
-                self._connections.remove(data)
+            config = connection.get_config()
+            if config in self._connections:
+                self._connections.remove(config)
                 self.notify_listeners(source)
+        
 
         @property
         def CONNECTIONS(self):
