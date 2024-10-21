@@ -47,8 +47,8 @@ def real_harvest():
     harvest = p1.read_harvest_data(False)
     p1.disconnect()
 
-    assert p1.id is not None
-    assert p1.id == harvest['serial_number']
+    assert p1.meter_serial_number is not None
+    assert p1.meter_serial_number == harvest['serial_number']
     assert harvest is not None
     assert harvest['serial_number'] is not None
     assert len(harvest['rows']) > 0

@@ -52,19 +52,33 @@ class SimpleTelnet:
         return self.socket
 
 class P1Telnet(ICom):
+
+
+    CONNECTION = "P1Telnet"
+
+    @staticmethod
+    def get_config_schema():
+        return {
+            "ip": "string, IP address or hostname of the device",
+            "port": "int, port of the device",
+            "meter_serial_number": "optional string, Serial number of the meter",
+            "model_name": "optional string, Model name of the meter"
+        }
+
+
     """
     P1Telnet class
     """
     client: SimpleTelnet
     ip: str
     port: int
-    id: str
+    meter_serial_number: str
     model_name: str
 
-    def __init__(self, ip: str, port: int = 23, id: str = "", model_name: str = "generic_p1_meter"):
+    def __init__(self, ip: str, port: int = 23, meter_serial_number: str = "", model_name: str = "generic_p1_meter"):
         self.ip = ip
         self.port = port
-        self.id = id
+        self.meter_serial_number = meter_serial_number
         self.model_name = model_name
 
     def connect(self) -> bool:
@@ -73,17 +87,17 @@ class P1Telnet(ICom):
             self.client.connect()
             logger.info(f"Successfully connected to {self.ip}:{self.port}")
             harvest = self.read_harvest_data(False)
-            if self.id == "":
-                self.id = harvest['serial_number']
+            if self.meter_serial_number == "":
+                self.meter_serial_number = harvest['serial_number']
                 return True
             else:
-                return self.id == harvest['serial_number']
+                return self.meter_serial_number == harvest['serial_number']
         except Exception as e:
             logger.error(f"Failed to connect to {self.ip}:{self.port}: {str(e)}")
             return False
 
     def is_valid(self) -> bool:
-        return self.id != ""
+        return self.meter_serial_number != ""
     
     def disconnect(self) -> None:
         if self.client:
@@ -141,7 +155,7 @@ class P1Telnet(ICom):
         return {
             "ip": self.ip,
             "port": self.port,
-            "id": self.id
+            "id": self.meter_serial_number
         }
     
     def get_profile(self) -> InverterProfile:
@@ -154,20 +168,20 @@ class P1Telnet(ICom):
         return P1ProfileTmp()
     
     def clone(self, ip: str) -> 'ICom':
-        return P1Telnet(ip, self.port, self.id)
+        return P1Telnet(ip, self.port, self.meter_serial_number)
 
     def _scan_for_devices(self, domain: str) -> Optional['P1Telnet']:
         mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
         for service in mdns_services:
             if service.address and service.port:
-                p1 = P1Telnet(service.address, service.port, self.id)
+                p1 = P1Telnet(service.address, service.port, self.meter_serial_number)
                 if p1.connect():
                     return p1
         return None
     
     def find_device(self) -> 'ICom':
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
-        if self.id:
+        if self.meter_serial_number:
             domain_names = {"_currently._tcp.local.":{"name": "currently_one"},
                              "_hwenergy._tcp.local.":{"name": "home_wizard_p1"},
                            }
@@ -180,4 +194,4 @@ class P1Telnet(ICom):
         return None
     
     def get_SN(self) -> str:
-        return self.id
+        return self.meter_serial_number
