@@ -625,18 +625,99 @@ fi
 # Band configuration
 # -----------------------------------------------------------------------------
 
-# Get the band to use (must be lowercase)
+API_WAIT_TIME=${API_WAIT_TIME:-30} # 10 seconds
+MAX_ATTEMPTS=${MAX_ATTEMPTS:-5}  # Maximum number of attempts to fetch the region
+DELAY_TIME=${DELAY_TIME:-300} # 5 minutes
+
+# Wait for the API to start
+echo "Waiting ${API_WAIT_TIME} seconds for the API to start..."
+sleep ${API_WAIT_TIME}
+
+# Function to fetch region from API
+fetch_region() {
+    REGION_DATA=$(curl -s http://localhost:3000/region)
+    REGION=$(echo $REGION_DATA | jq -r '.region')
+    if [ "$REGION" = "null" ]; then
+        return 1 # Failure, region is null
+    else
+        return 0 # Success, region is defined
+    fi
+}
+
+# Attempt to fetch region multiple times
+for attempt in $(seq 1 $MAX_ATTEMPTS); do
+    echo "Attempt $attempt to fetch region..."
+    
+    # if region is defined and not null
+    if fetch_region; then
+        echo -e "${COLOR_SUCCESS}Region fetched successfully: $REGION${COLOR_END}"
+        break
+    else
+        echo "Failed to fetch region. Retrying in ${DELAY_TIME} seconds..."
+        if [ $attempt -eq $MAX_ATTEMPTS ]; then
+            echo -e "${COLOR_ERROR}ERROR: Failed to fetch region after $MAX_ATTEMPTS attempts. Exiting.${COLOR_END}"
+            exit 1
+        fi
+        sleep ${DELAY_TIME}
+    fi
+done
+
+# Map region to band
+case $REGION in
+    "EU868")
+        BAND="eu_863_870"
+        ;;
+    "US915")
+        BAND="us_902_928"
+        ;;
+    "AU915_SB1" | "AU915_SB2")
+        BAND="au_915_928"
+        ;;
+    "EU433")
+        BAND="eu_433"
+        ;;
+    "AS923_1" | "AS923_1B" | "AS923_1C")
+        BAND="as_915_928"  # Mapped to AS_923
+        ;;
+    "AS923_2")
+        BAND="as_920_923"
+        ;;
+    "AS923_3")
+        BAND="as_915_921"
+        ;;
+    "AS923_4")
+        BAND="as_917_920"
+        ;;
+    "CN470")
+        BAND="cn_470_510"
+        ;;
+    "IN865")
+        BAND="in_865_867"
+        ;;
+    "RU864")
+        BAND="ru_864_870"
+        ;;
+    "KR920")
+        BAND="kr_920_923"
+        ;;
+    *)
+        echo -e "${COLOR_ERROR}ERROR: Unknown region: $REGION${COLOR_END}"
+        exit 1
+        ;;
+esac
+
+echo -e "${COLOR_SUCCESS}Region fetched successfully: $REGION, Band: $BAND${COLOR_END}"
+
+# Get the band to use
 if [[ "$CONCENTRATOR" == "SX1280" ]]; then
     BAND="global"
 fi
-BAND=${BAND:-"eu_863_870"}
-BAND=${BAND,,}
 
 # Map AS bands common names to standard name
-if [ "$BAND" == "as_923_1" ]; then BAND="as_915_928"; fi
-if [ "$BAND" == "as_923_2" ]; then BAND="as_920_923"; fi
-if [ "$BAND" == "as_923_3" ]; then BAND="as_915_921"; fi
-if [ "$BAND" == "as_923_4" ]; then BAND="as_917_920"; fi  
+# if [ "$BAND" == "as_923_1" ]; then BAND="as_915_928"; fi
+# if [ "$BAND" == "as_923_2" ]; then BAND="as_920_923"; fi
+# if [ "$BAND" == "as_923_3" ]; then BAND="as_915_921"; fi
+# if [ "$BAND" == "as_923_4" ]; then BAND="as_917_920"; fi  
 
 # Existing BANDS
 # https://www.thethingsindustries.com/docs/reference/frequency-plans/
