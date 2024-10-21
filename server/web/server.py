@@ -20,6 +20,7 @@ class Endpoints:
             "name": handler.get.name.Handler(),
             "logger": handler.get.logger.Handler(),
             "inverter": handler.get.inverter.Handler(),
+            
             # "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
             # "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
             "inverter/modbus/scan": handler.get.modbus_scan.ModbusScanHandler(),
@@ -38,13 +39,14 @@ class Endpoints:
         }
 
         self.api_post_dict = {
-            "invertertcp": handler.post.modbusTCP.Handler(),
-            "inverterrtu": handler.post.modbusRTU.Handler(),
-            "invertersolarman": handler.post.modbusSolarman.Handler(),
-            "modbus_device": handler.post.modbus_create.Handler(),
+            # "invertertcp": handler.post.modbusTCP.Handler(),
+            # "inverterrtu": handler.post.modbusRTU.Handler(),
+            # "invertersolarman": handler.post.modbusSolarman.Handler(),
+            # "modbus_device": handler.post.modbus_create.Handler(),
+            "device": handler.post.device.Handler(),
             "wifi": handler.post.wifi.Handler(),
             "initialize": handler.post.initialize.Handler(),
-            "inverter/modbus": handler.post.modbus_read_write.Handler(),
+            # "inverter/modbus": handler.post.modbus_read_write.Handler(),
             "logger": handler.post.logger.Handler(),
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),

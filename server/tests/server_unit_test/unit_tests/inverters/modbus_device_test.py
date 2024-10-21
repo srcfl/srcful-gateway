@@ -103,6 +103,6 @@ def test_get_SN(modbus_devices):
     
     assert modbus_tcp.get_SN() == "00:00:00:00:00:00" # Modbus Device MAC-Address
     assert modbus_rtu.get_SN() == "N/A" # Not implemented yet
-    assert modbus_solarman.get_SN() == 1234567890 # Stick Logger SN
+    assert modbus_solarman.get_SN() == '1234567890' # Stick Logger SN
         
         
