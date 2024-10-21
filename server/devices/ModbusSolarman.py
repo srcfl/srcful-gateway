@@ -1,5 +1,5 @@
-from .modbus import Modbus
-from .ICom import ICom, HarvestDataType
+from .ModbusTCP import ModbusTCP
+from .ICom import ICom
 from pysolarmanv5 import PySolarmanV5
 from server.network.network_utils import NetworkUtils
 import logging
@@ -10,7 +10,7 @@ log.setLevel(logging.INFO)
 
 
 
-class ModbusSolarman(Modbus):
+class ModbusSolarman(ModbusTCP):
     """
     ip: string, IP address of the inverter,
     mac: string, MAC address of the inverter,
@@ -22,34 +22,31 @@ class ModbusSolarman(Modbus):
     """
 
     CONNECTION = "SOLARMAN"
+      
+    @property
+    def SERIAL(self) -> str:
+        return self.serial_key()
     
-    @property
-    def IP(self) -> str:
-        return "ip"
-
-    @property
-    def MAC(self) -> str:
-        return "mac"
-    
-    @property
-    def SERIAL(self) -> int:
+    @staticmethod
+    def serial_key() -> str:
         return "serial"
     
     @property
-    def PORT(self) -> int:
-        return "port"
+    def VERBOSE(self) -> str:
+        return self.verbose_key()
     
-    @property
-    def DEVICE_TYPE(self) -> str:
-        return "device_type"
-    
-    @property
-    def SLAVE_ID(self) -> int:
-        return "slave_id"
-    
-    @property
-    def VERBOSE(self) -> int:
+    @staticmethod
+    def verbose_key() -> str:
         return "verbose"
+    
+    
+    @staticmethod
+    def get_config_schema():
+        schema = ModbusTCP.get_config_schema()
+        return {
+            **schema,
+            ModbusSolarman.serial_key(): "int, Serial number of the logger stick",
+        }
     
 
     def __init__(self, 
@@ -61,16 +58,9 @@ class ModbusSolarman(Modbus):
                  slave_id: int = None, 
                  verbose: int = None) -> None:
         log.info("Creating with: %s %s %s %s %s %s %s" % (ip, mac, serial, port, device_type, slave_id, verbose))
-        self.ip = ip
-        self.mac = mac
+        super().__init__(ip, mac, port, device_type, slave_id)
         self.serial = serial
-        self.port = port
-        self.device_type = device_type
-        self.slave_id = slave_id
         self.verbose = verbose
-        self.client = None
-        self.data_type = HarvestDataType.MODBUS_REGISTERS.value
-        super().__init__()
 
     def _open(self, **kwargs) -> bool:
         if not self._is_terminated():
@@ -88,7 +78,7 @@ class ModbusSolarman(Modbus):
 
     def _is_open(self) -> bool:
         try:
-            return bool(self.client.sock)
+            return bool(self.client and self.client.sock)
         except Exception as e:
             log.error("Error checking if inverter is open: %s", self._get_type())
             log.error(e)
@@ -123,37 +113,24 @@ class ModbusSolarman(Modbus):
             self._get_serial(),
             self._get_port(), 
             self._get_type(), 
-            self._get_address(), 
+            self._get_slave_id(), 
             self.verbose
         )
 
-    def _get_host(self) -> str:
-        return self.ip
-    
-    def _get_mac(self) -> str:
-        return self.mac
 
     def _get_serial(self) -> int:
         return self.serial
     
-    def _get_port(self) -> int:
-        return self.port
-
-    def _get_type(self) -> str:
-        return self.device_type.lower()
-    
-    def _get_address(self) -> int:
-        return self.slave_id
     
     def _get_SN(self) -> str:
-        return self.serial
+        return str(self.serial)
 
     def _get_config_dict(self) -> dict:
         return {
             ICom.CONNECTION_KEY: "SOLARMAN",
             self.DEVICE_TYPE: self._get_type(),
             self.SERIAL: self._get_serial(),
-            self.SLAVE_ID: self._get_address(),
+            self.SLAVE_ID: self._get_slave_id(),
             self.IP: self._get_host(),
             self.MAC: self._get_mac(),
             self.PORT: self._get_port(),
@@ -166,7 +143,7 @@ class ModbusSolarman(Modbus):
             self.client = PySolarmanV5(address=self._get_host(),
                             serial=self._get_serial(),
                             port=self._get_port(),
-                            mb_slave_id=self._get_address(),
+                            mb_slave_id=self._get_slave_id(),
                             v5_error_correction=False,
                             verbose=self.verbose,
                             **kwargs)

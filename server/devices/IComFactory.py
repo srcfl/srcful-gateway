@@ -10,6 +10,25 @@ log.setLevel(logging.INFO)
 
 
 class IComFactory:
+
+
+    @staticmethod
+    def get_supported_connections():
+        return [
+            ModbusTCP.CONNECTION,
+            ModbusRTU.CONNECTION,
+            ModbusSolarman.CONNECTION,
+            ModbusSunspec.CONNECTION,
+        ]
+
+    @staticmethod
+    def get_connection_configs():
+        return {
+            cls.CONNECTION: cls.get_config_schema()
+            for cls in [ModbusTCP, ModbusRTU, ModbusSolarman, ModbusSunspec]
+        }
+
+
     """
     IComFactory class
     """

@@ -21,27 +21,50 @@ class ModbusSunspec(ICom):
     
     @property
     def IP(self) -> str:
-        return "ip"
+        return self.ip_key()
     
+    @staticmethod
+    def ip_key() -> str:
+        return "ip"
+
     @property
     def MAC(self) -> str:
+        return self.mac_key()
+    
+    @staticmethod
+    def mac_key() -> str:
         return "mac"
     
     @property
-    def PORT(self) -> int:
+    def PORT(self) -> str:
+        return self.port_key()
+    
+    @staticmethod
+    def port_key() -> str:
         return "port"
     
-    @property
-    def DEVICE_TYPE(self) -> str:
-        return "device_type"
     
+    @staticmethod
+    def device_type_key() -> str:
+        return "device_type"
+
     @property
-    def SLAVE_ID(self) -> int:
+    def SLAVE_ID(self) -> str:
+        return self.slave_id_key()
+    
+    @staticmethod
+    def slave_id_key() -> str:
         return "slave_id"
     
-    @property
-    def SN(self) -> str:
-        return "sn"
+    @staticmethod
+    def get_config_schema():
+        return {
+            ModbusSunspec.ip_key(): "string, IP address or hostname of the device",
+            ModbusSunspec.mac_key(): "string, MAC address of the device",
+            ModbusSunspec.port_key(): "int, port of the device",
+            ModbusSunspec.slave_id_key(): "int, Modbus address of the device",
+        }
+    
     
     
     def __init__(self,

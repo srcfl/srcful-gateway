@@ -15,7 +15,6 @@ class Handler(PostHandler):
         return self.create_schema(
             "Open an inverter and start harvesting the data",
             required={
-                ICom.CONNECTION_KEY: "string, should be TCP",
                 "ip": "string, ip address of the inverter",
                 "port": "int, port of the inverter",
                 "type": "string, type of inverter",
