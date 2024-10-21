@@ -50,13 +50,11 @@ services:
       - "1680"
     environment:
       - GATEWAY_SETTINGS=/app/settings.toml
-    depends_on:
-      - packet-forwarder
 
   packet-forwarder:
     # Use pre-defined image
     image: rakwireless/udp-packet-forwarder:latest
-    restart: unless-stopped
+    restart: no
     privileged: true # set this to true or define the required devices to share with the container under the `devices` tag below
     network_mode: host # required to read host interface MAC instead of virtual one, you don't need this if you set the GATEWAY_EUI manually
 
@@ -72,6 +70,8 @@ services:
       # Helium settings
       SERVER_HOST: 127.0.0.1
       SERVER_PORT: 1680
+    depends_on:
+      - gateway-rs
 
 volumes:
   srcful-data:
