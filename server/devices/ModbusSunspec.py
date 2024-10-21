@@ -59,6 +59,7 @@ class ModbusSunspec(ICom):
     @staticmethod
     def get_config_schema():
         return {
+            ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
             ModbusSunspec.ip_key(): "string, IP address or hostname of the device",
             ModbusSunspec.mac_key(): "string, MAC address of the device",
             ModbusSunspec.port_key(): "int, port of the device",

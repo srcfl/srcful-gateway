@@ -45,6 +45,7 @@ class HarvestTransport(IHarvestTransport):
         while retries > 0:
             try:
                 jwt = self._create_jwt()
+                logger.debug("HarvestTransport JWT: %s", jwt)
                 return jwt
             except crypto.Chip.Error as e:
                 exception = e

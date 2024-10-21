@@ -1,4 +1,5 @@
 import logging
+import select
 import socket
 from typing import Callable, List, Optional
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
@@ -19,9 +20,11 @@ class SimpleTelnet:
         self.port = port
         self.timeout = timeout
         self.socket = None
+        self.buffer = b""
 
     def connect(self):
         self.socket = socket.create_connection((self.host, self.port), self.timeout)
+        self.socket.setblocking(False)
 
     def close(self):
         if self.socket:
@@ -31,22 +34,29 @@ class SimpleTelnet:
     def read_until(self, delimiter, timeout=None):
         if timeout is None:
             timeout = self.timeout
-        self.socket.settimeout(timeout)
-        buffer = b""
+        
         start_time = time.time()
+        
         while True:
             if time.time() - start_time > timeout:
                 raise TimeoutError("Read operation timed out")
-            try:
-                chunk = self.socket.recv(1)
+            
+            if delimiter in self.buffer:
+                index = self.buffer.index(delimiter)
+                result = self.buffer[:index + len(delimiter)]
+                self.buffer = self.buffer[index + len(delimiter):]
+                return result
+            
+            ready = select.select([self.socket], [], [], 1.0)
+            if ready[0]:
+                chunk = self.socket.recv(1024)  # Read larger chunks
                 if not chunk:
                     break
-                buffer += chunk
-                if buffer.endswith(delimiter):
-                    break
-            except socket.timeout:
-                continue
-        return buffer
+                self.buffer += chunk
+        
+        result = self.buffer
+        self.buffer = b""
+        return result
 
     def get_socket(self):
         return self.socket
@@ -120,11 +130,12 @@ class P1Telnet(ICom):
             raise
         
     def _read_harvest_data(self, telnet_client: SimpleTelnet) -> str:
+        timeout = 20
         # Read until the start of a P1 message
-        telnet_client.read_until(b"/", timeout=17)
+        telnet_client.read_until(b"/", timeout=timeout)
         
         # Read the entire P1 message including the last crc check
-        p1_message = "/" + telnet_client.read_until(b"!", timeout=17).decode('ascii') + telnet_client.read_until(b"\r\n", timeout=17).decode('ascii')
+        p1_message = "/" + telnet_client.read_until(b"!", timeout=timeout).decode('ascii') + telnet_client.read_until(b"\r\n", timeout=timeout).decode('ascii')
 
         if len(p1_message) < 5:
             logger.error(f"P1 message is too short: {p1_message}")
@@ -153,9 +164,10 @@ class P1Telnet(ICom):
     
     def get_config(self) -> dict:
         return {
+            ICom.CONNECTION_KEY: P1Telnet.CONNECTION,
             "ip": self.ip,
             "port": self.port,
-            "id": self.meter_serial_number
+            "meter_serial_number": self.meter_serial_number
         }
     
     def get_profile(self) -> InverterProfile:
@@ -167,7 +179,9 @@ class P1Telnet(ICom):
 
         return P1ProfileTmp()
     
-    def clone(self, ip: str) -> 'ICom':
+    def clone(self, ip: Optional[str] = None) -> 'ICom':
+        if ip is None:
+            ip = self.ip
         return P1Telnet(ip, self.port, self.meter_serial_number)
 
     def _scan_for_devices(self, domain: str) -> Optional['P1Telnet']:
