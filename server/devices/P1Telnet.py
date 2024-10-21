@@ -1,6 +1,6 @@
 import logging
 import telnetlib
-from typing import Callable, List
+from typing import Callable, List, Optional
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 
 from server.network import mdns as mdns
@@ -20,11 +20,13 @@ class P1Telnet(ICom):
     ip: str
     port: int
     id: str
+    model_name: str
 
-    def __init__(self, ip: str, port: int = 23, id: str = ""):
+    def __init__(self, ip: str, port: int = 23, id: str = "", model_name: str = "generic_p1_meter"):
         self.ip = ip
         self.port = port
         self.id = id
+        self.model_name = model_name
 
     def connect(self) -> bool:
         return self._connect(telnetlib.Telnet)
@@ -113,20 +115,38 @@ class P1Telnet(ICom):
         }
     
     def get_profile(self) -> InverterProfile:
-        raise NotImplementedError("get_profile is not implemented for P1Telnet")
+
+        # this is just a temporary until get_profile is removed.
+        class P1ProfileTmp(InverterProfile):
+            def __init__(self):
+                self.name = "P1Telnet"
+
+        return P1ProfileTmp()
     
     def clone(self, ip: str) -> 'ICom':
         return P1Telnet(ip, self.port, self.id)
+
+    def _scan_for_devices(self, domain: str) -> Optional['P1Telnet']:
+        mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
+        for service in mdns_services:
+            if service.address and service.port:
+                p1 = P1Telnet(service.address, service.port, self.id)
+                if p1.connect():
+                    return p1
+        return None
     
     def find_device(self) -> 'ICom':
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
         if self.id:
-            mdns_services: List[mdns.ServiceResult] = mdns.scan(5, "_currently._tcp.")
-            for service in mdns_services:
-                if service.address and service.port:
-                    p1 = P1Telnet(service.address, service.port, self.id)
-                    if p1.connect():
-                        return p1
+            domain_names = {"_currently._tcp.local.":{"name": "currently_one"},
+                             "_hwenergy._tcp.local.":{"name": "home_wizard_p1"},
+                           }
+
+            for domain, info in domain_names.items():
+                p1 = self._scan_for_devices(domain)
+                if p1:
+                    p1.model_name = info["name"]
+                    return p1
         return None
     
     def get_SN(self) -> str:

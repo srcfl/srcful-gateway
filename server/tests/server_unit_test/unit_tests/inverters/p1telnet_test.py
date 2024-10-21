@@ -53,6 +53,16 @@ def real_harvest():
     assert harvest['serial_number'] is not None
     assert len(harvest['rows']) > 0
 
+# real scan
+def real_find_device():
+    p1 = P1Telnet("192.168.0.30", 23, "abc123")
+    try:
+        found = p1.find_device()
+        assert found is not None
+        assert found.model_name == "home_wizard_p1"
+    except Exception as e:
+        assert False
+
 
 def test_parse_p1_data():
     p1 = P1Telnet("192.168.0.30", 23, "")
