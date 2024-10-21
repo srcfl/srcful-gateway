@@ -31,6 +31,7 @@ class ModbusSolarman(ModbusTCP):
     def serial_key() -> str:
         return "serial"
     
+    @property
     def VERBOSE(self) -> str:
         return self.verbose_key()
     
@@ -41,13 +42,10 @@ class ModbusSolarman(ModbusTCP):
     
     @staticmethod
     def get_config_schema():
+        schema = ModbusTCP.get_config_schema()
         return {
-            ModbusTCP.ip_key(): "string, IP address or hostname of the device",
+            **schema,
             ModbusSolarman.serial_key(): "int, Serial number of the logger stick",
-            ModbusTCP.mac_key(): "string, MAC address of the device",
-            ModbusTCP.port_key(): "int, port of the device",
-            ModbusTCP.device_type_key(): "string, type of the device",
-            ModbusTCP.slave_id_key(): "int, Modbus address of the device",
         }
     
 
