@@ -1,5 +1,5 @@
 import logging
-import telnetlib
+import socket
 from typing import Callable, List, Optional
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 
@@ -7,16 +7,55 @@ from server.network import mdns as mdns
 from .supported_inverters.profiles import InverterProfiles, InverterProfile
 from .ICom import HarvestDataType, ICom
 from server.network.network_utils import NetworkUtils
+import time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
+class SimpleTelnet:
+    def __init__(self, host, port, timeout=5):
+        self.host = host
+        self.port = port
+        self.timeout = timeout
+        self.socket = None
+
+    def connect(self):
+        self.socket = socket.create_connection((self.host, self.port), self.timeout)
+
+    def close(self):
+        if self.socket:
+            self.socket.close()
+            self.socket = None
+
+    def read_until(self, delimiter, timeout=None):
+        if timeout is None:
+            timeout = self.timeout
+        self.socket.settimeout(timeout)
+        buffer = b""
+        start_time = time.time()
+        while True:
+            if time.time() - start_time > timeout:
+                raise TimeoutError("Read operation timed out")
+            try:
+                chunk = self.socket.recv(1)
+                if not chunk:
+                    break
+                buffer += chunk
+                if buffer.endswith(delimiter):
+                    break
+            except socket.timeout:
+                continue
+        return buffer
+
+    def get_socket(self):
+        return self.socket
+
 class P1Telnet(ICom):
     """
     P1Telnet class
     """
-    client: telnetlib.Telnet
+    client: SimpleTelnet
     ip: str
     port: int
     id: str
@@ -29,12 +68,9 @@ class P1Telnet(ICom):
         self.model_name = model_name
 
     def connect(self) -> bool:
-        return self._connect(telnetlib.Telnet)
-        
-    
-    def _connect(self, telnet_factory: Callable[[str, int, int], telnetlib.Telnet]) -> bool:
         try:
-            self.client = telnet_factory(self.ip, self.port, 5)
+            self.client = SimpleTelnet(self.ip, self.port, 5)
+            self.client.connect()
             logger.info(f"Successfully connected to {self.ip}:{self.port}")
             harvest = self.read_harvest_data(False)
             if self.id == "":
@@ -42,12 +78,10 @@ class P1Telnet(ICom):
                 return True
             else:
                 return self.id == harvest['serial_number']
-
         except Exception as e:
             logger.error(f"Failed to connect to {self.ip}:{self.port}: {str(e)}")
             return False
-        
-    
+
     def is_valid(self) -> bool:
         return self.id != ""
     
@@ -60,21 +94,18 @@ class P1Telnet(ICom):
         return self.connect()
     
     def is_open(self) -> bool:
-        return self.client.get_socket() != None
+        return self.client is not None and self.client.get_socket() is not None
     
     def read_harvest_data(self, force_verbose) -> dict:
         try:
             p1_message = self._read_harvest_data(self.client)
-
-            # Parse the P1 message
             data = self._parse_p1_message(p1_message)
-            
             return data
         except Exception as e:
             logger.error(f"Error reading P1 data: {str(e)}")
             raise
         
-    def _read_harvest_data(self, telnet_client: telnetlib.Telnet) -> str:
+    def _read_harvest_data(self, telnet_client: SimpleTelnet) -> str:
         # Read until the start of a P1 message
         telnet_client.read_until(b"/", timeout=17)
         
@@ -85,8 +116,7 @@ class P1Telnet(ICom):
             logger.error(f"P1 message is too short: {p1_message}")
             raise Exception(f"P1 message is too short: {p1_message}")
         
-        return p1_message
-            
+        return p1_message    
 
     def _parse_p1_message(self, message: str) -> dict:
         lines = message.strip().split()
