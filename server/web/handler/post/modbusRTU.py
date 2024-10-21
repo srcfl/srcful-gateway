@@ -15,7 +15,6 @@ class Handler(PostHandler):
             "type": "post",
             "description": "open an inverter",
             "required": {
-                ICom.CONNECTION_KEY: "string, should be RTU",
                 "port": "string, Serial port used for communication",
                 "baudrate": "int, Bits per second",
                 "bytesize": "int, Number of bits per byte 7-8",

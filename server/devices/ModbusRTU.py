@@ -1,3 +1,4 @@
+from typing import Optional
 from .modbus import Modbus
 from .ICom import ICom, HarvestDataType
 from pymodbus.client import ModbusSerialClient as ModbusClient
@@ -30,39 +31,79 @@ class ModbusRTU(Modbus):
     def PORT(self) -> str:
         return "port"
     
-    @property
-    def BAUD_RATE(self) -> int:
-        return "baudrate"   
+    @staticmethod
+    def port_key() -> str:
+        return "port"
     
     @property
-    def BYTESIZE(self) -> int:
+    def BAUD_RATE(self) -> str:
+        return self.baud_rate_key()   
+    
+    @staticmethod
+    def baud_rate_key() -> str:
+        return "baudrate"
+    
+    @property
+    def BYTESIZE(self) -> str:
+        return self.bytesize_key()
+    
+    @staticmethod
+    def bytesize_key() -> str:
         return "bytesize"
     
     @property
     def PARITY(self) -> str:
+        return self.parity_key()
+    
+    @staticmethod
+    def parity_key() -> str:
         return "parity"
     
     @property
-    def STOPBITS(self) -> float:
+    def STOPBITS(self) -> str:
+        return self.stopbits_key()
+    
+    @staticmethod
+    def stopbits_key() -> str:
         return "stopbits"
     
     @property
     def DEVICE_TYPE(self) -> str:
+        return self.device_type_key()
+    
+    @staticmethod
+    def device_type_key() -> str:
         return "device_type"
     
     @property
-    def SLAVE_ID(self) -> int:
+    def SLAVE_ID(self) -> str:
+        return self.slave_id_key()
+    
+    @staticmethod
+    def slave_id_key() -> str:
         return "slave_id"
+
+    @staticmethod
+    def get_config_schema():
+        return {
+            ModbusRTU.baud_rate_key(): "string, IP address or hostname of the device",
+            ModbusRTU.bytesize_key(): "string, MAC address of the device",
+            ModbusRTU.port_key(): "int, port of the device",
+            ModbusRTU.parity_key(): "string, parity of the device",
+            ModbusRTU.stopbits_key(): "float, stopbits of the device",
+            ModbusRTU.device_type_key(): "string, type of the device",
+            ModbusRTU.slave_id_key(): "int, Modbus address of the device",
+        }
     
 
     def __init__(self, 
-                 port: str = None, 
-                 baudrate: int = None, 
-                 bytesize: int = None, 
-                 parity: str = None, 
-                 stopbits: float = None,
-                 device_type: str = None,
-                 slave_id: int = None):
+                 port: Optional[str] = None, 
+                 baudrate: Optional[int] = None, 
+                 bytesize: Optional[int] = None, 
+                 parity: Optional[str] = None, 
+                 stopbits: Optional[float] = None,
+                 device_type: Optional[str] = None,
+                 slave_id: Optional[int] = None):
         log.info("Creating with: %s, %s, %s, %s, %s, %s, %s", port, baudrate, bytesize, parity, stopbits, device_type, slave_id)
         self.port = port
         self.baudrate = baudrate

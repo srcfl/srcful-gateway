@@ -1,3 +1,4 @@
+from typing import Optional
 from .modbus import Modbus
 from .ICom import ICom, HarvestDataType
 from pymodbus.client import ModbusTcpClient as ModbusClient
@@ -27,31 +28,60 @@ class ModbusTCP(Modbus):
     
     @property
     def IP(self) -> str:
+        return self.ip_key()
+    
+    @staticmethod
+    def ip_key() -> str:
         return "ip"
 
     @property
     def MAC(self) -> str:
+        return self.mac_key()
+    
+    @staticmethod
+    def mac_key() -> str:
         return "mac"
     
     @property
-    def PORT(self) -> int:
+    def PORT(self) -> str:
+        return self.port_key()
+    
+    @staticmethod
+    def port_key() -> str:
         return "port"
     
     @property
     def DEVICE_TYPE(self) -> str:
-        return "device_type"
+        return self.device_type_key()
     
-    @property
-    def SLAVE_ID(self) -> int:
-        return "slave_id"
+    @staticmethod
+    def device_type_key() -> str:
+        return "device_type"
 
+    @property
+    def SLAVE_ID(self) -> str:
+        return self.slave_id_key()
+    
+    @staticmethod
+    def slave_id_key() -> str:
+        return "slave_id"
+    
+    @staticmethod
+    def get_config_schema():
+        return {
+            ModbusTCP.ip_key(): "string, IP address or hostname of the device",
+            ModbusTCP.mac_key(): "string, MAC address of the device",
+            ModbusTCP.port_key(): "int, port of the device",
+            ModbusTCP.device_type_key(): "string, type of the device",
+            ModbusTCP.slave_id_key(): "int, Modbus address of the device",
+        }
 
     def __init__(self,
-                 ip: str = None,
+                 ip: Optional[str] = None,
                  mac: str = "00:00:00:00:00:00",
-                 port: int = None, 
-                 device_type: str = None, 
-                 slave_id: int = None) -> None:
+                 port: Optional[int] = None, 
+                 device_type: Optional[str] = None, 
+                 slave_id: Optional[int] = None) -> None:
         log.info("Creating with: %s %s %s %s %s", ip, mac, port, device_type, slave_id)
         self.ip = ip
         self.mac = mac
