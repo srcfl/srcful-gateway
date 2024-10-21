@@ -24,7 +24,7 @@ api = 4467
 # forwarder. Note: Not setting this here or with a GW_REGION env var will stop
 # packet and poc beaconing until the correct asserted region is retrieved. 
 #
-region = "EU868"
+# region = "EU868"
 
 [log]
 # The logging level to assume on startup

@@ -55,7 +55,7 @@ def stop_gateway():
 def get_info():
     try:
         # Get info from the helium_gateway
-        result = subprocess.run(['./helium_gateway', '-c', settings_path, 'key', 'info'], capture_output=True, text=True)
+        result = subprocess.run(['./helium_gateway', '-c', settings_path, 'info', 'key'], capture_output=True, text=True)
         # Parse the JSON string into a Python dictionary
         info_dict = json.loads(result.stdout)
         logger.info(f"Gateway info: {info_dict}")
@@ -63,6 +63,19 @@ def get_info():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/region', methods=['GET'])
+def get_region():
+    try:
+        # Get info from the helium_gateway
+        result = subprocess.run(['./helium_gateway', '-c', settings_path, 'info', 'region'], capture_output=True, text=True)
+        # Parse the JSON string into a Python dictionary
+        info_dict = json.loads(result.stdout)
+        logger.info(f"Gateway info: {info_dict}")
+        return jsonify(info_dict), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+    
 @app.route('/add_gateway', methods=['POST'])
 def add_gateway():
     
