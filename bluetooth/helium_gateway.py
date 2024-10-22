@@ -89,48 +89,54 @@ class HeliumGateway:
         
         
     async def fetch_payer(self, gateway_address: str) -> str:
-        # Step 1: Get the maker ID for the gateway
-        hotspot_url = f"{constants.HELIUM_ONBOARDING_ENDPOINT}/api/v2/hotspots/{gateway_address}"
-        
-        response = requests.get(hotspot_url)
-        
-        if response.status_code != 200:
+        try:
+            # Step 1: Get the maker ID for the gateway
+            hotspot_url = f"{constants.HELIUM_ONBOARDING_ENDPOINT}/api/v2/hotspots/{gateway_address}"
+            
+            response = requests.get(hotspot_url)
+            
+            if response.status_code != 200:
+                return None
+
+            hotspot_data = response.json()
+            maker_id = hotspot_data.get("data", {}).get("makerId")
+
+            if not maker_id:
+                return None
+
+            # Step 2: Get the maker's SOL wallet address
+            makers_url = f"{constants.HELIUM_ONBOARDING_ENDPOINT}/api/v2/makers"
+            makers_response = requests.get(makers_url)
+            
+            if makers_response.status_code != 200:
+                return None
+
+            makers_data = makers_response.json()
+            makers_cache = makers_data.get("data", [])
+
+            maker = next((m for m in makers_cache if m["id"] == maker_id), None)
+            
+            if not maker:
+                return None
+
+            payer_name = maker.get("name")
+            payer_address = maker.get("solanaAddress")
+            
+            logger.debug(f"Payer name: {payer_name}")
+            logger.debug(f"Payer address: {payer_address}")
+            
+            if not payer_address:
+                return None
+
+            self.payer_name = payer_name
+            self.payer_address = payer_address
+
+            return payer_address
+        except Exception as e:
+            logger.error(f"Error fetching payer {e}")
+            self.payer_name = ""
+            self.payer_address = ""
             return None
-
-        hotspot_data = response.json()
-        maker_id = hotspot_data.get("data", {}).get("makerId")
-
-        if not maker_id:
-            return None
-
-        # Step 2: Get the maker's SOL wallet address
-        makers_url = f"{constants.HELIUM_ONBOARDING_ENDPOINT}/api/v2/makers"
-        makers_response = requests.get(makers_url)
-        
-        if makers_response.status_code != 200:
-            return None
-
-        makers_data = makers_response.json()
-        makers_cache = makers_data.get("data", [])
-
-        maker = next((m for m in makers_cache if m["id"] == maker_id), None)
-        
-        if not maker:
-            return None
-
-        payer_name = maker.get("name")
-        payer_address = maker.get("solanaAddress")
-        
-        logger.debug(f"Payer name: {payer_name}")
-        logger.debug(f"Payer address: {payer_address}")
-        
-        if not payer_address:
-            return None
-
-        self.payer_name = payer_name
-        self.payer_address = payer_address
-
-        return payer_address
     
     def get_txn_signed(self, swarm_key: str, txn: str) -> str:
         url = f"{constants.HELIUM_TRANSACTION_ENDPOINT}/{swarm_key}"
@@ -157,5 +163,5 @@ class HeliumGateway:
             return response.json()['data']['transaction'].encode('utf-8')
         except Exception as e:
             logger.error(f"Error getting signed transaction {e}")
-            return None
+            return json.dumps({"error": str(e)})
     
