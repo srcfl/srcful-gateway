@@ -1,6 +1,7 @@
 import logging
 import select
 import socket
+import errno
 from typing import Callable, List, Optional
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 
@@ -30,6 +31,9 @@ class SimpleTelnet:
         if self.socket:
             self.socket.close()
             self.socket = None
+    
+    def clear_buffer(self):
+        self.buffer = b""
 
     def read_until(self, delimiter, timeout=None):
         if timeout is None:
@@ -49,14 +53,19 @@ class SimpleTelnet:
             
             ready = select.select([self.socket], [], [], 1.0)
             if ready[0]:
-                chunk = self.socket.recv(1024)  # Read larger chunks
-                if not chunk:
-                    break
-                self.buffer += chunk
-        
-        result = self.buffer
-        self.buffer = b""
-        return result
+                try:
+                    chunk = self.socket.recv(1024)
+                    if not chunk:
+                        raise ConnectionError("Connection closed by remote host")
+                    self.buffer += chunk
+                except socket.error as e:
+                    if e.errno == errno.EWOULDBLOCK or e.errno == errno.EAGAIN:
+                        # No data available right now, just continue the loop
+                        continue
+                    else:
+                        logger.error(f"Socket error occurred: {str(e)}")
+                        raise
+                    
 
     def get_socket(self):
         return self.socket
@@ -131,6 +140,10 @@ class P1Telnet(ICom):
         
     def _read_harvest_data(self, telnet_client: SimpleTelnet) -> str:
         timeout = 20
+        
+        # we clear the buffer so we don't get old data
+        telnet_client.clear_buffer()
+
         # Read until the start of a P1 message
         telnet_client.read_until(b"/", timeout=timeout)
         
@@ -197,7 +210,7 @@ class P1Telnet(ICom):
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
         if self.meter_serial_number:
             domain_names = {"_currently._tcp.local.":{"name": "currently_one"},
-                             "_hwenergy._tcp.local.":{"name": "home_wizard_p1"},
+                            #  "_hwenergy._tcp.local.":{"name": "home_wizard_p1"},
                            }
 
             for domain, info in domain_names.items():

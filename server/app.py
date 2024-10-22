@@ -169,7 +169,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 else:
                     # Device not found in the blackboard, but apperantly exists in the settings,
                     # which means it was previously connected So we try to open it again
-                    logger.info("Device %s from settings was not found in the blackboard, opening a perpetual task to connect it", device.get_SN())
+                    logger.info("fDevice {settings_device.get_SN()} from settings was not found in the blackboard, opening a perpetual task to connect it")
                     self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
 
 
