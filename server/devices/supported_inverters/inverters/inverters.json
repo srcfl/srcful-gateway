@@ -340,13 +340,13 @@
       "registers": [
         {
           "fcode": 4,
-          "start_register": 36,
+          "start_register": 37,
           "num_of_registers": 1
         },
         {
           "fcode": 4,
-          "start_register": 36,
-          "num_of_registers": 1
+          "start_register": 1,
+          "num_of_registers": 3
         }
       ]
     },

@@ -22,6 +22,6 @@ class DiscoverModbusDevicesTask(Task):
 
         ip_port_mac_dict = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         
-        self.bb.set_modbus_devices_cache(ip_port_mac_dict)
+        self.bb.set_available_devices(ip_port_mac_dict)
 
         return None
