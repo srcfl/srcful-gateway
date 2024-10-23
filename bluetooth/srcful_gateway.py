@@ -10,11 +10,10 @@ import constants
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class SrcfulGateway:
-
     def __init__(self) -> None:
         # keep attempting to scan and get wifi info until it succeeds
         while True:
@@ -155,19 +154,16 @@ class SrcfulGateway:
         else:
             update_status_callback(constants.WIFI_ERROR)
         
-
     def is_egwttp_request(self, data) -> bool:
         return egwttp.is_request(data)
     
     def parse_egwttp_request(self, data) -> tuple[dict, str]:
         return egwttp.parse_request(data)
     
-    
     def handle_response(self, path: str, method: str, reply: requests.Response, offset: int):
         egwttp_response = egwttp.construct_response(path, method, reply.text, offset)
         logger.debug("Reply: %s", egwttp_response)
         return egwttp_response
-
 
     def request_get(self, path: str, offset: int) -> bytes:
         return self.handle_response(path, "GET", requests.get(constants.SRCFUL_GW_API_ENDPOINT + path, timeout=constants.SRCFUL_GW_API_REQUEST_TIMEOUT), offset)

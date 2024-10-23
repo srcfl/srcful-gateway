@@ -15,13 +15,13 @@ import macAddr
 
 # change root logger level to debug
 # Configure the root logger
-logging.basicConfig(level=logging.DEBUG, 
+logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 
-SERVICE_NAME = f"SrcFul Energy Gateway {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
+SERVICE_NAME = f"Sourceful Energy Gateway {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
 
 SERVER = None
 gateway = None
@@ -65,7 +65,8 @@ async def run(gpio_button_pin: int = -1):
     global gateway
     trigger.clear()
     
-    logger.warning("Initializing server...")
+    logger.info("Initializing server...")
+    
     # Instantiate the server
     SERVER = BlessServer(name=SERVICE_NAME, name_overwrite=True)
     logger.warning("Server instantiated")
@@ -83,7 +84,7 @@ async def run(gpio_button_pin: int = -1):
     logger.warning("Gateway initialized")
 
     SERVER.read_request_func = gateway.handle_read_request
-    SERVER.write_request_func = gateway.handle_write_request
+    SERVER.write_request_func = gateway.handle_write_request # lambda characteristic, value: asyncio.create_task(gateway.handle_write_request(characteristic, value))
     logger.warning("Request handlers set")
     
     logger.warning("Starting server...")
@@ -98,7 +99,7 @@ async def run(gpio_button_pin: int = -1):
         logger.error(f"Error starting server: {e}")
         raise  # Re-raise the exception to stop execution
 
-    logger.warning("Server started successfully!")
+    logger.info("Server started successfully!")
 
     # if we are using the bluez backend and gpio buttin is set then we stop advertising after 3 minutes and also set up the button
     if sys.platform == "linux" and gpio_button_pin >= 0:

@@ -14,9 +14,10 @@ from srcful_gateway import SrcfulGateway
 from helium_gateway import HeliumGateway
 import sys
 import base64
+import time
 
 # Configure the root logger
-logging.basicConfig(level=logging.DEBUG, 
+logging.basicConfig(level=logging.INFO, 
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     stream=sys.stdout)
 logger = logging.getLogger(__name__)
@@ -32,10 +33,10 @@ class Gateway:
         
     def update_diagnostics(self, characteristic: BlessGATTCharacteristic):        
         services = diagnostics_pb2.diagnostics_v1()
-        services.diagnostics['Name:'] = 'AA'
-        services.diagnostics['PubKey: '] = self.srcful_gw.get_swarm_id()
+        services.diagnostics['Name:'] = self.helium_gw.animal_name
         services.diagnostics['Payer: '] = self.helium_gw.payer_name
         services.diagnostics['Payer Addr: '] = self.helium_gw.payer_address
+        services.diagnostics['PubKey: '] = self.srcful_gw.get_swarm_id()
         services.diagnostics['Eth IP: '] = self.srcful_gw.get_eth_ip()
         services.diagnostics['Eth Mac: '] = self.srcful_gw.get_eth_mac()
         services.diagnostics['WiFi SSID: '] = self.srcful_gw.get_connected_wifi_ssid()
@@ -43,7 +44,7 @@ class Gateway:
         services.diagnostics['WiFi Mac: '] = self.srcful_gw.get_wifi_mac()
         
         characteristic.value = bytes(services.SerializeToString())
-        self.server.update_value(constants.SERVICE_UUID, constants.DIAGNOSTICS_UUID)
+        
         
     
     async def init_gateway(self):
@@ -53,8 +54,6 @@ class Gateway:
         gateway_swarm = self.srcful_gw.get_swarm_id()
         
         logger.debug(f"Gateway Swarm: {gateway_swarm}")
-        
-        # await self.helium_gw.fetch_payer(gateway_swarm)
         
         # To-Do: Read the onboarding and public key from the device and populate the characteristics
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.ONBOARDING_KEY_UUID, char_flags, gateway_swarm.encode('utf-8'), permissions)
@@ -117,6 +116,12 @@ class Gateway:
         elif characteristic.uuid == constants.DIAGNOSTICS_UUID:
             self.update_diagnostics(characteristic)
             
+        elif characteristic.uuid == constants.ADD_GATEWAY_UUID:
+            
+            # Wait until self.helium_gw.payer_address is set
+            while self.helium_gw.payer_address is None:
+                time.sleep(0.5)  # Sleep for 0.5 seconds between checks
+            
         return characteristic.value 
     
             
@@ -125,19 +130,18 @@ class Gateway:
         logger.debug(f"***** Write request {characteristic.uuid}, {value.decode('utf-8')}")
         logger.debug(f"################################################")
         if characteristic.uuid == constants.ADD_GATEWAY_UUID:
+                        
+            self.helium_gw.fetch_payer(self.srcful_gw.get_swarm_id())
             
-            # Seems like the timing of return here is critical.
-            # If the return is too early, the value is not updated
-            add_gateway_txn = self.helium_gw.create_add_gateway_txn(self.srcful_gw.get_swarm_id(), value)
-            
+            add_gateway_txn = self.helium_gw.create_add_gateway_txn(value)
             txn_bytes = base64.b64decode(add_gateway_txn)
-
             characteristic.value = txn_bytes
+            
             if self.server.update_value(constants.SERVICE_UUID, constants.ADD_GATEWAY_UUID):
                 logger.debug(f"Char updated, value set to {characteristic.value}")
             else:
                 logger.debug(f"Failed to update value")
-
+            
             return True
         elif characteristic.uuid == constants.WIFI_CONNECT_UUID:
 
@@ -150,7 +154,6 @@ class Gateway:
             self.srcful_gw.connect_wifi(value, update_status_callback)
             
             return True
-        
         elif characteristic.uuid == constants.SRCFUL_REQUEST_CHAR:
             value = value.decode("utf-8")
             if self.srcful_gw.is_egwttp_request(value):

@@ -4,12 +4,10 @@ import os
 import signal
 import json
 import logging
-from client import GatewayClient
-import base58 
 
 # change the logging level to debug from root level
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(name=__name__)
@@ -21,7 +19,6 @@ settings_path = os.getenv('GATEWAY_SETTINGS')
 
 # Global variable to store the process ID
 gateway_process = None
-
 gateway = None
 
 @app.route('/start_gateway', methods=['POST'])
@@ -75,14 +72,21 @@ def get_region():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
+@app.route('/name', methods=['GET'])
+def get_name():
+    try:
+        result = subprocess.run(['./helium_gateway', '-c', settings_path, 'info', 'name'], capture_output=True, text=True)
+        return json.loads(result.stdout), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     
 @app.route('/add_gateway', methods=['POST'])
 def add_gateway():
     
     data = request.get_json()
     data = json.loads(data)
-    logger.info(f"Request data: {type(data)}")
-    logger.info(f"Request data: {data}")
+    logger.debug(f"Request data: {data}")
+    
     owner = data.get('owner')
     payer = data.get('payer')
     logger.info(f"add gateway owner {owner} payer {payer}")
@@ -97,14 +101,14 @@ def add_gateway():
     try:
         
         json_payload = json.loads(result.stdout)
-        logger.info(f"Json payload {json_payload}")
+        logger.debug(f"Json payload {json_payload}")
         
         # log address, mode, owner, payer and txn 
-        logger.info(f"Address: {json_payload['address']}")
-        logger.info(f"Mode: {json_payload['mode']}")
-        logger.info(f"Owner: {json_payload['owner']}")
-        logger.info(f"Payer: {json_payload['payer']}")
-        logger.info(f"Txn: {json_payload['txn']}")
+        logger.debug(f"Address: {json_payload['address']}")
+        logger.debug(f"Mode: {json_payload['mode']}")
+        logger.debug(f"Owner: {json_payload['owner']}")
+        logger.debug(f"Payer: {json_payload['payer']}")
+        logger.debug(f"Txn: {json_payload['txn']}")
         
         txn = json_payload['txn']
             
@@ -121,6 +125,6 @@ def create_app():
     
     # Start the helium_gateway with the specified config file
     gateway_process = subprocess.Popen(['./helium_gateway', '-c', settings_path, 'server'])
-    gateway = GatewayClient()
+    # GatewayClient()
     logger.info(f"helium_gateway started with PID: {gateway_process.pid}")
     return app

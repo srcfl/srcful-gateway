@@ -1,5 +1,4 @@
 import logging
-import dbus # Do we really need dbus ? 
 import base58
 import requests
 import constants
@@ -7,64 +6,62 @@ import protos.add_gateway_pb2 as add_gateway_pb2
 import json
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class HeliumGateway:
     def __init__(self):
         logger.warning("Helium Gateway initialized")
+        self.animal_name = ""
         self.payer_name = ""
-        self.payer_address = "" # This is the payer's solana address
-        pass
-
-    def bytes_to_dbus_byte_array(self, str) -> list[dbus.Byte]:
-        byte_array = []
-
-        for c in str:
-            byte_array.append(dbus.Byte(c))
-
-        return byte_array
-
-    def bytes_to_hex_string(self, byte_data) -> str:
-        return ''.join(f'{byte:02x}' for byte in byte_data)
-
-    async def create_add_gateway_txn(self, value) -> bytes:
-       # https://docs.helium.com/hotspot-makers/become-a-maker/hotspot-integration-testing/#generate-an-add-hotspot-transaction
-
+        self.payer_address = ""
+        self.fetch_animal_name()
+        
+    def fetch_animal_name(self) -> None:
+        url = f"{constants.HELIUM_API_ENDPOINT}/name"
+        response = requests.get(url)
+        self.animal_name = response.json()['name']
+    
+    def create_add_gateway_txn(self, value) -> bytes:
+        """
+        Create an add gateway transaction
+        https://docs.helium.com/hotspot-makers/become-a-maker/hotspot-integration-testing/#generate-an-add-hotspot-transaction
+        """
         logger.debug(f"Add gateway, Value: {value}")
 
-        # Convert bytearray to bytes
+        # Parse and extract gateway details
+        add_gw_details = self._parse_gateway_details(value)
+        
+        # Prepare payload for API request
+        payload = self._prepare_payload(add_gw_details)
+        
+        # Send API request and process response
+        return self._send_api_request(payload)
+
+    def _parse_gateway_details(self, value):
         byte_data = bytes(value)
-
-        # Create an instance of the add_gateway_v1 message
         add_gw_details = add_gateway_pb2.add_gateway_v1()
-
-        # Parse the byte array into the message
         add_gw_details.ParseFromString(byte_data)
         
         logger.debug(f"Add gateway details: {add_gw_details}")
-    
+        
         owner = base58.b58decode_check(add_gw_details.owner)[1:]
-        payer = base58.b58decode_check(add_gw_details.payer)[1:]
-        fee = add_gw_details.fee
-        amount = add_gw_details.amount
+        owner_encoded = base58.b58encode(owner[1:]).decode('utf-8')
         
-        # Encode the owner and payer
-        owner_encoded = base58.b58encode(owner[1:])
-        payer_encoded = base58.b58encode(payer[1:])
+        logger.debug(f"Encoded owner: {owner_encoded}")
+        logger.debug(f"Fee: {add_gw_details.fee}")
+        logger.debug(f"Amount: {add_gw_details.amount}")
+        
+        return owner_encoded
 
-        logger.debug(f"Encoded owner {owner_encoded}")
-        logger.debug(f"Encoded payer {payer_encoded}")
-        
-        owner = owner_encoded.decode('utf-8')
-        payer = await self.fetch_payer(owner)
-        
-        payload = {
+    def _prepare_payload(self, owner):
+        return {
             "owner": owner,
             "mode": "full",
-            "payer": payer
+            "payer": self.payer_address if self.payer_address else owner
         }
-        
+
+    def _send_api_request(self, payload):
         url = f"{constants.HELIUM_API_ENDPOINT}/add_gateway"
         headers = {'Content-Type': 'application/json'}
         
@@ -72,68 +69,66 @@ class HeliumGateway:
         logger.debug(f"Json payload {json_payload}")
         
         response = requests.post(url, json=json_payload, headers=headers)
-        
         response_json = response.json()
         
         logger.debug(f"Response: {response_json}")
 
         if response.status_code == 200:
-            
-            txn = response_json['txn'] # This is the base64 encoded txn returned by gateway-rs
-            
+            txn = response_json['txn']
             logger.debug("Returning txn %s", txn)
             return txn
         else:
             logger.debug(f"Failed to add gateway {response.text}")
             return None
         
-        
-    async def fetch_payer(self, gateway_address: str) -> str:
+    def fetch_payer(self, gateway_address: str):
+        """
+        Fetch the payer's address and name for a given gateway address
+        """
         try:
-            # Step 1: Get the maker ID for the gateway
-            hotspot_url = f"{constants.HELIUM_ONBOARDING_ENDPOINT}/api/v2/hotspots/{gateway_address}"
-            
-            response = requests.get(hotspot_url)
-            
-            if response.status_code != 200:
-                return None
-
-            hotspot_data = response.json()
-            maker_id = hotspot_data.get("data", {}).get("makerId")
-
+            maker_id = self._get_maker_id(gateway_address)
             if not maker_id:
-                return None
+                return
 
-            # Step 2: Get the maker's SOL wallet address
-            makers_url = f"{constants.HELIUM_ONBOARDING_ENDPOINT}/api/v2/makers"
-            makers_response = requests.get(makers_url)
-            
-            if makers_response.status_code != 200:
-                return None
-
-            makers_data = makers_response.json()
-            makers_cache = makers_data.get("data", [])
-
-            maker = next((m for m in makers_cache if m["id"] == maker_id), None)
-            
+            maker = self._get_maker_info(maker_id)
             if not maker:
-                return None
+                return
 
-            payer_name = maker.get("name")
-            payer_address = maker.get("solanaAddress")
-            
-            logger.debug(f"Payer name: {payer_name}")
-            logger.debug(f"Payer address: {payer_address}")
-            
-            if not payer_address:
-                return None
-
-            self.payer_name = payer_name
-            self.payer_address = payer_address
-
-            return payer_address
+            self._set_payer_info(maker)
         except Exception as e:
-            logger.error(f"Error fetching payer {e}")
-            self.payer_name = ""
-            self.payer_address = ""
+            logger.error(f"Error fetching payer: {e}")
+
+    def _get_maker_id(self, gateway_address: str) -> str:
+        """Get the maker ID for the given gateway address"""
+        hotspot_url = f"{constants.HELIUM_ONBOARDING_ENDPOINT}/api/v2/hotspots/{gateway_address}"
+        response = requests.get(hotspot_url)
+        
+        if response.status_code != 200:
             return None
+
+        hotspot_data = response.json()
+        return hotspot_data.get("data", {}).get("makerId")
+
+    def _get_maker_info(self, maker_id: str) -> dict:
+        """Get the maker's information based on the maker ID"""
+        makers_url = f"{constants.HELIUM_ONBOARDING_ENDPOINT}/api/v2/makers"
+        makers_response = requests.get(makers_url)
+        
+        if makers_response.status_code != 200:
+            return None
+
+        makers_data = makers_response.json()
+        makers_cache = makers_data.get("data", [])
+        return next((m for m in makers_cache if m["id"] == maker_id), None)
+
+    def _set_payer_info(self, maker: dict):
+        """Set the payer's name and address from the maker information"""
+        payer_name = maker.get("name")
+        payer_address = maker.get("solanaAddress")
+        
+        logger.info(f"Payer name: {payer_name}")
+        logger.info(f"Payer address: {payer_address}")
+        
+        if payer_address:
+            self.payer_address = payer_address
+            self.payer_name = payer_name

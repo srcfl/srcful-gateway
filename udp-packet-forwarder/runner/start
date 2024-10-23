@@ -625,8 +625,9 @@ fi
 # Band configuration
 # -----------------------------------------------------------------------------
 
-API_WAIT_TIME=${API_WAIT_TIME:-30} # 10 seconds
-MAX_ATTEMPTS=${MAX_ATTEMPTS:-5}  # Maximum number of attempts to fetch the region
+# 576 attempts, once every 5 minutes => 48 hours
+API_WAIT_TIME=${API_WAIT_TIME:-30} # 30 seconds
+MAX_ATTEMPTS=${MAX_ATTEMPTS:-576}  # Maximum number of attempts to fetch the region
 DELAY_TIME=${DELAY_TIME:-300} # 5 minutes
 
 # Wait for the API to start
