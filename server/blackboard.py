@@ -41,7 +41,7 @@ class BlackBoard:
         self._settings = Settings()
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
         self._crypto_state = crypto_state if crypto_state is not None else {}
-        self._modbus_devices_cache = {}
+        self.available_devices = {}
         
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -126,7 +126,7 @@ class BlackBoard:
         state['crypto'] = self.crypto_state()
         state['network'] = self.network_state()
         state['devices'] = self.devices_state()
-        state['available_devices'] = self.modbus_devices_cache()
+        state['available_devices'] = self.get_available_devices()
         return state
     
     def message_state(self) -> dict:
@@ -172,11 +172,12 @@ class BlackBoard:
         ret['supported'] = supported.Handler().get_supported_inverters()
         return ret
     
-    def modbus_devices_cache(self) -> dict:
-        return self._modbus_devices_cache
+    def get_available_devices(self) -> dict:
+        return self.available_devices
     
-    def set_modbus_devices_cache(self, cache: dict):
-        self._modbus_devices_cache = cache
+    def set_available_devices(self, devices: dict):
+        self.available_devices = devices
+        self._save_state()
     
     @property
     def chip_death_count(self):
@@ -213,7 +214,7 @@ class BlackBoard:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.15.0"
+        return "0.15.2"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:
