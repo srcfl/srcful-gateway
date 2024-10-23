@@ -126,7 +126,7 @@ class BlackBoard:
         state['crypto'] = self.crypto_state()
         state['network'] = self.network_state()
         state['devices'] = self.devices_state()
-        state['modbus_devices_cache'] = self.modbus_devices_cache()
+        state['available_devices'] = self.modbus_devices_cache()
         return state
     
     def message_state(self) -> dict:
