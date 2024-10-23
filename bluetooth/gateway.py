@@ -13,6 +13,7 @@ import protos.diagnostics_pb2 as diagnostics_pb2
 from srcful_gateway import SrcfulGateway
 from helium_gateway import HeliumGateway
 import sys
+import base64
 
 # Configure the root logger
 logging.basicConfig(level=logging.DEBUG, 
@@ -53,7 +54,7 @@ class Gateway:
         
         logger.debug(f"Gateway Swarm: {gateway_swarm}")
         
-        await self.helium_gw.fetch_payer(gateway_swarm)
+        # await self.helium_gw.fetch_payer(gateway_swarm)
         
         # To-Do: Read the onboarding and public key from the device and populate the characteristics
         await self.server.add_new_characteristic(constants.SERVICE_UUID, constants.ONBOARDING_KEY_UUID, char_flags, gateway_swarm.encode('utf-8'), permissions)
@@ -125,11 +126,13 @@ class Gateway:
         logger.debug(f"################################################")
         if characteristic.uuid == constants.ADD_GATEWAY_UUID:
             
-            # Seems like the timing of return here is critical. 
+            # Seems like the timing of return here is critical.
             # If the return is too early, the value is not updated
             add_gateway_txn = self.helium_gw.create_add_gateway_txn(self.srcful_gw.get_swarm_id(), value)
+            
+            txn_bytes = base64.b64decode(add_gateway_txn)
 
-            characteristic.value = add_gateway_txn
+            characteristic.value = txn_bytes
             if self.server.update_value(constants.SERVICE_UUID, constants.ADD_GATEWAY_UUID):
                 logger.debug(f"Char updated, value set to {characteristic.value}")
             else:

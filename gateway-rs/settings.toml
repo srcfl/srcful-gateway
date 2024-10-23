@@ -8,7 +8,7 @@
 # keypair = "/etc/helium_gateway/gateway_key.bin"
 
 # Ecc608 based:
-keypair = "ecc://i2c-1:96?slot=0&network=mainnet"
+keypair = "ecc://i2c-1:96?slot=0"
 onboarding = "ecc://i2c-1:96?slot=0"
 
 # The address to listen on for the (semtech) packet forwarder

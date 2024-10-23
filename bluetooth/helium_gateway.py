@@ -13,8 +13,8 @@ logger.setLevel(logging.DEBUG)
 class HeliumGateway:
     def __init__(self):
         logger.warning("Helium Gateway initialized")
-        self.payer_name = None
-        self.payer_address = None # This is the payer's solana address
+        self.payer_name = ""
+        self.payer_address = "" # This is the payer's solana address
         pass
 
     def bytes_to_dbus_byte_array(self, str) -> list[dbus.Byte]:
@@ -28,7 +28,7 @@ class HeliumGateway:
     def bytes_to_hex_string(self, byte_data) -> str:
         return ''.join(f'{byte:02x}' for byte in byte_data)
 
-    def create_add_gateway_txn(self, swarm_key: str, value) -> bytes:
+    async def create_add_gateway_txn(self, value) -> bytes:
        # https://docs.helium.com/hotspot-makers/become-a-maker/hotspot-integration-testing/#generate-an-add-hotspot-transaction
 
         logger.debug(f"Add gateway, Value: {value}")
@@ -46,9 +46,8 @@ class HeliumGateway:
     
         owner = base58.b58decode_check(add_gw_details.owner)[1:]
         payer = base58.b58decode_check(add_gw_details.payer)[1:]
-        
-        logger.debug(f"Decoded owner {self.bytes_to_hex_string(owner[1:])}")
-        logger.debug(f"Decoded payer {self.bytes_to_hex_string(payer[1:])}")
+        fee = add_gw_details.fee
+        amount = add_gw_details.amount
         
         # Encode the owner and payer
         owner_encoded = base58.b58encode(owner[1:])
@@ -57,18 +56,20 @@ class HeliumGateway:
         logger.debug(f"Encoded owner {owner_encoded}")
         logger.debug(f"Encoded payer {payer_encoded}")
         
+        owner = owner_encoded.decode('utf-8')
+        payer = await self.fetch_payer(owner)
+        
         payload = {
-            "owner": owner_encoded.decode('utf-8'),
+            "owner": owner,
             "mode": "full",
-            "payer": self.payer_address # This should have been updated during gateway.init_gateway() in gateway.py
+            "payer": payer
         }
+        
+        url = f"{constants.HELIUM_API_ENDPOINT}/add_gateway"
+        headers = {'Content-Type': 'application/json'}
         
         json_payload = json.dumps(payload)
         logger.debug(f"Json payload {json_payload}")
-        url = f"{constants.HELIUM_API_ENDPOINT}/add_gateway"
-        headers = {'Content-Type': 'application/json'}
-        logger.debug(f"Url {url}")
-        logger.debug(f"Headers {headers}")
         
         response = requests.post(url, json=json_payload, headers=headers)
         
@@ -77,12 +78,11 @@ class HeliumGateway:
         logger.debug(f"Response: {response_json}")
 
         if response.status_code == 200:
-            logger.debug(f"Response {response_json['txn']}")
             
-            txn_signed = self.get_txn_signed(swarm_key, response_json['txn'])
-            # txn_bytes = base58.b58decode(txn_signed) # Not needed since get_txn_signed already returns a base58 decoded string
-
-            return self.bytes_to_dbus_byte_array(txn_signed)
+            txn = response_json['txn'] # This is the base64 encoded txn returned by gateway-rs
+            
+            logger.debug("Returning txn %s", txn)
+            return txn
         else:
             logger.debug(f"Failed to add gateway {response.text}")
             return None
@@ -137,31 +137,3 @@ class HeliumGateway:
             self.payer_name = ""
             self.payer_address = ""
             return None
-    
-    def get_txn_signed(self, swarm_key: str, txn: str) -> str:
-        url = f"{constants.HELIUM_TRANSACTION_ENDPOINT}/{swarm_key}"
-        headers = {'Content-Type': 'application/json'}
-        
-        payload = {
-            "transaction": txn
-        }
-        logger.debug(f"################################################")
-        logger.debug(f"Getting signed transaction")
-        logger.debug(f"Url {url}")
-        logger.debug(f"Headers {headers}")
-        logger.debug(f"Payload {payload}")
-        
-        try:
-            response = requests.post(url, json=payload, headers=headers)
-        
-            logger.debug(f"Response {response.json()}")
-            logger.debug(f"################################################")
-            
-            if response.status_code != 200:
-                return None
-            
-            return response.json()['data']['transaction'].encode('utf-8')
-        except Exception as e:
-            logger.error(f"Error getting signed transaction {e}")
-            return json.dumps({"error": str(e)})
-    
