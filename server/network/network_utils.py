@@ -24,8 +24,8 @@ class NetworkUtils:
     MASK_KEY = 'mask'
     DEVICE_KEY = 'device'
     TIMEOUT_KEY = 'timeout'
-    DEFAULT_MODBUS_PORTS = "502,1502,6607,8899"
-    DEFAULT_TIMEOUT = 0.01
+    DEFAULT_MODBUS_PORTS = "502,6607,8899"
+    DEFAULT_TIMEOUT = 0.1
 
     def __init__(self):
         raise NotImplementedError("This class shouldn't be instantiated.")

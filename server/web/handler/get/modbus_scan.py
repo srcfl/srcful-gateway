@@ -33,8 +33,8 @@ class ModbusScanHandler(GetHandler):
         ports = NetworkUtils.parse_ports(ports)
         timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, 0.01) # 10ms may be too short for some networks?
 
-        ip_port_mac_dict = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
+        available_devices = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         
-        data.bb.set_modbus_devices_cache(ip_port_mac_dict)
+        data.bb.set_available_devices(available_devices)
         
-        return 200, json.dumps({self.DEVICES: ip_port_mac_dict})
+        return 200, json.dumps({self.DEVICES: available_devices})
