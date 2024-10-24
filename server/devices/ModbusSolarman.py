@@ -127,7 +127,7 @@ class ModbusSolarman(ModbusTCP):
 
     def _get_config_dict(self) -> dict:
         return {
-            ICom.CONNECTION_KEY: "SOLARMAN",
+            ICom.CONNECTION_KEY: ModbusSolarman.CONNECTION,
             self.DEVICE_TYPE: self._get_type(),
             self.SERIAL: self._get_serial(),
             self.SLAVE_ID: self._get_slave_id(),

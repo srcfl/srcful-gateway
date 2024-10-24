@@ -6,12 +6,13 @@ from server.network.network_utils import NetworkUtils
 class HarvestDataType(Enum):
     MODBUS_REGISTERS = "modbus_registers"
     SUNSPEC = "sunspec_json"
+    P1_TELNET = "p1_telnet_json"
     UNDEFINED = "undefined"
 
 class DER_TYPE(Enum):
     PV = "pv"
     BATTERY = "battery"
-    UTILITY_METER = "utility_meter"
+    UTILITY_METER_P1 = "meter_p1"
 
 
 class ICom(ABC):

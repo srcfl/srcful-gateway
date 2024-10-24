@@ -2,6 +2,7 @@ from .ModbusRTU import ModbusRTU
 from .ModbusTCP import ModbusTCP
 from .ModbusSolarman import ModbusSolarman
 from .ModbusSunspec import ModbusSunspec
+from .P1Telnet import P1Telnet
 from .ICom import ICom
 import logging
 
@@ -19,13 +20,14 @@ class IComFactory:
             ModbusRTU.CONNECTION,
             ModbusSolarman.CONNECTION,
             ModbusSunspec.CONNECTION,
+            P1Telnet.CONNECTION,
         ]
 
     @staticmethod
     def get_connection_configs():
         return {
             cls.CONNECTION: cls.get_config_schema()
-            for cls in [ModbusTCP, ModbusRTU, ModbusSolarman, ModbusSunspec]
+            for cls in [ModbusTCP, ModbusRTU, ModbusSolarman, ModbusSunspec, P1Telnet]
         }
 
 
@@ -71,6 +73,8 @@ class IComFactory:
                 return ModbusSolarman(**stripped_config)
             case ModbusSunspec.CONNECTION:
                 return ModbusSunspec(**stripped_config)
+            case P1Telnet.CONNECTION:
+                return P1Telnet(**stripped_config)
             case _:
                 log.error("Unknown connection type: %s", connection)
                 return None

@@ -34,7 +34,7 @@ class Harvest(Task):
             self.device.disconnect()
             
             open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
-            transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
+            transports = self._create_transport(1, event_time, self.bb.settings.harvest.endpoints)
             return [open_inverter] + transports
         
         try:
@@ -60,14 +60,14 @@ class Harvest(Task):
             self.device.disconnect()
             
             open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
-            transports = self._create_transport(1, event_time, self.bb.settings.harvest._endpoints)
+            transports = self._create_transport(1, event_time, self.bb.settings.harvest.endpoints)
     
             return [open_inverter] + transports
             
         self.time = event_time + self.backoff_time
 
         # check if it is time to transport the harvest
-        transport = self._create_transport(10, event_time + elapsed_time_ms * 2, self.bb.settings.harvest._endpoints)
+        transport = self._create_transport(10, event_time + elapsed_time_ms * 2, self.bb.settings.harvest.endpoints)
         if len(transport) > 0:
             return [self] + transport
         return self
@@ -87,6 +87,7 @@ class Harvest(Task):
                     
                 transport = self.transport_factory(event_time + 100, self.bb, self.barn, headers)
                 transport.post_url = endpoint
+                ret.append(transport)
+
             self.barn = {}
-            ret.append(transport)
         return ret
