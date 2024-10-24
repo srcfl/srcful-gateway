@@ -50,21 +50,6 @@ class ModbusTCP(Modbus):
     def port_key() -> str:
         return "port"
     
-    @property
-    def DEVICE_TYPE(self) -> str:
-        return self.device_type_key()
-    
-    @staticmethod
-    def device_type_key() -> str:
-        return "device_type"
-
-    @property
-    def SLAVE_ID(self) -> str:
-        return self.slave_id_key()
-    
-    @staticmethod
-    def slave_id_key() -> str:
-        return "slave_id"
     
     @staticmethod
     def get_config_schema():
@@ -76,21 +61,20 @@ class ModbusTCP(Modbus):
             ModbusTCP.slave_id_key(): "int, Modbus address of the device",
         }
 
-    def __init__(self,
-                 ip: Optional[str] = None,
-                 mac: str = "00:00:00:00:00:00",
-                 port: Optional[int] = None, 
-                 device_type: Optional[str] = None, 
-                 slave_id: Optional[int] = None) -> None:
-        log.info("Creating with: %s %s %s %s %s", ip, mac, port, device_type, slave_id)
-        self.ip = ip
-        self.mac = mac
-        self.port = port
-        self.device_type = device_type
-        self.slave_id = slave_id
+    # init but with kwargs
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        
+        # check if old keys are provided
+        if "host" in kwargs:
+            kwargs[self.ip_key()] = kwargs.pop("host")
+            
+        # get the kwargs, and default if not provided
+        self.ip = kwargs.get(self.ip_key(), None)
+        self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
+        self.port = kwargs.get(self.port_key(), None)
         self.client = None
         self.data_type = HarvestDataType.MODBUS_REGISTERS.value
-        super().__init__()
 
     def _open(self, **kwargs) -> bool:
         if not self._is_terminated():
@@ -121,9 +105,16 @@ class ModbusTCP(Modbus):
     def _clone(self, ip: str = None) -> 'ModbusTCP':
         if ip is None:
             ip = self._get_host()
+            
+        args = {
+            self.ip_key(): ip,
+            self.mac_key(): self._get_mac(),
+            self.port_key(): self._get_port(),
+            self.device_type_key(): self._get_type(),
+            self.slave_id_key(): self._get_slave_id()
+        }
 
-        return ModbusTCP(ip, self._get_mac(), self._get_port(),
-                            self._get_type(), self._get_slave_id())
+        return ModbusTCP(**args)
 
     def _get_host(self) -> str:
         return self.ip

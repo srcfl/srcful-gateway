@@ -8,16 +8,42 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
+
 class Modbus(ICom):
     """Base class for all inverters."""
+    
+    @property
+    def DEVICE_TYPE(self) -> str:
+        return self.device_type_key()
+    
+    @staticmethod
+    def device_type_key() -> str:
+        return "device_type"
+
+    @property
+    def SLAVE_ID(self) -> str:
+        return self.slave_id_key()
+    
+    @staticmethod
+    def slave_id_key() -> str:
+        return "slave_id"
     
     @property
     def SN(self) -> str:
         return "sn"
 
-    def __init__(self):
+    def __init__(self, **kwargs) -> None:
+        if "address" in kwargs:
+            kwargs[self.SLAVE_ID] = kwargs.pop("address")
+        if "type" in kwargs:
+            kwargs[self.DEVICE_TYPE] = kwargs.pop("type")
+        
+        self.sn = kwargs.get(self.SN, None)
+        self.slave_id = kwargs.get(self.SLAVE_ID, None)
+        self.device_type = kwargs.get(self.DEVICE_TYPE, None)
+        
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
-        self.profile: InverterProfile = InverterProfiles().get(self._get_type())
+        self.profile: InverterProfile = InverterProfiles().get(self.device_type)
         
     def _get_type(self) -> str:
         """Returns the inverter's type."""

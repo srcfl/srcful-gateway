@@ -48,19 +48,11 @@ class ModbusSolarman(ModbusTCP):
             ModbusSolarman.serial_key(): "int, Serial number of the logger stick",
         }
     
-
-    def __init__(self, 
-                 ip: str = None, 
-                 mac: str = "00:00:00:00:00:00", 
-                 serial: int = None, 
-                 port: int = None, 
-                 device_type: str = None, 
-                 slave_id: int = None, 
-                 verbose: int = None) -> None:
-        log.info("Creating with: %s %s %s %s %s %s %s" % (ip, mac, serial, port, device_type, slave_id, verbose))
-        super().__init__(ip, mac, port, device_type, slave_id)
-        self.serial = serial
-        self.verbose = verbose
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        
+        self.serial = kwargs.get(self.serial_key(), None)
+        self.verbose = kwargs.get(self.verbose_key(), 0)
 
     def _open(self, **kwargs) -> bool:
         if not self._is_terminated():
@@ -106,16 +98,18 @@ class ModbusSolarman(ModbusTCP):
     def _clone(self, ip: str = None) -> 'ModbusSolarman':
         if ip is None:
             ip = self._get_host()
-
-        return ModbusSolarman(
-            ip, 
-            self._get_mac(),
-            self._get_serial(),
-            self._get_port(), 
-            self._get_type(), 
-            self._get_slave_id(), 
-            self.verbose
-        )
+            
+        args = {
+            self.ip_key(): ip,
+            self.mac_key(): self._get_mac(),
+            self.serial_key(): self._get_serial(),
+            self.port_key(): self._get_port(),
+            self.device_type_key(): self._get_type(),
+            self.slave_id_key(): self._get_slave_id(),
+            self.verbose_key(): self.verbose
+        }
+        
+        return ModbusSolarman(**args)
 
 
     def _get_serial(self) -> int:

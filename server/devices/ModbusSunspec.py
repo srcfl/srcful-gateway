@@ -66,27 +66,24 @@ class ModbusSunspec(ICom):
             ModbusSunspec.slave_id_key(): "int, Modbus address of the device",
         }
     
-    
-    
-    def __init__(self,
-                 ip: str,
-                 mac: str = "00:00:00:00:00:00",
-                 port: int = 502,
-                 slave_id: int = 1,
-                 verbose: bool = False) -> None:
-        """
-        Constructor
-        """
-        self.ip = ip
-        self.mac = mac
-        self.port = port
-        self.slave_id = slave_id
+    def __init__(self, **kwargs) -> None:
+        if "host" in kwargs:
+            kwargs[self.ip_key()] = kwargs.pop("host")
+        if "address" in kwargs:
+            kwargs[self.slave_id_key()] = kwargs.pop("address")
+        if "type" in kwargs:
+            kwargs[self.device_type_key()] = kwargs.pop("type")
+
+        self.ip = kwargs.get(self.ip_key(), None)
+        self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
+        self.port = kwargs.get(self.port_key(), None)
+        self.slave_id = kwargs.get(self.slave_id_key(), 1)
+        self.sn = kwargs.get(self.SN, None)
         self.client = None
         self.common = None
         self.inverter = None
         self.ac_model = None
         self.dc_model = None
-        self.sn = None
         self.data_type = HarvestDataType.SUNSPEC.value
         
     def connect(self) -> bool:

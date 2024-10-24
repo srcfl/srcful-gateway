@@ -57,7 +57,7 @@ class IComFactory:
         connection = config[ICom.CONNECTION_KEY]
         
         # Strip the connection key and sn from the config
-        stripped_config = {k: v for k, v in config.items() if k != ICom.CONNECTION_KEY and k != "sn"}
+        stripped_config = {k: v for k, v in config.items() if k != ICom.CONNECTION_KEY}
         
         log.info("####################################################")
         log.info("Creating ICom object for connection connection: %s", connection)
@@ -79,4 +79,6 @@ class IComFactory:
                 log.error("Unknown connection type: %s", connection)
                 return None
             
+        
+        
         

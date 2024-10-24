@@ -95,26 +95,22 @@ class ModbusRTU(Modbus):
             ModbusRTU.slave_id_key(): "int, Modbus address of the device",
         }
     
-
-    def __init__(self, 
-                 port: Optional[str] = None, 
-                 baudrate: Optional[int] = None, 
-                 bytesize: Optional[int] = None, 
-                 parity: Optional[str] = None, 
-                 stopbits: Optional[float] = None,
-                 device_type: Optional[str] = None,
-                 slave_id: Optional[int] = None):
-        log.info("Creating with: %s, %s, %s, %s, %s, %s, %s", port, baudrate, bytesize, parity, stopbits, device_type, slave_id)
-        self.port = port
-        self.baudrate = baudrate
-        self.bytesize = bytesize
-        self.parity = parity
-        self.stopbits = stopbits
-        self.device_type = device_type
-        self.slave_id = slave_id
+    
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        
+        self.port = kwargs.get(self.port_key(), None)
+        self.baudrate = kwargs.get(self.baud_rate_key(), None)
+        self.bytesize = kwargs.get(self.bytesize_key(), None)
+        self.parity = kwargs.get(self.parity_key(), None)
+        self.stopbits = kwargs.get(self.stopbits_key(), None)
+        # self.device_type = kwargs.get(self.device_type_key(), None)
+        self.slave_id = kwargs.get(self.slave_id_key(), None)
         self.client = None
         self.data_type = HarvestDataType.MODBUS_REGISTERS.value
-        super().__init__()
+        
+        
+
 
     def _open(self, **kwargs) -> bool:
         self._create_client(**kwargs)
@@ -141,13 +137,17 @@ class ModbusRTU(Modbus):
         if host is None:
             host = self._get_host()
             
-        return ModbusRTU(host, 
-                        self._get_baudrate(),
-                        self._get_bytesize(), 
-                        self._get_parity(),
-                        self._get_stopbits(), 
-                        self._get_type(), 
-                        self._get_slave_id())
+        args = {
+            self.port_key(): host,
+            self.baud_rate_key(): self._get_baudrate(),
+            self.bytesize_key(): self._get_bytesize(), 
+            self.parity_key(): self._get_parity(),
+            self.stopbits_key(): self._get_stopbits(), 
+            self.device_type_key(): self._get_type(), 
+            self.slave_id_key(): self._get_slave_id()
+        }
+            
+        return ModbusRTU(**args)
 
     def _get_host(self) -> str:
         return self.port

@@ -2,7 +2,7 @@ import pytest
 import json
 from server.settings import Settings, ChangeSource
 from server.devices.ModbusTCP import ModbusTCP
-
+import server.tests.config_defaults as cfg
 
 @pytest.fixture
 def settings():
@@ -10,11 +10,11 @@ def settings():
 
 @pytest.fixture
 def com():
-    return ModbusTCP("192.168.1.1", "00:00:00:00:00:00", 502, "solaredge", 1)
+    return ModbusTCP(**cfg.TCP_ARGS)
 
 @pytest.fixture
 def com2():
-    return ModbusTCP("192.168.1.1", "00:00:00:00:00:00", 502, "solaredge", 1)
+    return ModbusTCP(**cfg.TCP_ARGS)
 
 def test_constants(settings):
     assert settings.SETTINGS == "settings"
@@ -30,7 +30,7 @@ def test_devices_add_connection(settings, com):
 
     settings.devices.add_connection(com, ChangeSource.LOCAL)
     assert len(settings.devices.connections) == 1
-    assert settings.devices.connections[0]["ip"] == "192.168.1.1"
+    assert settings.devices.connections[0]["ip"] == "localhost"
     assert settings.devices.to_dict()[settings.devices.CONNECTIONS][0] == expected_connection
 
 def test_add_duplicate_device_but_different_casing(settings, com, com2):
