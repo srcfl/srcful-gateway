@@ -28,6 +28,9 @@ class DataReader:
     def get_socket(self):
         return "test_socket"
     
+    def clear_buffer(self):
+        pass
+    
 class MockTelnet:
     def __init__(self, host, port, timeout):
         self.host = host
