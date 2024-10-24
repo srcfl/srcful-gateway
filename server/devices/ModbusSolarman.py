@@ -12,15 +12,18 @@ log.setLevel(logging.INFO)
 
 class ModbusSolarman(ModbusTCP):
     """
-    ip: string, IP address of the inverter,
-    mac: string, MAC address of the inverter,
-    serial: int, Serial number of the logger stick,
-    port: int, Port of the inverter,
-    type: string, solaredge, huawei or fronius etc...,
-    address: int, Modbus address of the inverter
-    verbose: int, 0 or 1 for verbose logging
+    ModbusSolarman device class
+    
+    Attributes:
+        ip (str): The IP address or hostname of the device.
+        mac (str, optional): The MAC address of the device. Defaults to "00:00:00:00:00:00" if not provided.
+        serial (int): The serial number of the logger stick.
+        port (int): The port number used for the Modbus connection.
+        device_type (str): The type of the device (solaredge, huawei or fronius etc...).
+        slave_id (int): The Modbus address of the device, typically used to identify the device on the network.
+        verbose (int, optional): The verbosity level of the device. Defaults to 0.
     """
-
+    
     CONNECTION = "SOLARMAN"
       
     @property
@@ -45,7 +48,7 @@ class ModbusSolarman(ModbusTCP):
         schema = ModbusTCP.get_config_schema()
         return {
             **schema,
-            ModbusSolarman.serial_key(): "int, Serial number of the logger stick",
+            ModbusSolarman.serial_key(): "int - Serial number of the logger stick",
         }
     
     def __init__(self, **kwargs) -> None:

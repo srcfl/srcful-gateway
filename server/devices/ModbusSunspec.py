@@ -10,11 +10,14 @@ logger.setLevel(logging.INFO)
 
 class ModbusSunspec(ICom):
     """
-    ip: string, IP address of the Modbus TCP device,
-    mac: string, MAC address of the Modbus TCP device,
-    port: int, Port of the Modbus TCP device,
-    device_type: string, solaredge, huawei or fronius etc...,
-    slave_id: int, Modbus address of the Modbus TCP device
+    ModbusSunspec device class
+    
+    Attributes:
+        ip (str): The IP address or hostname of the device.
+        mac (str, optional): The MAC address of the device. Defaults to "00:00:00:00:00:00" if not provided.
+        port (int): The port number used for the Modbus connection.
+        slave_id (int): The Modbus address of the device, typically used to identify the device on the network.
+        sn (str, optional): The serial number of the device. If not provided, it may be retrieved from the device.
     """
 
     CONNECTION = "SUNSPEC"
@@ -56,14 +59,24 @@ class ModbusSunspec(ICom):
     def slave_id_key() -> str:
         return "slave_id"
     
+    @property
+    def SN(self) -> str:
+        return "sn"
+    
+    @staticmethod
+    def sn_key() -> str:
+        return "sn"
+    
     @staticmethod
     def get_config_schema():
+        """Returns the schema for the config and optional parameters of the ModbusSunspec device."""
         return {
             ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
-            ModbusSunspec.ip_key(): "string, IP address or hostname of the device",
-            ModbusSunspec.mac_key(): "string, MAC address of the device",
-            ModbusSunspec.port_key(): "int, port of the device",
-            ModbusSunspec.slave_id_key(): "int, Modbus address of the device",
+            ModbusSunspec.ip_key(): "string - IP address or hostname of the device",
+            ModbusSunspec.mac_key(): "string - (Optional) MAC address of the device",
+            ModbusSunspec.port_key(): "int - port of the device",
+            ModbusSunspec.slave_id_key(): "int - Modbus address of the device",
+            ModbusSunspec.sn_key(): "string - (Optional) serial number of the device"
         }
     
     def __init__(self, **kwargs) -> None:
@@ -78,7 +91,7 @@ class ModbusSunspec(ICom):
         self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
         self.port = kwargs.get(self.port_key(), None)
         self.slave_id = kwargs.get(self.slave_id_key(), 1)
-        self.sn = kwargs.get(self.SN, None)
+        self.sn = kwargs.get(self.sn_key(), None)
         self.client = None
         self.common = None
         self.inverter = None
@@ -199,4 +212,4 @@ class ModbusSunspec(ICom):
         return None
     
     def get_SN(self) -> str:
-        return self.sn
+        return self.sn or self.mac

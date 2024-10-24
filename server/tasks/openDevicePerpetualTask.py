@@ -17,6 +17,12 @@ class DevicePerpetualTask(Task):
         logger.info("******************** DevicePerpetualTask ********************")
         logger.info("*************************************************************")
         
+        # Check if the device is already in the blackboard and is open
+        # If it is, we don't need to do anything. This check is necessary to ensure 
+        # that a device does not get opened multiple times.
+        if self.bb.devices.contains(self.device) and self.device.is_open():
+            return None
+        
         try:
             if self.device.connect():
                 

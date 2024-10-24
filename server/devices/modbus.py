@@ -41,6 +41,9 @@ class Modbus(ICom):
         self.sn = kwargs.get(self.SN, None)
         self.slave_id = kwargs.get(self.SLAVE_ID, None)
         self.device_type = kwargs.get(self.DEVICE_TYPE, None)
+
+        if self.device_type:
+            self.device_type = self.device_type.lower()
         
         self._isTerminated = False  # this means the inverter is marked for removal it will not react to any requests
         self.profile: InverterProfile = InverterProfiles().get(self.device_type)
