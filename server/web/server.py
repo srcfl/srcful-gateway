@@ -20,6 +20,7 @@ class Endpoints:
             "name": handler.get.name.Handler(),
             "logger": handler.get.logger.Handler(),
             "inverter": handler.get.inverter.Handler(),
+            "device": handler.get.device.Handler(),
             # "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
             # "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
             "inverter/modbus/scan": handler.get.modbus_scan.ModbusScanHandler(),

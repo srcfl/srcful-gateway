@@ -14,4 +14,4 @@ from . import supported
 from . import notification
 from . import settings
 from . import state
-
+from . import device
