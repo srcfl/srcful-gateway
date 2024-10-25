@@ -33,20 +33,21 @@ class Handler(PostHandler):
 
     def do_post(self, data: RequestData) -> tuple[int, str]:
         logger.info(f"Device enpoint Received data: {data.data}")
-        try:
-            connection_types = IComFactory.get_supported_connections()
-            connection_type = next((ct for ct in connection_types if ct in data.data), None)
-            logger.info(f"Connection type: {connection_type}")
-            if not connection_type:
+
+        
+        try:            
+            if ICom.CONNECTION_KEY not in data.data:
                 logger.error(f"Missing or invalid connection type")
                 return 400, json.dumps({"status": "error", "message": "Missing or invalid connection type"})
+        
+            com = IComFactory.create_com(data.data)
             
-            config = {ICom.CONNECTION_KEY: connection_type, **data.data[connection_type]}
-            com = IComFactory.create_com(config)
-            logger.info(f"Created a device {connection_type} connection")
+            # config = {ICom.CONNECTION_KEY: connection_type, **data.data[connection_type]}
+            # com = IComFactory.create_com(config)
+            logger.info(f"Created a device {com.get_config()} connection")
             
             data.bb.add_task(OpenDeviceTask(data.bb.time_ms() + 100, data.bb, com))
-            return 200, json.dumps({"status": "ok"})   
+            return 200, json.dumps({"status": "ok"})
             
         except Exception as e:
             logger.error(f"Failed to open a device connection: {str(e)}")
