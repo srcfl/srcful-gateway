@@ -37,6 +37,10 @@ class ICom(ABC):
     @abstractmethod
     def is_valid(self) -> bool:
         pass
+
+    @abstractmethod
+    def is_terminated(self) -> bool:
+        pass
     
     @abstractmethod
     def disconnect(self) -> None:

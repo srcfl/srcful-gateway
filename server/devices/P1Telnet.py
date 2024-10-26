@@ -201,7 +201,7 @@ class P1Telnet(ICom):
         mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
         for service in mdns_services:
             if service.address and service.port:
-                p1 = P1Telnet(service.address, service.port, self.meter_serial_number)
+                p1 = P1Telnet(service.address, self.port, self.meter_serial_number)
                 if p1.connect():
                     return p1
         return None

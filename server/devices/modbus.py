@@ -45,10 +45,6 @@ class Modbus(ICom):
         """Returns True if the inverter is terminated."""
         raise NotImplementedError("Subclass must implement abstract method")
 
-    def _clone(self, host: str):
-        """Returns a clone of the inverter. This clone will only have the configuration and not the connection."""
-        raise NotImplementedError("Subclass must implement abstract method")
-
     def _get_config(self) -> tuple:
         """Returns the inverter's setup as a tuple."""
         raise NotImplementedError("Subclass must implement abstract method")
@@ -172,9 +168,6 @@ class Modbus(ICom):
     
     def get_profile(self) -> InverterProfile:
         return self.profile
-    
-    def clone(self, host: str = None) -> 'ICom':
-        return self._clone(host)
     
     def find_device(self) -> 'ICom':
         

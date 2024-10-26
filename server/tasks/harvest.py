@@ -1,6 +1,7 @@
 
 import logging
-from typing import List
+from typing import List, Union
+from server.tasks.itask import ITask
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.blackboard import BlackBoard
 from .task import Task
@@ -23,20 +24,27 @@ class Harvest(Task):
         self.max_backoff_time = 256000 # max ~4.3-minute backoff
         self.transport_factory = transport_factory
 
-    def execute(self, event_time) -> Task | list[Task]:
+    def execute(self, event_time) -> Union[List[ITask], ITask, None]:
 
         start_time = event_time
         elapsed_time_ms = 1000
 
         if not self.device.is_open():
-            logger.info("This should never happen unless the device is unexpectedly closed. Inverter is terminated make the final transport if there is anything in the barn")
+            logger.info("Device is closed make the final transport if there is anything in the barn")
             self.device.disconnect()
             # self.bb.devices.remove(self.device)
             # self.bb.add_warning("Device unexpectedly closed, removing from blackboard and starting a new open device perpetual task")
-            open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
+
+            
             transports = self._create_transport(1, event_time, self.bb.settings.harvest.endpoints)
-            return [open_inverter] + transports
-        
+
+            #  if the devices is not terminated, we need to start a new open device perpetual to try to reconnect
+            if not self.device.is_terminated():
+                open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
+                transports.append(open_inverter)
+            
+            return transports
+    
         try:
             harvest = self.device.read_harvest_data(force_verbose=len(self.barn) == 0)
             end_time = self.bb.time_ms()

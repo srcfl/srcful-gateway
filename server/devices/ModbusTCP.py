@@ -115,7 +115,7 @@ class ModbusTCP(Modbus):
     def _is_terminated(self) -> bool:
         return self._isTerminated
 
-    def _clone(self, ip: str = None) -> 'ModbusTCP':
+    def clone(self, ip: str = None) -> 'ModbusTCP':
         if ip is None:
             ip = self._get_host()
 

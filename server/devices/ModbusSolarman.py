@@ -100,7 +100,7 @@ class ModbusSolarman(ModbusTCP):
     def _is_terminated(self) -> bool:
         return self._isTerminated
 
-    def _clone(self, ip: str = None) -> 'ModbusSolarman':
+    def clone(self, ip: str = None) -> 'ModbusSolarman':
         if ip is None:
             ip = self._get_host()
 
