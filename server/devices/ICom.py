@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 from .supported_inverters.profiles import InverterProfile
 from enum import Enum
 from server.network.network_utils import NetworkUtils
@@ -32,6 +33,7 @@ class ICom(ABC):
 
     @abstractmethod
     def connect(self) -> bool:
+        ''' Establish a connection to the device using the configuration of the device. If the device has a serial number it will only connect to the device with that serial number. If it has no serial number it will read the serial number from the device.'''
         pass
     
     @abstractmethod
@@ -39,15 +41,12 @@ class ICom(ABC):
         pass
 
     @abstractmethod
-    def is_terminated(self) -> bool:
+    def is_disconnected(self) -> bool:
         pass
     
     @abstractmethod
     def disconnect(self) -> None:
-        pass
-    
-    @abstractmethod
-    def reconnect(self) -> bool:
+        ''' Permanently disconnect the device. This will close the connection and release any resources. You cannot reconnect to the device with the same object. Instead create a new object using. eg clone(). '''
         pass
     
     @abstractmethod
@@ -67,11 +66,11 @@ class ICom(ABC):
         pass
     
     @abstractmethod
-    def get_profile(self) -> InverterProfile:
+    def get_name(self) -> str:
         pass
     
     @abstractmethod
-    def clone(self, ip: str) -> 'ICom':
+    def clone(self, ip: Optional[str] = None) -> 'ICom':
         pass
     
     @abstractmethod

@@ -1,4 +1,4 @@
-from server.web.handler.post.modbus_create import Handler as ModbusDeviceHandler
+from server.web.handler.post.device import Handler as DeviceHandler
 from server.web.handler.requestData import RequestData
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.blackboard import BlackBoard
@@ -10,7 +10,7 @@ import queue
 def test_post_create_inverter_tcp():
     conf = cfg.TCP_CONFIG
 
-    handler = ModbusDeviceHandler()
+    handler = DeviceHandler()
     rd = RequestData(BlackBoard(), {}, {}, conf)
 
     handler.do_post(rd)

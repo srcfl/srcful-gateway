@@ -110,11 +110,10 @@ class ModbusRTU(Modbus):
         self.bytesize = bytesize
         self.parity = parity
         self.stopbits = stopbits
-        self.device_type = device_type
         self.slave_id = slave_id
         self.client = None
         self.data_type = HarvestDataType.MODBUS_REGISTERS.value
-        super().__init__()
+        super().__init__(device_type)
 
     def _open(self, **kwargs) -> bool:
         self._create_client(**kwargs)
@@ -124,30 +123,27 @@ class ModbusRTU(Modbus):
         else:
             return False
 
-    def _is_open(self) -> bool:
+    def is_open(self) -> bool:
         return bool(self.client.socket)
     
     def _close(self) -> None:
         self.client.close()
 
-    def _terminate(self) -> None:
+    def _disconnect(self) -> None:
         self._close()
-        self._isTerminated = True
 
-    def _is_terminated(self) -> bool:
-        return self._isTerminated
 
     def clone(self, host: str = None) -> 'ModbusRTU':
         if host is None:
             host = self._get_host()
             
-        return ModbusRTU(host, 
-                        self._get_baudrate(),
-                        self._get_bytesize(), 
-                        self._get_parity(),
-                        self._get_stopbits(), 
-                        self._get_type(), 
-                        self._get_slave_id())
+        return ModbusRTU(self.port, 
+                        self.baudrate,
+                        self.bytesize, 
+                        self.parity,
+                        self.stopbits, 
+                        self.device_type, 
+                        self.slave_id)
 
     def _get_host(self) -> str:
         return self.port
@@ -173,41 +169,31 @@ class ModbusRTU(Modbus):
     def find_device(self) -> 'ICom':
         raise NotImplementedError("find_device is not implemented for ModbusRTU")
     
-    def _get_SN(self) -> str:
+    def get_SN(self) -> str:
         return "N/A"
 
-    def _get_config(self) -> tuple[str, str, int, int, str, float, str, int]:
-        return (
-            ModbusRTU.CONNECTION,
-            self._get_host(),
-            self._get_baudrate(),
-            self._get_bytesize(),
-            self._get_parity(),
-            self._get_stopbits(),
-            self._get_type(),
-            self._get_slave_id(),
-        )
+    def get_config(self) -> dict:
+        super_config = super().get_config()
 
-    def _get_config_dict(self) -> dict:
-        return {
+        my_config = {
             ICom.CONNECTION_KEY: ModbusRTU.CONNECTION,
-            self.DEVICE_TYPE: self._get_type(),
-            self.SLAVE_ID: self._get_slave_id(),
-            self.PORT: self._get_host(),
-            self.BAUD_RATE: self._get_baudrate(),
-            self.BYTESIZE: self._get_bytesize(),
-            self.PARITY: self._get_parity(),
-            self.STOPBITS: self._get_stopbits(),
+            self.SLAVE_ID: self.slave_id,
+            self.PORT: self.port,
+            self.BAUD_RATE: self.baudrate,
+            self.BYTESIZE: self.bytesize,
+            self.PARITY: self.parity,
+            self.STOPBITS: self.stopbits,
         }
+        return {**super_config, **my_config}
     
     def _create_client(self, **kwargs) -> None:
-        self.client = ModbusClient(
+        self.client = ModbusClient( 
             method="rtu",
-            port=self._get_host(),
-            baudrate=self._get_baudrate(),
-            bytesize=self._get_bytesize(),
-            parity=self._get_parity(),
-            stopbits=self._get_stopbits(),
+            port=self.port,
+            baudrate=self.baudrate,
+            bytesize=self.bytesize,
+            parity=self.parity,
+            stopbits=self.stopbits,
             **kwargs
         )
 
@@ -226,7 +212,7 @@ class ModbusRTU(Modbus):
         
         return resp.registers
     
-    def write_registers(self, starting_register, values) -> None:
+    def write_registers(self, starting_register, values) -> bool:
         """
         Write a range of holding registers from a start address
         """

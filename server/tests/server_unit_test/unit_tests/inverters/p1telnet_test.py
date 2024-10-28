@@ -78,7 +78,7 @@ def test_parse_p1_data():
 def test_read_harvest_data():
     mock_telnet = DataReader(get_p1_data())
     p1 = P1Telnet("192.168.0.30", 23, "")
-    harvest = p1._read_harvest_data(mock_telnet)
+    harvest = p1._read_harvest_data_internal(mock_telnet)
     assert '/LGF5E360' in harvest
     assert '!A267' in harvest
 

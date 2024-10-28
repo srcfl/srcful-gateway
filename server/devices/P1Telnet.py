@@ -5,6 +5,7 @@ import errno
 from typing import Callable, List, Optional
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 
+from server.devices.Device import Device
 from server.network import mdns as mdns
 from .supported_inverters.profiles import InverterProfiles, InverterProfile
 from .ICom import HarvestDataType, ICom
@@ -70,7 +71,7 @@ class SimpleTelnet:
     def get_socket(self):
         return self.socket
 
-class P1Telnet(ICom):
+class P1Telnet(Device):
 
 
     CONNECTION = "P1Telnet"
@@ -100,7 +101,7 @@ class P1Telnet(ICom):
         self.meter_serial_number = meter_serial_number
         self.model_name = model_name
 
-    def connect(self) -> bool:
+    def _connect(self, **kwargs) -> bool:
         try:
             self.client = SimpleTelnet(self.ip, self.port, 5)
             self.client.connect()
@@ -118,27 +119,23 @@ class P1Telnet(ICom):
     def is_valid(self) -> bool:
         return self.meter_serial_number != ""
     
-    def disconnect(self) -> None:
+    def _disconnect(self) -> None:
         if self.client:
             self.client.close()
-    
-    def reconnect(self) -> bool:
-        self.disconnect()
-        return self.connect()
-    
+       
     def is_open(self) -> bool:
         return self.client is not None and self.client.get_socket() is not None
     
-    def read_harvest_data(self, force_verbose) -> dict:
+    def _read_harvest_data(self, force_verbose) -> dict:
         try:
-            p1_message = self._read_harvest_data(self.client)
+            p1_message = self._read_harvest_data_internal(self.client)
             data = self._parse_p1_message(p1_message)
             return data
         except Exception as e:
             logger.error(f"Error reading P1 data: {str(e)}")
             raise
         
-    def _read_harvest_data(self, telnet_client: SimpleTelnet) -> str:
+    def _read_harvest_data_internal(self, telnet_client: SimpleTelnet) -> str:
         timeout = 20
         
         # we clear the buffer so we don't get old data
@@ -183,14 +180,8 @@ class P1Telnet(ICom):
             "meter_serial_number": self.meter_serial_number
         }
     
-    def get_profile(self) -> InverterProfile:
-
-        # this is just a temporary until get_profile is removed.
-        class P1ProfileTmp(InverterProfile):
-            def __init__(self):
-                self.name = "P1Telnet"
-
-        return P1ProfileTmp()
+    def get_name(self) -> str:
+        return "P1Telnet"
     
     def clone(self, ip: Optional[str] = None) -> 'ICom':
         if ip is None:

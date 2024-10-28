@@ -62,18 +62,15 @@ class ModbusSolarman(ModbusTCP):
         self.serial = serial
         self.verbose = verbose
 
-    def _open(self, **kwargs) -> bool:
-        if not self._is_terminated():
-            try:
-                self._create_client(**kwargs)
-                if not self.client.sock:
-                    log.error("FAILED to open inverter: %s", self._get_type())
-                return bool(self.client.sock)
-            except Exception as e:
-                log.error("Error opening inverter: %s", self._get_type())
-                log.error(e)
-                return False
-        else:
+    def _connect(self, **kwargs) -> bool:
+        try:
+            self._create_client(**kwargs)
+            if not self.client.sock:
+                log.error("FAILED to open inverter: %s", self._get_type())
+            return bool(self.client.sock)
+        except Exception as e:
+            log.error("Error opening inverter: %s", self._get_type())
+            log.error(e)
             return False
 
     def _is_open(self) -> bool:
@@ -93,24 +90,18 @@ class ModbusSolarman(ModbusTCP):
             log.error("Close -> Error disconnecting inverter: %s", self._get_type())
             log.error(e)
 
-    def _terminate(self) -> None:
+    def _disconnect(self) -> None:
         self._close()
         self._isTerminated = True
 
-    def _is_terminated(self) -> bool:
-        return self._isTerminated
-
     def clone(self, ip: str = None) -> 'ModbusSolarman':
-        if ip is None:
-            ip = self._get_host()
-
         return ModbusSolarman(
-            ip, 
-            self._get_mac(),
-            self._get_serial(),
-            self._get_port(), 
-            self._get_type(), 
-            self._get_slave_id(), 
+            ip if ip else self.ip, 
+            self.mac,
+            self.serial,
+            self.port, 
+            self.device_type, 
+            self.slave_id, 
             self.verbose
         )
 
@@ -119,31 +110,29 @@ class ModbusSolarman(ModbusTCP):
         return self.serial
     
     
-    def _get_SN(self) -> str:
+    def get_SN(self) -> str:
         return str(self.serial)
 
-    def _get_config_dict(self) -> dict:
-        return {
+    def get_config(self) -> dict:
+        super_config = super().get_config()
+
+        my_config = {
             ICom.CONNECTION_KEY: ModbusSolarman.CONNECTION,
-            self.DEVICE_TYPE: self._get_type(),
-            self.SERIAL: self._get_serial(),
-            self.SLAVE_ID: self._get_slave_id(),
-            self.IP: self._get_host(),
-            self.MAC: self._get_mac(),
-            self.PORT: self._get_port(),
+            self.SERIAL: self.serial,
+            self.SLAVE_ID: self.slave_id,
             self.VERBOSE: self.verbose
         }
-    
+        return {**super_config, **my_config}
     def _create_client(self, **kwargs) -> None:
         try:
-            self.client = PySolarmanV5(address=self._get_host(),
-                            serial=self._get_serial(),
-                            port=self._get_port(),
-                            mb_slave_id=self._get_slave_id(),
+            self.client = PySolarmanV5(address=self.ip,
+                            serial=self.serial,
+                            port=self.port,
+                            mb_slave_id=self.slave_id,
                             v5_error_correction=False,
                             verbose=self.verbose,
                             **kwargs)
-            self.mac = NetworkUtils.get_mac_from_ip(self._get_host())
+            self.mac = NetworkUtils.get_mac_from_ip(self.ip)
         except Exception as e:
             log.error("Error creating client: %s", e)
 

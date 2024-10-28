@@ -36,12 +36,19 @@ class Handler(PostHandler):
         try:
             connection_types = IComFactory.get_supported_connections()
             connection_type = next((ct for ct in connection_types if ct in data.data), None)
-            logger.info(f"Connection type: {connection_type}")
             if not connection_type:
-                logger.error(f"Missing or invalid connection type")
-                return 400, json.dumps({"status": "error", "message": "Missing or invalid connection type"})
-            
-            config = {ICom.CONNECTION_KEY: connection_type, **data.data[connection_type]}
+                # no key found try the connection type in the config
+                if ICom.CONNECTION_KEY in data.data and data.data[ICom.CONNECTION_KEY] in connection_types:
+                    connection_type = data.data[ICom.CONNECTION_KEY]
+                else:
+                    logger.error(f"Missing or invalid connection type")
+                    return 400, json.dumps({"status": "error", "message": "Missing or invalid connection type"})
+
+            logger.info(f"Connection type: {connection_type}")
+            config = data.data
+            if ICom.CONNECTION_KEY not in config:
+                config[ICom.CONNECTION_KEY] = connection_type
+                
             com = IComFactory.create_com(config)
             logger.info(f"Created a device {connection_type} connection")
             

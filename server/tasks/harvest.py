@@ -31,7 +31,6 @@ class Harvest(Task):
 
         if not self.device.is_open():
             logger.info("Device is closed make the final transport if there is anything in the barn")
-            self.device.disconnect()
             # self.bb.devices.remove(self.device)
             # self.bb.add_warning("Device unexpectedly closed, removing from blackboard and starting a new open device perpetual task")
 
@@ -39,7 +38,7 @@ class Harvest(Task):
             transports = self._create_transport(1, event_time, self.bb.settings.harvest.endpoints)
 
             #  if the devices is not terminated, we need to start a new open device perpetual to try to reconnect
-            if not self.device.is_terminated():
+            if not self.device.is_disconnected():
                 open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
                 transports.append(open_inverter)
             
@@ -81,7 +80,7 @@ class Harvest(Task):
             return [self] + transport
         return self
 
-    def _create_transport(self, limit: int, event_time: int, endpoints: list[str]) -> List[Task]:
+    def _create_transport(self, limit: int, event_time: int, endpoints: list[str]) -> List[ITask]:
         ret = []
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
             for endpoint in endpoints:
@@ -91,8 +90,7 @@ class Harvest(Task):
                 headers["dtype"] = self.device.get_harvest_data_type()
                 headers["sn"] = self.device.get_SN()
                 
-                if self.device.get_profile():
-                    headers["model"] = self.device.get_profile().name.lower()
+                headers["model"] = self.device.get_name().lower()
                     
                 transport = self.transport_factory(event_time + 100, self.bb, self.barn, headers)
                 transport.post_url = endpoint
