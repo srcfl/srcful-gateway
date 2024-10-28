@@ -12,15 +12,18 @@ log.setLevel(logging.INFO)
 
 class ModbusSolarman(ModbusTCP):
     """
-    ip: string, IP address of the inverter,
-    mac: string, MAC address of the inverter,
-    serial: int, Serial number of the logger stick,
-    port: int, Port of the inverter,
-    type: string, solaredge, huawei or fronius etc...,
-    address: int, Modbus address of the inverter
-    verbose: int, 0 or 1 for verbose logging
+    ModbusSolarman device class
+    
+    Attributes:
+        ip (str): The IP address or hostname of the device.
+        mac (str, optional): The MAC address of the device. Defaults to "00:00:00:00:00:00" if not provided.
+        serial (int): The serial number of the logger stick.
+        port (int): The port number used for the Modbus connection.
+        device_type (str): The type of the device (solaredge, huawei or fronius etc...).
+        slave_id (int): The Modbus address of the device, typically used to identify the device on the network.
+        verbose (int, optional): The verbosity level of the device. Defaults to 0.
     """
-
+    
     CONNECTION = "SOLARMAN"
       
     @property
@@ -45,22 +48,14 @@ class ModbusSolarman(ModbusTCP):
         schema = ModbusTCP.get_config_schema()
         return {
             **schema,
-            ModbusSolarman.serial_key(): "int, Serial number of the logger stick",
+            ModbusSolarman.serial_key(): "int - Serial number of the logger stick",
         }
     
-
-    def __init__(self, 
-                 ip: str = None, 
-                 mac: str = None, 
-                 serial: int = None, 
-                 port: int = None, 
-                 device_type: str = None, 
-                 slave_id: int = None, 
-                 verbose: int = None) -> None:
-        log.info("Creating with: %s %s %s %s %s %s %s" % (ip, mac, serial, port, device_type, slave_id, verbose))
-        super().__init__(ip, mac, port, device_type, slave_id)
-        self.serial = serial
-        self.verbose = verbose
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        
+        self.serial = kwargs.get(self.serial_key(), None)
+        self.verbose = kwargs.get(self.verbose_key(), 0)
 
     def _connect(self, **kwargs) -> bool:
         try:
@@ -80,6 +75,9 @@ class ModbusSolarman(ModbusTCP):
             log.error("Error checking if inverter is open: %s", self._get_type())
             log.error(e)
             return False
+        
+    def _is_valid(self) -> bool:
+        return self.get_SN() is not None
 
     def _close(self) -> None:
         try:
@@ -119,7 +117,6 @@ class ModbusSolarman(ModbusTCP):
         my_config = {
             ICom.CONNECTION_KEY: ModbusSolarman.CONNECTION,
             self.SERIAL: self.serial,
-            self.SLAVE_ID: self.slave_id,
             self.VERBOSE: self.verbose
         }
         return {**super_config, **my_config}

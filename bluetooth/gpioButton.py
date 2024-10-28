@@ -16,6 +16,7 @@ class GpioButton:
     def __init__(self, pin_number, when_double_clicked: Callable[[], None]):
         logger.info("Initializing GPIO button on pin %s",pin_number)
         self.gpio = SysfsGPIO(pin_number)
+        logger.info("GPIO object: %s", self.gpio)
         self.gpio.export = True
         self.gpio.direction = 'in'
         self.when_double_clicked = when_double_clicked
@@ -26,6 +27,7 @@ class GpioButton:
         while True:
             if not self.is_pressed():
                 if self.click_count == 2 and self.when_double_clicked:
+                    logger.info("Double click detected")
                     await self.when_double_clicked()
                 self.click_count = 0
             else:

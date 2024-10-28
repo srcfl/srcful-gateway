@@ -2,3 +2,5 @@ requests==2.32.0
 bless==0.2.5
 dbus-next==0.2.3
 gpio4==0.1.6
+protobuf==5.27.1
+base58==2.1.1

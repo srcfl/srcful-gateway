@@ -23,12 +23,12 @@ def test_execute_inverter_already_open():
     bb = BlackBoard()
     device = MagicMock()
     device.is_open.return_value = True
-    device.get_config.return_value = cfg.TCP_CONFIG
+    device.get_config.return_value = cfg.TCP_ARGS
     bb.devices.add(device)
 
     new_device = MagicMock()
     new_device.is_open.return_value = True
-    new_device.get_config.return_value = cfg.TCP_CONFIG
+    new_device.get_config.return_value = cfg.TCP_ARGS
 
     task = OpenDeviceTask(0, bb, new_device)
     task.execute(0)
@@ -111,7 +111,7 @@ def test_execute_inverter_not_on_local_network():
     bb = BlackBoard()
     device = MagicMock()
     device.connect.return_value = True
-    device.get_config.return_value = cfg.TCP_CONFIG # MAC is 00:00:00:00:00:00, so probably not on the local network
+    device.get_config.return_value = cfg.TCP_ARGS # MAC is 00:00:00:00:00:00, so probably not on the local network
     device.is_valid.return_value = False
     
     task = OpenDeviceTask(0, bb, device)

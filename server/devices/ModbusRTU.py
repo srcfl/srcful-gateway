@@ -14,15 +14,17 @@ pymodbus_apply_logging_config("INFO")
 
 
 class ModbusRTU(Modbus):
-
     """
-    port: string, Serial port used for communication,
-    baudrate: int, Bits per second,
-    bytesize: int, Number of bits per byte 7-8,
-    parity: string, 'E'ven, 'O'dd or 'N'one,
-    stopbits: float, Number of stop bits 1, 1.5, 2,
-    device_type: string, solaredge, huawei or fronius etc...,
-    slave_id: int, Modbus address of the inverter,
+    ModbusRTU device class
+    
+    Attributes:
+        port (str): The serial port used for communication.
+        baudrate (int): The bits per second.
+        bytesize (int): The number of bits per byte (7-8).
+        parity (str): The parity ('E'ven, 'O'dd or 'N'one).
+        stopbits (float): The number of stop bits (1, 1.5, 2).
+        device_type (str): The type of the device (solaredge, huawei or fronius etc...).
+        slave_id (int): The Modbus address of the device.
     """
 
     CONNECTION = "RTU"
@@ -86,34 +88,30 @@ class ModbusRTU(Modbus):
     @staticmethod
     def get_config_schema():
         return {
-            ModbusRTU.baud_rate_key(): "string, IP address or hostname of the device",
-            ModbusRTU.bytesize_key(): "string, MAC address of the device",
-            ModbusRTU.port_key(): "int, port of the device",
-            ModbusRTU.parity_key(): "string, parity of the device",
-            ModbusRTU.stopbits_key(): "float, stopbits of the device",
-            ModbusRTU.device_type_key(): "string, type of the device",
-            ModbusRTU.slave_id_key(): "int, Modbus address of the device",
+            ModbusRTU.baud_rate_key(): "string - baudrate of the device",
+            ModbusRTU.bytesize_key(): "string - bytesize of the device",
+            ModbusRTU.port_key(): "int - port of the device",
+            ModbusRTU.parity_key(): "string - parity of the device",
+            ModbusRTU.stopbits_key(): "float - stopbits of the device",
+            ModbusRTU.device_type_key(): "string - type of the device",
+            ModbusRTU.slave_id_key(): "int - Modbus address of the device",
         }
     
-
-    def __init__(self, 
-                 port: Optional[str] = None, 
-                 baudrate: Optional[int] = None, 
-                 bytesize: Optional[int] = None, 
-                 parity: Optional[str] = None, 
-                 stopbits: Optional[float] = None,
-                 device_type: Optional[str] = None,
-                 slave_id: Optional[int] = None):
-        log.info("Creating with: %s, %s, %s, %s, %s, %s, %s", port, baudrate, bytesize, parity, stopbits, device_type, slave_id)
-        self.port = port
-        self.baudrate = baudrate
-        self.bytesize = bytesize
-        self.parity = parity
-        self.stopbits = stopbits
-        self.slave_id = slave_id
+    
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        
+        self.port = kwargs.get(self.port_key(), None)
+        self.baudrate = kwargs.get(self.baud_rate_key(), None)
+        self.bytesize = kwargs.get(self.bytesize_key(), None)
+        self.parity = kwargs.get(self.parity_key(), None)
+        self.stopbits = kwargs.get(self.stopbits_key(), None)
+        self.slave_id = kwargs.get(self.slave_id_key(), None)
         self.client = None
         self.data_type = HarvestDataType.MODBUS_REGISTERS.value
-        super().__init__(device_type)
+        
+        
+
 
     def _open(self, **kwargs) -> bool:
         self._create_client(**kwargs)
@@ -225,5 +223,5 @@ class ModbusRTU(Modbus):
             raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
         return resp
 
-    def is_valid(self) -> bool:
-        raise NotImplementedError("is_valid is not implemented for ModbusRTU")
+    def _is_valid(self) -> bool:
+        raise NotImplementedError("_is_valid is not implemented for ModbusRTU")

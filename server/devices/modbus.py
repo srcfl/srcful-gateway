@@ -11,9 +11,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
+
+
 class Modbus(Device, ABC):
     """Base class for all inverters."""
-
 
     @property
     def DEVICE_TYPE(self) -> str:

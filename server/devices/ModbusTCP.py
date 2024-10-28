@@ -15,13 +15,15 @@ log.setLevel(logging.INFO)
 pymodbus_apply_logging_config("INFO")
 
 class ModbusTCP(Modbus):
-
     """
-    ip: string, IP address of the Modbus TCP device,
-    mac: string, MAC address of the Modbus TCP device,
-    port: int, Port of the Modbus TCP device,
-    device_type: string, solaredge, huawei or fronius etc...,
-    address: int, Modbus address of the Modbus TCP device
+    ModbusTCP device class.
+
+    Attributes:
+        ip (str): The IP address or hostname of the device.
+        mac (str, optional): The MAC address of the device. Defaults to "00:00:00:00:00:00" if not provided.
+        port (int): The port number used for the Modbus connection.
+        device_type (str): The type of the device (e.g., solaredge, huawei, fronius).
+        slave_id (int): The Modbus address of the device, typically used to identify the device on the network.
     """
 
     CONNECTION = "TCP"
@@ -50,37 +52,29 @@ class ModbusTCP(Modbus):
     def port_key() -> str:
         return "port"
     
- 
-    @property
-    def SLAVE_ID(self) -> str:
-        return self.slave_id_key()
-    
-    @staticmethod
-    def slave_id_key() -> str:
-        return "slave_id"
     
     @staticmethod
     def get_config_schema():
         return {
-            ModbusTCP.ip_key(): "string, IP address or hostname of the device",
-            ModbusTCP.mac_key(): "optional, string, MAC address of the device",
-            ModbusTCP.port_key(): "int, port of the device",
-            ModbusTCP.device_type_key(): "string, type of the device",
-            ModbusTCP.slave_id_key(): "int, Modbus address of the device",
+            ModbusTCP.ip_key(): "string - IP address or hostname of the device",
+            ModbusTCP.mac_key(): "string - (Optional) MAC address of the device",
+            ModbusTCP.port_key(): "int - port of the device",
+            ModbusTCP.device_type_key(): "string - type of the device",
+            ModbusTCP.slave_id_key(): "int - Modbus address of the device",
         }
 
-    def __init__(self,
-                 ip: Optional[str] = None,
-                 mac: str = "00:00:00:00:00:00",
-                 port: Optional[int] = None, 
-                 device_type: Optional[str] = None, 
-                 slave_id: Optional[int] = None) -> None:
-        log.info("Creating with: %s %s %s %s %s", ip, mac, port, device_type, slave_id)
-        super().__init__(device_type)
-        self.ip = ip
-        self.mac = mac
-        self.port = port
-        self.slave_id = slave_id
+    # init but with kwargs
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        
+        # check if old keys are provided
+        if "host" in kwargs:
+            kwargs[self.ip_key()] = kwargs.pop("host")
+            
+        # get the kwargs, and default if not provided
+        self.ip = kwargs.get(self.ip_key(), None)
+        self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
+        self.port = kwargs.get(self.port_key(), None)
         self.client = None
         self.data_type = HarvestDataType.MODBUS_REGISTERS.value
 

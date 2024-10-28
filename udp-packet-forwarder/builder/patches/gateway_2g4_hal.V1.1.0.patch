@@ -1,0 +1,211 @@
+diff --git a/libloragw/src/loragw_hal.c b/libloragw/src/loragw_hal.c
+index fc03b3f..0499bb9 100644
+--- a/libloragw/src/loragw_hal.c
++++ b/libloragw/src/loragw_hal.c
+@@ -167,8 +167,7 @@ int lgw_start(void) {
+ 
+     /* Check MCU version (ignore first char of the received version (release/debug) */
+     if (strncmp(gw_info.version + 1, mcu_version_string, sizeof mcu_version_string) != 0) {
+-        printf("ERROR: MCU version mismatch (expected:%s, got:%s)\n", mcu_version_string, gw_info.version);
+-        return -1;
++        printf("WARNING: MCU version mismatch (expected:%s, got:%s)\n", mcu_version_string, gw_info.version + 1);
+     }
+     printf("INFO: Concentrator MCU version is %s\n", gw_info.version);
+ 
+diff --git a/packet_forwarder/src/lora_pkt_fwd.c b/packet_forwarder/src/lora_pkt_fwd.c
+index bd4f332..aed5c8c 100644
+--- a/packet_forwarder/src/lora_pkt_fwd.c
++++ b/packet_forwarder/src/lora_pkt_fwd.c
+@@ -82,6 +82,8 @@
+ 
+ #define NB_PKT_MAX      255 /* max number of packets per fetch/send cycle */
+ 
++#define WHITELIST_SIZE  16
++
+ #define STATUS_SIZE     200
+ #define TX_BUFF_SIZE    ((540 * NB_PKT_MAX) + 30 + STATUS_SIZE)
+ #define ACK_BUFF_SIZE   64
+@@ -154,6 +156,12 @@ static pthread_mutex_t mx_stat_rep = PTHREAD_MUTEX_INITIALIZER; /* control acces
+ static bool report_ready = false; /* true when there is a new report to send to the server */
+ static char status_report[STATUS_SIZE]; /* status report as a JSON object */
+ 
++/* whitelists */
++static uint8_t whitelist_netids_count = 0;
++static uint32_t whitelist_netids[WHITELIST_SIZE];
++static uint8_t whitelist_ouis_count = 0;
++static uint32_t whitelist_ouis[WHITELIST_SIZE];
++
+ /* auto-quit function */
+ static uint32_t autoquit_threshold = 0; /* enable auto-quit after a number of non-acknowledged PULL_DATA (0 = disabled)*/
+ 
+@@ -187,6 +195,8 @@ static int parse_gateway_configuration(const char * conf_file);
+ 
+ static double difftimespec(struct timespec end, struct timespec beginning);
+ 
++static uint32_t get_netid(uint32_t devaddr);
++
+ static void print_nb_pkt_stats(void);
+ 
+ /* threads */
+@@ -519,6 +529,32 @@ static int parse_gateway_configuration(const char * conf_file) {
+         MSG("INFO: Auto-quit after %u non-acknowledged PULL_DATA\n", autoquit_threshold);
+     }
+ 
++    /* Whitelist Net IDs */
++    JSON_Array * conf_whitelist_netids_array = json_object_get_array(conf_obj, "whitelist_netids");
++    if (conf_whitelist_netids_array != NULL) {
++        whitelist_netids_count = json_array_get_count(conf_whitelist_netids_array);
++        for (uint8_t i = 0; i < whitelist_netids_count; i++) {
++            str = json_array_get_string(conf_whitelist_netids_array, i);
++            if (str != NULL) {
++                whitelist_netids[i] = ((int) strtol(str, NULL, 0)) & 0x00FFFFFF;
++                MSG("INFO: Whitelisted NetID: 0x%06X\n", whitelist_netids[i]);
++            }
++        }
++    }
++
++    /* Whitelist OUIs */
++    JSON_Array * conf_whitelist_ouis_array = json_object_get_array(conf_obj, "whitelist_ouis");
++    if (conf_whitelist_ouis_array != NULL) {
++        whitelist_ouis_count = json_array_get_count(conf_whitelist_ouis_array);
++        for (uint8_t i = 0; i < whitelist_ouis_count; i++) {
++            str = json_array_get_string(conf_whitelist_ouis_array, i);
++            if (str != NULL) {
++                whitelist_ouis[i] = ((int) strtol(str, NULL, 0)) & 0x00FFFFFF;
++                MSG("INFO: Whitelisted OUI: 0x%06X\n", whitelist_ouis[i]);
++            }
++        }
++    }
++
+     /* free JSON parsing data structure */
+     json_value_free(root_val);
+     return 0;
+@@ -1150,20 +1186,12 @@ void thread_up(void) {
+         for (i = 0; i < nb_pkt; ++i) {
+             p = &rxpkt[i];
+ 
+-            /* Get mote information from current packet (addr, fcnt) */
+-            /* FHDR - DevAddr */
+-            if (p->size >= 8) {
+-                mote_addr  = p->payload[1];
+-                mote_addr |= p->payload[2] << 8;
+-                mote_addr |= p->payload[3] << 16;
+-                mote_addr |= p->payload[4] << 24;
+-                /* FHDR - FCnt */
+-                mote_fcnt  = p->payload[6];
+-                mote_fcnt |= p->payload[7] << 8;
+-            } else {
+-                mote_addr = 0;
+-                mote_fcnt = 0;
++            /* Payload debug info */
++            printf("INFO: [up] payload (%d bytes): ", p->size);
++            for (uint8_t i=0; i<p->size; i++) {
++                printf("%02X", p->payload[i]);
+             }
++            printf("\n");
+ 
+             /* basic packet filtering */
+             pthread_mutex_lock(&mx_meas_up);
+@@ -1199,7 +1227,80 @@ void thread_up(void) {
+             meas_up_pkt_fwd += 1;
+             meas_up_payload_byte += p->size;
+             pthread_mutex_unlock(&mx_meas_up);
+-            printf( "\nINFO: Received pkt from mote: %08X (fcnt=%u)\n", mote_addr, mote_fcnt );
++
++
++            /* Type of message 
++            *   0: Join-Request
++            *   1: Join-Accept
++            *   2: Unconfirmed Data Uplink
++            *   3: Unconfirmed Data Downlink
++            *   4: Confirmed Data Uplink
++            *   5: Confirmed Data Downlink
++            *   6: RFU
++            *   7: Propietary
++            */
++            uint8_t fType = p->payload[0] >> 5;
++
++            /* Filter JOINs */
++            if (0 == fType) {
++                
++                uint32_t deveui_h = 0;
++                uint32_t deveui_l = 0;
++                deveui_l  = p->payload[ 9];
++                deveui_l |= p->payload[10] << 8;
++                deveui_l |= p->payload[11] << 16;
++                deveui_l |= p->payload[12] << 24;
++                deveui_h  = p->payload[13];
++                deveui_h |= p->payload[14] << 8;
++                deveui_h |= p->payload[15] << 16;
++                deveui_h |= p->payload[16] << 24;
++
++                printf("INFO: [up] Join-Request from %08X%08X\n", deveui_h, deveui_l);
++                u_int32_t oui = deveui_h >> 8;
++                
++                bool found = (whitelist_ouis_count == 0);
++                for (uint8_t i=0; i<whitelist_ouis_count; i++) {
++                    if (oui == whitelist_ouis[i]) {
++                        found = true;
++                        break;
++                    }
++                }
++                if (!found) {
++                    printf("INFO: [up] OUI %06X not in the whitelist, filter out Join Request\n", oui);
++                    continue; /* skip that packet */
++                }
++
++            } else if (p->size >= 8) {
++
++                mote_addr  = p->payload[1];
++                mote_addr |= p->payload[2] << 8;
++                mote_addr |= p->payload[3] << 16;
++                mote_addr |= p->payload[4] << 24;
++                mote_fcnt  = p->payload[6];
++                mote_fcnt |= p->payload[7] << 8;
++
++                uint32_t netid = get_netid(mote_addr);
++                printf( "INFO: [up] pkt from mote: 0x%08X (netid=0x%06X, fcnt=%u)\n", mote_addr, netid, mote_fcnt );
++
++                bool found = (whitelist_netids_count == 0);
++                for (uint8_t i=0; i<whitelist_netids_count; i++) {
++                    if (netid == whitelist_netids[i]) {
++                        found = true;
++                        break;
++                    }
++                }
++                if (!found) {
++                    printf("INFO: [up] NetID %06X not in the whitelist, skipping packet\n", netid);
++                    continue; /* skip that packet */
++                }
++
++            } else {
++
++                mote_addr = 0;
++                mote_fcnt = 0;
++                
++            }
++            
+ 
+             /* Start of packet, add inter-packet separator if necessary */
+             if (pkt_in_dgram == 0) {
+@@ -1454,6 +1555,20 @@ void thread_up(void) {
+     MSG("\nINFO: End of upstream thread\n");
+ }
+ 
++static uint32_t get_netid(uint32_t devaddr) {
++
++    uint8_t nwkid_bits_array[] = { 6, 6, 9, 11, 12, 13, 15, 17 };
++    uint8_t type_id = __builtin_clz(~devaddr);
++    if (type_id > 7) return 0;
++
++    uint8_t nwkid_bits = nwkid_bits_array[type_id];
++    uint32_t nwkid = devaddr >> (31 - type_id - nwkid_bits);
++    nwkid &= ((1 << nwkid_bits) - 1);
++
++    return (type_id << 21) | nwkid;
++
++}
++
+ /* -------------------------------------------------------------------------- */
+ /* --- THREAD 2: POLLING SERVER AND ENQUEUING PACKETS IN JIT QUEUE ---------- */
+ 

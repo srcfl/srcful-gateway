@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+
+# -----------------------------------------------------------------------------
+#
+# Tries to detect existing concentrators, run by:
+#
+# docker run --privileged --rm rakwireless/udp-packet-forwarder find_concentrator
+#
+# By default it will reset the concentrator using GPIO6 and GPIO17, if
+# you know the reset pin is connected to any other GPIO(S) you can use the RESET_GPIO
+# environment variable:
+#
+# docker run --privileged --rm -e RESET_GPIO="12 13" rakwireless/udp-packet-forwarder find_concentrator
+#
+# Finally, you can also limit the interfaces to scan by setting SCAN_USB or SCAN_SPI to 0,
+# so this command below will only scan for SUB concentrators:
+#
+# docker run --privileged --rm -e SCAN_SPI=0 rakwireless/udp-packet-forwarder find_concentrator
+#
+# -----------------------------------------------------------------------------
+
+cd "$( dirname "$0" )" || exit
+
+# -----------------------------------------------------------------------------
+# Colors
+# -----------------------------------------------------------------------------
+
+WIDTH_DEVICE=0
+WIDTH_DESIGN=13
+WIDTH_ID=21
+
+FOUND=0
+
+function pad() {
+    
+    TEXT=$1
+    LENGTH=$2
+    FILL=$3
+    
+    START=${#TEXT}
+    COUNT=$(( LENGTH - START - 1 ))
+    printf "%s" "$TEXT"
+    for (( i = 0; i < "$COUNT"; ++i )); do 
+        printf "%s" "$FILL"
+    done
+
+}
+
+# -----------------------------------------------------------------------------
+# Chip ID
+# -----------------------------------------------------------------------------
+
+function test_device {
+
+    local DEVICE=$1
+    local GATEWAY_EUI=""
+    local DESIGN
+
+    pad "$DEVICE" $WIDTH_DEVICE " "
+
+    [[ "$DEVICE" == *"ttyV"* ]] && TIMEOUT=10 || TIMEOUT=3
+
+    for DESIGN in corecell 2g4 picocell; do
+
+        CHIP_ID_COMMAND="/app/artifacts/${DESIGN}/chip_id"
+        if [[ -f $CHIP_ID_COMMAND ]]; then
+            
+            if [[ "$DESIGN" == "corecell" ]]; then
+                [[ "$DEVICE" == *"tty"* ]] && COM_TYPE="-u"
+                GATEWAY_EUI=$( timeout "${TIMEOUT}s" "$CHIP_ID_COMMAND" "$COM_TYPE" -d "$DEVICE" 2>/dev/null | grep 'EUI' | sed 's/^.*0x//' | tr "[:lower:]" "[:upper:]" )
+                [[ -n "${GATEWAY_EUI}" ]] && break
+            fi
+            
+            if [[ "$DESIGN" == "2g4" ]] && [[ "$DEVICE" == *"tty"* ]]; then 
+                GATEWAY_EUI=$( timeout "${TIMEOUT}s" "$CHIP_ID_COMMAND" -d "$DEVICE" 2>/dev/null | grep 'EUI' | sed 's/^.*0x//' | tr "[:lower:]" "[:upper:]" )
+                [[ -n "${GATEWAY_EUI}" ]] && break
+            fi
+            
+            if [[ "$DESIGN" == "picocell" ]] && [[ "$DEVICE" == *"tty"* ]]; then 
+                GATEWAY_EUI=$( timeout "${TIMEOUT}s" "$CHIP_ID_COMMAND" -d "$DEVICE" 2>/dev/null | tr "[:lower:]" "[:upper:]" )
+                [[ -n "${GATEWAY_EUI}" ]] && break
+            fi
+            
+        fi
+    
+    done
+    
+    if [[ -n "${GATEWAY_EUI}" ]]; then
+        pad "$DESIGN" $WIDTH_DESIGN " "
+        pad "$GATEWAY_EUI" $WIDTH_ID " "
+        FOUND=$(( FOUND + 1 ))
+        echo ""
+    else
+        echo -e -n "\r"
+        pad "" $WIDTH_DEVICE " "
+        echo -e -n "\r"
+    fi
+
+}
+
+# -----------------------------------------------------------------------------
+# Create reset file
+# -----------------------------------------------------------------------------
+
+# Raspberry Pi requires using libgpiod with gpiochip4
+if [[ $( grep -c "Raspberry Pi 5" /proc/cpuinfo ) -eq 0  ]]; then
+    USE_LIBGPIOD=${USE_LIBGPIOD:-0}
+    GPIO_CHIP=${GPIO_CHIP:-gpiochip0}
+else
+    USE_LIBGPIOD=${USE_LIBGPIOD:-1}
+    GPIO_CHIP=${GPIO_CHIP:-gpiochip4}
+fi
+
+# Create reset file
+if [[ ${USE_LIBGPIOD:-0} -eq 0 ]]; then
+    cp reset.sh.legacy reset_lgw.sh
+else
+    cp reset.sh.gpiod reset_lgw.sh
+fi
+sed -i "s#{{GPIO_CHIP}}#${GPIO_CHIP:-gpiochip0}#" reset_lgw.sh
+sed -i "s#{{RESET_GPIO}}#${RESET_GPIO:-6 17}#" reset_lgw.sh
+sed -i "s#{{POWER_EN_GPIO}}#${POWER_EN_GPIO:-0}#" reset_lgw.sh
+sed -i "s#{{POWER_EN_LOGIC}}#${POWER_EN_LOGIC:-1}#" reset_lgw.sh
+chmod +x reset_lgw.sh
+
+# -----------------------------------------------------------------------------
+# Network device
+# -----------------------------------------------------------------------------
+
+if [[ "${INTERFACE}" == "NET" ]]; then
+    NETLINK=${DEVICE:-$( /sbin/ip route|awk '/default/ { print $3 ":3333" }' )}
+    DEVICE="/dev/ttyV0"
+    socat pty,link=$DEVICE,waitslave "tcp:$NETLINK" &
+fi
+
+# -----------------------------------------------------------------------------
+# Test all devices
+# -----------------------------------------------------------------------------
+
+SCAN_USB=${SCAN_USB:-1}
+SCAN_SPI=${SCAN_SPI:-1}
+
+if [[ $SCAN_USB -eq 1 ]]; then
+    if [[ $SCAN_SPI -eq 1 ]]; then
+        DEVICES=$( ls /dev/spidev* /dev/ttyACM* /dev/ttyUSB* /dev/ttyV* 2> /dev/null )
+    else
+        DEVICES=$( ls /dev/ttyACM* /dev/ttyUSB* /dev/ttyV* 2> /dev/null )
+    fi
+else
+    if [[ $SCAN_SPI -eq 1 ]]; then
+        DEVICES=$( ls /dev/spidev* 2> /dev/null )
+    else
+        DEVICES=""
+    fi
+fi
+
+if [[ -z "${DEVICES}" ]]; then
+    echo "No available interfaces. Quitting."
+    exit
+fi
+
+echo
+echo "Looking for devices, this might take some time..."
+echo 
+
+for DEVICE in $DEVICES; do
+    [[ ${#DEVICE} -gt $WIDTH_DEVICE ]] && WIDTH_DEVICE=${#DEVICE}
+done
+WIDTH_DEVICE=$(( WIDTH_DEVICE + 5 ))
+
+pad "DEVICE" $WIDTH_DEVICE " "
+pad "DESIGN" $WIDTH_DESIGN " "
+pad "ID" $WIDTH_ID " "; echo ""
+pad "" $WIDTH_DEVICE "-"
+pad "" $WIDTH_DESIGN "-"
+pad "" $WIDTH_ID "-"; echo ""
+
+for DEVICE in $DEVICES; do
+    test_device "$DEVICE"
+done
+
+echo
+echo "$FOUND device(s) found!"
+echo

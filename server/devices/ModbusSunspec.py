@@ -12,11 +12,14 @@ logger.setLevel(logging.INFO)
 
 class ModbusSunspec(Device):
     """
-    ip: string, IP address of the Modbus TCP device,
-    mac: string, MAC address of the Modbus TCP device,
-    port: int, Port of the Modbus TCP device,
-    device_type: string, solaredge, huawei or fronius etc...,
-    slave_id: int, Modbus address of the Modbus TCP device
+    ModbusSunspec device class
+    
+    Attributes:
+        ip (str): The IP address or hostname of the device.
+        mac (str, optional): The MAC address of the device. Defaults to "00:00:00:00:00:00" if not provided.
+        port (int): The port number used for the Modbus connection.
+        slave_id (int): The Modbus address of the device, typically used to identify the device on the network.
+        sn (str, optional): The serial number of the device. If not provided, it may be retrieved from the device.
     """
 
     CONNECTION = "SUNSPEC"
@@ -57,36 +60,44 @@ class ModbusSunspec(Device):
     def slave_id_key() -> str:
         return "slave_id"
     
+    @property
+    def SN(self) -> str:
+        return "sn"
+    
+    @staticmethod
+    def sn_key() -> str:
+        return "sn"
+    
     @staticmethod
     def get_config_schema():
+        """Returns the schema for the config and optional parameters of the ModbusSunspec device."""
         return {
             ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
-            ModbusSunspec.ip_key(): "string, IP address or hostname of the device",
-            ModbusSunspec.mac_key(): "string, MAC address of the device",
-            ModbusSunspec.port_key(): "int, port of the device",
-            ModbusSunspec.slave_id_key(): "int, Modbus address of the device",
+            ModbusSunspec.ip_key(): "string - IP address or hostname of the device",
+            ModbusSunspec.mac_key(): "string - (Optional) MAC address of the device",
+            ModbusSunspec.port_key(): "int - port of the device",
+            ModbusSunspec.slave_id_key(): "int - Modbus address of the device",
+            ModbusSunspec.sn_key(): "string - (Optional) serial number of the device"
         }
     
-    
-    def __init__(self, 
-                 ip: str, 
-                 mac: str, 
-                 port: int, 
-                 slave_id: int, 
-                 verbose: bool = False) -> None:
-        """
-        Constructor
-        """
-        self.ip = ip
-        self.mac = mac
-        self.port = port
-        self.slave_id = slave_id
+    def __init__(self, **kwargs) -> None:
+        if "host" in kwargs:
+            kwargs[self.ip_key()] = kwargs.pop("host")
+        if "address" in kwargs:
+            kwargs[self.slave_id_key()] = kwargs.pop("address")
+        if "type" in kwargs:
+            kwargs[self.device_type_key()] = kwargs.pop("type")
+
+        self.ip = kwargs.get(self.ip_key(), None)
+        self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
+        self.port = kwargs.get(self.port_key(), None)
+        self.slave_id = kwargs.get(self.slave_id_key(), 1)
+        self.sn = kwargs.get(self.sn_key(), None)
         self.client = None
         self.common = None
         self.inverter = None
         self.ac_model = None
         self.dc_model = None
-        self.SN = None
         self.data_type = HarvestDataType.SUNSPEC.value
         
     def _connect(self, **kwargs) -> bool:
@@ -98,10 +109,10 @@ class ModbusSunspec(Device):
         logger.info("Models: %s", self.client.models)
         
         try:
-            self.SN = self.client.common[0].SN.value
+            self.sn = self.client.common[0].SN.value
         except KeyError:
             logger.warning("Could not get serial number, using MAC address as fallback")
-            self.SN = NetworkUtils.get_mac_from_ip(self.ip)
+            self.sn = NetworkUtils.get_mac_from_ip(self.ip)
 
         if 'inverter' in self.client.models:
             self.inverter = self.client.inverter[0]
@@ -119,10 +130,7 @@ class ModbusSunspec(Device):
         return len(self.client.models) > 0
     
     def is_valid(self) -> bool:
-        # Ensure that the device is on the local network
-        if self.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
-            return False
-        return True
+        return self.get_SN() is not None and self.mac != "00:00:00:00:00:00"
     
     def _disconnect(self) -> None:
         self.client.disconnect()
@@ -180,7 +188,8 @@ class ModbusSunspec(Device):
             self.IP: self.ip,
             self.MAC: self.mac,
             self.PORT: self.port,
-            self.SLAVE_ID: self.slave_id
+            self.SLAVE_ID: self.slave_id,
+            self.SN: self.get_SN()
         }
         
     def get_name(self) -> str:
@@ -202,4 +211,4 @@ class ModbusSunspec(Device):
         return None
     
     def get_SN(self) -> str:
-        return self.SN
+        return self.sn or self.mac

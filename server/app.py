@@ -3,7 +3,6 @@ import sys
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from server.devices.IComFactory import IComFactory
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 from server.tasks.saveStateTask import SaveStatePerpetualTask
 import server.web.server
@@ -18,8 +17,7 @@ from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
-from server.network.network_utils import NetworkUtils
-
+from server.settings_device_listener import SettingsDeviceListener
 
 from server.blackboard import BlackBoard
 
@@ -142,36 +140,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 else:
                     logger.info("No need to save settings to backend as the source is the backend")
 
-    class SettingsDeviceListener(DebouncedMonitorBase):
-        def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
-            super().__init__(debounce_delay)
-            self.blackboard = blackboard
-
-        # TODO: This is a bit of a hack, but it works for now
-        def _perform_action(self, source: ChangeSource):
     
-            for connection in self.blackboard.settings.devices.connections:
-                
-                settings_device = IComFactory.create_com(connection)
-                
-                for device in self.blackboard.devices.lst:
-                    # Check if the device already exists in the blackboard
-                    # Then check if the device is open, if not, then start a perpetual task to open it
-                    # TODO: This might start another DevicePerpetualTask in addition to one that might
-                    # already be running from the blackboard. Consider reworking this logic
-                    if device.get_SN() == settings_device.get_SN():
-                        if not device.is_open():
-                            logger.info("Device %s from settings was found in the blackboard, but not open", device.get_SN())
-                            logger.info("Removing %s from the blackboard and opening a perpetual task to connect it", device.get_SN())
-                            self.blackboard.devices.remove(device)
-                            self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
-                        break
-                else:
-                    # Device not found in the blackboard, but apperantly exists in the settings,
-                    # which means it was previously connected So we try to open it again
-                    logger.info("fDevice {settings_device.get_SN()} from settings was not found in the blackboard, opening a perpetual task to connect it")
-                    self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
-
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)

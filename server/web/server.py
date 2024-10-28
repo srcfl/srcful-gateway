@@ -39,10 +39,6 @@ class Endpoints:
         }
 
         self.api_post_dict = {
-            # "invertertcp": handler.post.modbusTCP.Handler(),
-            # "inverterrtu": handler.post.modbusRTU.Handler(),
-            # "invertersolarman": handler.post.modbusSolarman.Handler(),
-            # "modbus_device": handler.post.modbus_create.Handler(),
             "device": handler.post.device.Handler(),
             "wifi": handler.post.wifi.Handler(),
             "initialize": handler.post.initialize.Handler(),

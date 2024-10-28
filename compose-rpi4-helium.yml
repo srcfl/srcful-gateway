@@ -1,0 +1,68 @@
+# RAK Hotspot V.2 (LoRaWAN)
+
+version: "2.4"
+
+x-environment: &shared_env
+  - REST_SERVICE_PORT: 80 # should correspond to the port in the web service below
+  - REST_SERVICE_PORT_INTERNAL: 5000 # should correspond to the port in the web service below
+
+services:
+  web:
+    build: ./server
+    container_name: eGW-web
+    ports:
+      - 80:5000
+    environment:
+      <<: *shared_env
+    devices:
+      - /dev/i2c-1
+    volumes:
+      - srcful-data:/data/srcful
+      - /var/run/dbus:/host/run/dbus
+    restart: always
+
+  bluetooth:
+    build: ./bluetooth
+    container_name: eGW-ble
+    environment:
+      - REST_SERVICE_PORT=80 # should correspond to the port in the web service below
+      - REST_SERVICE_PORT_INTERNAL=5000 # should correspond to the port in the web service below
+      - GPIO_BUTTON_PIN=7
+    volumes:
+      - /var/run/dbus:/host/run/dbus
+      - /sys:/sys
+      - /lib/modules:/lib/modules
+    network_mode: host # could be needed for ble communication, test?
+    privileged: true
+    restart: always
+    depends_on:
+      - web
+
+  gateway-rs:
+    build: ./gateway-rs
+    devices:
+      - /dev/i2c-1
+    expose:
+      - "1680"
+      - 3001:3000
+    environment:
+      - GATEWAY_SETTINGS=/app/settings.toml
+    network_mode: host
+    depends_on:
+      - packet-forwarder
+
+  packet-forwarder:
+    image: rakwireless/udp-packet-forwarder:latest # Use pre-defined image
+    environment:
+      MODEL: "RAK7248"
+      USE_LIBGPIOD: 1
+      RESET_GPIO: 25
+      # Helium settings
+      SERVER_HOST: 127.0.0.1
+      SERVER_PORT: 1680
+    network_mode: host # required to read host interface MAC instead of virtual one, you don't need this if you set the GATEWAY_EUI manually
+    privileged: true # set this to true or define the required devices to share with the container under the `devices` tag below
+    restart: unless-stopped
+
+volumes:
+  srcful-data:
