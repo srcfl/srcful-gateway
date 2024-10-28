@@ -1,19 +1,13 @@
 # To add a new inverter, create a new file in the inverters folder and import it here
 # Then add the new inverter to the inverters list and it will be supported by the gateway (PoS)
 import typing
-from ..enums import ProfileKey, RegistersKey, OperationKey
+from ..enums import ProfileKey, RegistersKey, OperationKey, DeviceCategory
 import json
 from .supported_devices import supported_devices
 
 inverters = []
 
-# Load all inverters
-# with open("server/devices/supported_inverters/inverters/inverters.json") as f:
-#     data = json.load(f)
-#     for d in data["inverters"]:
-#         inverters.append(d)
-
-for device in supported_devices["inverters"]:
+for device in supported_devices[DeviceCategory.INVERTERS]:
     inverters.append(device)
 
 class RegisterInterval:

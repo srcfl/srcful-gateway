@@ -28,7 +28,10 @@ class OperationKey(Enum):
     READ_HOLDING_REGISTERS = 0x03
     READ_INPUT_REGISTERS = 0x04
 
-    
+
+class DeviceCategory(Enum):
+    INVERTERS = 'inverters'
+    METERS = 'meters'
     
     
     

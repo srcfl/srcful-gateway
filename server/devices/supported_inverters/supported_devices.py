@@ -1,7 +1,7 @@
-from ..enums import ProtocolKey, ProfileKey, RegistersKey, OperationKey
+from ..enums import ProtocolKey, ProfileKey, RegistersKey, OperationKey, DeviceCategory
 
 supported_devices = {
-    "inverters": [
+    DeviceCategory.INVERTERS: [
         {
             ProfileKey.NAME: "huawei",
             ProfileKey.VERSION: "V1.1b3",
@@ -223,7 +223,7 @@ supported_devices = {
             ]
         }
     ],
-    "meters": [
+    DeviceCategory.METERS: [
         {
             ProfileKey.NAME: "lqt40s",
             ProfileKey.VERSION: "V1.1b3",
