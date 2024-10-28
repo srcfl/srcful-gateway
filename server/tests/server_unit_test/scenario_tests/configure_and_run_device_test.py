@@ -14,6 +14,7 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     # Create and connect first device
     device = MagicMock()
     device.connect.return_value = True
+    device.is_disconnected.return_value = False
     device.is_open.return_value = True
     device.get_SN.return_value = "00:00:00:00:00:00"
     
@@ -27,7 +28,7 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     device2 = MagicMock()
     device2.connect.return_value = True
     device2.is_open.return_value = True
-    
+    device2.is_disconnected.return_value = False
     task2 = DevicePerpetualTask(0, bb, device2)
     task2.execute(0)
     
@@ -53,13 +54,15 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     # Execute harvest task for disconnected device
     ret = device_harvest_task.execute(0)
     
-    assert isinstance(ret[0], DevicePerpetualTask)
-    assert ret[0].device is not None
+    # flaky as we depend on the order of the tasks in the list
+    task = ret[1]
+    assert isinstance(task, DevicePerpetualTask)
+    assert task.device is not None
     
     # Simulate device reconnection
-    ret[0].device.connect.return_value = True
-    ret[0].device.is_open.return_value = True
-    ret = ret[0].execute(0)
+    task.device.connect.return_value = True
+    task.device.is_open.return_value = True
+    ret = task.execute(0)
     
     assert ret is None  # Device successfully reopened
     

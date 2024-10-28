@@ -76,91 +76,60 @@ class ModbusTCP(Modbus):
         self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
         self.port = kwargs.get(self.port_key(), None)
         self.client = None
-        self.data_type = HarvestDataType.MODBUS_REGISTERS.value
+        self.data_type = HarvestDataType.MODBUS_REGISTERS
 
-    def _open(self, **kwargs) -> bool:
-        if not self._is_terminated():
-            self._create_client(**kwargs)
-            if not self.client.connect():
-                log.error("FAILED to open Modbus TCP device: %s", self._get_type())
-            return bool(self.client.socket)
-        else:
-            return False
-
-    def _is_open(self) -> bool:
-        return bool(self.client) and bool(self.client.socket)
-    
-    def _is_valid(self) -> bool:
-        return self.mac != "00:00:00:00:00:00"
-
-    def _close(self) -> None:
-        log.info("Closing client ModbusTCP %s", self._get_mac())
-        self.client.close()
-
-    def _terminate(self) -> None:
-        self._close()
-        self._isTerminated = True
-
-    def _is_terminated(self) -> bool:
-        return self._isTerminated
-
-    def _clone(self, ip: str = None) -> 'ModbusTCP':
-        if ip is None:
-            ip = self._get_host()
-            
-        args = {
-            self.ip_key(): ip,
-            self.mac_key(): self._get_mac(),
-            self.port_key(): self._get_port(),
-            self.device_type_key(): self._get_type(),
-            self.slave_id_key(): self._get_slave_id()
-        }
-
-        return ModbusTCP(**args)
-
-    def _get_host(self) -> str:
-        return self.ip
-    
-    def _get_mac(self) -> str:
-        return self.mac
-
-    def _get_port(self) -> int:
-        return self.port
-
+    def _connect(self, **kwargs) -> bool:
+        self._create_client(**kwargs)
+        if not self.client.connect():
+            log.error("FAILED to open Modbus TCP device: %s", self._get_type())
+        return bool(self.client.socket)
+        
     def _get_type(self) -> str:
         return self.device_type
 
-    def _get_slave_id(self) -> int:
-        return self.slave_id
+    def is_open(self) -> bool:
+        return bool(self.client) and bool(self.client.socket)
+
+    def _close(self) -> None:
+        log.info("Closing client ModbusTCP %s", self.mac)
+        self.client.close()
+
+    def _disconnect(self) -> None:
+        self._close()
+
+    def clone(self, ip: str | None = None) -> 'ModbusTCP':
+        config = self.get_config()
+        if ip:
+            config[self.IP] = ip
+
+        return ModbusTCP(**config)
+
+    def get_config(self) -> dict:
+        super_config = super().get_config()
+
+        my_config = {
+            ICom.CONNECTION_KEY: ModbusTCP.CONNECTION,
+            self.MAC: self.mac,
+            self.IP: self.ip,
+            self.PORT: self.port,
+        }
+        return {**super_config, **my_config}
     
-    def _get_SN(self) -> str:
+    def get_SN(self) -> str:
+        # TODO: get the serial number from the device use mac for now
         return self.mac
 
-    def _get_config_dict(self) -> dict:
-        return {
-            ICom.CONNECTION_KEY: ModbusTCP.CONNECTION,
-            self.DEVICE_TYPE: self._get_type(),
-            self.MAC: self._get_mac(),
-            self.SLAVE_ID: self._get_slave_id(),
-            self.IP: self._get_host(),
-            self.PORT: self._get_port(),
-            self.SN: self._get_SN()
-        }
-
     def _create_client(self, **kwargs) -> None:
-        self.client =  ModbusClient(host=self._get_host(),
-                                    port=self._get_port(), 
-                                    unit_id=self._get_slave_id(),
-                                    **kwargs
-        )
-        self.mac = NetworkUtils.get_mac_from_ip(self._get_host())
+        self.client =  ModbusClient(host=self.ip, port=self.port, unit_id=self.slave_id, **kwargs)
+        self.mac = NetworkUtils.get_mac_from_ip(self.ip)
+
     def _read_registers(self, operation, scan_start, scan_range) -> list:
         resp = None
         
         if operation == 0x04:
-            resp = self.client.read_input_registers(scan_start, scan_range, slave=self._get_slave_id())
+            resp = self.client.read_input_registers(scan_start, scan_range, slave=self.slave_id)
         elif operation == 0x03:
-            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self._get_slave_id())
+            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.slave_id)
 
         # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
         # We solve this by raising the exception manually
@@ -169,7 +138,7 @@ class ModbusTCP(Modbus):
         
         return resp.registers
     
-    def write_registers(self, starting_register, values) -> None:
+    def write_registers(self, starting_register, values) -> bool:
         """
         Write a range of holding registers from a start address
         """

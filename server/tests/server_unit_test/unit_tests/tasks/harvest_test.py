@@ -24,6 +24,7 @@ def test_create_harvest_transport():
 def test_inverter_terminated():
     mock_inverter = Mock()
     mock_inverter.is_open.return_value = False
+    mock_inverter.is_disconnected.return_value = False
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)

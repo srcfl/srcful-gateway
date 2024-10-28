@@ -1,5 +1,7 @@
 import sunspec2.modbus.client as client
 from sunspec2.modbus.client import SunSpecModbusClientError
+
+from server.devices.Device import Device
 from .ICom import ICom, HarvestDataType
 import logging
 from server.network.network_utils import NetworkUtils
@@ -8,7 +10,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class ModbusSunspec(ICom):
+class ModbusSunspec(Device):
     """
     ModbusSunspec device class
     
@@ -45,11 +47,6 @@ class ModbusSunspec(ICom):
     @staticmethod
     def port_key() -> str:
         return "port"
-    
-    
-    @staticmethod
-    def device_type_key() -> str:
-        return "device_type"
 
     @property
     def SLAVE_ID(self) -> str:
@@ -61,7 +58,7 @@ class ModbusSunspec(ICom):
     
     @property
     def SN(self) -> str:
-        return "sn"
+        return self.sn_key()
     
     @staticmethod
     def sn_key() -> str:
@@ -87,6 +84,7 @@ class ModbusSunspec(ICom):
         if "type" in kwargs:
             kwargs[self.device_type_key()] = kwargs.pop("type")
 
+
         self.ip = kwargs.get(self.ip_key(), None)
         self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
         self.port = kwargs.get(self.port_key(), None)
@@ -97,9 +95,9 @@ class ModbusSunspec(ICom):
         self.inverter = None
         self.ac_model = None
         self.dc_model = None
-        self.data_type = HarvestDataType.SUNSPEC.value
+        self.data_type = HarvestDataType.SUNSPEC
         
-    def connect(self) -> bool:
+    def _connect(self, **kwargs) -> bool:
         self.client = client.SunSpecModbusClientDeviceTCP(slave_id=self.slave_id, ipaddr=self.ip, ipport=self.port)
         self.mac = NetworkUtils.get_mac_from_ip(self.ip)
         self.client.scan()
@@ -131,16 +129,13 @@ class ModbusSunspec(ICom):
     def is_valid(self) -> bool:
         return self.get_SN() is not None and self.mac != "00:00:00:00:00:00"
     
-    def disconnect(self) -> None:
+    def _disconnect(self) -> None:
         self.client.disconnect()
-    
-    def reconnect(self) -> bool:
-        return self.disconnect() and self.connect()
-        
+           
     def is_open(self) -> bool:
         return bool(self.client.is_connected())
     
-    def read_harvest_data(self, force_verbose=False) -> dict:
+    def _read_harvest_data(self, force_verbose=False) -> dict:
         try:
             if self.inverter is not None:
                 self.inverter.read()
@@ -193,21 +188,16 @@ class ModbusSunspec(ICom):
             self.SN: self.get_SN()
         }
         
-    def get_profile(self):
-        pass
+    def get_name(self) -> str:
+        return "Sunspec"
     
     def clone(self, ip: str = None) -> 'ModbusSunspec':
-        if ip is None:
-            ip = self.ip
-        
-        args = {
-            self.ip_key(): ip,
-            self.mac_key(): self.mac,
-            self.port_key(): self.port,
-            self.slave_id_key(): self.slave_id
-        }
-        
-        return ModbusSunspec(**args)
+        config = self.get_config()
+
+        if ip:
+            config[self.IP] = ip
+
+        return ModbusSunspec(**config)
     
     def find_device(self) -> 'ICom':
         port = self.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config

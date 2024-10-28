@@ -17,7 +17,7 @@ class ModbusSolarman(ModbusTCP):
     Attributes:
         ip (str): The IP address or hostname of the device.
         mac (str, optional): The MAC address of the device. Defaults to "00:00:00:00:00:00" if not provided.
-        serial (int): The serial number of the logger stick.
+        sn (int): The serial number of the logger stick.
         port (int): The port number used for the Modbus connection.
         device_type (str): The type of the device (solaredge, huawei or fronius etc...).
         slave_id (int): The Modbus address of the device, typically used to identify the device on the network.
@@ -48,18 +48,15 @@ class ModbusSolarman(ModbusTCP):
         
         self.verbose = kwargs.get(self.verbose_key(), 0)
 
-    def _open(self, **kwargs) -> bool:
-        if not self._is_terminated():
-            try:
-                self._create_client(**kwargs)
-                if not self.client.sock:
-                    log.error("FAILED to open inverter: %s", self._get_type())
-                return bool(self.client.sock)
-            except Exception as e:
-                log.error("Error opening inverter: %s", self._get_type())
-                log.error(e)
-                return False
-        else:
+    def _connect(self, **kwargs) -> bool:
+        try:
+            self._create_client(**kwargs)
+            if not self.client.sock:
+                log.error("FAILED to open inverter: %s", self._get_type())
+            return bool(self.client.sock)
+        except Exception as e:
+            log.error("Error opening inverter: %s", self._get_type())
+            log.error(e)
             return False
 
     def _is_open(self) -> bool:
@@ -82,54 +79,40 @@ class ModbusSolarman(ModbusTCP):
             log.error("Close -> Error disconnecting inverter: %s", self._get_type())
             log.error(e)
 
-    def _terminate(self) -> None:
+    def _disconnect(self) -> None:
         self._close()
         self._isTerminated = True
 
-    def _is_terminated(self) -> bool:
-        return self._isTerminated
+    def clone(self, ip: str = None) -> 'ModbusSolarman':
+        config = self.get_config()
+        if ip:
+            config[self.IP] = ip
 
-    def _clone(self, ip: str = None) -> 'ModbusSolarman':
-        if ip is None:
-            ip = self._get_host()
-            
-        args = {
-            self.IP: ip,
-            self.MAC: self._get_mac(),
-            self.SN: self._get_SN(),
-            self.PORT: self._get_port(),
-            self.DEVICE_TYPE: self._get_type(),
-            self.SLAVE_ID: self._get_slave_id(),
-            self.VERBOSE: self.verbose
-        }
-        
-        return ModbusSolarman(**args)
+        return ModbusSolarman(**config)
     
-    def _get_SN(self) -> str:
+    def get_SN(self) -> str:
         return str(self.sn)
 
-    def _get_config_dict(self) -> dict:
-        return {
+    def get_config(self) -> dict:
+        super_config = super().get_config()
+
+        my_config = {
             ICom.CONNECTION_KEY: ModbusSolarman.CONNECTION,
-            self.DEVICE_TYPE: self._get_type(),
-            self.SN: self._get_SN(),
-            self.SLAVE_ID: self._get_slave_id(),
-            self.IP: self._get_host(),
-            self.MAC: self._get_mac(),
-            self.PORT: self._get_port(),
+            self.SN: self.sn,
             self.VERBOSE: self.verbose
         }
+        return {**super_config, **my_config}
     
     def _create_client(self, **kwargs) -> None:
         try:
-            self.client = PySolarmanV5(address=self._get_host(),
-                            serial=self._get_SN(),
-                            port=self._get_port(),
-                            mb_slave_id=self._get_slave_id(),
+            self.client = PySolarmanV5(address=self.ip,
+                            serial=self.sn,
+                            port=self.port,
+                            mb_slave_id=self.slave_id,
                             v5_error_correction=False,
                             verbose=self.verbose,
                             **kwargs)
-            self.mac = NetworkUtils.get_mac_from_ip(self._get_host())
+            self.mac = NetworkUtils.get_mac_from_ip(self.ip)
         except Exception as e:
             log.error("Error creating client: %s", e)
 
