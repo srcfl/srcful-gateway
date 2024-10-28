@@ -1,5 +1,5 @@
 import typing
-from ..enums import ProfileKey, RegistersKey, DeviceCategory, ProtocolKey
+from ..profile_keys import ProfileKey, RegistersKey, DeviceCategory, ProtocolKey
 from .supported_devices import supported_devices
 from abc import ABC
 

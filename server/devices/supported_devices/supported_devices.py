@@ -1,4 +1,4 @@
-from ..enums import ProtocolKey, ProfileKey, RegistersKey, OperationKey, DeviceCategory
+from ..profile_keys import ProtocolKey, ProfileKey, RegistersKey, OperationKey, DeviceCategory
 
 supported_devices = {
     DeviceCategory.INVERTERS: [

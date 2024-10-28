@@ -2,7 +2,7 @@ import json
 from ..handler import GetHandler
 from ..requestData import RequestData
 # from ....devices.supported_devices.profiles import InverterProfiles
-from ....devices.enums import ProtocolKey
+from ....devices.profile_keys import ProtocolKey
 from ....devices.supported_devices.profiles import DeviceProfiles
 
 class Handler(GetHandler):
