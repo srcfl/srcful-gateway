@@ -3,6 +3,31 @@ from ..enums import ProtocolKey, ProfileKey, RegistersKey, OperationKey, DeviceC
 supported_devices = {
     DeviceCategory.INVERTERS: [
         {
+            # Enphase REST API profile
+            ProfileKey.NAME: "enphase",
+            ProfileKey.VERSION: "V0.1",
+            ProfileKey.VERBOSE_ALWAYS: False,
+            ProfileKey.DISPLAY_NAME: "Enphase",
+            ProfileKey.PROTOCOL: ProtocolKey.REST_API,
+            ProfileKey.DESCRIPTION: "Enphase Envoy REST API",
+            ProfileKey.BASE_URL: 'http://envoy.local/',
+            ProfileKey.ENDPOINTS: {
+                'meters': 'ivp/meters',
+                'readings': 'ivp/meters/readings',
+                'energy': 'ivp/pdm/energy',
+                'inverters': 'api/v1/production/inverters'
+            }
+        },
+        {
+            # SunSpec profile
+            ProfileKey.NAME: "sunspec_inverter",
+            ProfileKey.VERSION: "V1.0",
+            ProfileKey.VERBOSE_ALWAYS: False,
+            ProfileKey.DISPLAY_NAME: "SunSpec Inverter",
+            ProfileKey.PROTOCOL: ProtocolKey.SUNSPEC,
+            ProfileKey.DESCRIPTION: "SunSpec-compatible inverter",
+        },
+        {
             ProfileKey.NAME: "huawei",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,

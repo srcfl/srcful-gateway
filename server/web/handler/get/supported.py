@@ -1,8 +1,9 @@
 import json
 from ..handler import GetHandler
 from ..requestData import RequestData
-from ....devices.supported_inverters.profiles import InverterProfiles
+# from ....devices.supported_devices.profiles import InverterProfiles
 from ....devices.enums import ProtocolKey
+from ....devices.supported_devices.profiles import DeviceProfiles
 
 class Handler(GetHandler):
     def schema(self):
@@ -11,7 +12,7 @@ class Handler(GetHandler):
                                   returns={"inverters": "{\"name\": backend name, \"dname\": display name, \"proto\": protocol (mb (modbus) or sol (solarman))}"})
 
     def get_supported_inverters(self):
-        supported_inverters = InverterProfiles().get_supported_inverters()
+        supported_inverters = DeviceProfiles().get_supported_devices()
 
         # The protocol part is temporarily hardcoded since we only support modbus and solarman
         supported_inverters = [{'name': profile.name, 'dname': profile.display_name, 'proto': 'mb' if profile.protocol == ProtocolKey.MODBUS.value else 'sol'} for profile in supported_inverters]

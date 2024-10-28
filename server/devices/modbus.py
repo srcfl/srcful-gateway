@@ -1,16 +1,15 @@
 from abc import ABC, abstractmethod
 import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
-
 from server.devices.Device import Device
-from .supported_inverters.profiles import InverterProfiles, InverterProfile
+# from .supported_devices.profiles import InverterProfiles, InverterProfile
 from .ICom import HarvestDataType, ICom
 from server.network.network_utils import NetworkUtils
+from .supported_devices.profiles import DeviceProfiles
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
 
 
 class Modbus(Device, ABC):
@@ -53,8 +52,10 @@ class Modbus(Device, ABC):
 
         if self.device_type:
             self.device_type = self.device_type.lower()
+            
+        profiles = DeviceProfiles()
         
-        self.profile: InverterProfile = InverterProfiles().get(self.device_type)
+        self.profile: DeviceProfiles = DeviceProfiles().get(self.device_type)
     
     def _read_harvest_data(self, force_verbose) -> dict:
         regs = []

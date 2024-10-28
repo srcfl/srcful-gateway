@@ -11,12 +11,16 @@ class ProfileKey(Enum):
     DESCRIPTION = 'description'
     REGISTERS_VERBOSE = 'registers_verbose'
     REGISTERS = 'registers'
+    BASE_URL = 'base_url'
+    ENDPOINTS = 'endpoints'
 
 
 class ProtocolKey(Enum):
     MODBUS = 'modbus'
     SOLARMAN_V5 = 'solarmanv5'
     SUNSPEC = 'sunspec'
+    REST_API = 'rest_api'
+
 
 class RegistersKey(Enum):
     FCODE = 'fcode'
@@ -32,6 +36,9 @@ class OperationKey(Enum):
 class DeviceCategory(Enum):
     INVERTERS = 'inverters'
     METERS = 'meters'
+    
+
+
     
     
     
