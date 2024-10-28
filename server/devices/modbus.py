@@ -31,6 +31,10 @@ class Modbus(ICom):
     @property
     def SN(self) -> str:
         return "sn"
+    
+    @staticmethod
+    def sn_key() -> str:
+        return "sn"
 
     def __init__(self, **kwargs) -> None:
         if "address" in kwargs:

@@ -3,15 +3,18 @@
 import typing
 from ..enums import ProfileKey, RegistersKey, OperationKey
 import json
+from .supported_devices import supported_devices
 
 inverters = []
 
 # Load all inverters
-with open("server/devices/supported_inverters/inverters/inverters.json") as f:
-    data = json.load(f)
-    for d in data["inverters"]:
-        inverters.append(d)
+# with open("server/devices/supported_inverters/inverters/inverters.json") as f:
+#     data = json.load(f)
+#     for d in data["inverters"]:
+#         inverters.append(d)
 
+for device in supported_devices["inverters"]:
+    inverters.append(device)
 
 class RegisterInterval:
     def __init__(self, operation, start_register, offset):
@@ -22,33 +25,30 @@ class RegisterInterval:
 
 class InverterProfile:
     def __init__(self, inverter_profile):
-        inverter_profile = json.loads(json.dumps(inverter_profile))
-
-        self.name: str = inverter_profile[ProfileKey.NAME.value]
-        self.version: str = inverter_profile[ProfileKey.VERSION.value]
-        self.verbose_always: bool = inverter_profile[ProfileKey.VERBOSE_ALWAYS.value]
-        self.model_group: str = inverter_profile[ProfileKey.MODEL_GROUP.value]
-        self.display_name: str = inverter_profile[ProfileKey.DISPLAY_NAME.value]
-        self.protocol: str = inverter_profile[ProfileKey.PROTOCOL.value]
-        self.description: str = inverter_profile[ProfileKey.DESCRIPTION.value]
+        self.name: str = inverter_profile[ProfileKey.NAME]
+        self.version: str = inverter_profile[ProfileKey.VERSION]
+        self.verbose_always: bool = inverter_profile[ProfileKey.VERBOSE_ALWAYS]
+        self.display_name: str = inverter_profile[ProfileKey.DISPLAY_NAME]
+        self.protocol: str = inverter_profile[ProfileKey.PROTOCOL]
+        self.description: str = inverter_profile[ProfileKey.DESCRIPTION]
 
         self.registers_verbose = []
         self.registers = []
 
-        for register_interval in inverter_profile[ProfileKey.REGISTERS_VERBOSE.value]:
+        for register_interval in inverter_profile[ProfileKey.REGISTERS_VERBOSE]:
             self.registers_verbose.append(
                 RegisterInterval(
-                    register_interval[RegistersKey.FCODE.value],
-                    register_interval[RegistersKey.START_REGISTER.value],
-                    register_interval[RegistersKey.NUM_OF_REGISTERS.value]
+                    register_interval[RegistersKey.FCODE],
+                    register_interval[RegistersKey.START_REGISTER],
+                    register_interval[RegistersKey.NUM_OF_REGISTERS]
                 )
             )
 
-        for register_interval in inverter_profile[ProfileKey.REGISTERS.value]:
+        for register_interval in inverter_profile[ProfileKey.REGISTERS]:
             self.registers.append(
-                RegisterInterval(register_interval[RegistersKey.FCODE.value],
-                                 register_interval[RegistersKey.START_REGISTER.value],
-                                 register_interval[RegistersKey.NUM_OF_REGISTERS.value])
+                RegisterInterval(register_interval[RegistersKey.FCODE],
+                                 register_interval[RegistersKey.START_REGISTER],
+                                 register_interval[RegistersKey.NUM_OF_REGISTERS])
             )
 
     def get_registers_verbose(self) -> typing.List[RegisterInterval]:

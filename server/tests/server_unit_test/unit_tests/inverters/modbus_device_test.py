@@ -1,5 +1,4 @@
 from server.devices.ModbusTCP import ModbusTCP
-from server.devices.ModbusRTU import ModbusRTU
 from server.devices.ModbusSunspec import ModbusSunspec
 from server.devices.ModbusSolarman import ModbusSolarman
 from server.devices.modbus import Modbus
@@ -11,15 +10,19 @@ import pytest
 # Patch the Sunspec connection 
 
 @pytest.fixture
+def sunspec_device():
+    return ModbusSunspec(**cfg.SUNSPEC_ARGS)
+
+
+@pytest.fixture
 def modbus_devices():
     devices: list[Modbus] = []
     
     tcp_config = {k: v for k, v in cfg.TCP_ARGS.items() if k != 'connection'}
-    rtu_conf = {k: v for k, v in cfg.RTU_ARGS.items() if k != 'connection'}
     solarman_conf = {k: v for k, v in cfg.SOLARMAN_ARGS.items() if k != 'connection'}
     
+    
     devices.append(ModbusTCP(**tcp_config))
-    devices.append(ModbusRTU(**rtu_conf))
     devices.append(ModbusSolarman(**solarman_conf))
 
     return devices
@@ -41,7 +44,7 @@ def test_read_harvest_no_data_exception(modbus_devices):
                 return [i for i in range(address, address + size)]
     
             device.read_registers = read_registers
-            arr = device.read_harvest_data(True)
+            device.read_harvest_data(True)
     
             # Empty register array should raise an exception
             with pytest.raises(Exception):
@@ -58,14 +61,12 @@ def test_read_harvest_data_terminated_exception(modbus_devices):
                 
             
 def test_get_config(modbus_devices):
-    
+
     assert modbus_devices[0].get_config() == cfg.TCP_CONFIG
-    assert modbus_devices[1].get_config() == cfg.RTU_CONFIG
-    assert modbus_devices[2].get_config() == cfg.SOLARMAN_CONFIG
+    assert modbus_devices[1].get_config() == cfg.SOLARMAN_CONFIG
 
 
 def test_modbus_device_clone(modbus_devices):
-    
     
     for device in modbus_devices:
         left = device.get_config()
@@ -101,11 +102,14 @@ def test_modbus_device_mac_not_present(modbus_devices):
 def test_get_SN(modbus_devices):
     
     modbus_tcp = modbus_devices[0]
-    modbus_rtu = modbus_devices[1]
-    modbus_solarman = modbus_devices[2]
+    modbus_solarman = modbus_devices[1]
     
     assert modbus_tcp.get_SN() == "00:00:00:00:00:00" # Modbus Device MAC-Address
-    assert modbus_rtu.get_SN() == "N/A" # Not implemented yet
     assert modbus_solarman.get_SN() == '1234567890' # Stick Logger SN
         
         
+def test_sunspec_device_clone(sunspec_device):
+    
+    left = sunspec_device.get_config()
+    right = sunspec_device.clone().get_config()
+    assert left == right

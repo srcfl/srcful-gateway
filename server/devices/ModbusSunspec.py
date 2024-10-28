@@ -199,7 +199,15 @@ class ModbusSunspec(ICom):
     def clone(self, ip: str = None) -> 'ModbusSunspec':
         if ip is None:
             ip = self.ip
-        return ModbusSunspec(ip, self.mac, self.port, self.slave_id)
+        
+        args = {
+            self.ip_key(): ip,
+            self.mac_key(): self.mac,
+            self.port_key(): self.port,
+            self.slave_id_key(): self.slave_id
+        }
+        
+        return ModbusSunspec(**args)
     
     def find_device(self) -> 'ICom':
         port = self.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config

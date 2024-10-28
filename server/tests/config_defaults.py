@@ -22,9 +22,9 @@ SOLARMAN_ARGS = {
     "connection": "SOLARMAN",
     "ip": "localhost",
     "mac": "00:00:00:00:00:00",
-    "serial": 1234567890,
     "port": 502,
     "device_type": "deye",
+    "sn": 1234567890,
     "slave_id": 1,
     "verbose": True
 }

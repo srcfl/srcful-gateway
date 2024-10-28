@@ -16,6 +16,7 @@ class ProfileKey(Enum):
 class ProtocolKey(Enum):
     MODBUS = 'modbus'
     SOLARMAN_V5 = 'solarmanv5'
+    SUNSPEC = 'sunspec'
 
 class RegistersKey(Enum):
     FCODE = 'fcode'
@@ -26,3 +27,8 @@ class RegistersKey(Enum):
 class OperationKey(Enum):
     READ_HOLDING_REGISTERS = 0x03
     READ_INPUT_REGISTERS = 0x04
+
+    
+    
+    
+    

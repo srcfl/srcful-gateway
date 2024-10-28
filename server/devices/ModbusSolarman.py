@@ -25,14 +25,6 @@ class ModbusSolarman(ModbusTCP):
     """
     
     CONNECTION = "SOLARMAN"
-      
-    @property
-    def SERIAL(self) -> str:
-        return self.serial_key()
-    
-    @staticmethod
-    def serial_key() -> str:
-        return "serial"
     
     @property
     def VERBOSE(self) -> str:
@@ -48,13 +40,12 @@ class ModbusSolarman(ModbusTCP):
         schema = ModbusTCP.get_config_schema()
         return {
             **schema,
-            ModbusSolarman.serial_key(): "int - Serial number of the logger stick",
+            ModbusTCP.sn_key(): "int - Serial number of the logger stick",
         }
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         
-        self.serial = kwargs.get(self.serial_key(), None)
         self.verbose = kwargs.get(self.verbose_key(), 0)
 
     def _open(self, **kwargs) -> bool:
@@ -103,42 +94,36 @@ class ModbusSolarman(ModbusTCP):
             ip = self._get_host()
             
         args = {
-            self.ip_key(): ip,
-            self.mac_key(): self._get_mac(),
-            self.serial_key(): self._get_serial(),
-            self.port_key(): self._get_port(),
-            self.device_type_key(): self._get_type(),
-            self.slave_id_key(): self._get_slave_id(),
-            self.verbose_key(): self.verbose
+            self.IP: ip,
+            self.MAC: self._get_mac(),
+            self.SN: self._get_SN(),
+            self.PORT: self._get_port(),
+            self.DEVICE_TYPE: self._get_type(),
+            self.SLAVE_ID: self._get_slave_id(),
+            self.VERBOSE: self.verbose
         }
         
         return ModbusSolarman(**args)
-
-
-    def _get_serial(self) -> int:
-        return self.serial
-    
     
     def _get_SN(self) -> str:
-        return str(self.serial)
+        return str(self.sn)
 
     def _get_config_dict(self) -> dict:
         return {
             ICom.CONNECTION_KEY: ModbusSolarman.CONNECTION,
             self.DEVICE_TYPE: self._get_type(),
-            self.SERIAL: self._get_serial(),
+            self.SN: self._get_SN(),
             self.SLAVE_ID: self._get_slave_id(),
             self.IP: self._get_host(),
             self.MAC: self._get_mac(),
             self.PORT: self._get_port(),
-            self.VERBOSE: self.verbose,
-            self.SN: self._get_SN()
+            self.VERBOSE: self.verbose
         }
     
     def _create_client(self, **kwargs) -> None:
         try:
             self.client = PySolarmanV5(address=self._get_host(),
-                            serial=self._get_serial(),
+                            serial=self._get_SN(),
                             port=self._get_port(),
                             mb_slave_id=self._get_slave_id(),
                             v5_error_correction=False,
