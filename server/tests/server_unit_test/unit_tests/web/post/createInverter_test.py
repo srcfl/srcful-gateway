@@ -26,7 +26,7 @@ def test_post_create_inverter_tcp():
 def test_post_create_inverter_rtu():
     conf = cfg.RTU_CONFIG
 
-    handler = ModbusDeviceHandler()
+    handler = DeviceHandler()
     rd = RequestData(BlackBoard(), {}, {}, conf)
 
     handler.do_post(rd)
@@ -42,7 +42,7 @@ def test_post_create_inverter_rtu():
 def test_post_create_inverter_solarman():
     conf = cfg.SOLARMAN_CONFIG
     
-    handler = ModbusDeviceHandler()
+    handler = DeviceHandler()
     rd = RequestData(BlackBoard(), {}, {}, conf)
 
     handler.do_post(rd)

@@ -47,10 +47,6 @@ class ModbusSunspec(Device):
     @staticmethod
     def port_key() -> str:
         return "port"
-    
-    @staticmethod
-    def device_type_key() -> str:
-        return "device_type"
 
     @property
     def SLAVE_ID(self) -> str:
@@ -62,7 +58,7 @@ class ModbusSunspec(Device):
     
     @property
     def SN(self) -> str:
-        return "sn"
+        return self.sn_key()
     
     @staticmethod
     def sn_key() -> str:
@@ -88,6 +84,7 @@ class ModbusSunspec(Device):
         if "type" in kwargs:
             kwargs[self.device_type_key()] = kwargs.pop("type")
 
+
         self.ip = kwargs.get(self.ip_key(), None)
         self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
         self.port = kwargs.get(self.port_key(), None)
@@ -98,7 +95,7 @@ class ModbusSunspec(Device):
         self.inverter = None
         self.ac_model = None
         self.dc_model = None
-        self.data_type = HarvestDataType.SUNSPEC.value
+        self.data_type = HarvestDataType.SUNSPEC
         
     def _connect(self, **kwargs) -> bool:
         self.client = client.SunSpecModbusClientDeviceTCP(slave_id=self.slave_id, ipaddr=self.ip, ipport=self.port)
@@ -184,7 +181,6 @@ class ModbusSunspec(Device):
     def get_config(self):
         return {
             ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
-            self.DEVICE_TYPE: self.device_type,
             self.IP: self.ip,
             self.MAC: self.mac,
             self.PORT: self.port,
@@ -196,9 +192,12 @@ class ModbusSunspec(Device):
         return "Sunspec"
     
     def clone(self, ip: str = None) -> 'ModbusSunspec':
-        if ip is None:
-            ip = self.ip
-        return ModbusSunspec(ip, self.mac, self.port, self.slave_id)
+        config = self.get_config()
+
+        if ip:
+            config[self.IP] = ip
+
+        return ModbusSunspec(**config)
     
     def find_device(self) -> 'ICom':
         port = self.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config

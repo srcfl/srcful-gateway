@@ -4,7 +4,7 @@ from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOEx
 
 from server.devices.Device import Device
 from .supported_inverters.profiles import InverterProfiles, InverterProfile
-from .ICom import ICom
+from .ICom import HarvestDataType, ICom
 from server.network.network_utils import NetworkUtils
 
 logger = logging.getLogger(__name__)
@@ -24,10 +24,32 @@ class Modbus(Device, ABC):
     def device_type_key() -> str:
         return "device_type"
 
+    @property
+    def SLAVE_ID(self) -> str:
+        return self.slave_id_key()
+    
+    @staticmethod
+    def slave_id_key() -> str:
+        return "slave_id"
+    
+    @property
+    def SN(self) -> str:
+        return "sn"
 
-    def __init__(self, device_type: str):
-        super().__init__()
-        self.device_type = device_type
+
+    def __init__(self, **kwargs) -> None:
+        if "address" in kwargs:
+            kwargs[self.SLAVE_ID] = kwargs.pop("address")
+        if "type" in kwargs:
+            kwargs[self.DEVICE_TYPE] = kwargs.pop("type")
+        
+        self.sn = kwargs.get(self.SN, None)
+        self.slave_id = kwargs.get(self.SLAVE_ID, None)
+        self.device_type = kwargs.get(self.DEVICE_TYPE, None)
+
+        if self.device_type:
+            self.device_type = self.device_type.lower()
+        
         self.profile: InverterProfile = InverterProfiles().get(self.device_type)
     
     def _read_harvest_data(self, force_verbose) -> dict:
@@ -107,7 +129,7 @@ class Modbus(Device, ABC):
             return False
         return True
     
-    def get_harvest_data_type(self) -> str:
+    def get_harvest_data_type(self) -> HarvestDataType:
         return self.data_type
     
     def get_name(self) -> str:
@@ -125,5 +147,9 @@ class Modbus(Device, ABC):
         return None
     
     def get_config(self) -> dict:
-        return {self.DEVICE_TYPE: self.device_type}
+        return {
+            self.DEVICE_TYPE: self.device_type,
+            self.SLAVE_ID: self.slave_id,
+            self.SN: self.get_SN()
+        }
 

@@ -93,15 +93,11 @@ class ModbusSolarman(ModbusTCP):
         self._isTerminated = True
 
     def clone(self, ip: str = None) -> 'ModbusSolarman':
-        return ModbusSolarman(
-            ip if ip else self.ip, 
-            self.mac,
-            self.serial,
-            self.port, 
-            self.device_type, 
-            self.slave_id, 
-            self.verbose
-        )
+        config = self.get_config()
+        if ip:
+            config[self.IP] = ip
+
+        return ModbusSolarman(**config)
 
 
     def _get_serial(self) -> int:
@@ -120,6 +116,7 @@ class ModbusSolarman(ModbusTCP):
             self.VERBOSE: self.verbose
         }
         return {**super_config, **my_config}
+    
     def _create_client(self, **kwargs) -> None:
         try:
             self.client = PySolarmanV5(address=self.ip,

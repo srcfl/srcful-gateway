@@ -108,15 +108,13 @@ class ModbusRTU(Modbus):
         self.stopbits = kwargs.get(self.stopbits_key(), None)
         self.slave_id = kwargs.get(self.slave_id_key(), None)
         self.client = None
-        self.data_type = HarvestDataType.MODBUS_REGISTERS.value
-        
+        self.data_type = HarvestDataType.MODBUS_REGISTERS
         
 
-
-    def _open(self, **kwargs) -> bool:
+    def _connect(self, **kwargs) -> bool:
         self._create_client(**kwargs)
         if not self.client.connect():
-            log.error("FAILED to open inverter: %s", self._get_type())
+            log.error("FAILED to open inverter: %s", self.device_type)
             return bool(self.client.socket)
         else:
             return False
@@ -131,38 +129,13 @@ class ModbusRTU(Modbus):
         self._close()
 
 
-    def clone(self, host: str = None) -> 'ModbusRTU':
-        if host is None:
-            host = self._get_host()
-            
-        return ModbusRTU(self.port, 
-                        self.baudrate,
-                        self.bytesize, 
-                        self.parity,
-                        self.stopbits, 
-                        self.device_type, 
-                        self.slave_id)
+    def clone(self, port: str = None) -> 'ModbusRTU':
+        config = self.get_config()
+        if port:
+            config[self.PORT] = port
 
-    def _get_host(self) -> str:
-        return self.port
+        return ModbusRTU(**config)
 
-    def _get_baudrate(self) -> int:
-        return self.baudrate
-
-    def _get_bytesize(self) -> int:
-        return self.bytesize
-
-    def _get_parity(self) -> str:
-        return self.parity
-
-    def _get_stopbits(self) -> int:
-        return self.stopbits
-
-    def _get_type(self) -> str:
-        return self.device_type
-
-    def _get_slave_id(self) -> int:
-        return self.slave_id
     
     def find_device(self) -> 'ICom':
         raise NotImplementedError("find_device is not implemented for ModbusRTU")
@@ -175,7 +148,6 @@ class ModbusRTU(Modbus):
 
         my_config = {
             ICom.CONNECTION_KEY: ModbusRTU.CONNECTION,
-            self.SLAVE_ID: self.slave_id,
             self.PORT: self.port,
             self.BAUD_RATE: self.baudrate,
             self.BYTESIZE: self.bytesize,
@@ -199,9 +171,9 @@ class ModbusRTU(Modbus):
         resp = None
         
         if operation == 0x04:
-            resp = self.client.read_input_registers(scan_start, scan_range, slave=self._get_slave_id())
+            resp = self.client.read_input_registers(scan_start, scan_range, slave=self.slave_id)
         elif operation == 0x03:
-            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self._get_slave_id())
+            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.slave_id)
 
         # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
         # We solve this by raising the exception manually
@@ -215,7 +187,7 @@ class ModbusRTU(Modbus):
         Write a range of holding registers from a start address
         """
         resp = self.client.write_registers(
-            starting_register, values, slave=self._get_slave_id()
+            starting_register, values, slave=self.slave_id
         )
         log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
         

@@ -76,16 +76,13 @@ class ModbusTCP(Modbus):
         self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
         self.port = kwargs.get(self.port_key(), None)
         self.client = None
-        self.data_type = HarvestDataType.MODBUS_REGISTERS.value
+        self.data_type = HarvestDataType.MODBUS_REGISTERS
 
     def _connect(self, **kwargs) -> bool:
-        if not self._is_terminated():
-            self._create_client(**kwargs)
-            if not self.client.connect():
-                log.error("FAILED to open Modbus TCP device: %s", self._get_type())
-            return bool(self.client.socket)
-        else:
-            return False
+        self._create_client(**kwargs)
+        if not self.client.connect():
+            log.error("FAILED to open Modbus TCP device: %s", self._get_type())
+        return bool(self.client.socket)
         
     def _get_type(self) -> str:
         return self.device_type
@@ -100,8 +97,12 @@ class ModbusTCP(Modbus):
     def _disconnect(self) -> None:
         self._close()
 
-    def clone(self, ip: str = None) -> 'ModbusTCP':
-        return ModbusTCP(ip if ip else self.ip, self.mac, self.port, self.device_type, self.slave_id)
+    def clone(self, ip: str | None = None) -> 'ModbusTCP':
+        config = self.get_config()
+        if ip:
+            config[self.IP] = ip
+
+        return ModbusTCP(**config)
 
     def get_config(self) -> dict:
         super_config = super().get_config()
@@ -109,7 +110,6 @@ class ModbusTCP(Modbus):
         my_config = {
             ICom.CONNECTION_KEY: ModbusTCP.CONNECTION,
             self.MAC: self.mac,
-            self.SLAVE_ID: self.slave_id,
             self.IP: self.ip,
             self.PORT: self.port,
         }
