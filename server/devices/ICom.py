@@ -6,6 +6,7 @@ class HarvestDataType(Enum):
     MODBUS_REGISTERS = "modbus_registers"
     SUNSPEC = "sunspec_json"
     P1_TELNET = "p1_telnet_json"
+    REST_API = "rest_api_json"
     UNDEFINED = "undefined"
 
 class DER_TYPE(Enum):
