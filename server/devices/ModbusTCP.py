@@ -82,6 +82,8 @@ class ModbusTCP(Modbus):
         self._create_client(**kwargs)
         if not self.client.connect():
             log.error("FAILED to open Modbus TCP device: %s", self._get_type())
+        if self.client.socket:
+            self.mac = NetworkUtils.get_mac_from_ip(self.ip)
         return bool(self.client.socket)
         
     def _get_type(self) -> str:
@@ -121,7 +123,6 @@ class ModbusTCP(Modbus):
 
     def _create_client(self, **kwargs) -> None:
         self.client =  ModbusClient(host=self.ip, port=self.port, unit_id=self.slave_id, **kwargs)
-        self.mac = NetworkUtils.get_mac_from_ip(self.ip)
 
     def _read_registers(self, operation, scan_start, scan_range) -> list:
         resp = None

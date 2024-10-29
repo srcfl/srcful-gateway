@@ -1,6 +1,9 @@
 import pytest
 from unittest.mock import MagicMock
 from server.blackboard import BlackBoard
+from server.settings_device_listener import SettingsDeviceListener
+from server.tasks.harvestFactory import HarvestFactory
+from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.web.handler.delete.device import Handler
 from server.web.handler.requestData import RequestData
 import server.tests.config_defaults as cfg
@@ -77,3 +80,43 @@ def test_delete_multiple_devices(handler, blackboard):
     assert len(blackboard.devices.lst) == 2
     remaining_sns = [d.get_config()['sn'] for d in blackboard.devices.lst]
     assert 'device_1' not in remaining_sns
+
+def test_delete_device_with_perpetual_task(handler, blackboard, mock_device):
+
+
+    # set up the listeners
+    settings_device_listener = SettingsDeviceListener(blackboard)
+    harvest_factory = HarvestFactory(blackboard)
+
+    blackboard.devices.add_listener(harvest_factory)
+    blackboard.settings.devices.add_listener(settings_device_listener.on_change)
+
+
+    # Add a device to the blackboard
+    blackboard.devices.add(mock_device)
+
+    # make sure the device is closed
+    mock_device.is_open.return_value = False
+
+    # create a perpetual task
+    cloned_device = mock_device.clone()
+    cloned_device.is_open.return_value = False
+
+    task = DevicePerpetualTask(0, blackboard, cloned_device)
+
+    # delete the device
+    post_params = {'id': mock_device.get_config()['sn']}
+    request = RequestData(blackboard, post_params, {}, {})
+
+    # execute delete
+    status_code, response = handler.do_delete(request)
+
+    # verify response
+    assert status_code == 200
+    assert len(blackboard.devices.lst) == 0
+    
+    # check that the perpetual task does not execute and returns None
+    assert task.execute(0) == None
+
+    assert cloned_device.connect.call_count == 0
+    assert len(blackboard.devices.lst) == 0

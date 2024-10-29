@@ -1,3 +1,5 @@
+from server.settings import ChangeSource
+from server.settings_device_listener import SettingsDeviceListener
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
@@ -8,6 +10,12 @@ from server.devices.ModbusRTU import ModbusRTU
 from server.devices.ModbusSolarman import ModbusSolarman
 import server.tests.config_defaults as cfg
 import pytest 
+
+
+def set_up_listeners(blackboard: BlackBoard):
+    settings_device_listener = SettingsDeviceListener(blackboard)
+    HarvestFactory(blackboard)
+    blackboard.settings.devices.add_listener(settings_device_listener.on_change)
 
 @pytest.fixture
 def modbus_devices():
@@ -24,10 +32,15 @@ def modbus_devices():
 
 def test_execute_invertert_added():
     bb = BlackBoard()
-    HarvestFactory(bb)
+    set_up_listeners(bb)
 
+    # Add a device to the settings
     inverter = MagicMock()
+    inverter.get_config.return_value = cfg.TCP_CONFIG
+    inverter.get_SN.return_value = cfg.TCP_CONFIG.get('sn')
+    bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
     inverter.open.return_value = True
+
     task = DevicePerpetualTask(0, bb, inverter)
     ret = task.execute(0)
 
@@ -39,9 +52,12 @@ def test_execute_invertert_added():
 
 def test_retry_on_exception():
     bb = BlackBoard()
-    HarvestFactory(bb)
+    set_up_listeners(bb)
 
     inverter = MagicMock()
+    inverter.get_config.return_value = cfg.TCP_CONFIG
+    inverter.get_SN.return_value = cfg.TCP_CONFIG.get('sn')
+    bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
     inverter.connect.side_effect = Exception("test")
     task = DevicePerpetualTask(0, bb, inverter)
     ret = task.execute(0)
@@ -52,9 +68,12 @@ def test_retry_on_exception():
 
 def test_execute_inverter_not_found():
     bb = BlackBoard()
-    HarvestFactory(bb)
+    set_up_listeners(bb)
     
     device = MagicMock()
+    device.get_config.return_value = cfg.TCP_CONFIG
+    device.get_SN.return_value = cfg.TCP_CONFIG.get('sn')
+    bb.settings.devices.add_connection(device, ChangeSource.LOCAL)
     device.connect.return_value = False
     device.get_config.return_value = cfg.TCP_ARGS
 
@@ -71,14 +90,19 @@ def test_execute_inverter_not_found():
 
 def test_execute_new_inverter_added_after_rescan():
     bb = BlackBoard()
-    inverter = MagicMock()
-    inverter.get_config.return_value = cfg.TCP_ARGS
-    inverter.connect.return_value = False
+    set_up_listeners(bb)
     
+    inverter = MagicMock()
+    inverter.get_config.return_value = cfg.TCP_CONFIG
+    inverter.get_SN.return_value = cfg.TCP_CONFIG.get('sn')
+    bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
+    
+    inverter.connect.return_value = False
+    inverter.find_device.return_value = inverter
     task = DevicePerpetualTask(0, bb, inverter)
 
-    task.execute(event_time=0)
-    
+    task = task.execute(event_time=0)
+
     inverter.connect.return_value = True
     
     ret = task.execute(event_time=500)
@@ -90,10 +114,12 @@ def test_execute_new_inverter_added_after_rescan():
 @patch('server.tasks.openDevicePerpetualTask.NetworkUtils')
 def test_reconnect_does_not_find_known_device(mock_network_utils):
     bb = BlackBoard()
-    HarvestFactory(bb)
+    set_up_listeners(bb)
     
     inverter = MagicMock()
     inverter.get_config.return_value = cfg.TCP_ARGS
+    inverter.get_SN.return_value = cfg.TCP_CONFIG.get('sn')
+    bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
     inverter.connect.return_value = False
     task = DevicePerpetualTask(0, bb, inverter)
     
@@ -121,7 +147,13 @@ def test_reconnect_does_not_find_known_device(mock_network_utils):
 
 def test_execute_inverter_not_on_local_network():
     bb = BlackBoard()
+    set_up_listeners(bb)
+    
     inverter = MagicMock()
+    inverter.get_config.return_value = cfg.TCP_ARGS
+    inverter.get_SN.return_value = cfg.TCP_CONFIG.get('sn')
+    bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
+
     inverter.connect.return_value = True
     inverter.get_config.return_value = cfg.TCP_ARGS # MAC is 00:00:00:00:00:00, so probably not on the local network
     inverter.is_valid.return_value = False
@@ -139,12 +171,21 @@ def test_execute_inverter_not_on_local_network():
 
 def test_add_multiple_devices():
     bb = BlackBoard()
+    set_up_listeners(bb)
+    
     device1 = MagicMock()
+    device1.get_config.return_value = cfg.TCP_CONFIG
+    device1.get_SN.return_value = cfg.TCP_CONFIG.get('sn')
+    bb.settings.devices.add_connection(device1, ChangeSource.LOCAL)
     device1.connect.return_value = True
     device1.is_open.return_value = True
     
+    
 
     device2 = MagicMock()
+    device2.get_config.return_value = cfg.P1_TELNET_CONFIG
+    device2.get_SN.return_value = cfg.P1_TELNET_CONFIG.get('meter_serial_number')
+    bb.settings.devices.add_connection(device2, ChangeSource.LOCAL)
     device2.connect.return_value = True
     device2.is_open.return_value = True
     

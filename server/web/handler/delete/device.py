@@ -13,10 +13,10 @@ class Handler(DeleteHandler):
         )
     
     def do_delete(self, data: RequestData):
-        if "id" not in data.post_params:
+        if "id" not in data.data:
             return 400, json.dumps({"status": "bad request", "schema": self.schema()})
         
-        id = data.post_params["id"]
+        id = data.data["id"]
 
         for device in data.bb.devices.lst:
             if device.get_SN() == id:

@@ -14,7 +14,6 @@ class NetworkUtils:
     Utility class for network-related operations.
     """
 
-    _arp_table: Optional[list[dict[str, str, str, str, str, str]]] = None
     IP_KEY = 'ip'
     PORT_KEY = 'port'
     PORTS_KEY = 'ports'
@@ -32,7 +31,7 @@ class NetworkUtils:
 
     # Method to get the arp table   
     @staticmethod
-    def refresh_arp_table() -> None:
+    def arp_table() -> list[dict[str, str]]:
         """Refresh the ARP table from the system."""
         logger.info("Scanning ARP table")
         try:
@@ -48,18 +47,16 @@ class NetworkUtils:
                           NetworkUtils.DEVICE_KEY], line.split()))
                 for line in lines
             ]
-            NetworkUtils._arp_table = arp_table
+            return arp_table
         except FileNotFoundError:
             logger.warning("ARP table file not found. Using empty ARP table.")
-            NetworkUtils._arp_table = []
+            return []
         
     
     @staticmethod
     def get_mac_from_ip(ip: str) -> Optional[str]:
         """Get the MAC address from the ARP table for a given IP address."""
-        if NetworkUtils._arp_table is None:
-            NetworkUtils.refresh_arp_table()
-        for entry in NetworkUtils._arp_table:
+        for entry in NetworkUtils.arp_table():
             if entry[NetworkUtils.IP_KEY] == ip:
                 return entry[NetworkUtils.MAC_KEY]
         return "00:00:00:00:00:00"
@@ -117,7 +114,7 @@ class NetworkUtils:
             return []
         
         # Refresh the ARP table
-        NetworkUtils.refresh_arp_table()
+        NetworkUtils.arp_table()
         
         # Extract the network prefix from the local IP address
         network_prefix = ".".join(local_ip.split(".")[:-1]) + ".0/24"
