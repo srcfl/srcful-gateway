@@ -1,8 +1,7 @@
 from .Device import Device
 import logging
 import requests
-from .supported_devices.profiles import DeviceProfiles, RestApiProfile
-from .profile_keys import ProfileKey
+from .supported_devices.profiles import DeviceProfiles
 from server.network import mdns as mdns
 from .ICom import HarvestDataType, ICom
 from typing import Optional, List
@@ -10,9 +9,9 @@ from typing import Optional, List
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-class RestAPI(Device):
+class Enphase(Device):
     """
-    RestAPI device class
+    Enphase device class
     
     Attributes:
         base_url (str): The base URL for the REST API
@@ -20,31 +19,31 @@ class RestAPI(Device):
         auth_method (str): Authentication method to use
     """
 
-    CONNECTION = "REST"
+    CONNECTION = "ENPHASE"
 
     @staticmethod
     def get_supported_devices():
-        return {RestAPI.CONNECTION: {'id': 'rest', 'display_name': 'REST API'}}
+        return {Enphase.CONNECTION: {'id': 'enphase', 'display_name': 'Enphase'}}
     
     @staticmethod
     def get_config_schema():
         return {
            'ip': 'string, IP address or hostname of the device',
+           'endpoints': 'dict, Dictionary of endpoints to read data from',
            'bearer_token': 'string, Bearer token for the device'
         }
 
     def __init__(self, **kwargs):
-        self.device_type: str = kwargs.get("device_type", None)
-        if not self.device_type:
-            raise ValueError("Device type is required")
         
         self.bearer_token: str = kwargs.get("bearer_token", None)
         if not self.bearer_token:
             raise ValueError("Bearer token is required")
         
-        self.profile: RestApiProfile = DeviceProfiles().get(self.device_type)
-        self.base_url: str = self.profile.base_url
-        self.endpoints: dict = self.profile.endpoints
+        self.base_url: str = kwargs.get("base_url", None)   
+        if not self.base_url:
+            raise ValueError("Base URL is required")
+        
+        self.endpoints: dict = kwargs.get("endpoints", {})
         
         self.headers: dict = {"Authorization": f"Bearer {self.bearer_token}"}
         
@@ -91,7 +90,7 @@ class RestAPI(Device):
     
     def get_config(self) -> dict:
         return {
-            ICom.CONNECTION_KEY: RestAPI.CONNECTION,
+            ICom.CONNECTION_KEY: Enphase.CONNECTION,
             "base_url": self.base_url,
             "endpoints": self.endpoints,
             "mac": self.mac, 
@@ -104,7 +103,7 @@ class RestAPI(Device):
     def clone(self, ip: Optional[str] = None) -> 'ICom':
         if ip is None:
             ip = self.base_url
-        return RestAPI(device_type=self.device_type, bearer_token=self.bearer_token, base_url=ip)
+        return Enphase(device_type=self.device_type, bearer_token=self.bearer_token, base_url=ip)
     
     def find_device(self) -> 'ICom':
         raise NotImplementedError("Not implemented")

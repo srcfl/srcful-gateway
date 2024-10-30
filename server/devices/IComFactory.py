@@ -3,7 +3,7 @@ from .ModbusTCP import ModbusTCP
 from .ModbusSolarman import ModbusSolarman
 from .ModbusSunspec import ModbusSunspec
 from .P1Telnet import P1Telnet
-from .rest_api import RestAPI
+from .enphase import Enphase
 from .ICom import ICom
 import logging
 
@@ -13,7 +13,7 @@ log.setLevel(logging.INFO)
 
 class IComFactory:
     
-    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, RestAPI]
+    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, Enphase]
 
     @staticmethod
     def get_connection_configs():
@@ -73,6 +73,8 @@ class IComFactory:
                 return ModbusSunspec(**stripped_config)
             case P1Telnet.CONNECTION:
                 return P1Telnet(**stripped_config)
+            case Enphase.CONNECTION:
+                return Enphase(**stripped_config)
             case _:
                 log.error("Unknown connection type: %s", connection)
                 return None

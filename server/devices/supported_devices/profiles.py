@@ -58,20 +58,20 @@ class ModbusProfile(DeviceProfile):
         return self.registers
 
 
-class SunSpecProfile(DeviceProfile):
-    """SunSpec profile class. Does not contain any register intervals since they are defined in the SunSpec models."""
-    def __init__(self, profile_data: dict):
-        super().__init__(profile_data)
-        # self.model_ids = profile_data.get('model_ids', [])
+# class SunSpecProfile(DeviceProfile):
+#     """SunSpec profile class. Does not contain any register intervals since they are defined in the SunSpec models."""
+#     def __init__(self, profile_data: dict):
+#         super().__init__(profile_data)
+#         # self.model_ids = profile_data.get('model_ids', [])
         
 
-class RestApiProfile(DeviceProfile):
-    """Rest API profile class. Used to define base URL and endpoints for Rest API profiles."""
-    def __init__(self, profile_data: dict):
-        super().__init__(profile_data)
-        self.base_url = profile_data.get('base_url')
-        self.endpoints = profile_data.get('endpoints', {})
-        self.auth_method = profile_data.get('auth_method')
+# class RestApiProfile(DeviceProfile):
+#     """Rest API profile class. Used to define base URL and endpoints for Rest API profiles."""
+#     def __init__(self, profile_data: dict):
+#         super().__init__(profile_data)
+#         self.base_url = profile_data.get('base_url')
+#         self.endpoints = profile_data.get('endpoints', {})
+#         self.auth_method = profile_data.get('auth_method')
 
 
 class DeviceProfiles:
