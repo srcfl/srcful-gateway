@@ -1,3 +1,5 @@
+import json
+from server.devices.ICom import HarvestDataType, ICom
 import server.tasks.harvest as harvest
 import server.tasks.harvestTransport as harvestTransport
 import server.tasks.openDevicePerpetualTask as oit
@@ -221,6 +223,22 @@ def test_execute_harvests_from_two_devices():
     
     assert device2.read_harvest_data.called
 
+def test_create_headers():
+    device = MagicMock(spec=ICom)
+    device.get_harvest_data_type.return_value = HarvestDataType.MODBUS_REGISTERS
+    device.get_SN.return_value = "1234567890"
+    device.get_name.return_value = "Volvo 240"
+
+    bb = BlackBoard()
+    harvest_task = harvest.Harvest(0, bb, device, harvestTransport.DefaultHarvestTransportFactory())
+
+    headers = harvest_task._create_headers(device)
+
+    #  check so the headers can be json serialized
+    try:
+        json.dumps(headers)
+    except Exception as e:
+        assert False
 
 # Test creating a device task, then harvesting from it. Then the device unexpectedly closes and removed from the blackboard
 # Then we should restart the device

@@ -1,4 +1,6 @@
 from typing import Optional
+
+from server.devices.enums import OperationKey
 from .modbus import Modbus
 from .ICom import ICom, HarvestDataType
 from pymodbus.client import ModbusTcpClient as ModbusClient
