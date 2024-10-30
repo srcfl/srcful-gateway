@@ -1,7 +1,7 @@
 import pytest
 import json
 from server.settings import Settings, ChangeSource
-from server.devices.ModbusTCP import ModbusTCP
+from server.devices.inverters.ModbusTCP import ModbusTCP
 import server.tests.config_defaults as cfg
 
 @pytest.fixture

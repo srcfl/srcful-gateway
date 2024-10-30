@@ -1,9 +1,9 @@
-from .Device import Device
+from ..Device import Device
 import logging
 import requests
-from .supported_devices.profiles import ModbusDeviceProfiles
+from ..supported_devices.profiles import ModbusDeviceProfiles
 from server.network import mdns as mdns
-from .ICom import HarvestDataType, ICom
+from ..ICom import HarvestDataType, ICom
 from typing import Optional, List
 
 logger = logging.getLogger(__name__)

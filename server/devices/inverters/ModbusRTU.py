@@ -2,7 +2,7 @@ from typing import Optional
 
 from server.devices.profile_keys import OperationKey
 from .modbus import Modbus
-from .ICom import ICom, HarvestDataType
+from ..ICom import ICom, HarvestDataType
 from pymodbus.client import ModbusSerialClient as ModbusClient
 from pymodbus.pdu import ExceptionResponse
 from pymodbus.exceptions import ModbusIOException

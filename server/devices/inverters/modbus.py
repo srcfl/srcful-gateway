@@ -3,9 +3,9 @@ import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from server.devices.Device import Device
 from server.devices.profile_keys import OperationKey
-from .ICom import HarvestDataType, ICom
+from ..ICom import HarvestDataType, ICom
 from server.network.network_utils import NetworkUtils
-from .supported_devices.profiles import ModbusDeviceProfiles
+from ..supported_devices.profiles import ModbusDeviceProfiles
 
 
 logger = logging.getLogger(__name__)

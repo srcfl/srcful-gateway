@@ -1,5 +1,5 @@
 import logging
-from server.devices.modbus import Modbus
+from server.devices.inverters.modbus import Modbus
 from server.blackboard import BlackBoard
 from .task import Task
 

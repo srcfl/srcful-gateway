@@ -2,10 +2,11 @@ import logging
 import select
 import socket
 import errno
-from typing import List, Optional
+from typing import Callable, List, Optional
+
 from server.devices.Device import Device
 from server.network import mdns as mdns
-from .ICom import HarvestDataType, ICom
+from ..ICom import HarvestDataType, ICom
 import time
 
 logger = logging.getLogger(__name__)

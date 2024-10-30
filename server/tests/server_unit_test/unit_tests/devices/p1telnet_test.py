@@ -1,11 +1,8 @@
 from io import BytesIO
 import pytest 
 
-from server.devices.P1Telnet import P1Telnet
-
-
-
-        
+from server.devices.p1meters.P1Telnet import P1Telnet
+    
 
 class DataReader:
     def __init__(self, data):

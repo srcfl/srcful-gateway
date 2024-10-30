@@ -1,9 +1,9 @@
-from .ModbusRTU import ModbusRTU
-from .ModbusTCP import ModbusTCP
-from .ModbusSolarman import ModbusSolarman
-from .ModbusSunspec import ModbusSunspec
-from .P1Telnet import P1Telnet
-from .enphase import Enphase
+from .inverters.ModbusRTU import ModbusRTU
+from .inverters.ModbusTCP import ModbusTCP
+from .inverters.ModbusSolarman import ModbusSolarman
+from .inverters.ModbusSunspec import ModbusSunspec
+from .inverters.enphase import Enphase
+from .p1meters.P1Telnet import P1Telnet
 from .ICom import ICom
 import logging
 
