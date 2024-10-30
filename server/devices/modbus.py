@@ -3,6 +3,7 @@ import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 
 from server.devices.Device import Device
+from server.devices.enums import OperationKey
 from .supported_inverters.profiles import InverterProfiles, InverterProfile
 from .ICom import HarvestDataType, ICom
 from server.network.network_utils import NetworkUtils
@@ -55,6 +56,7 @@ class Modbus(Device, ABC):
             self.device_type = self.device_type.lower()
         
         self.profile: InverterProfile = InverterProfiles().get(self.device_type)
+        assert self.profile, f"Profile for {self.device_type} not found"
     
     def _read_harvest_data(self, force_verbose) -> dict:
         regs = []
@@ -96,11 +98,11 @@ class Modbus(Device, ABC):
         return [x for x in range(scan_start, scan_start + scan_range, 1)]
     
     @abstractmethod
-    def _read_registers(self, operation, scan_start, scan_range) -> list:
+    def _read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
         """Reads a range of registers from a start address."""
         pass
 
-    def read_registers(self, operation, scan_start, scan_range) -> list:
+    def read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
         """
         Read a range of input registers from a start address
         """

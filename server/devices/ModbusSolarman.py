@@ -1,3 +1,4 @@
+from server.devices.enums import OperationKey
 from .ModbusTCP import ModbusTCP
 from .ICom import ICom
 from pysolarmanv5 import PySolarmanV5
@@ -117,12 +118,12 @@ class ModbusSolarman(ModbusTCP):
         except Exception as e:
             log.error("Error creating client: %s", e)
 
-    def _read_registers(self, operation, scan_start, scan_range) -> list:
+    def _read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
         resp = None
 
-        if operation == 0x04:
+        if operation == OperationKey.READ_INPUT_REGISTERS:
             resp = self.client.read_input_registers(register_addr=scan_start, quantity=scan_range)
-        elif operation == 0x03:
+        elif operation == OperationKey.READ_HOLDING_REGISTERS:
             resp = self.client.read_holding_registers(register_addr=scan_start, quantity=scan_range)
 
         return resp

@@ -1,4 +1,6 @@
 from typing import Optional
+
+from server.devices.enums import OperationKey
 from .modbus import Modbus
 from .ICom import ICom, HarvestDataType
 from pymodbus.client import ModbusSerialClient as ModbusClient
@@ -167,12 +169,12 @@ class ModbusRTU(Modbus):
             **kwargs
         )
 
-    def _read_registers(self, operation, scan_start, scan_range) -> list:
+    def _read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
         resp = None
         
-        if operation == 0x04:
+        if operation == OperationKey.READ_INPUT_REGISTERS:
             resp = self.client.read_input_registers(scan_start, scan_range, slave=self.slave_id)
-        elif operation == 0x03:
+        elif operation == OperationKey.READ_HOLDING_REGISTERS:
             resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.slave_id)
 
         # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it

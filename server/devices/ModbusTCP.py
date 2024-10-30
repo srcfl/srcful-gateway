@@ -124,12 +124,12 @@ class ModbusTCP(Modbus):
     def _create_client(self, **kwargs) -> None:
         self.client =  ModbusClient(host=self.ip, port=self.port, unit_id=self.slave_id, **kwargs)
 
-    def _read_registers(self, operation, scan_start, scan_range) -> list:
+    def _read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
         resp = None
         
-        if operation == 0x04:
+        if operation == OperationKey.READ_INPUT_REGISTERS:
             resp = self.client.read_input_registers(scan_start, scan_range, slave=self.slave_id)
-        elif operation == 0x03:
+        elif operation == OperationKey.READ_HOLDING_REGISTERS:
             resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.slave_id)
 
         # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
