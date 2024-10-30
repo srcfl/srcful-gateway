@@ -53,11 +53,11 @@ class ICom(ABC):
         pass
     
     @abstractmethod
-    def read_harvest_data(self, force_verbose) -> HarvestDataType:
+    def read_harvest_data(self, force_verbose) -> dict:
         pass
     
     @abstractmethod
-    def get_harvest_data_type(self) -> str:
+    def get_harvest_data_type(self) -> HarvestDataType:
         pass
     
     @abstractmethod

@@ -1,4 +1,6 @@
 from typing import Optional
+
+from server.devices.profile_keys import OperationKey
 from .modbus import Modbus
 from .ICom import ICom, HarvestDataType
 from pymodbus.client import ModbusTcpClient as ModbusClient
@@ -82,6 +84,8 @@ class ModbusTCP(Modbus):
         self._create_client(**kwargs)
         if not self.client.connect():
             log.error("FAILED to open Modbus TCP device: %s", self._get_type())
+        if self.client.socket:
+            self.mac = NetworkUtils.get_mac_from_ip(self.ip)
         return bool(self.client.socket)
         
     def _get_type(self) -> str:
@@ -121,14 +125,13 @@ class ModbusTCP(Modbus):
 
     def _create_client(self, **kwargs) -> None:
         self.client =  ModbusClient(host=self.ip, port=self.port, unit_id=self.slave_id, **kwargs)
-        self.mac = NetworkUtils.get_mac_from_ip(self.ip)
 
-    def _read_registers(self, operation, scan_start, scan_range) -> list:
+    def _read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
         resp = None
         
-        if operation == 0x04:
+        if operation == OperationKey.READ_INPUT_REGISTERS:
             resp = self.client.read_input_registers(scan_start, scan_range, slave=self.slave_id)
-        elif operation == 0x03:
+        elif operation == OperationKey.READ_HOLDING_REGISTERS:
             resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.slave_id)
 
         # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it

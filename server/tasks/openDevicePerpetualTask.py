@@ -1,5 +1,6 @@
 import logging
 from server.blackboard import BlackBoard
+from server.devices.IComFactory import IComFactory
 from .task import Task
 from server.devices.ICom import ICom
 from server.network.network_utils import NetworkUtils
@@ -12,6 +13,14 @@ class DevicePerpetualTask(Task):
         super().__init__(event_time, bb)
         self.device = device
 
+
+    def in_settings(self, device: ICom):
+        for settings in self.bb.settings.devices.connections:
+            settings_device = IComFactory.create_com(settings)
+            if settings_device.get_SN() == self.device.get_SN():
+                return True
+        return False
+
     def execute(self, event_time):
         logger.info("*************************************************************")
         logger.info("******************** DevicePerpetualTask ********************")
@@ -20,7 +29,12 @@ class DevicePerpetualTask(Task):
         # Check if the device is already in the blackboard and is open
         # If it is, we don't need to do anything. This check is necessary to ensure 
         # that a device does not get opened multiple times.
-        if self.bb.devices.contains(self.device) and self.device.is_open():
+        existing_device = self.bb.devices.find_sn(self.device.get_SN())
+        if existing_device and existing_device.is_open():
+            return None
+        
+        # If the device is not in the settings list it has probably been closed so lets not do anything
+        if not self.in_settings(self.device):
             return None
         
         try:
@@ -53,9 +67,9 @@ class DevicePerpetualTask(Task):
                 
                 if tmp_device is not None:
                     self.device = tmp_device
-                    logger.info("Found a device at %s, retry in 5 seconds...", self.device.get_config()[NetworkUtils.IP_KEY])
+                    logger.info("Found a device at %s, retry in 5 seconds...", self.device.get_config())
                     self.time = event_time + 5000
-                    self.bb.add_info("Found a device at " + self.device.get_config()[NetworkUtils.IP_KEY] + ", retry in 5 seconds...")
+                    self.bb.add_info("Found a device at " + self.device.get_name() + ", retry in 5 seconds...")
                 else:
                     message = "Failed to find %s, rescan and retry in 5 minutes", self.device.get_SN()
                     logger.info(message)

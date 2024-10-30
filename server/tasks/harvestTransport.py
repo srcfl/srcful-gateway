@@ -15,7 +15,7 @@ class IHarvestTransport(SrcfulAPICallTask):
 
 
 class ITransportFactory:
-    def __call__(self, event_time: int, bb: BlackBoard, icom: ICom, barn: dict) -> IHarvestTransport:
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, headers: dict) -> IHarvestTransport:
         pass
 
 

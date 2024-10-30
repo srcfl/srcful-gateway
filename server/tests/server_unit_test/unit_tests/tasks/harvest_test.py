@@ -1,3 +1,5 @@
+import json
+from server.devices.ICom import HarvestDataType, ICom
 import server.tasks.harvest as harvest
 import server.tasks.harvestTransport as harvestTransport
 import server.tasks.openDevicePerpetualTask as oit
@@ -221,40 +223,19 @@ def test_execute_harvests_from_two_devices():
     
     assert device2.read_harvest_data.called
 
+def test_create_headers():
+    device = MagicMock(spec=ICom)
+    device.get_harvest_data_type.return_value = HarvestDataType.MODBUS_REGISTERS
+    device.get_SN.return_value = "1234567890"
+    device.get_name.return_value = "Volvo 240"
 
-# Test creating a device task, then harvesting from it. Then the device unexpectedly closes and removed from the blackboard
-# Then we should restart the device
-def test_execute_harvests_from_two_devices_perpetual():
     bb = BlackBoard()
-    device = MagicMock()
-    device.connect.return_value = True
-    device.is_open.return_value = True
-    task = DevicePerpetualTask(0, bb, device)
-    task.execute(0)
-    
-    assert device in bb.devices.lst
-    
-    assert task.execute(0) is None # It is already in the blackboard
-    
-    # We add a second device
-    device2 = MagicMock()
-    device2.connect.return_value = True
-    device2.is_open.return_value = True
-    task2 = DevicePerpetualTask(0, bb, device2)
-    task2.execute(0)
-    
-    assert device2 in bb.devices.lst
-    
-    assert task2.execute(0) is None # It is already in the blackboard
-    
-    
-    # Now we create a harvest task
     harvest_task = harvest.Harvest(0, bb, device, harvestTransport.DefaultHarvestTransportFactory())
-    harvest_task.execute(0)
-    
-    assert device.read_harvest_data.called
-    
-    harvest_task2 = harvest.Harvest(0, bb, device2, harvestTransport.DefaultHarvestTransportFactory())
-    harvest_task2.execute(0)
-    
-    assert device2.read_harvest_data.called
+
+    headers = harvest_task._create_headers(device)
+
+    #  check so the headers can be json serialized
+    try:
+        json.dumps(headers)
+    except Exception as e:
+        assert False

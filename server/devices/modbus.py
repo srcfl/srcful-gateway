@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from server.devices.Device import Device
-# from .supported_devices.profiles import InverterProfiles, InverterProfile
+from server.devices.profile_keys import OperationKey
 from .ICom import HarvestDataType, ICom
 from server.network.network_utils import NetworkUtils
 from .supported_devices.profiles import DeviceProfiles
@@ -97,11 +97,11 @@ class Modbus(Device, ABC):
         return [x for x in range(scan_start, scan_start + scan_range, 1)]
     
     @abstractmethod
-    def _read_registers(self, operation, scan_start, scan_range) -> list:
+    def _read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
         """Reads a range of registers from a start address."""
         pass
 
-    def read_registers(self, operation, scan_start, scan_range) -> list:
+    def read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
         """
         Read a range of input registers from a start address
         """

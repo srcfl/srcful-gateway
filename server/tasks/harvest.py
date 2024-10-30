@@ -78,18 +78,21 @@ class Harvest(Task):
         if len(transport) > 0:
             return [self] + transport
         return self
+    
+    def _create_headers(self, device: ICom) -> dict:
+        headers = {"model": ""}
+        headers["dtype"] = device.get_harvest_data_type().value
+        headers["sn"] = device.get_SN()
+        headers["model"] = device.get_name().lower()
+        return headers
 
     def _create_transport(self, limit: int, event_time: int, endpoints: list[str]) -> List[ITask]:
-        ret = []
+        ret: List[ITask] = []
         if (len(self.barn) > 0 and len(self.barn) % limit == 0):
             for endpoint in endpoints:
                 logger.info("Creating transport for %s", endpoint)
                 
-                headers = {"model": ""}
-                headers["dtype"] = self.device.get_harvest_data_type()
-                headers["sn"] = self.device.get_SN()
-                
-                headers["model"] = self.device.get_name().lower()
+                headers = self._create_headers(self.device)
                     
                 transport = self.transport_factory(event_time + 100, self.bb, self.barn, headers)
                 transport.post_url = endpoint

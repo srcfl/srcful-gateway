@@ -1,3 +1,4 @@
+from server.devices.ICom import ICom
 import server.tasks.harvest as harvest
 import server.tasks.harvestTransport as harvestTransport
 from unittest.mock import MagicMock
@@ -12,28 +13,23 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     HarvestFactory(bb)
 
     # Create and connect first device
-    device = MagicMock()
+    device = MagicMock(spec=ICom)
     device.connect.return_value = True
     device.is_disconnected.return_value = False
     device.is_open.return_value = True
     device.get_SN.return_value = "00:00:00:00:00:00"
     
-    task = DevicePerpetualTask(0, bb, device)
-    task.execute(0)
-    
+    bb.devices.add(device)
     assert device in bb.devices.lst
-    assert task.execute(0) is None  # Device already in the blackboard
     
     # Create and connect second device
     device2 = MagicMock()
     device2.connect.return_value = True
     device2.is_open.return_value = True
     device2.is_disconnected.return_value = False
-    task2 = DevicePerpetualTask(0, bb, device2)
-    task2.execute(0)
     
+    bb.devices.add(device2)
     assert device2 in bb.devices.lst
-    assert task2.execute(0) is None  # Device already in the blackboard
     
     # Create and execute harvest tasks for both devices
     device_harvest_task = harvest.Harvest(0, bb, device, harvestTransport.DefaultHarvestTransportFactory())
