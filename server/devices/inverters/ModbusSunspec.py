@@ -2,7 +2,7 @@ import sunspec2.modbus.client as client
 from sunspec2.modbus.client import SunSpecModbusClientError
 
 from server.devices.Device import Device
-from .ICom import ICom, HarvestDataType
+from ..ICom import ICom, HarvestDataType
 import logging
 from server.network.network_utils import NetworkUtils
 

@@ -2,7 +2,7 @@
 
 import struct
 from enum import Enum
-from .modbus import Modbus
+from .inverters.modbus import Modbus
 
 
 class RegisterValue:

@@ -10,7 +10,7 @@ from server.tasks.itask import ITask
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
-from server.devices.ModbusTCP import ModbusTCP
+from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.getSettingsTask import GetSettingsTask

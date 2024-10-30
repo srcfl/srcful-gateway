@@ -1,6 +1,6 @@
 from server.devices.enums import OperationKey
 from .ModbusTCP import ModbusTCP
-from .ICom import ICom
+from ..ICom import ICom
 from pysolarmanv5 import PySolarmanV5
 from server.network.network_utils import NetworkUtils
 import logging

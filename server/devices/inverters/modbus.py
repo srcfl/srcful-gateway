@@ -4,8 +4,8 @@ from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOEx
 
 from server.devices.Device import Device
 from server.devices.enums import OperationKey
-from .supported_inverters.profiles import InverterProfiles, InverterProfile
-from .ICom import HarvestDataType, ICom
+from ..supported_inverters.profiles import InverterProfiles, InverterProfile
+from ..ICom import HarvestDataType, ICom
 from server.network.network_utils import NetworkUtils
 
 logger = logging.getLogger(__name__)
