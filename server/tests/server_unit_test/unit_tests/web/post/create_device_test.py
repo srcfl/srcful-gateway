@@ -23,7 +23,7 @@ def test_create_device(device_config, handler):
     
     
 def test_post_create_p1_telnet():
-    conf = cfg.P1_TELNET_ARGS
+    conf = cfg.P1_TELNET_CONFIG
     
     handler = DeviceHandler()
     rd = RequestData(BlackBoard(), {}, {}, conf)

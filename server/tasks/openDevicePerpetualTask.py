@@ -29,7 +29,8 @@ class DevicePerpetualTask(Task):
         # Check if the device is already in the blackboard and is open
         # If it is, we don't need to do anything. This check is necessary to ensure 
         # that a device does not get opened multiple times.
-        if self.bb.devices.contains(self.device) and self.device.is_open():
+        existing_device = self.bb.devices.find_sn(self.device.get_SN())
+        if existing_device and existing_device.is_open():
             return None
         
         # If the device is not in the settings list it has probably been closed so lets not do anything

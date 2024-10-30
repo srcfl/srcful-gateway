@@ -23,7 +23,7 @@ class OpenDeviceTask(Task):
                 if not self.device.is_valid():
                     self.device.disconnect()
                     message = "Failed to open device: " + str(self.device.get_config())
-                    logger.error(message)
+                    logger.error(message) 
                     self.bb.add_error(message)
                     return None
 

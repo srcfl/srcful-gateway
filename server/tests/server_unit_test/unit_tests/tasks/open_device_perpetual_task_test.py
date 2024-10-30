@@ -1,3 +1,5 @@
+from server.devices.ICom import ICom
+from server.devices.IComFactory import IComFactory
 from server.settings import ChangeSource
 from server.settings_device_listener import SettingsDeviceListener
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
@@ -204,4 +206,25 @@ def test_add_multiple_devices():
     assert len(bb.devices.lst) == 2
     
     
+def test_device_witn_sn_already_open():
+    existing_device = MagicMock(spec=ICom)
+    existing_device.get_SN.return_value = IComFactory.create_com(cfg.P1_TELNET_CONFIG).get_SN()
+    existing_device.is_open.return_value = True
+    existing_device.get_config.return_value = cfg.P1_TELNET_CONFIG
+    
+    bb = BlackBoard()
+    set_up_listeners(bb)
+    
+    bb.devices.add(existing_device)
+    
+    new_device = MagicMock(spec=ICom)
+    new_device.get_SN.return_value = existing_device.get_SN()
+    new_device.is_open.return_value = False
 
+    task = DevicePerpetualTask(0, bb, new_device)
+    assert task.execute(0) is None
+    assert not new_device.connect.called
+    
+    
+    assert len(bb.devices.lst) == 1
+    assert new_device not in bb.devices.lst

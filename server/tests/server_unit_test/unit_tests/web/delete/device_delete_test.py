@@ -29,8 +29,8 @@ def test_delete_existing_device(handler, blackboard, mock_device):
     blackboard.devices.add(mock_device)
     
     # Create request data with the device's serial number
-    post_params = {'id': mock_device.get_config()['sn']}
-    request = RequestData(blackboard, post_params, {}, {})
+    data_params = {'id': mock_device.get_config()['sn']}
+    request = RequestData(blackboard, {}, {}, data_params)
     
     # Execute delete
     status_code, response = handler.do_delete(request)
@@ -41,8 +41,8 @@ def test_delete_existing_device(handler, blackboard, mock_device):
 
 def test_delete_nonexistent_device(handler, blackboard):
     # Create request data with a non-existent serial number
-    post_params = {'id': 'nonexistent_sn'}
-    request = RequestData(blackboard, post_params, {}, {})
+    data_params = {'id': 'nonexistent_sn'}
+    request = RequestData(blackboard, {}, {}, data_params)
     
     # Execute delete
     status_code, response = handler.do_delete(request)
@@ -69,8 +69,8 @@ def test_delete_multiple_devices(handler, blackboard):
         blackboard.devices.add(device)
     
     # Delete middle device
-    post_params = {'id': 'device_1'}
-    request = RequestData(blackboard, post_params, {}, {})
+    data_params = {'id': 'device_1'}
+    request = RequestData(blackboard, {}, {}, data_params)
     
     # Execute delete
     status_code, response = handler.do_delete(request)
@@ -105,8 +105,8 @@ def test_delete_device_with_perpetual_task(handler, blackboard, mock_device):
     task = DevicePerpetualTask(0, blackboard, cloned_device)
 
     # delete the device
-    post_params = {'id': mock_device.get_config()['sn']}
-    request = RequestData(blackboard, post_params, {}, {})
+    data_params = {'id': mock_device.get_config()['sn']}
+    request = RequestData(blackboard, {}, {}, data_params)
 
     # execute delete
     status_code, response = handler.do_delete(request)

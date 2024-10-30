@@ -48,4 +48,4 @@ TCP_CONFIG = {**TCP_ARGS, "sn": "00:00:00:00:00:00"}
 RTU_CONFIG = {**RTU_ARGS, "sn": "N/A"}
 SOLARMAN_CONFIG = {**SOLARMAN_ARGS, "sn": 1234567890}
 SUNSPEC_CONFIG = {**SUNSPEC_ARGS, "sn": "SUNSPEC135792468"}
-P1_TELNET_CONFIG = {**P1_TELNET_ARGS, "meter_serial_number": ""}
+P1_TELNET_CONFIG = {**P1_TELNET_ARGS, "meter_serial_number": "abc5qwerty"}

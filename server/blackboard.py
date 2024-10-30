@@ -240,28 +240,25 @@ class BlackBoard:
             self._observers.remove(observer)
             
         def contains(self, device: ICom) -> bool:
-            try:
-                for d in self.lst:
-                    if d.get_SN() == device.get_SN():
-                        return True
-            except (KeyError, AttributeError) as e:
-                logger.error("Error checking device: %s", e)
-                return False
+            return self.find_sn(device.get_SN()) is not None
+
+        def find_sn(self, sn: str) -> ICom | None:
+            for d in self.lst:
+                if d.get_SN() == sn:
+                    return d
+            return None
 
         def add(self, device:ICom):
             assert device.is_open(), "Only open devices can be added to the blackboard"
             
-            exists = False
-            # Check if the device is already in the list by MAC address
-            for index, d in enumerate(self.lst):
-                if d.get_SN() == device.get_SN():
-                    logger.info("Device already in the list, updating it. Open status: %s", device.is_open())
-                    self.lst[index] = device # We just update the device, no need to re-add it
-                    exists = True
-                    break
+            existing_device = self.find_sn(device.get_SN())
+            if existing_device == device:
+                return
             
-            if not exists:
-                self.lst.append(device)
+            if existing_device:
+                self.remove(existing_device)
+            
+            self.lst.append(device)
                 
             for o in self._observers:
                 o.add_device(device)
