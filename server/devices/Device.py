@@ -26,6 +26,12 @@ class Device(ICom, ABC):
             return self._read_harvest_data(force_verbose)
 
         raise Exception("Device is disconnected")
+    
+    def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
+        min_backoff_time = max(harvest_time_ms * 2, 1000)
+        backoff_time = max(int(previous_backoff_time_ms * .9), min_backoff_time)
+        backoff_time = min(backoff_time, 256000)
+        return backoff_time
 
     @abstractmethod
     def _read_harvest_data(self, force_verbose) -> dict:

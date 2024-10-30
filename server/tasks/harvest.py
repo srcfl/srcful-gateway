@@ -16,12 +16,9 @@ class Harvest(Task):
     def __init__(self, event_time: int, bb: BlackBoard, device: ICom, transport_factory: ITransportFactory):
         super().__init__(event_time, bb)
         self.device = device
-        self.barn = {}
+        self.barn: dict[int, dict] = {}
         
-        # incremental backoff stuff
-        self.min_backoff_time = 1000
-        self.backoff_time = self.min_backoff_time  # start with a 1-second backoff
-        self.max_backoff_time = 256000 # max ~4.3-minute backoff
+        self.backoff_time = 1000 # start with a 1-second backoff
         self.transport_factory = transport_factory
 
     def execute(self, event_time) -> Union[List[ITask], ITask, None]:
@@ -49,14 +46,11 @@ class Harvest(Task):
             end_time = self.bb.time_ms()
 
             elapsed_time_ms = end_time - start_time
+            self.backoff_time = self.device.get_backoff_time_ms(elapsed_time_ms, self.backoff_time)
             logger.debug("Harvest from [%s] took %s ms", self.device.get_SN(), elapsed_time_ms)
 
-            self.min_backoff_time = max(elapsed_time_ms * 2, 1000)
 
-            self.barn[event_time] = harvest
-
-            self.backoff_time = max(self.backoff_time - self.backoff_time * 0.1, self.min_backoff_time)
-            self.backoff_time = min(self.backoff_time, self.max_backoff_time)
+            self.barn[end_time] = harvest
 
         except Exception as e:
             
@@ -66,15 +60,15 @@ class Harvest(Task):
             
             self.device.disconnect()
             
-            open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
-            transports = self._create_transport(1, event_time, self.bb.settings.harvest.endpoints)
+            open_inverter = DevicePerpetualTask(self.bb.time_ms() + 30000, self.bb, self.device.clone())
+            transports = self._create_transport(1, self.bb.time_ms(), self.bb.settings.harvest.endpoints)
     
             return [open_inverter] + transports
             
-        self.time = event_time + self.backoff_time
+        self.time = self.bb.time_ms() + self.backoff_time
 
         # check if it is time to transport the harvest
-        transport = self._create_transport(10, event_time + elapsed_time_ms * 2, self.bb.settings.harvest.endpoints)
+        transport = self._create_transport(10, self.bb.time_ms() + elapsed_time_ms * 2, self.bb.settings.harvest.endpoints)
         if len(transport) > 0:
             return [self] + transport
         return self

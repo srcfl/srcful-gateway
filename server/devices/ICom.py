@@ -48,7 +48,12 @@ class ICom(ABC):
     def disconnect(self) -> None:
         ''' Permanently disconnect the device. This will close the connection and release any resources. You cannot reconnect to the device with the same object. Instead create a new object using. eg clone(). '''
         pass
-    
+
+
+    @abstractmethod
+    def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
+        pass
+
     @abstractmethod
     def is_open(self) -> bool:
         pass
