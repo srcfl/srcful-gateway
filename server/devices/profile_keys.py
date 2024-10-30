@@ -17,9 +17,9 @@ class ProfileKey(Enum):
 
 class ProtocolKey(Enum):
     MODBUS = 'modbus'
-    SOLARMAN_V5 = 'solarmanv5'
+    SOLARMAN = 'solarman'
     SUNSPEC = 'sunspec'
-    REST_API = 'rest_api'
+    REST = 'rest'
 
 
 class RegistersKey(Enum):

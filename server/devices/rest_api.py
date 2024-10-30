@@ -3,7 +3,6 @@ import logging
 import requests
 from .supported_devices.profiles import DeviceProfiles, RestApiProfile
 from .profile_keys import ProfileKey
-from network.network_utils import NetworkUtils
 from server.network import mdns as mdns
 from .ICom import HarvestDataType, ICom
 from typing import Optional, List
@@ -24,9 +23,14 @@ class RestAPI(Device):
     CONNECTION = "REST"
 
     @staticmethod
+    def get_supported_devices():
+        return {RestAPI.CONNECTION: {'id': 'rest', 'display_name': 'REST API'}}
+    
+    @staticmethod
     def get_config_schema():
         return {
-            ProfileKey.NAME: "string, Device name",
+           'ip': 'string, IP address or hostname of the device',
+           'bearer_token': 'string, Bearer token for the device'
         }
 
     def __init__(self, **kwargs):

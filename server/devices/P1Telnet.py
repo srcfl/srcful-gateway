@@ -72,6 +72,11 @@ class P1Telnet(Device):
 
     CONNECTION = "P1Telnet"
 
+    
+    @staticmethod
+    def get_supported_devices():
+        return {P1Telnet.CONNECTION: {'device_type': P1Telnet.CONNECTION, 'display_name': 'P1 Telnet'}}
+    
     @staticmethod
     def get_config_schema():
         return {

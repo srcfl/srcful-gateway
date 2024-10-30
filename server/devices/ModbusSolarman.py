@@ -4,6 +4,8 @@ from .ICom import ICom
 from pysolarmanv5 import PySolarmanV5
 from server.network.network_utils import NetworkUtils
 import logging
+from server.devices.profile_keys import ProtocolKey
+from server.devices.supported_devices.profiles import DeviceProfiles
 
 
 log = logging.getLogger(__name__)
@@ -34,6 +36,20 @@ class ModbusSolarman(ModbusTCP):
     @staticmethod
     def verbose_key() -> str:
         return "verbose"
+    
+    @staticmethod
+    def get_supported_devices():
+        supported_devices = []
+        for profile in DeviceProfiles().get_supported_devices():
+            if profile.protocol.value == ProtocolKey.SOLARMAN.value:    
+                obj = {
+                    ModbusTCP.device_type_key(): profile.name,
+                'display_name': profile.display_name,
+                'protocol': profile.protocol.value
+                }
+                supported_devices.append(obj)
+            
+        return {ModbusSolarman.CONNECTION: supported_devices}
     
     
     @staticmethod

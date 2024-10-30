@@ -65,6 +65,10 @@ class ModbusSunspec(Device):
         return "sn"
     
     @staticmethod
+    def get_supported_devices():
+        return {ModbusSunspec.CONNECTION: {'id': 'sunspec', 'display_name': 'SunSpec Device'}}
+    
+    @staticmethod
     def get_config_schema():
         """Returns the schema for the config and optional parameters of the ModbusSunspec device."""
         return {
@@ -73,7 +77,6 @@ class ModbusSunspec(Device):
             ModbusSunspec.mac_key(): "string - (Optional) MAC address of the device",
             ModbusSunspec.port_key(): "int - port of the device",
             ModbusSunspec.slave_id_key(): "int - Modbus address of the device",
-            ModbusSunspec.sn_key(): "string - (Optional) serial number of the device"
         }
     
     def __init__(self, **kwargs) -> None:

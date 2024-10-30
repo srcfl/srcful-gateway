@@ -3,6 +3,7 @@ from .ModbusTCP import ModbusTCP
 from .ModbusSolarman import ModbusSolarman
 from .ModbusSunspec import ModbusSunspec
 from .P1Telnet import P1Telnet
+from .rest_api import RestAPI
 from .ICom import ICom
 import logging
 
@@ -11,25 +12,22 @@ log.setLevel(logging.INFO)
 
 
 class IComFactory:
-
-
-    @staticmethod
-    def get_supported_connections():
-        return [
-            ModbusTCP.CONNECTION,
-            ModbusRTU.CONNECTION,
-            ModbusSolarman.CONNECTION,
-            ModbusSunspec.CONNECTION,
-            P1Telnet.CONNECTION,
-        ]
+    
+    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, RestAPI]
 
     @staticmethod
     def get_connection_configs():
         return {
             cls.CONNECTION: cls.get_config_schema()
-            for cls in [ModbusTCP, ModbusRTU, ModbusSolarman, ModbusSunspec, P1Telnet]
+            for cls in IComFactory.supported_devices
         }
 
+    @staticmethod
+    def get_supported_devices():
+        return [
+            cls.get_supported_devices()
+            for cls in IComFactory.supported_devices
+        ]
 
     """
     IComFactory class

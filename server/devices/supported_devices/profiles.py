@@ -91,11 +91,11 @@ class DeviceProfiles:
         
         if protocol == ProtocolKey.MODBUS:
             return ModbusProfile(profile_data)
-        elif protocol == ProtocolKey.SOLARMAN_V5:
+        elif protocol == ProtocolKey.SOLARMAN:
             return ModbusProfile(profile_data)
         elif protocol == ProtocolKey.SUNSPEC:
             return SunSpecProfile(profile_data)
-        elif protocol == ProtocolKey.REST_API:
+        elif protocol == ProtocolKey.REST:
             return RestApiProfile(profile_data)
         else:
             raise ValueError(f"Unsupported protocol: {protocol}")

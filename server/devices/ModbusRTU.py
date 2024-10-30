@@ -87,6 +87,11 @@ class ModbusRTU(Modbus):
     def slave_id_key() -> str:
         return "slave_id"
 
+
+    @staticmethod
+    def get_supported_devices():
+        return []
+    
     @staticmethod
     def get_config_schema():
         return {

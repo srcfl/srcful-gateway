@@ -1,5 +1,3 @@
-from typing import Optional
-
 from server.devices.profile_keys import OperationKey
 from .modbus import Modbus
 from .ICom import ICom, HarvestDataType
@@ -8,7 +6,9 @@ from pymodbus.exceptions import ModbusIOException
 from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
 from server.network.network_utils import NetworkUtils
+from server.devices.supported_devices.profiles import DeviceProfiles
 import logging
+from server.devices.profile_keys import ProtocolKey
 
 
 log = logging.getLogger(__name__)
@@ -54,6 +54,19 @@ class ModbusTCP(Modbus):
     def port_key() -> str:
         return "port"
     
+    @staticmethod
+    def get_supported_devices():
+        supported_devices = []
+        for profile in DeviceProfiles().get_supported_devices():
+            if profile.protocol.value == ProtocolKey.MODBUS.value:    
+                obj = {
+                    ModbusTCP.device_type_key(): profile.name,
+                'display_name': profile.display_name,
+                'protocol': profile.protocol.value
+            }
+                supported_devices.append(obj)
+            
+        return {ModbusTCP.CONNECTION: supported_devices}
     
     @staticmethod
     def get_config_schema():

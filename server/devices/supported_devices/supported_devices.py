@@ -3,31 +3,6 @@ from ..profile_keys import ProtocolKey, ProfileKey, RegistersKey, OperationKey, 
 supported_devices = {
     DeviceCategory.INVERTERS: [
         {
-            # Enphase REST API profile
-            ProfileKey.NAME: "enphase",
-            ProfileKey.VERSION: "V0.1",
-            ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "Enphase",
-            ProfileKey.PROTOCOL: ProtocolKey.REST_API,
-            ProfileKey.DESCRIPTION: "Enphase Envoy REST API",
-            ProfileKey.BASE_URL: 'http://envoy.local/',
-            ProfileKey.ENDPOINTS: {
-                'meters': 'ivp/meters',
-                'readings': 'ivp/meters/readings',
-                'energy': 'ivp/pdm/energy',
-                'inverters': 'api/v1/production/inverters'
-            }
-        },
-        {
-            # SunSpec profile
-            ProfileKey.NAME: "sunspec_inverter",
-            ProfileKey.VERSION: "V1.0",
-            ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "SunSpec Inverter",
-            ProfileKey.PROTOCOL: ProtocolKey.SUNSPEC,
-            ProfileKey.DESCRIPTION: "SunSpec-compatible inverter",
-        },
-        {
             ProfileKey.NAME: "huawei",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
@@ -78,23 +53,6 @@ supported_devices = {
             ]
         },
         {
-            ProfileKey.NAME: "sungrow_hybrid",
-            ProfileKey.VERSION: "V1.1b3",
-            ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "Sungrow Hybrid",
-            ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
-            ProfileKey.DESCRIPTION: "Another inverter profile...",
-            ProfileKey.REGISTERS_VERBOSE: [
-                {RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS, RegistersKey.START_REGISTER: 4989, RegistersKey.NUM_OF_REGISTERS: 120},
-                {RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS, RegistersKey.START_REGISTER: 5112, RegistersKey.NUM_OF_REGISTERS: 50},
-                {RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS, RegistersKey.START_REGISTER: 13000, RegistersKey.NUM_OF_REGISTERS: 50}
-            ],
-            ProfileKey.REGISTERS: [
-                {RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS, RegistersKey.START_REGISTER: 5035, RegistersKey.NUM_OF_REGISTERS: 1},
-                {RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS, RegistersKey.START_REGISTER: 5016, RegistersKey.NUM_OF_REGISTERS: 2}
-            ]
-        },
-        {
             ProfileKey.NAME: "sma",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
@@ -128,43 +86,11 @@ supported_devices = {
             ]
         },
         {
-            ProfileKey.NAME: "fronius_sunspec",
-            ProfileKey.VERSION: "V1.1b3",
-            ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "Fronius (SunSpec)",
-            ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
-            ProfileKey.DESCRIPTION: "Fronius inverter profile...",
-            ProfileKey.REGISTERS_VERBOSE: [
-                {RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS, RegistersKey.START_REGISTER: 40000, RegistersKey.NUM_OF_REGISTERS: 125}
-            ],
-            ProfileKey.REGISTERS: [
-                {RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS, RegistersKey.START_REGISTER: 40085, RegistersKey.NUM_OF_REGISTERS: 2},
-                {RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS, RegistersKey.START_REGISTER: 40100, RegistersKey.NUM_OF_REGISTERS: 2}
-            ]
-        },
-        {
             ProfileKey.NAME: "deye",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Deye",
-            ProfileKey.PROTOCOL: ProtocolKey.SOLARMAN_V5,
-            ProfileKey.DESCRIPTION: "Another inverter profile...",
-            ProfileKey.REGISTERS_VERBOSE: [
-                {RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS, RegistersKey.START_REGISTER: 3, RegistersKey.NUM_OF_REGISTERS: 86},
-                {RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS, RegistersKey.START_REGISTER: 514, RegistersKey.NUM_OF_REGISTERS: 125},
-                {RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS, RegistersKey.START_REGISTER: 644, RegistersKey.NUM_OF_REGISTERS: 50}
-            ],
-            ProfileKey.REGISTERS: [
-                {RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS, RegistersKey.START_REGISTER: 609, RegistersKey.NUM_OF_REGISTERS: 1},
-                {RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS, RegistersKey.START_REGISTER: 672, RegistersKey.NUM_OF_REGISTERS: 2}
-            ]
-        },
-        {
-            ProfileKey.NAME: "deye_hybrid",
-            ProfileKey.VERSION: "V1.1b3",
-            ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "Deye Hybrid",
-            ProfileKey.PROTOCOL: ProtocolKey.SOLARMAN_V5,
+            ProfileKey.PROTOCOL: ProtocolKey.SOLARMAN,
             ProfileKey.DESCRIPTION: "Another inverter profile...",
             ProfileKey.REGISTERS_VERBOSE: [
                 {RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS, RegistersKey.START_REGISTER: 3, RegistersKey.NUM_OF_REGISTERS: 86},
