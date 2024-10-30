@@ -5,7 +5,7 @@ from pysolarmanv5 import PySolarmanV5
 from server.network.network_utils import NetworkUtils
 import logging
 from server.devices.profile_keys import ProtocolKey
-from server.devices.supported_devices.profiles import DeviceProfiles
+from server.devices.supported_devices.profiles import ModbusDeviceProfiles
 
 
 log = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ class ModbusSolarman(ModbusTCP):
     @staticmethod
     def get_supported_devices():
         supported_devices = []
-        for profile in DeviceProfiles().get_supported_devices():
+        for profile in ModbusDeviceProfiles().get_supported_devices():
             if profile.protocol.value == ProtocolKey.SOLARMAN.value:    
                 obj = {
                     ModbusTCP.device_type_key(): profile.name,

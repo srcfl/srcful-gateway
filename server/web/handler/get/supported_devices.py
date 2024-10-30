@@ -3,7 +3,7 @@ from ..handler import GetHandler
 from ..requestData import RequestData
 # from ....devices.supported_devices.profiles import InverterProfiles
 from ....devices.profile_keys import ProtocolKey
-from ....devices.supported_devices.profiles import DeviceProfiles
+from ....devices.supported_devices.profiles import ModbusDeviceProfiles
 from ....devices.IComFactory import IComFactory
 
 class Handler(GetHandler):

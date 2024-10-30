@@ -74,7 +74,7 @@ class ModbusProfile(DeviceProfile):
 #         self.auth_method = profile_data.get('auth_method')
 
 
-class DeviceProfiles:
+class ModbusDeviceProfiles:
     """Device profiles class. Used to load and manage device profiles."""
     def __init__(self, device_category: DeviceCategory = DeviceCategory.INVERTERS):
         self.profiles: list[DeviceProfile] = []
@@ -89,14 +89,8 @@ class DeviceProfiles:
     def _create_profile(self, profile_data: dict) -> DeviceProfile:
         protocol = profile_data[ProfileKey.PROTOCOL]
         
-        if protocol == ProtocolKey.MODBUS:
+        if protocol == ProtocolKey.MODBUS or protocol == ProtocolKey.SOLARMAN:
             return ModbusProfile(profile_data)
-        elif protocol == ProtocolKey.SOLARMAN:
-            return ModbusProfile(profile_data)
-        elif protocol == ProtocolKey.SUNSPEC:
-            return SunSpecProfile(profile_data)
-        elif protocol == ProtocolKey.REST:
-            return RestApiProfile(profile_data)
         else:
             raise ValueError(f"Unsupported protocol: {protocol}")
 

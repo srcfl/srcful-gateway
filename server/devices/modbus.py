@@ -5,7 +5,7 @@ from server.devices.Device import Device
 from server.devices.profile_keys import OperationKey
 from .ICom import HarvestDataType, ICom
 from server.network.network_utils import NetworkUtils
-from .supported_devices.profiles import DeviceProfiles
+from .supported_devices.profiles import ModbusDeviceProfiles
 
 
 logger = logging.getLogger(__name__)
@@ -53,9 +53,9 @@ class Modbus(Device, ABC):
         if self.device_type:
             self.device_type = self.device_type.lower()
             
-        profiles = DeviceProfiles()
+        profiles = ModbusDeviceProfiles()
         
-        self.profile: DeviceProfiles = DeviceProfiles().get(self.device_type)
+        self.profile: ModbusDeviceProfiles = ModbusDeviceProfiles().get(self.device_type)
     
     def _read_harvest_data(self, force_verbose) -> dict:
         regs = []
