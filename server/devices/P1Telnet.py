@@ -214,3 +214,7 @@ class P1Telnet(Device):
     
     def get_SN(self) -> str:
         return self.meter_serial_number
+
+    def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
+        # p1 meters typically send data every 10 seconds
+        return 10 * 1000

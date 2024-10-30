@@ -82,6 +82,10 @@ def test_read_harvest_data():
     assert '/LGF5E360' in harvest
     assert '!A267' in harvest
 
+def test_get_backoff_time_ms():
+    p1 = P1Telnet("192.168.0.30", 23, "")
+    assert p1.get_backoff_time_ms(0, 1000) == 10 * 1000
+    
     
 
 def get_p1_data():
