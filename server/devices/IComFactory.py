@@ -2,7 +2,7 @@ from .ModbusRTU import ModbusRTU
 from .ModbusTCP import ModbusTCP
 from .ModbusSolarman import ModbusSolarman
 from .ModbusSunspec import ModbusSunspec
-from .P1Telnet import P1Telnet
+from .p1meters.P1Telnet import P1Telnet
 from .ICom import ICom
 import logging
 
