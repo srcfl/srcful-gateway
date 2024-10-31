@@ -4,6 +4,7 @@ from .inverters.ModbusSolarman import ModbusSolarman
 from .inverters.ModbusSunspec import ModbusSunspec
 from .inverters.enphase import Enphase
 from .p1meters.P1Telnet import P1Telnet
+from .p1meters.P1Jemac import P1Jemac
 from .ICom import ICom
 import logging
 
@@ -13,7 +14,7 @@ log.setLevel(logging.INFO)
 
 class IComFactory:
     
-    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, Enphase]
+    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, Enphase, P1Jemac]
 
     @staticmethod
     def get_connection_configs():
@@ -75,6 +76,8 @@ class IComFactory:
                 return P1Telnet(**stripped_config)
             case Enphase.CONNECTION:
                 return Enphase(**stripped_config)
+            case P1Jemac.CONNECTION:
+                return P1Jemac(**stripped_config)
             case _:
                 log.error("Unknown connection type: %s", connection)
                 return None
