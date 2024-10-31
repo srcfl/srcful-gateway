@@ -64,3 +64,37 @@ def test_modbus_scan(mock_network_utils):
     response = json.loads(response)
     assert response[handler.DEVICES] == [{NetworkUtils.IP_KEY: "192.168.50.220",
                                           NetworkUtils.PORT_KEY: 502}]
+    
+    
+def test_parse_address():
+    # Test valid IP addresses
+    assert NetworkUtils.parse_address("192.168.1.1") == "http://192.168.1.1"
+    assert NetworkUtils.parse_address("10.0.0.1") == "http://10.0.0.1"
+    
+    # Test valid URLs with IP addresses
+    assert NetworkUtils.parse_address("http://192.168.1.1") == "http://192.168.1.1"
+    assert NetworkUtils.parse_address("https://192.168.1.1") == "https://192.168.1.1"
+    assert NetworkUtils.parse_address("http://192.168.1.1:8080") == "http://192.168.1.1:8080"
+    
+    # Test invalid inputs
+    assert NetworkUtils.parse_address("") is None
+    assert NetworkUtils.parse_address("invalid_ip") is None
+    assert NetworkUtils.parse_address("envoy.local") is None
+    assert NetworkUtils.parse_address("256.256.256.256") is None
+    assert NetworkUtils.parse_address("http://google.com") is None  # Hostname instead of IP
+    assert NetworkUtils.parse_address("192.168.1") is None  # Incomplete IP
+    
+    
+def test_extract_ip():
+    # Test valid inputs
+    assert NetworkUtils.extract_ip("192.168.1.1") == "192.168.1.1"
+    assert NetworkUtils.extract_ip("http://192.168.1.1") == "192.168.1.1"
+    assert NetworkUtils.extract_ip("https://192.168.1.1") == "192.168.1.1"
+    assert NetworkUtils.extract_ip("http://192.168.1.1:8080") == "192.168.1.1"
+    
+    # Test invalid inputs
+    assert NetworkUtils.extract_ip("") is None
+    assert NetworkUtils.extract_ip("invalid_ip") is None
+    assert NetworkUtils.extract_ip("256.256.256.256") is None
+    assert NetworkUtils.extract_ip("http://google.com") is None
+    assert NetworkUtils.extract_ip("192.168.1") is None
