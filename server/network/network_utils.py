@@ -3,7 +3,7 @@ from typing import Optional
 import socket
 import ipaddress
 from server.network.wifi import get_ip_address
-
+from furl import furl
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -28,6 +28,69 @@ class NetworkUtils:
 
     def __init__(self):
         raise NotImplementedError("This class shouldn't be instantiated.")
+    
+    @staticmethod
+    def extract_ip(url: str) -> Optional[str]:
+        """
+        Extract IP address from a URL or IP string.
+        Returns the IP if valid, None if invalid.
+        
+        Args:
+            url (str): URL or IP address string
+            
+        Returns:
+            Optional[str]: IP address or None if invalid
+            
+        Examples:
+            >>> extract_ip("192.168.1.1")
+            "192.168.1.1"
+            >>> extract_ip("http://192.168.1.1")
+            "192.168.1.1"
+            >>> extract_ip("https://192.168.1.1:8080")
+            "192.168.1.1"
+        """
+        parsed_url = NetworkUtils.parse_address(url)
+        if not parsed_url:
+            return None
+            
+        try:
+            f = furl(parsed_url)
+            ip = f.host
+            # Validate it's a valid IP
+            ipaddress.ip_address(ip)
+            return ip
+        except ValueError:
+            return None
+    
+    @staticmethod
+    def parse_address(url: str) -> Optional[str]:
+        """
+        Parse URL and validate it contains an IP address (not a hostname).
+        Returns URL if valid, None if invalid.
+        
+        Args:
+            url (str): URL or IP address
+            
+        Returns:
+            Optional[str]: URL or None if invalid
+        """
+        try:
+            # If it's just an IP, convert it to a URL
+            try:
+                ipaddress.ip_address(url)
+                f = furl(scheme='http', host=url)
+            except ValueError:
+                f = furl(url)
+
+            # Validate the host is an IP address
+            if not f.host:
+                return None
+                
+            ipaddress.ip_address(f.host)
+            return str(f)
+
+        except ValueError:
+            return None
 
     # Method to get the arp table   
     @staticmethod
@@ -55,7 +118,8 @@ class NetworkUtils:
     
     @staticmethod
     def get_mac_from_ip(ip: str) -> Optional[str]:
-        """Get the MAC address from the ARP table for a given IP address."""
+        """Get the MAC address from the ARP table for a given IP address or URL."""
+        ip = NetworkUtils.extract_ip(ip)
         for entry in NetworkUtils.arp_table():
             if entry[NetworkUtils.IP_KEY] == ip:
                 return entry[NetworkUtils.MAC_KEY]

@@ -66,7 +66,7 @@ class ModbusSunspec(Device):
     
     @staticmethod
     def get_supported_devices():
-        return {ModbusSunspec.CONNECTION: {'id': 'sunspec', 'display_name': 'SunSpec Device'}}
+        return {ModbusSunspec.CONNECTION: {'device_type': 'sunspec', 'display_name': 'SunSpec Device', 'protocol': 'modbus'}}
     
     @staticmethod
     def get_config_schema():
