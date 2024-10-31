@@ -171,8 +171,8 @@ class P1Telnet(Device):
         return data
 
 
-    def get_harvest_data_type(self) -> str:
-        return HarvestDataType.P1_TELNET.value
+    def get_harvest_data_type(self) -> HarvestDataType:
+        return HarvestDataType.P1_TELNET
     
     def get_config(self) -> dict:
         return {

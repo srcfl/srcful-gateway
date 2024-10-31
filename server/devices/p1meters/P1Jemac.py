@@ -66,7 +66,7 @@ class P1Jemac(Device):
         pass
        
     def is_open(self) -> bool:
-        return True
+        return self._connect()
     
     def _parse_p1_message(self, p1_message: dict) -> dict:
         p1_message = p1_message.get('data', {})
@@ -82,7 +82,7 @@ class P1Jemac(Device):
     
     def _read_harvest_data(self, force_verbose) -> dict:
         try:
-            p1_message = requests.get(f"http://{self.ip}:{self.port}{self.endpoint}")
+            p1_message = requests.get(f"http://{self.ip}:{self.port}{self.endpoint}", timeout=5)
             p1_message.raise_for_status()
 
             return self._parse_p1_message(p1_message.json())
@@ -92,9 +92,9 @@ class P1Jemac(Device):
         
     
 
-    def get_harvest_data_type(self) -> str:
+    def get_harvest_data_type(self) -> HarvestDataType:
         # We return data in the same format as the P1Telnet device
-        return HarvestDataType.P1_TELNET.value
+        return HarvestDataType.P1_TELNET
     
     def get_config(self) -> dict:
         return {
