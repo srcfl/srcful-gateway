@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import logging
 from typing import Optional
 import socket
@@ -7,6 +8,13 @@ from server.network.wifi import get_ip_address
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+
+@dataclass
+class HostInfo:
+    ip: str
+    port: int
+    mac: str
 
 
 class NetworkUtils:
@@ -54,7 +62,7 @@ class NetworkUtils:
         
     
     @staticmethod
-    def get_mac_from_ip(ip: str) -> Optional[str]:
+    def get_mac_from_ip(ip: str) -> str:
         """Get the MAC address from the ARP table for a given IP address."""
         for entry in NetworkUtils.arp_table():
             if entry[NetworkUtils.IP_KEY] == ip:
@@ -87,7 +95,7 @@ class NetworkUtils:
             return False
         
     @staticmethod
-    def get_hosts(ports: list[int], timeout: float) -> list[dict[str, str, str]]:
+    def get_hosts(ports: list[int], timeout: float) -> list[HostInfo]:
         """
         Scan the local network for modbus devices on the given ports.
         
@@ -125,15 +133,15 @@ class NetworkUtils:
         ip_port_dict = []
 
         for ip in subnet.hosts():
-            ip = str(ip)
+            ip_str:str = str(ip)
             for port in ports:
-                if NetworkUtils.is_port_open(ip, port, float(timeout)):
-                    ip_port = {
-                        NetworkUtils.IP_KEY: ip,
-                        NetworkUtils.PORT_KEY: port,
-                        NetworkUtils.MAC_KEY: NetworkUtils.get_mac_from_ip(ip)
-                    }
-                    ip_port_dict.append(ip_port)
+                if NetworkUtils.is_port_open(ip_str, port, float(timeout)):
+                    host_info = HostInfo(
+                        ip=ip_str,
+                        port=port,
+                        mac=NetworkUtils.get_mac_from_ip(ip_str)
+                    )
+                    ip_port_dict.append(host_info)
         if not ip_port_dict:
             logger.info("No IPs with given port(s) %s open found in the subnet %s", ports, subnet)
             return []

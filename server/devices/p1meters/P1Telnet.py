@@ -5,7 +5,9 @@ import errno
 from typing import Callable, List, Optional
 
 from server.devices.Device import Device
+from server.devices.TCPDevice import TCPDevice
 from server.network import mdns as mdns
+from server.network.network_utils import HostInfo
 from ..ICom import HarvestDataType, ICom
 import time
 
@@ -68,7 +70,7 @@ class SimpleTelnet:
     def get_socket(self):
         return self.socket
 
-class P1Telnet(Device):
+class P1Telnet(TCPDevice):
 
 
     CONNECTION = "P1Telnet"
@@ -81,8 +83,7 @@ class P1Telnet(Device):
     @staticmethod
     def get_config_schema():
         return {
-            "ip": "string, IP address or hostname of the device",
-            "port": "int, port of the device",
+            **TCPDevice.get_config_schema(),
             "meter_serial_number": "optional string, Serial number of the meter",
             "model_name": "optional string, Model name of the meter"
         }
@@ -177,8 +178,7 @@ class P1Telnet(Device):
     def get_config(self) -> dict:
         return {
             ICom.CONNECTION_KEY: P1Telnet.CONNECTION,
-            "ip": self.ip,
-            "port": self.port,
+            **TCPDevice.get_config(self),
             "meter_serial_number": self.meter_serial_number
         }
     
@@ -199,7 +199,7 @@ class P1Telnet(Device):
                     return p1
         return None
     
-    def find_device(self) -> 'ICom':
+    def find_device(self) -> Optional[ICom]:
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
         if self.meter_serial_number:
             domain_names = {"_currently._tcp.local.":{"name": "currently_one"},
@@ -211,7 +211,18 @@ class P1Telnet(Device):
                 if p1:
                     p1.model_name = info["name"]
                     return p1
+            
+            # nothing found
+            # TODO: Would it be a good idea to scan for telnet ports, open and check the serial number?
+            # This would likely work, but it would potentially be slow i.g. connecting to open telenet ports that are not P1 meters
+
         return None
+
+    def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
+        
+        config = self.get_config()
+        config[self.IP] = host.ip
+        return P1Telnet(**config)
     
     def get_SN(self) -> str:
         return self.meter_serial_number

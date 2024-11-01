@@ -1,16 +1,18 @@
+from typing import Optional
 import sunspec2.modbus.client as client
 from sunspec2.modbus.client import SunSpecModbusClientError
 
 from server.devices.Device import Device
+from server.devices.TCPDevice import TCPDevice
 from ..ICom import ICom, HarvestDataType
 import logging
-from server.network.network_utils import NetworkUtils
+from server.network.network_utils import HostInfo, NetworkUtils
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class ModbusSunspec(Device):
+class ModbusSunspec(TCPDevice):
     """
     ModbusSunspec device class
     
@@ -25,13 +27,13 @@ class ModbusSunspec(Device):
     CONNECTION = "SUNSPEC"
     
     @property
-    def IP(self) -> str:
-        return self.ip_key()
+    def DEVICE_TYPE(self) -> str:
+        return self.device_type_key()
     
     @staticmethod
-    def ip_key() -> str:
-        return "ip"
-
+    def device_type_key() -> str:
+        return "device_type"
+    
     @property
     def MAC(self) -> str:
         return self.mac_key()
@@ -40,14 +42,6 @@ class ModbusSunspec(Device):
     def mac_key() -> str:
         return "mac"
     
-    @property
-    def PORT(self) -> str:
-        return self.port_key()
-    
-    @staticmethod
-    def port_key() -> str:
-        return "port"
-
     @property
     def SLAVE_ID(self) -> str:
         return self.slave_id_key()
@@ -73,10 +67,9 @@ class ModbusSunspec(Device):
         """Returns the schema for the config and optional parameters of the ModbusSunspec device."""
         return {
             ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
-            ModbusSunspec.ip_key(): "string - IP address or hostname of the device",
             ModbusSunspec.mac_key(): "string - (Optional) MAC address of the device",
-            ModbusSunspec.port_key(): "int - port of the device",
             ModbusSunspec.slave_id_key(): "int - Modbus address of the device",
+            **TCPDevice.get_config_schema(),
         }
     
     def __init__(self, **kwargs) -> None:
@@ -88,9 +81,12 @@ class ModbusSunspec(Device):
             kwargs[self.device_type_key()] = kwargs.pop("type")
 
 
-        self.ip = kwargs.get(self.ip_key(), None)
+        ip = kwargs.get(self.ip_key(), None)
+        port = kwargs.get(self.port_key(), None)
+
+        TCPDevice.__init__(self, ip, port)
+
         self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
-        self.port = kwargs.get(self.port_key(), None)
         self.slave_id = kwargs.get(self.slave_id_key(), 1)
         self.sn = kwargs.get(self.sn_key(), None)
         self.client = None
@@ -178,15 +174,14 @@ class ModbusSunspec(Device):
             logger.error("Error reading data: %s", e)
             raise SunSpecModbusClientError(e)
 
-    def get_harvest_data_type(self) -> str:
+    def get_harvest_data_type(self) -> HarvestDataType:
         return self.data_type
 
     def get_config(self):
         return {
             ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
-            self.IP: self.ip,
+            **TCPDevice.get_config(self),
             self.MAC: self.mac,
-            self.PORT: self.port,
             self.SLAVE_ID: self.slave_id,
             self.SN: self.get_SN()
         }
@@ -194,23 +189,17 @@ class ModbusSunspec(Device):
     def get_name(self) -> str:
         return "Sunspec"
     
-    def clone(self, ip: str = None) -> 'ModbusSunspec':
-        config = self.get_config()
-
-        if ip:
-            config[self.IP] = ip
-
-        return ModbusSunspec(**config)
+    def clone(self) -> 'ICom':
+        return ModbusSunspec(**self.get_config())
     
-    def find_device(self) -> 'ICom':
-        port = self.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config
-        hosts = NetworkUtils.get_hosts([int(port)], 0.01)
+    def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
+
+        if host.mac != self.mac:
+            return None
         
-        if len(hosts) > 0:
-            for host in hosts:
-                if host[NetworkUtils.MAC_KEY] == self.get_config()[NetworkUtils.MAC_KEY]:
-                    return self.clone(host[NetworkUtils.IP_KEY])
-        return None
+        config = self.get_config()
+        config[self.IP] = host.ip
+        return ModbusSunspec(**config)
     
     def get_SN(self) -> str:
         return self.sn or self.mac

@@ -1,3 +1,5 @@
+from typing import Optional
+from server.devices.TCPDevice import TCPDevice
 from server.devices.profile_keys import OperationKey
 from .modbus import Modbus
 from ..ICom import ICom, HarvestDataType
@@ -5,7 +7,7 @@ from pymodbus.client import ModbusTcpClient as ModbusClient
 from pymodbus.exceptions import ModbusIOException
 from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
-from server.network.network_utils import NetworkUtils
+from server.network.network_utils import HostInfo, NetworkUtils
 from server.devices.supported_devices.profiles import ModbusDeviceProfiles
 import logging
 from server.devices.profile_keys import ProtocolKey
@@ -16,7 +18,7 @@ log.setLevel(logging.INFO)
 
 pymodbus_apply_logging_config("INFO")
 
-class ModbusTCP(Modbus):
+class ModbusTCP(Modbus, TCPDevice):
     """
     ModbusTCP device class.
 
@@ -30,10 +32,7 @@ class ModbusTCP(Modbus):
 
     CONNECTION = "TCP"
     
-    @property
-    def IP(self) -> str:
-        return self.ip_key()
-    
+  
     @staticmethod
     def ip_key() -> str:
         return "ip"
@@ -45,10 +44,6 @@ class ModbusTCP(Modbus):
     @staticmethod
     def mac_key() -> str:
         return "mac"
-    
-    @property
-    def PORT(self) -> str:
-        return self.port_key()
     
     @staticmethod
     def port_key() -> str:
@@ -80,16 +75,18 @@ class ModbusTCP(Modbus):
 
     # init but with kwargs
     def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
+        Modbus.__init__(self, **kwargs)
         
         # check if old keys are provided
         if "host" in kwargs:
             kwargs[self.ip_key()] = kwargs.pop("host")
             
         # get the kwargs, and default if not provided
-        self.ip = kwargs.get(self.ip_key(), None)
+        ip = kwargs.get(self.ip_key(), None)
+        port = kwargs.get(self.port_key(), None)    
+        TCPDevice.__init__(self, ip, port)
+
         self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
-        self.port = kwargs.get(self.port_key(), None)
         self.client = None
         self.data_type = HarvestDataType.MODBUS_REGISTERS
 
@@ -122,15 +119,13 @@ class ModbusTCP(Modbus):
         return ModbusTCP(**config)
 
     def get_config(self) -> dict:
-        super_config = super().get_config()
 
-        my_config = {
+        return {
+            **Modbus.get_config(self),
+            **TCPDevice.get_config(self),
             ICom.CONNECTION_KEY: ModbusTCP.CONNECTION,
             self.MAC: self.mac,
-            self.IP: self.ip,
-            self.PORT: self.port,
         }
-        return {**super_config, **my_config}
     
     def get_SN(self) -> str:
         # TODO: get the serial number from the device use mac for now
@@ -166,4 +161,13 @@ class ModbusTCP(Modbus):
         if isinstance(resp, ExceptionResponse):
             raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
         return resp
+    
+    def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
+
+        if host.mac != self.mac:
+            return None
+        
+        config = self.get_config()
+        config[self.IP] = host.ip
+        return ModbusTCP(**config)
     

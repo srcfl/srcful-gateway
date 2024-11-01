@@ -26,7 +26,7 @@ def test_connect_new_device(mock_response):
     with patch('server.devices.p1meters.P1Jemac.requests.get', return_value=mock_response) as mock_get:
         assert p1_meter.connect()
         assert p1_meter.meter_serial_number == "/LGF5E360"
-        mock_get.assert_called_once_with("http://192.168.0.30:80/telegram.json")
+        mock_get.assert_called_once_with("http://192.168.0.30:80/telegram.json", timeout=5)
 
 def test_get_harvest_data(mock_response):
     p1_meter = P1Jemac("192.168.0.30", 80)
