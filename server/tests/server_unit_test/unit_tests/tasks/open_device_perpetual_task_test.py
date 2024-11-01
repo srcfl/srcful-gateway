@@ -8,7 +8,6 @@ from server.tasks.harvestFactory import HarvestFactory
 from unittest.mock import MagicMock, patch
 from server.devices.inverters.modbus import Modbus
 from server.devices.inverters.ModbusTCP import ModbusTCP
-from server.devices.inverters.ModbusRTU import ModbusRTU
 from server.devices.inverters.ModbusSolarman import ModbusSolarman
 import server.tests.config_defaults as cfg
 import pytest 
@@ -24,11 +23,9 @@ def modbus_devices():
     devices: list[Modbus] = []
     
     tcp_config = {k: v for k, v in cfg.TCP_ARGS.items() if k != 'connection'}
-    rtu_conf = {k: v for k, v in cfg.RTU_ARGS.items() if k != 'connection'}
     solarman_conf = {k: v for k, v in cfg.SOLARMAN_ARGS.items() if k != 'connection'}
     
     devices.append(ModbusTCP(**tcp_config))
-    devices.append(ModbusRTU(**rtu_conf))
     devices.append(ModbusSolarman(**solarman_conf))
     
 

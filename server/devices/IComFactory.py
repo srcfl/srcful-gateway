@@ -1,4 +1,3 @@
-from .inverters.ModbusRTU import ModbusRTU
 from .inverters.ModbusTCP import ModbusTCP
 from .inverters.ModbusSolarman import ModbusSolarman
 from .inverters.ModbusSunspec import ModbusSunspec
@@ -66,8 +65,6 @@ class IComFactory:
         match connection:
             case ModbusTCP.CONNECTION:
                 return ModbusTCP(**stripped_config)
-            case ModbusRTU.CONNECTION:
-                return ModbusRTU(**stripped_config)
             case ModbusSolarman.CONNECTION:
                 return ModbusSolarman(**stripped_config)
             case ModbusSunspec.CONNECTION:

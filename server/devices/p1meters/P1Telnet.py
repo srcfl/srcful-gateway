@@ -78,7 +78,7 @@ class P1Telnet(TCPDevice):
     
     @staticmethod
     def get_supported_devices():
-        return {P1Telnet.CONNECTION: {'device_type': P1Telnet.CONNECTION, 'display_name': 'P1 Telnet'}}
+        return {P1Telnet.CONNECTION: {'device_type': P1Telnet.CONNECTION, 'display_name': 'P1 Telnet', 'protocol': 'telnet'}}
     
     @staticmethod
     def get_config_schema():
