@@ -22,8 +22,7 @@ class Enphase(Device):
     
     Attributes:
         base_url (str): The base URL for the REST API
-        endpoints (dict): Dictionary of available endpoints
-        auth_method (str): Authentication method to use
+        bearer_token (str): The Bearer token for the REST API
     """
 
     CONNECTION = "ENPHASE"
@@ -45,9 +44,10 @@ class Enphase(Device):
         if not self.bearer_token:
             raise ValueError("Bearer token is required")
         
-        self.base_url: str = kwargs.get("base_url", None)   
-        is_valid_url = self.base_url and NetworkUtils.parse_address(self.base_url)
-        if not self.base_url or not is_valid_url:
+        self.base_url: str = kwargs.get("base_url", None)
+        self.base_url = NetworkUtils.parse_address(self.base_url)
+        
+        if not self.base_url:
             raise ValueError("Base URL is required")
         
         self.headers: dict = {"Authorization": f"Bearer {self.bearer_token}"}
@@ -121,7 +121,7 @@ class Enphase(Device):
     def clone(self, ip: Optional[str] = None) -> 'ICom':
         if ip is None:
             ip = self.base_url
-        return Enphase(device_type=self.device_type, bearer_token=self.bearer_token, base_url=ip)
+        return Enphase(base_url=ip, bearer_token=self.bearer_token, )
     
     def find_device(self) -> 'ICom':
         raise NotImplementedError("Not implemented")
