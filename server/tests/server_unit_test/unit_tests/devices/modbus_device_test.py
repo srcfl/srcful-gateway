@@ -3,6 +3,7 @@ from server.devices.inverters.ModbusSunspec import ModbusSunspec
 from server.devices.inverters.ModbusSolarman import ModbusSolarman
 from server.devices.inverters.modbus import Modbus
 from server.devices.ICom import ICom
+from server.network.network_utils import NetworkUtils
 import server.tests.config_defaults as cfg
 from unittest.mock import patch
 import pytest 
@@ -96,7 +97,7 @@ def test_modbus_device_mac_not_present(modbus_devices):
             
         config = device.get_config()
         assert device.mac is not None
-        assert config["mac"] == "00:00:00:00:00:00"
+        assert config["mac"] == NetworkUtils.INVALID_MAC
     
     
 def test_get_SN(modbus_devices):
@@ -104,7 +105,7 @@ def test_get_SN(modbus_devices):
     modbus_tcp = modbus_devices[0]
     modbus_solarman = modbus_devices[1]
     
-    assert modbus_tcp.get_SN() == "00:00:00:00:00:00" # Modbus Device MAC-Address
+    assert modbus_tcp.get_SN() == NetworkUtils.INVALID_MAC # Modbus Device MAC-Address
     assert modbus_solarman.get_SN() == '1234567890' # Stick Logger SN
         
         

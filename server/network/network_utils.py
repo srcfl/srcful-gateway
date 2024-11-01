@@ -34,6 +34,8 @@ class NetworkUtils:
     DEFAULT_MODBUS_PORTS = "502,6607,8899"
     DEFAULT_TIMEOUT = 0.1
 
+    INVALID_MAC = "00:00:00:00:00:00"
+
     def __init__(self):
         raise NotImplementedError("This class shouldn't be instantiated.")
     
@@ -131,7 +133,7 @@ class NetworkUtils:
         for entry in NetworkUtils.arp_table():
             if entry[NetworkUtils.IP_KEY] == ip:
                 return entry[NetworkUtils.MAC_KEY]
-        return "00:00:00:00:00:00"
+        return NetworkUtils.INVALID_MAC
     
     @staticmethod
     def parse_ports(ports_str: str) -> list[int]:

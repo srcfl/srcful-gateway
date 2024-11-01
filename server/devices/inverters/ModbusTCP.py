@@ -86,7 +86,7 @@ class ModbusTCP(Modbus, TCPDevice):
         port = kwargs.get(self.port_key(), None)    
         TCPDevice.__init__(self, ip, port)
 
-        self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
+        self.mac = kwargs.get(self.mac_key(), NetworkUtils.INVALID_MAC)
         self.client = None
         self.data_type = HarvestDataType.MODBUS_REGISTERS
 
@@ -96,7 +96,7 @@ class ModbusTCP(Modbus, TCPDevice):
             log.error("FAILED to open Modbus TCP device: %s", self._get_type())
         if self.client.socket:
             self.mac = NetworkUtils.get_mac_from_ip(self.ip)
-        return bool(self.client.socket)
+        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC
         
     def _get_type(self) -> str:
         return self.device_type

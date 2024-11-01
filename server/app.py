@@ -3,6 +3,7 @@ import sys
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from server.network.network_utils import NetworkUtils
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 from server.tasks.saveStateTask import SaveStatePerpetualTask
 import server.web.server
@@ -186,5 +187,12 @@ if __name__ == "__main__":
     # handler = logging.StreamHandler(sys.stdout)
     # logging.root.addHandler(handler)
     logging.root.setLevel(logging.INFO)
-    modbus_tcp = ModbusTCP("192.168.1.100", "00:00:00:00:00:00", 502, "huawei", 1)
+    args = {
+        NetworkUtils.IP_KEY: "192.168.1.100",
+        NetworkUtils.MAC_KEY: NetworkUtils.INVALID_MAC,
+        NetworkUtils.PORT_KEY: 502,
+        ModbusTCP.slave_id_key(): 1,  
+        ModbusTCP.device_type_key(): "huawei"
+    }
+    modbus_tcp = ModbusTCP(**args)
     main(("localhost", 5000), ("localhost", 5000), modbus_tcp)

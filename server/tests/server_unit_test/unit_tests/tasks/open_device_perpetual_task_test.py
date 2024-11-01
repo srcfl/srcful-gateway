@@ -127,7 +127,7 @@ def test_reconnect_does_not_find_known_device(mock_network_utils):
     mock_network_utils.PORT_KEY = 'port'
     
     # two random devices on the network, with different mac addresses than,
-    # the one we are trying to connect to (00:00:00:00:00:00 in cfg.TCP_CONFIG)
+    # the one we are trying to connect to (NetworkUtils.INVALID_MAC in cfg.TCP_CONFIG)
     mock_network_utils.get_hosts.return_value = [
         {mock_network_utils.IP_KEY: '192.168.50.1',
          mock_network_utils.MAC_KEY: '00:00:00:00:00:01',
@@ -148,22 +148,21 @@ def test_execute_inverter_not_on_local_network():
     bb = BlackBoard()
     set_up_listeners(bb)
     
-    inverter = MagicMock()
+    inverter = MagicMock(spec=ModbusTCP)
     inverter.get_config.return_value = cfg.TCP_ARGS
     inverter.get_SN.return_value = cfg.TCP_CONFIG.get('sn')
     bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
 
-    inverter.connect.return_value = True
+    inverter.connect.return_value = False
     inverter.get_config.return_value = cfg.TCP_ARGS # MAC is 00:00:00:00:00:00, so probably not on the local network
-    inverter.is_valid.return_value = False
     task = DevicePerpetualTask(0, bb, inverter)
-    assert task.execute(0) is None
+    assert task.execute(0) is not None
 
     assert inverter not in bb.devices.lst
     assert inverter.connect.called
-    assert inverter.disconnect.called
 
     assert len(bb.devices.lst) == 0 # Not on the local network, so not added
+    assert len(bb.settings.devices.connections) == 1
 
     assert len(bb.purge_tasks()) == 1 # state save task added as error message is generated
     

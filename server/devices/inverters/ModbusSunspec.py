@@ -16,12 +16,6 @@ class ModbusSunspec(TCPDevice):
     """
     ModbusSunspec device class
     
-    Attributes:
-        ip (str): The IP address or hostname of the device.
-        mac (str, optional): The MAC address of the device. Defaults to "00:00:00:00:00:00" if not provided.
-        port (int): The port number used for the Modbus connection.
-        slave_id (int): The Modbus address of the device, typically used to identify the device on the network.
-        sn (str, optional): The serial number of the device. If not provided, it may be retrieved from the device.
     """
 
     CONNECTION = "SUNSPEC"
@@ -86,7 +80,7 @@ class ModbusSunspec(TCPDevice):
 
         TCPDevice.__init__(self, ip, port)
 
-        self.mac = kwargs.get(self.mac_key(), "00:00:00:00:00:00")
+        self.mac = kwargs.get(self.mac_key(), NetworkUtils.INVALID_MAC)
         self.slave_id = kwargs.get(self.slave_id_key(), 1)
         self.sn = kwargs.get(self.sn_key(), None)
         self.client = None
@@ -123,11 +117,8 @@ class ModbusSunspec(TCPDevice):
         elif 714 in self.client.models:
             self.dc_model = self.client.models[714][0]
             
-        return len(self.client.models) > 0
-    
-    def is_valid(self) -> bool:
-        return self.get_SN() is not None and self.mac != "00:00:00:00:00:00"
-    
+        return len(self.client.models) > 0 and self.mac != NetworkUtils.INVALID_MAC
+       
     def _disconnect(self) -> None:
         self.client.disconnect()
            

@@ -53,7 +53,7 @@ class Enphase(Device):
         self.headers: dict = {"Authorization": f"Bearer {self.bearer_token}"}
         
         self.session: requests.Session = None
-        self.mac: str = "00:00:00:00:00:00"
+        self.mac: str = NetworkUtils.INVALID_MAC
         
         # Move there to somewhere else more appropriate?
         self.endpoints: dict = {
@@ -76,7 +76,7 @@ class Enphase(Device):
         
         self.mac = NetworkUtils.get_mac_from_ip(self.base_url)
         
-        return True
+        return self.mac != NetworkUtils.INVALID_MAC
 
     def _disconnect(self) -> None:
         self.session.close()
@@ -93,10 +93,7 @@ class Enphase(Device):
                 continue
             data[endpoint_name] = response.json()
         return data
-    
-    def is_valid(self) -> bool:
-        return self.mac != "00:00:00:00:00:00"
-    
+       
     def is_open(self) -> bool:
         return self.session.get(self.base_url, headers=self.headers).status_code == 200
     

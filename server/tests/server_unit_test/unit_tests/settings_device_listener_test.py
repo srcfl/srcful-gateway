@@ -2,6 +2,7 @@ from server.settings_device_listener import SettingsDeviceListener
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.blackboard import BlackBoard
 from server.settings import ChangeSource
+from server.network.network_utils import NetworkUtils
 import pytest 
 from unittest.mock import patch, MagicMock
 
@@ -35,11 +36,11 @@ def test_add_connection_in_old_format(settings_device_listener):
     old_config = {
         "connection": "TCP",
         "host": "192.168.1.1",
-        "mac": "00:00:00:00:00:00",
+        "mac": NetworkUtils.INVALID_MAC,
         "port": 502,
         "address": 1,
         "type": "solaredge",
-        "sn": "00:00:00:00:00:00"}
+        "sn": NetworkUtils.INVALID_MAC}
     
     settings_device_listener.blackboard.settings.devices._connections = [old_config]
     

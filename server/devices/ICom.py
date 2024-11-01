@@ -34,10 +34,6 @@ class ICom(ABC):
     def connect(self) -> bool:
         ''' Establish a connection to the device using the configuration of the device. If the device has a serial number it will only connect to the device with that serial number. If it has no serial number it will read the serial number from the device.'''
         pass
-    
-    @abstractmethod
-    def is_valid(self) -> bool:
-        pass
 
     @abstractmethod
     def is_disconnected(self) -> bool:

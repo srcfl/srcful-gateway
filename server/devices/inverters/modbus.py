@@ -120,19 +120,6 @@ class Modbus(Device, ABC):
                 logger.error("ModbusIOException occurred: %s", str(me))
 
         return resp
-
-    # ICom methods
-    def is_valid(self) -> bool:
-        """
-        Check if the device is valid by checking if the MAC address is not 00:00:00:00:00:00,
-        this is a simple check to make sure the device is on the local network. 
-        More sophisticated checks may be added later.
-        """
-        # Ensure that the device is on the local network
-        # There can be other checks to make sure the device is valid, but this is a good start.
-        if self.get_config()[NetworkUtils.MAC_KEY] == "00:00:00:00:00:00":
-            return False
-        return True
     
     def get_harvest_data_type(self) -> HarvestDataType:
         return self.data_type

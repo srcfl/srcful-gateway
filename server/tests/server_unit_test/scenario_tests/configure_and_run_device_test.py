@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from server.blackboard import BlackBoard
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.harvestFactory import HarvestFactory
-
+from server.network.network_utils import NetworkUtils
 
 def test_harvest_from_two_devices_with_one_device_reconnection():
     # Setup
@@ -17,7 +17,7 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     device.connect.return_value = True
     device.is_disconnected.return_value = False
     device.is_open.return_value = True
-    device.get_SN.return_value = "00:00:00:00:00:00"
+    device.get_SN.return_value = NetworkUtils.INVALID_MAC
     
     bb.devices.add(device)
     assert device in bb.devices.lst

@@ -60,9 +60,7 @@ class P1Jemac(TCPDevice):
             logger.error(f"Failed to connect to {self.ip}:{self.port}: {str(e)}")
             return False
 
-    def is_valid(self) -> bool:
-        return self.meter_serial_number != ""
-    
+        
     def _disconnect(self) -> None:
         pass
        

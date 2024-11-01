@@ -1,7 +1,10 @@
+from server.network.network_utils import NetworkUtils
+
+
 TCP_ARGS = {
     "connection": "TCP",
     "ip": "localhost",
-    "mac": "00:00:00:00:00:00",
+    "mac": NetworkUtils.INVALID_MAC,
     "port": 502,
     "device_type": "solaredge",
     "slave_id": 4,
@@ -21,7 +24,7 @@ RTU_ARGS = {
 SOLARMAN_ARGS = {
     "connection": "SOLARMAN",
     "ip": "localhost",
-    "mac": "00:00:00:00:00:00",
+    "mac": NetworkUtils.INVALID_MAC,
     "port": 502,
     "device_type": "deye",
     "sn": 1234567890,
@@ -32,7 +35,7 @@ SOLARMAN_ARGS = {
 SUNSPEC_ARGS = {
     "connection": "SUNSPEC",
     "ip": "localhost",
-    "mac": "00:00:00:00:00:00",
+    "mac": NetworkUtils.INVALID_MAC,
     "port": 502,
     "slave_id": 1
 }
@@ -44,7 +47,7 @@ P1_TELNET_ARGS = {
 }
 
 # Config snapshots after device creation
-TCP_CONFIG = {**TCP_ARGS, "sn": "00:00:00:00:00:00"}
+TCP_CONFIG = {**TCP_ARGS, "sn": NetworkUtils.INVALID_MAC}
 RTU_CONFIG = {**RTU_ARGS, "sn": "N/A"}
 SOLARMAN_CONFIG = {**SOLARMAN_ARGS, "sn": 1234567890}
 SUNSPEC_CONFIG = {**SUNSPEC_ARGS, "sn": "SUNSPEC135792468"}

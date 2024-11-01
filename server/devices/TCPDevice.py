@@ -60,9 +60,6 @@ class TCPDevice(Device, ABC):
         return False
     
     def find_device(self) -> Optional['ICom']:
-        if not self.is_valid():
-            raise Exception("Device is not valid")
-
         port = self.get_config()[self.PORT] # get the port from the previous device config
         hosts = NetworkUtils.get_hosts([int(port)], 0.01)
         

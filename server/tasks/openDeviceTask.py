@@ -23,13 +23,6 @@ class OpenDeviceTask(Task):
         
         try:
             if self.device.connect():
-                
-                if not self.device.is_valid():
-                    self.device.disconnect()
-                    message = "Failed to open device: " + str(self.device.get_config())
-                    logger.error(message) 
-                    self.bb.add_error(message)
-                    return None
 
                 if self.bb.devices.contains(self.device) and not self.device.is_open():
                     message = "Device is already in the blackboard, no action needed"

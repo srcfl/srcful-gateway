@@ -1,3 +1,4 @@
+from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
@@ -108,15 +109,15 @@ def test_retry_on_exception():
     
 def test_execute_inverter_not_on_local_network():
     bb = BlackBoard()
-    device = MagicMock()
-    device.connect.return_value = True
-    device.get_config.return_value = cfg.TCP_ARGS # MAC is 00:00:00:00:00:00, so probably not on the local network
-    device.is_valid.return_value = False
+    device = MagicMock(spec=ModbusTCP)
+    device.connect.return_value = False
+    device.get_config.return_value = cfg.TCP_ARGS # MAC is 00:00:00:00:00:00, which is NetworkUtils.INVALID_MAC, so probably not on the local network
     
     task = OpenDeviceTask(0, bb, device)
     assert task.execute(0) is None
 
     assert device not in bb.devices.lst
+    assert len(bb.settings.devices.connections) == 0
     
     assert device.connect.called
     assert device.disconnect.called

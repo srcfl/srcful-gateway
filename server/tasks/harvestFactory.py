@@ -16,7 +16,7 @@ class HarvestFactory:
         self.bb = bb
         bb.devices.add_listener(self)
 
-    def add_device(self, com):
+    def add_device(self, com:ICom):
         """Add the device to the blackboard and create a harvest task and save it to the settings"""
         # now we have an open device, lets create a harvest task and save it to the settings
         if com.is_open():

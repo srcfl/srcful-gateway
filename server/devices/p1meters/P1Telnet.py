@@ -118,9 +118,6 @@ class P1Telnet(TCPDevice):
         except Exception as e:
             logger.error(f"Failed to connect to {self.ip}:{self.port}: {str(e)}")
             return False
-
-    def is_valid(self) -> bool:
-        return self.meter_serial_number != ""
     
     def _disconnect(self) -> None:
         if self.client:
