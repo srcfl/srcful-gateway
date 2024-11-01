@@ -46,9 +46,16 @@ P1_TELNET_ARGS = {
     "port": 23,
 }
 
+ENPHASE_ARGS = {
+    "connection": "ENPHASE", 
+    "base_url": "192.168.1.110",
+    "bearer_token": "eyJraWQiOiIasdasdadsI1NiJ9.eyJhdWQiOiIyMDIyMTUwMDMwMjgiLCJpc3Miasdn21wmVEUuQ"
+}
+
 # Config snapshots after device creation
 TCP_CONFIG = {**TCP_ARGS, "sn": NetworkUtils.INVALID_MAC}
 RTU_CONFIG = {**RTU_ARGS, "sn": "N/A"}
 SOLARMAN_CONFIG = {**SOLARMAN_ARGS, "sn": 1234567890}
 SUNSPEC_CONFIG = {**SUNSPEC_ARGS, "sn": "SUNSPEC135792468"}
 P1_TELNET_CONFIG = {**P1_TELNET_ARGS, "meter_serial_number": "abc5qwerty"}
+ENPHASE_CONFIG = {**ENPHASE_ARGS, "sn": "00:00:00:00:00:00"}
