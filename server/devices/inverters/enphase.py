@@ -1,10 +1,11 @@
+from server.devices.TCPDevice import TCPDevice
 from ..Device import Device
 import logging
 import requests
 from server.network import mdns as mdns
 from ..ICom import HarvestDataType, ICom
 from typing import Optional
-from server.network.network_utils import NetworkUtils
+from server.network.network_utils import HostInfo, NetworkUtils
 
 # Suppress SSL verification warnings (optional)
 import urllib3
@@ -16,13 +17,9 @@ logging.getLogger('charset_normalizer').setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-class Enphase(Device):
+class Enphase(TCPDevice):
     """
     Enphase device class
-    
-    Attributes:
-        base_url (str): The base URL for the REST API
-        bearer_token (str): The Bearer token for the REST API
     """
 
     CONNECTION = "ENPHASE"
@@ -34,8 +31,9 @@ class Enphase(Device):
     @staticmethod
     def get_config_schema():
         return {
-           'ip': 'string, IP address or hostname of the device',
-           'bearer_token': 'string, Bearer token for the device'
+            **TCPDevice.get_config_schema(),
+            'bearer_token': 'string, Bearer token for the device'
+
         }
 
     def __init__(self, **kwargs):
@@ -44,11 +42,13 @@ class Enphase(Device):
         if not self.bearer_token:
             raise ValueError("Bearer token is required")
         
-        self.base_url: str = kwargs.get("base_url", None)
+        self.base_url: str = kwargs.get(self.IP, None)
         self.base_url = NetworkUtils.parse_address(self.base_url)
         
         if not self.base_url:
             raise ValueError("Base URL is required")
+
+        TCPDevice.__init__(self, self.base_url, kwargs.get(self.PORT, 80))
         
         self.headers: dict = {"Authorization": f"Bearer {self.bearer_token}"}
         
@@ -95,12 +95,12 @@ class Enphase(Device):
         return data
        
     def is_open(self) -> bool:
-        return self.session.get(self.base_url, headers=self.headers).status_code == 200
+        return self.session and self.session.get(self.base_url, headers=self.headers).status_code == 200
     
     def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
         return 1000*60*10 # 10 minutes
     
-    def get_harvest_data_type(self) -> str:
+    def get_harvest_data_type(self) -> HarvestDataType:
         return HarvestDataType.REST_API
     
     def get_config(self) -> dict:
@@ -115,13 +115,18 @@ class Enphase(Device):
     def get_name(self) -> str:
         return self.CONNECTION.lower()
     
-    def clone(self, ip: Optional[str] = None) -> 'ICom':
-        if ip is None:
-            ip = self.base_url
-        return Enphase(base_url=ip, bearer_token=self.bearer_token, )
+    def clone(self) -> 'ICom':
+        return Enphase(**self.get_config())
     
-    def find_device(self) -> 'ICom':
-        raise NotImplementedError("Not implemented")
+
+    def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
+
+        if host.mac != self.mac:
+            return None
+        
+        config = self.get_config()
+        config[self.IP] = host.ip
+        return Enphase(**config)
             
     def get_SN(self) -> str:
         return self.mac

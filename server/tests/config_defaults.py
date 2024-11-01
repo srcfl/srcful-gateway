@@ -48,7 +48,7 @@ P1_TELNET_ARGS = {
 
 ENPHASE_ARGS = {
     "connection": "ENPHASE", 
-    "base_url": "192.168.1.110",
+    "ip": "192.168.1.110",
     "bearer_token": "eyJraWQiOiIasdasdadsI1NiJ9.eyJhdWQiOiIyMDIyMTUwMDMwMjgiLCJpc3Miasdn21wmVEUuQ"
 }
 

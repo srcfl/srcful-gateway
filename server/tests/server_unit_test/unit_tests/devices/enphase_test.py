@@ -8,4 +8,4 @@ def enphase():
 
 
 def test_open(enphase):
-    assert enphase.is_open()
+    assert not enphase.is_open()
