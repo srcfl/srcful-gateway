@@ -1,8 +1,9 @@
+from typing import Optional
 from server.devices.profile_keys import OperationKey
 from .ModbusTCP import ModbusTCP
 from ..ICom import ICom
 from pysolarmanv5 import PySolarmanV5
-from server.network.network_utils import NetworkUtils
+from server.network.network_utils import HostInfo, NetworkUtils
 import logging
 from server.devices.profile_keys import ProtocolKey
 from server.devices.supported_devices.profiles import ModbusDeviceProfiles
@@ -146,3 +147,13 @@ class ModbusSolarman(ModbusTCP):
 
     def write_register(self, operation, register, value) -> bool:
         raise NotImplementedError("Not implemented yet")
+    
+
+    def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
+
+        if host.mac != self.mac:
+            return None
+        
+        config = self.get_config()
+        config[self.IP] = host.ip
+        return ModbusSolarman(**config)

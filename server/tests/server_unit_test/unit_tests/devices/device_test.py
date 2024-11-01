@@ -4,6 +4,8 @@ from server.devices.Device import Device
 from server.devices.ICom import ICom, HarvestDataType, DER_TYPE
 from typing import Optional
 
+from server.network.network_utils import HostInfo
+
 @pytest.fixture
 def device():
     class TestDevice(Device):
@@ -48,6 +50,13 @@ def device():
         def get_SN(self) -> str:
             return "qwe123"
         
+
+        def compare_host(self, other: 'ICom') -> bool:
+            return True
+
+        def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
+            return TestDevice()
+        
     
     return TestDevice()
 
@@ -85,3 +94,5 @@ def test_get_backoff_time_ms(device):
     assert device.get_backoff_time_ms(10, 10) == 1000
 
     assert device.get_backoff_time_ms(100000, 2560000) == 256000
+
+

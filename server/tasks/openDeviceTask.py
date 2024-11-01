@@ -16,6 +16,10 @@ class OpenDeviceTask(Task):
         logger.info("##########################################################")
         logger.info("#################### OpenDeviceTask ####################")
         logger.info("##########################################################")
+
+        for device in self.bb.devices.lst:
+            if self.device.compare_host(device):
+                return None
         
         try:
             if self.device.connect():

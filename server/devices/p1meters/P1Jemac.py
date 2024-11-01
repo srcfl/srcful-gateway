@@ -4,14 +4,17 @@ import requests
 
 from server.devices.Device import Device
 from server.devices.ICom import HarvestDataType, ICom
+from server.devices.TCPDevice import TCPDevice
 from server.devices.p1meters.P1Telnet import P1Telnet
 from server.network import mdns
 
 import logging
 
+from server.network.network_utils import HostInfo
+
 logger = logging.getLogger(__name__)
 
-class P1Jemac(Device):
+class P1Jemac(TCPDevice):
 
 
     CONNECTION = "P1Jemac"
@@ -24,8 +27,7 @@ class P1Jemac(Device):
     @staticmethod
     def get_config_schema():
         return {
-            "ip": "string, IP address or hostname of the device",
-            "port": "int, port of the device",
+            **TCPDevice.get_config_schema(),
             "meter_serial_number": "optional string, Serial number of the meter",
             "model_name": "optional string, Model name of the meter"
         }
@@ -40,8 +42,7 @@ class P1Jemac(Device):
     model_name: str
 
     def __init__(self, ip: str, port: int = 23, meter_serial_number: str = "", model_name: str = "jema_p1_meter"):
-        self.ip = ip
-        self.port = port
+        super().__init__(ip=ip, port=port)
         self.meter_serial_number = meter_serial_number
         self.model_name = model_name
         self.endpoint = "/telegram.json"
@@ -99,8 +100,7 @@ class P1Jemac(Device):
     def get_config(self) -> dict:
         return {
             ICom.CONNECTION_KEY: P1Telnet.CONNECTION,
-            "ip": self.ip,
-            "port": self.port,
+            **TCPDevice.get_config(self),
             "meter_serial_number": self.meter_serial_number
         }
     
@@ -142,3 +142,9 @@ class P1Jemac(Device):
     def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
         # p1 meters typically send data every 10 seconds
         return 10 * 1000
+
+    def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
+        
+        config = self.get_config()
+        config[self.IP] = host.ip
+        return P1Telnet(**config)

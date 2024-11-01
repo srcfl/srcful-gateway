@@ -56,6 +56,7 @@ def test_second_inverter_opened():
     bb = BlackBoard()
     device = MagicMock()
     device.connect.return_value = True
+    device.compare_host.return_value = False
     task = OpenDeviceTask(0, bb, device)
     ret = task.execute(0)
 
@@ -65,6 +66,7 @@ def test_second_inverter_opened():
     
     device2 = MagicMock()
     device2.connect.return_value = True
+    device2.compare_host.return_value = False
     task = OpenDeviceTask(0, bb, device2)
     ret = task.execute(0)
 
@@ -75,9 +77,6 @@ def test_second_inverter_opened():
     assert len(bb.devices.lst) == 2
     
 
-##########################################################################################
-# CONTINUE HERE 
-##########################################################################################
 def test_remove_device():
     bb = BlackBoard()
     device = MagicMock()
@@ -132,12 +131,12 @@ def test_add_multiple_devices():
     device1 = MagicMock()
     device1.connect.return_value = True
     device1.is_open.return_value = True
-    
+    device1.compare_host.return_value = False
 
     device2 = MagicMock()
     device2.connect.return_value = True
     device2.is_open.return_value = True
-    
+    device2.compare_host.return_value = False
     task1 = OpenDeviceTask(0, bb, device1)
     task2 = OpenDeviceTask(0, bb, device2)
     
@@ -151,3 +150,45 @@ def test_add_multiple_devices():
     assert device2.connect.called
     
     assert len(bb.devices.lst) == 2
+
+
+def test_open_device_that_is_already_open():
+    bb = BlackBoard()
+    device = MagicMock()
+    device.connect.return_value = True
+    device.is_open.return_value = True
+    device.get_config.return_value = cfg.TCP_CONFIG
+    device.get_SN.return_value = "1234567890"
+    bb.devices.add(device)
+    
+    device2 = MagicMock()
+    device2.connect.return_value = True
+    device2.is_open.return_value = True
+    device2.get_config.return_value = cfg.TCP_CONFIG
+    device2.get_SN.return_value = "1234567890"
+
+    task = OpenDeviceTask(0, bb, device2)
+    task.execute(0)
+    
+    assert device2 not in bb.devices.lst
+
+
+def test_open_device_that_is_already_open_no_sn():
+    bb = BlackBoard()
+    device = MagicMock()
+    device.connect.return_value = True
+    device.is_open.return_value = True
+    device.get_config.return_value = cfg.TCP_CONFIG
+    device.get_SN.return_value = cfg.TCP_CONFIG["sn"]
+    bb.devices.add(device)
+    
+    device2 = MagicMock()
+    device2.connect.return_value = True
+    device2.is_open.return_value = True
+    device2.get_config.return_value = cfg.TCP_ARGS
+    device2.get_SN.return_value = ""
+
+    task = OpenDeviceTask(0, bb, device2)
+    task.execute(0)
+    
+    assert device2 not in bb.devices.lst

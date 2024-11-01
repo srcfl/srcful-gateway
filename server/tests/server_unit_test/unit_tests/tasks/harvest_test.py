@@ -207,6 +207,7 @@ def test_execute_harvests_from_two_devices():
     device = MagicMock()
     device.connect.return_value = True
     device.is_open.return_value = True
+    device.compare_host.return_value = False
     task = OpenDeviceTask(0, bb, device)
     task.execute(0)
     
@@ -218,6 +219,7 @@ def test_execute_harvests_from_two_devices():
     device2 = MagicMock()
     device2.connect.return_value = True
     device2.is_open.return_value = True
+    device2.compare_host.return_value = False
     task2 = OpenDeviceTask(0, bb, device2)
     task2.execute(0)
     

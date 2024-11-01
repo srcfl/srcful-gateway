@@ -74,11 +74,16 @@ class ICom(ABC):
         pass
     
     @abstractmethod
-    def clone(self, ip: Optional[str] = None) -> 'ICom':
+    def clone(self) -> 'ICom':
+        pass
+
+    @abstractmethod
+    def compare_host(self, other: 'ICom') -> bool:
+        ''' Compare two devices to see if they connect to the same host and service. This should not require a connection to make the comparison.'''
         pass
     
     @abstractmethod
-    def find_device(self) -> 'ICom':
+    def find_device(self) -> Optional['ICom']:
         pass
     
     @abstractmethod
