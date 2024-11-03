@@ -1,4 +1,6 @@
 import logging
+
+from server.devices.inverters.ModbusTCP import ModbusTCP
 from .task import Task
 from server.blackboard import BlackBoard
 from server.network.network_utils import NetworkUtils
@@ -22,6 +24,16 @@ class DiscoverModbusDevicesTask(Task):
 
         ip_port_mac_dict = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         
-        self.bb.set_available_devices(ip_port_mac_dict)
+        icoms = []
+        for host in ip_port_mac_dict:
+            args = {
+                ModbusTCP.ip_key(): host.ip,
+                ModbusTCP.port_key(): host.port,
+                ModbusTCP.mac_key(): host.mac
+            }
+            
+            icoms.append(ModbusTCP(**args))
+        
+        self.bb.set_available_devices(icoms)
 
         return None

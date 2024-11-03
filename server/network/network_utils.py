@@ -59,7 +59,7 @@ class NetworkUtils:
             >>> extract_ip("https://192.168.1.1:8080")
             "192.168.1.1"
         """
-        parsed_url = NetworkUtils.parse_address(url)
+        parsed_url = NetworkUtils.normalize_ip_url(url)
         if not parsed_url:
             return None
             
@@ -73,16 +73,26 @@ class NetworkUtils:
             return None
     
     @staticmethod
-    def parse_address(url: str) -> Optional[str]:
+    def normalize_ip_url(url: str) -> Optional[str]:
         """
-        Parse URL and validate it contains an IP address (not a hostname).
-        Returns URL if valid, None if invalid.
+        Normalize and validate a URL or IP address into a consistent URL format.
+        Returns normalized URL if valid IP-based URL, None if invalid.
         
         Args:
             url (str): URL or IP address
             
         Returns:
-            Optional[str]: URL or None if invalid
+            Optional[str]: Normalized URL or None if invalid
+            
+        Examples:
+            >>> normalize_ip_url("192.168.1.1")
+            "http://192.168.1.1"
+            >>> normalize_ip_url("http://192.168.1.1")
+            "http://192.168.1.1"
+            >>> normalize_ip_url("envoy.local")
+            None
+            >>> normalize_ip_url("http://google.com")
+            None  # Not an IP-based URL
         """
         try:
             # If it's just an IP, convert it to a URL

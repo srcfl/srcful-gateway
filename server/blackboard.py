@@ -6,6 +6,7 @@ from server.message import Message
 from server.tasks.itask import ITask
 from server.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
+from server.network.network_utils import HostInfo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -126,7 +127,7 @@ class BlackBoard:
         state['crypto'] = self.crypto_state()
         state['network'] = self.network_state()
         state['devices'] = self.devices_state()
-        state['available_devices'] = self.get_available_devices()
+        state['available_devices'] = [device.get_config() for device in self.get_available_devices()]
         return state
     
     def message_state(self) -> dict:
@@ -172,10 +173,10 @@ class BlackBoard:
         ret['supported'] = supported.Handler().get_supported_inverters()
         return ret
     
-    def get_available_devices(self) -> dict:
+    def get_available_devices(self) -> list[ICom]:
         return self.available_devices
     
-    def set_available_devices(self, devices: dict):
+    def set_available_devices(self, devices: list[ICom]):
         self.available_devices = devices
         self._save_state()
     
@@ -214,7 +215,7 @@ class BlackBoard:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.15.5"
+        return "0.15.6"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:

@@ -1,5 +1,6 @@
 import pytest
 import json
+from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.network import NetworkHandler
 from server.web.handler.get.network import AddressHandler
@@ -58,31 +59,33 @@ def test_modbus_scan(mock_network_utils):
 
     mock_network_utils.get_hosts.return_value = [{NetworkUtils.IP_KEY: "192.168.50.220",
                                                   NetworkUtils.PORT_KEY: 502}]
+    
+    bb = BlackBoard()
 
-    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {NetworkUtils.PORTS_KEY: ports}, {}))
+    status_code, response = handler.do_get(RequestData(bb, {}, {NetworkUtils.PORTS_KEY: ports}, {}))
     assert status_code == 200
-    response = json.loads(response)
-    assert response[handler.DEVICES] == [{NetworkUtils.IP_KEY: "192.168.50.220",
-                                          NetworkUtils.PORT_KEY: 502}]
+    
+    assert len(bb._tasks) == 1
+    assert isinstance(bb._tasks[0], DiscoverModbusDevicesTask)
     
     
 def test_parse_address():
     # Test valid IP addresses
-    assert NetworkUtils.parse_address("192.168.1.1") == "http://192.168.1.1"
-    assert NetworkUtils.parse_address("10.0.0.1") == "http://10.0.0.1"
+    assert NetworkUtils.normalize_ip_url("192.168.1.1") == "http://192.168.1.1"
+    assert NetworkUtils.normalize_ip_url("10.0.0.1") == "http://10.0.0.1"
     
     # Test valid URLs with IP addresses
-    assert NetworkUtils.parse_address("http://192.168.1.1") == "http://192.168.1.1"
-    assert NetworkUtils.parse_address("https://192.168.1.1") == "https://192.168.1.1"
-    assert NetworkUtils.parse_address("http://192.168.1.1:8080") == "http://192.168.1.1:8080"
+    assert NetworkUtils.normalize_ip_url("http://192.168.1.1") == "http://192.168.1.1"
+    assert NetworkUtils.normalize_ip_url("https://192.168.1.1") == "https://192.168.1.1"
+    assert NetworkUtils.normalize_ip_url("http://192.168.1.1:8080") == "http://192.168.1.1:8080"
     
     # Test invalid inputs
-    assert NetworkUtils.parse_address("") is None
-    assert NetworkUtils.parse_address("invalid_ip") is None
-    assert NetworkUtils.parse_address("envoy.local") is None
-    assert NetworkUtils.parse_address("256.256.256.256") is None
-    assert NetworkUtils.parse_address("http://google.com") is None  # Hostname instead of IP
-    assert NetworkUtils.parse_address("192.168.1") is None  # Incomplete IP
+    assert NetworkUtils.normalize_ip_url("") is None
+    assert NetworkUtils.normalize_ip_url("invalid_ip") is None
+    assert NetworkUtils.normalize_ip_url("envoy.local") is None
+    assert NetworkUtils.normalize_ip_url("256.256.256.256") is None
+    assert NetworkUtils.normalize_ip_url("http://google.com") is None  # Hostname instead of IP
+    assert NetworkUtils.normalize_ip_url("192.168.1") is None  # Incomplete IP
     
     
 def test_extract_ip():
