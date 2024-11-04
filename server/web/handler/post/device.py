@@ -13,13 +13,9 @@ class Handler(PostHandler):
     def schema(self):
         connection_configs = IComFactory.get_connection_configs()
 
-        connection_schema = {}
+        connection_schema = []
         for connection_type, config in connection_configs.items():
-            connection_schema[connection_type] = {
-                "type": "object",
-                "properties": config,
-                "required": list(config.keys())
-            }
+            connection_schema.append(config)
 
         return self.create_schema(
             "Open a device and start harvesting data. Use one of the required objects.",

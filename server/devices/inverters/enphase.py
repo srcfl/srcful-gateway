@@ -46,7 +46,7 @@ class Enphase(TCPDevice):
     @staticmethod
     def get_config_schema():
         return {
-            **TCPDevice.get_config_schema(),
+            **TCPDevice.get_config_schema(Enphase.CONNECTION),
             Enphase.bearer_token_key(): 'string, Bearer token for the device'
 
         }

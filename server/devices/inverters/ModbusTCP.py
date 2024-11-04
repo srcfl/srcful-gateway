@@ -66,7 +66,7 @@ class ModbusTCP(Modbus, TCPDevice):
     @staticmethod
     def get_config_schema():
         return {
-            **Modbus.get_config_schema(),
+            **Modbus.get_config_schema(ModbusTCP.CONNECTION),
             ModbusTCP.mac_key(): "string - (Optional) MAC address of the device",
             ModbusTCP.device_type_key(): "string - type of the device",
             ModbusTCP.slave_id_key(): "int - Modbus address of the device",

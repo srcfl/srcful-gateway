@@ -1,4 +1,5 @@
 from typing import Optional
+from server.devices.Device import Device
 from server.devices.profile_keys import OperationKey
 from .ModbusTCP import ModbusTCP
 from ..ICom import ICom
@@ -57,6 +58,7 @@ class ModbusSolarman(ModbusTCP):
     def get_config_schema():
         return {
             **ModbusTCP.get_config_schema(),
+            **Device.get_config_schema(ModbusSolarman.CONNECTION),  # needed to set the correct connection type as ModbuTCP is also a concrete inverter class
             ModbusTCP.sn_key(): "int - Serial number of the logger stick",
         }
     

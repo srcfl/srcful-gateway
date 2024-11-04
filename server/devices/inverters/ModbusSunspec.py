@@ -62,7 +62,7 @@ class ModbusSunspec(TCPDevice):
         return {
             ModbusSunspec.mac_key(): "string - (Optional) MAC address of the device",
             ModbusSunspec.slave_id_key(): "int - Modbus address of the device",
-            **TCPDevice.get_config_schema(),
+            **TCPDevice.get_config_schema(ModbusSunspec.CONNECTION),
         }
     
     def __init__(self, **kwargs) -> None:

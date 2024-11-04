@@ -17,9 +17,12 @@ def test_create_icom():
         icom = IComFactory.create_com(config)
         assert icom is not None
 
-        icom = IComFactory.create_com(icom.get_config())
+        old_config = icom.get_config()
+        icom = IComFactory.create_com(old_config)
         assert icom is not None
         assert isinstance(icom, device_class)
+        assert icom.get_config() == old_config
+
 
 def test_clone():
     for device_class in IComFactory.supported_devices:

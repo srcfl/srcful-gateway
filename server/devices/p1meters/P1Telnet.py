@@ -83,7 +83,7 @@ class P1Telnet(TCPDevice):
     @staticmethod
     def get_config_schema():
         return {
-            **TCPDevice.get_config_schema(),
+            **TCPDevice.get_config_schema(P1Telnet.CONNECTION),
             "meter_serial_number": "optional string, Serial number of the meter",
             "model_name": "optional string, Model name of the meter"
         }

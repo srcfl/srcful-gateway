@@ -5,6 +5,7 @@ from server.devices.ICom import ICom
 
 class Device(ICom, ABC):
     _is_disconnected: bool = False
+    
 
     def __init__(self):
         super().__init__()
@@ -52,5 +53,5 @@ class Device(ICom, ABC):
         }
 
     @staticmethod
-    def get_config_schema():
-        return {"connection": "string - connection type"}
+    def get_config_schema(connection:str):
+        return {"connection": f"string - the connection type, for this object use: {connection}"}

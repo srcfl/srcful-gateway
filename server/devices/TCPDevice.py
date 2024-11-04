@@ -41,9 +41,9 @@ class TCPDevice(Device, ABC):
         self.port = port
         
     @staticmethod
-    def get_config_schema():
+    def get_config_schema(connection: str):
         return {
-            **Device.get_config_schema(),
+            **Device.get_config_schema(connection),
             TCPDevice.ip_key(): "string - IP address or hostname of the device",
             TCPDevice.port_key(): "int - port of the device",
         }
