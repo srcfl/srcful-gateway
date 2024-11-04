@@ -13,7 +13,7 @@ class Handler(PostHandler):
     def schema(self):
         return {
             "type": "post",
-            "description": "initialize the wallet",
+            "description": "Recover the private and public keys for walletless signing",
             "required": {"api_key": "string, recovery api key",
                          "access_key": "string, recovery access key"},
             "returns": {"prv": "string the private key",
@@ -29,7 +29,10 @@ class Handler(PostHandler):
             t = WalletlessRecoverTask(0, {}, data.data["api_key"], data.data["access_key"])
             t.execute(0)
 
-            if len(t.prv) == 0 or len(t.pub) == 0:
+            if not t.reply:
+                return 500, json.dumps({"status": "internal server error"})
+
+            if (len(t.prv) == 0 or len(t.pub) == 0):
                 return t.reply.status_code, json.dumps({"body": t.reply.body})
 
             return 200, json.dumps({"prv": t.prv, "pub": t.pub})
