@@ -3,7 +3,7 @@ import logging
 import requests
 from server.network import mdns as mdns
 from ..ICom import HarvestDataType, ICom
-from typing import Optional
+from typing import List, Optional
 from server.network.network_utils import HostInfo, NetworkUtils
 import urllib3
 
@@ -34,6 +34,8 @@ class Enphase(TCPDevice):
         CONSUMPTION: "/ivp/meters/reports/consumption",
         ENERGY: "/ivp/pdm/energy"
     }
+    
+    model_name: str
     
     @staticmethod
     def bearer_token_key():
@@ -135,6 +137,28 @@ class Enphase(TCPDevice):
         config[self.ip_key()] = host.ip
         config[self.port_key()] = host.port
         return Enphase(**config)
+    
+    def _scan_for_devices(self, domain: str) -> Optional['Enphase']:
+        mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
+        for service in mdns_services:
+            if service.address and service.port:
+                enphase = Enphase(ip=service.address, port=service.port, bearer_token=self.bearer_token)
+                if enphase.connect():
+                    return enphase
+        return None
+    
+    def find_device(self) -> 'ICom':
+        """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
+        if self.mac != NetworkUtils.INVALID_MAC:
+            # TODO: This is unknown at this point
+            domain_names = {"_enphase-envoy._tcp.local.":{"name": "Enphase IQ Gateway"}}
+
+            for domain, info in domain_names.items():
+                enphase = self._scan_for_devices(domain)
+                if enphase:
+                    enphase.model_name = info["name"]
+                    return enphase
+        return None
             
     def get_SN(self) -> str:
         return self.mac
