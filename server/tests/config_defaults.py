@@ -1,3 +1,5 @@
+import server.devices.inverters as inverter
+import server.devices.p1meters as p1meter
 from server.network.network_utils import NetworkUtils
 
 
@@ -52,6 +54,11 @@ ENPHASE_ARGS = {
     "bearer_token": "eyJraWQiOiIasdasdadsI1NiJ9.eyJhdWQiOiIyMDIyMTUwMDMwMjgiLCJpc3Miasdn21wmVEUuQ"
 }
 
+P1_JEMAC_ARGS = {
+    "connection": "P1Jemac",
+    "ip": "192.168.1.110",
+}
+
 # Config snapshots after device creation
 TCP_CONFIG = {**TCP_ARGS, "sn": NetworkUtils.INVALID_MAC}
 RTU_CONFIG = {**RTU_ARGS, "sn": "N/A"}
@@ -59,3 +66,12 @@ SOLARMAN_CONFIG = {**SOLARMAN_ARGS, "sn": 1234567890}
 SUNSPEC_CONFIG = {**SUNSPEC_ARGS, "sn": "SUNSPEC135792468"}
 P1_TELNET_CONFIG = {**P1_TELNET_ARGS, "meter_serial_number": "abc5qwerty"}
 ENPHASE_CONFIG = {**ENPHASE_ARGS, "sn": "00:00:00:00:00:00"}
+
+class_config_map = {
+    inverter.ModbusTCP: TCP_ARGS,
+    inverter.ModbusSolarman: SOLARMAN_ARGS,
+    inverter.ModbusSunspec: SUNSPEC_ARGS,
+    inverter.Enphase: ENPHASE_ARGS,
+    p1meter.P1Telnet: P1_TELNET_ARGS,
+    p1meter.P1Jemac: P1_JEMAC_ARGS,
+}

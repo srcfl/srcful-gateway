@@ -5,7 +5,6 @@ import requests
 from server.devices.Device import Device
 from server.devices.ICom import HarvestDataType, ICom
 from server.devices.TCPDevice import TCPDevice
-from server.devices.p1meters.P1Telnet import P1Telnet
 from server.network import mdns
 
 import logging
@@ -34,7 +33,7 @@ class P1Jemac(TCPDevice):
 
 
     """
-    P1Telnet class
+    PJemac class
     """
     ip: str
     port: int
@@ -97,24 +96,24 @@ class P1Jemac(TCPDevice):
     
     def get_config(self) -> dict:
         return {
-            ICom.CONNECTION_KEY: P1Telnet.CONNECTION,
+            ICom.CONNECTION_KEY: P1Jemac.CONNECTION,
             **TCPDevice.get_config(self),
             "meter_serial_number": self.meter_serial_number
         }
     
     def get_name(self) -> str:
-        return "P1Telnet"
+        return "P1Jemac"
     
     def clone(self, ip: Optional[str] = None) -> 'ICom':
         if ip is None:
             ip = self.ip
-        return P1Telnet(ip, self.port, self.meter_serial_number)
+        return P1Jemac(ip, self.port, self.meter_serial_number)
 
-    def _scan_for_devices(self, domain: str) -> Optional['P1Telnet']:
+    def _scan_for_devices(self, domain: str) -> Optional['P1Jemac']:
         mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
         for service in mdns_services:
             if service.address and service.port:
-                p1 = P1Telnet(service.address, self.port, self.meter_serial_number)
+                p1 = P1Jemac(service.address, self.port, self.meter_serial_number)
                 if p1.connect():
                     return p1
         return None
@@ -145,4 +144,4 @@ class P1Jemac(TCPDevice):
         
         config = self.get_config()
         config[self.IP] = host.ip
-        return P1Telnet(**config)
+        return P1Jemac(**config)
