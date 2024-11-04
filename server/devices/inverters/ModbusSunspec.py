@@ -169,13 +169,14 @@ class ModbusSunspec(TCPDevice):
 
     def get_config(self):
         return {
-            ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
             **TCPDevice.get_config(self),
             self.MAC: self.mac,
             self.SLAVE_ID: self.slave_id,
             self.SN: self.get_SN()
         }
-        
+    
+    def _get_connection_type(self) -> str:
+        return ModbusSunspec.CONNECTION
     def get_name(self) -> str:
         return "Sunspec"
     

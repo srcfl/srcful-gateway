@@ -118,11 +118,13 @@ class ModbusSolarman(ModbusTCP):
         super_config = super().get_config()
 
         my_config = {
-            ICom.CONNECTION_KEY: ModbusSolarman.CONNECTION,
             self.SN: self.sn,
             self.VERBOSE: self.verbose
         }
         return {**super_config, **my_config}
+    
+    def _get_connection_type(self) -> str:
+        return ModbusSolarman.CONNECTION
     
     def _create_client(self, **kwargs) -> None:
         try:

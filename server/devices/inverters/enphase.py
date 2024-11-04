@@ -48,7 +48,6 @@ class Enphase(TCPDevice):
         return {
             **TCPDevice.get_config_schema(Enphase.CONNECTION),
             Enphase.bearer_token_key(): 'string, Bearer token for the device'
-
         }
 
     def __init__(self, **kwargs):
@@ -58,12 +57,8 @@ class Enphase(TCPDevice):
         if not self.bearer_token:
             raise ValueError("Bearer token is required")
         
-        self.ip: str = kwargs.get(self.IP, None)
-        self.ip = NetworkUtils.normalize_ip_url(self.ip) # 
-        if not self.ip:
-            raise ValueError("Base URL is required")
-
-        TCPDevice.__init__(self, self.ip, kwargs.get(self.PORT, 80))
+        ip: str = kwargs.get(self.IP, None)
+        TCPDevice.__init__(self, ip, kwargs.get(self.PORT, 80))
         
         self.headers: dict = {"Authorization": f"Bearer {self.bearer_token}"}
         
@@ -97,7 +92,7 @@ class Enphase(TCPDevice):
         data: dict = {}
         # Read data from all endpoints and return the result
         for endpoint_name, endpoint_path in self.ENDPOINTS.items():
-            response = self.session.get(self.ip + endpoint_path)
+            response = self.session.get("http://" + self.ip + endpoint_path)
             # logger.info(f"Response: {response.json()}")
             if response.status_code != 200:
                 logger.error(f"Failed to read data from endpoint {endpoint_name}")
@@ -116,11 +111,13 @@ class Enphase(TCPDevice):
     
     def get_config(self) -> dict:
         return {
-            ICom.CONNECTION_KEY: Enphase.CONNECTION,
-            self.ip_key(): self.ip,
+            **super().get_config(),
             self.mac_key(): self.mac, 
             self.bearer_token_key(): self.bearer_token
         }
+    
+    def _get_connection_type(self) -> str:
+        return Enphase.CONNECTION
     
     def get_name(self) -> str:
         return self.CONNECTION.lower()

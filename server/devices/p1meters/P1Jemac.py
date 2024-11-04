@@ -96,10 +96,12 @@ class P1Jemac(TCPDevice):
     
     def get_config(self) -> dict:
         return {
-            ICom.CONNECTION_KEY: P1Jemac.CONNECTION,
             **TCPDevice.get_config(self),
             "meter_serial_number": self.meter_serial_number
         }
+    
+    def _get_connection_type(self) -> str:
+        return P1Jemac.CONNECTION
     
     def get_name(self) -> str:
         return "P1Jemac"

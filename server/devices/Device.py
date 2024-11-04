@@ -50,8 +50,13 @@ class Device(ICom, ABC):
 
     def get_config(self) -> dict:
         return {
+            ICom.CONNECTION_KEY: self._get_connection_type(),
         }
+
+    @abstractmethod
+    def _get_connection_type(self) -> str:
+        pass
 
     @staticmethod
     def get_config_schema(connection:str):
-        return {"connection": f"string - the connection type, for this object use: {connection}"}
+        return {ICom.CONNECTION_KEY: f"string - the connection type, for this object use: {connection}"}

@@ -122,9 +122,11 @@ class ModbusTCP(Modbus, TCPDevice):
         return {
             **Modbus.get_config(self),
             **TCPDevice.get_config(self),
-            ICom.CONNECTION_KEY: ModbusTCP.CONNECTION,
             self.MAC: self.mac,
         }
+    
+    def _get_connection_type(self) -> str:
+        return ModbusTCP.CONNECTION
     
     def get_SN(self) -> str:
         # TODO: get the serial number from the device use mac for now

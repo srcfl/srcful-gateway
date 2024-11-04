@@ -57,6 +57,9 @@ def device():
         def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
             return TestDevice()
         
+        def _get_connection_type(self) -> str:
+            return "test"
+        
     
     return TestDevice()
 
