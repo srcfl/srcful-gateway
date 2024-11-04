@@ -130,22 +130,11 @@ class Enphase(TCPDevice):
     def clone(self) -> 'ICom':
         return Enphase(**self.get_config())
     
-
-    def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
-
-        if host.mac != self.mac:
-            return None
-        
-        config = self.get_config()
-        config[self.ip_key()] = host.ip
-        config[self.port_key()] = host.port
-        return Enphase(**config)
-    
     def _scan_for_devices(self, domain: str) -> Optional['Enphase']:
         mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
         for service in mdns_services:
             if service.address and service.port:
-                enphase = Enphase(service.address, service.port, self.bearer_token)
+                enphase = Enphase(ip=service.address, port=service.port, bearer_token=self.bearer_token)
                 if enphase.connect():
                     return enphase
         return None
