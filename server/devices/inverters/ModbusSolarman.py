@@ -55,9 +55,8 @@ class ModbusSolarman(ModbusTCP):
     
     @staticmethod
     def get_config_schema():
-        schema = ModbusTCP.get_config_schema()
         return {
-            **schema,
+            **ModbusTCP.get_config_schema(),
             ModbusTCP.sn_key(): "int - Serial number of the logger stick",
         }
     

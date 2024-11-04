@@ -43,12 +43,14 @@ class TCPDevice(Device, ABC):
     @staticmethod
     def get_config_schema():
         return {
+            **Device.get_config_schema(),
             TCPDevice.ip_key(): "string - IP address or hostname of the device",
             TCPDevice.port_key(): "int - port of the device",
         }
     
     def get_config(self) -> dict:
         return {
+            **Device.get_config(self),
             self.IP: self.ip,
             self.PORT: self.port,
         }

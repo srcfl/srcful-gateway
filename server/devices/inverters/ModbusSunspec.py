@@ -60,7 +60,6 @@ class ModbusSunspec(TCPDevice):
     def get_config_schema():
         """Returns the schema for the config and optional parameters of the ModbusSunspec device."""
         return {
-            ICom.CONNECTION_KEY: ModbusSunspec.CONNECTION,
             ModbusSunspec.mac_key(): "string - (Optional) MAC address of the device",
             ModbusSunspec.slave_id_key(): "int - Modbus address of the device",
             **TCPDevice.get_config_schema(),

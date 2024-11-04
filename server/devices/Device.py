@@ -46,3 +46,11 @@ class Device(ICom, ABC):
     def _connect(self, **kwargs) -> bool:
         '''Implementation of device specific connection'''
         pass
+
+    def get_config(self) -> dict:
+        return {
+        }
+
+    @staticmethod
+    def get_config_schema():
+        return {"connection": "string - connection type"}
