@@ -24,9 +24,9 @@ class Handler(PostHandler):
         return json.dumps(self.schema())
 
     def do_post(self, data: RequestData):
-        if "wallet" in data.data:
+        if "api_key" in data.data and "access_key" in data.data:
 
-            t = WalletlessRecoverTask(0, {}, data.data["api_key"], data.data["access_key"])
+            t = WalletlessRecoverTask(0, data.bb, data.data["api_key"], data.data["access_key"])
             t.execute(0)
 
             if not t.reply:
