@@ -1,7 +1,7 @@
 import threading
 
 import server.tasks.harvest as harvest
-from server.devices.ModbusTCP import ModbusTCP
+from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.blackboard import BlackBoard
 
 from .modbus_sim import server

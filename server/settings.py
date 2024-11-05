@@ -130,11 +130,6 @@ class Settings(Observable):
             if config in self._connections:
                 self._connections.remove(config)
                 self.notify_listeners(source)
-                
-        def remove_connection_by_config(self, config: dict, source: ChangeSource):
-            if config in self._connections:
-                self._connections.remove(config)
-                self.notify_listeners(source)
         
 
         @property

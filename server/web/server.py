@@ -48,7 +48,7 @@ class Endpoints:
             "logger": handler.post.logger.Handler(),
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),
-            "walletless/recover": handler.post.walletless_recover.Handler(),
+            "crypto/sign": handler.post.crypto_sign.Handler(),
         }
 
         self.api_delete_dict = {

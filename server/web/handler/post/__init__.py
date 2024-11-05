@@ -5,4 +5,4 @@ from . import modbus_read_write
 from . import echo
 from . import settings
 from . import device
-from . import walletless_recover
+from . import crypto_sign
