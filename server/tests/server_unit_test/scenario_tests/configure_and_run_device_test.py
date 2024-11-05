@@ -18,6 +18,7 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     device.is_disconnected.return_value = False
     device.is_open.return_value = True
     device.get_SN.return_value = NetworkUtils.INVALID_MAC
+    device.compare_host.return_value = False
     
     bb.devices.add(device)
     assert device in bb.devices.lst
@@ -27,7 +28,7 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     device2.connect.return_value = True
     device2.is_open.return_value = True
     device2.is_disconnected.return_value = False
-    
+    device2.compare_host.return_value = False
     bb.devices.add(device2)
     assert device2 in bb.devices.lst
     

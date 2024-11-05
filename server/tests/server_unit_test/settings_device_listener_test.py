@@ -14,10 +14,11 @@ def blackboard():
     return BlackBoard()
 
 @pytest.fixture
-def settings_device_listener(blackboard):
-    return SettingsDeviceListener(blackboard)
+def settings_device_listener(blackboard: BlackBoard) -> SettingsDeviceListener:
+    ret = SettingsDeviceListener(blackboard)
+    blackboard.settings.devices.add_listener(ret._perform_action)   # we hack this to call _perform action directly and avoid the debounce thread
+    return ret
 
-# @pytest.fixture
 def assert_initial_state(settings_device_listener):
     """Helper function to assert the initial state of connections."""
     assert settings_device_listener.blackboard.settings.devices._connections == []
@@ -47,7 +48,7 @@ def test_add_connection_in_old_format(settings_device_listener):
     
     settings_device_listener.blackboard.settings.devices._connections = [old_config]
     
-    settings_device_listener._perform_action(ChangeSource.LOCAL)
+    settings_device_listener._perform_action(ChangeSource.BACKEND)
     
     new_config = settings_device_listener.blackboard._tasks[0].device.get_config()
     assert new_config == old_config
@@ -77,7 +78,7 @@ def test_add_multiple_connections_in_old_format(settings_device_listener):
         }
     ]
     
-    settings_device_listener._perform_action(ChangeSource.LOCAL)
+    settings_device_listener._perform_action(ChangeSource.BACKEND)
     
     assert len(settings_device_listener.blackboard._tasks) == 2
     
@@ -108,7 +109,7 @@ def test_add_duplicate_connections(settings_device_listener):
         }
     ]
     
-    settings_device_listener._perform_action(ChangeSource.LOCAL)
+    settings_device_listener._perform_action(ChangeSource.BACKEND)
     
     tasks = settings_device_listener.blackboard._tasks
     
@@ -130,7 +131,7 @@ def test_settings_updated_after_device_opened_with_old_format(settings_device_li
         }
     ]
     
-    settings_device_listener._perform_action(ChangeSource.LOCAL)
+    settings_device_listener._perform_action(ChangeSource.BACKEND)
     
     task = settings_device_listener.blackboard._tasks[0]
     
@@ -149,8 +150,8 @@ def test_settings_updated_after_device_opened_with_old_format(settings_device_li
     assert conf == settings_device_listener.blackboard.devices.lst[0].get_config()
     
 
-def test_fetch_device_settings_in_old_format(settings_device_listener):
-    # HarvestFactory(settings_device_listener.blackboard)
+def test_fetch_device_settings_in_old_format(settings_device_listener: SettingsDeviceListener):
+    HarvestFactory(settings_device_listener.blackboard)
     settings_device_listener.blackboard.settings.devices._connections = [
         {
             "host": "192.168.0.240",

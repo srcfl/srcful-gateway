@@ -171,22 +171,25 @@ def test_add_multiple_devices():
     bb = BlackBoard()
     set_up_listeners(bb)
     
-    device1 = MagicMock()
+    device1 = MagicMock(spec=ICom)
     device1.get_config.return_value = cfg.TCP_CONFIG
     device1.get_SN.return_value = cfg.TCP_CONFIG.get('sn')
-    bb.settings.devices.add_connection(device1, ChangeSource.LOCAL)
     device1.connect.return_value = True
     device1.is_open.return_value = True
+    device1.compare_host.return_value = False
     
-    
-
-    device2 = MagicMock()
+    device2 = MagicMock(spec=ICom)
     device2.get_config.return_value = cfg.P1_TELNET_CONFIG
     device2.get_SN.return_value = cfg.P1_TELNET_CONFIG.get('meter_serial_number')
-    bb.settings.devices.add_connection(device2, ChangeSource.LOCAL)
     device2.connect.return_value = True
     device2.is_open.return_value = True
-    
+    device2.compare_host.return_value = False
+
+
+    bb.settings.devices.add_connection(device1, ChangeSource.LOCAL)
+    bb.settings.devices.add_connection(device2, ChangeSource.LOCAL)
+
+
     task1 = DevicePerpetualTask(0, bb, device1)
     task2 = DevicePerpetualTask(0, bb, device2)
     

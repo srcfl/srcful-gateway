@@ -7,6 +7,7 @@ from typing import Callable, List
 from abc import ABC, abstractmethod
 from typing import Optional
 from server.devices.ICom import ICom
+from server.devices.IComFactory import IComFactory
 
 
 logger = logging.getLogger(__name__)
@@ -81,8 +82,6 @@ class Settings(Observable):
     def SETTINGS(self):
         return "settings"
 
-
-
     @property
     def harvest(self) -> 'Settings.Harvest':
         return self._harvest
@@ -116,12 +115,18 @@ class Settings(Observable):
     class Devices(Observable):
         def __init__(self, parent: Optional[Observable] = None):
             super().__init__(parent)
-            self._connections = []
+            self._connections: List[dict] = []
 
 
         def add_connection(self, connection: ICom, source: ChangeSource):
             config = connection.get_config()
             if config not in self._connections:
+
+                # Remove old configs that are the same
+                old_configs = [x for x in self._connections if connection.compare_host(IComFactory.create_com(x))]
+                for old_config in old_configs:
+                    self._connections.remove(old_config)
+
                 self._connections.append(config)
                 self.notify_listeners(source)
 

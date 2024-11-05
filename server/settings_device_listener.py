@@ -13,7 +13,11 @@ class SettingsDeviceListener(DebouncedMonitorBase):
             self.blackboard = blackboard
 
         def _perform_action(self, source: ChangeSource):
-    
+
+            # we do nothing if the change is local
+            if source == ChangeSource.LOCAL:
+                return
+            
             for connection in self.blackboard.settings.devices.connections:
                 
                 com = IComFactory.create_com(connection)
