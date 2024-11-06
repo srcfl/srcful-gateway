@@ -323,3 +323,17 @@ def test_duplicate_device_serials(settings:Settings, com):
 
     settings.devices.add_connection(com2, ChangeSource.LOCAL)
     assert len(settings.devices.connections) == 1
+
+def test_remove_connection_old_format(settings:Settings):
+    old_format_settings = {
+        "host": "192.168.1.2",
+        "port": 502,
+        "type": "solaredge",
+        "slave_id": 1,
+        "connection": "TCP"
+    }
+    settings.devices._connections = [old_format_settings]
+
+    com = ModbusTCP(**old_format_settings)
+    settings.devices.remove_connection(com, ChangeSource.LOCAL)
+    assert len(settings.devices.connections) == 0

@@ -133,10 +133,17 @@ class Settings(Observable):
 
         def remove_connection(self, connection: ICom, source: ChangeSource):
             config = connection.get_config()
-            if config in self._connections:
-                self._connections.remove(config)
+            removed = False
+
+            # configurations may change format between version, so we need to check for equivalent configs
+            equivalent_configs = [x for x in self._connections if x in self._connections or IComFactory.create_com(x).get_config() in self._connections]
+
+            for equivalent_config in equivalent_configs:
+                self._connections.remove(equivalent_config)
+
+            # notify if something was removed
+            if len(equivalent_configs) > 0:
                 self.notify_listeners(source)
-        
 
         @property
         def CONNECTIONS(self):
