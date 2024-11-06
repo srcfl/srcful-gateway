@@ -164,15 +164,11 @@ def test_fetch_device_settings_in_old_format(settings_device_listener: SettingsD
     ]
     settings_device_listener._perform_action(ChangeSource.BACKEND) # _connection gets updated at this point to conform to the new format
     
-    task = settings_device_listener.blackboard._tasks[0]
+    task = settings_device_listener.blackboard.purge_tasks()[0]
     
     assert isinstance(task, DevicePerpetualTask)
     
     mock_device_methods(task)
-    
-    task = settings_device_listener.blackboard.purge_tasks()
-    
-    task = task[0]
     
     def mock_connect():
         task.device.mac = "00:00:00:00:00:02"  # Set "real" MAC
