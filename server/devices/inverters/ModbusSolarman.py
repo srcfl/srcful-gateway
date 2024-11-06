@@ -72,7 +72,7 @@ class ModbusSolarman(ModbusTCP):
             self._create_client(**kwargs)
             if not self.client.sock:
                 log.error("FAILED to open inverter: %s", self._get_type())
-            if self.client.socket:
+            if self.client.sock:
                 self.mac = NetworkUtils.get_mac_from_ip(self.ip)
             return bool(self.client.sock)
         except Exception as e:
@@ -80,7 +80,7 @@ class ModbusSolarman(ModbusTCP):
             log.error(e)
             return False
 
-    def _is_open(self) -> bool:
+    def is_open(self) -> bool:
         try:
             return bool(self.client and self.client.sock)
         except Exception as e:

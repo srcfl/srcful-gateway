@@ -15,7 +15,11 @@ class Handler(GetHandler):
         supported_inverters = ModbusDeviceProfiles().get_supported_devices()
 
         # The protocol part is temporarily hardcoded since we only support modbus and solarman
-        supported_inverters = [{'name': profile.name, 'dname': profile.display_name, 'proto': 'mb' if profile.protocol == ProtocolKey.MODBUS.value else 'sol'} for profile in supported_inverters]
+        supported_inverters = [{'name': profile.name, 'dname': profile.display_name, 'proto': 'mb' if profile.protocol == ProtocolKey.MODBUS else 'sol'} for profile in supported_inverters]
+        
+        # Add SunSpec and Enphase to the supported inverters
+        supported_inverters.append({'name': 'sunspec', 'dname': 'SunSpec Compatible Device', 'proto': 'sunspec'})
+        supported_inverters.append({'name': 'enphase', 'dname': 'Enphase', 'proto': 'rest'})
         
         ret = {"inverters": supported_inverters}
         return ret
