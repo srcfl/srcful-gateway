@@ -1,5 +1,6 @@
 import pytest
 import json
+from server.network.network_utils import HostInfo
 from server.settings import Settings, ChangeSource
 from server.devices.inverters.ModbusTCP import ModbusTCP
 import server.tests.config_defaults as cfg
@@ -310,3 +311,15 @@ def test_update_from_backend(settings:Settings, com):
     assert called
     assert settings.harvest.endpoints == ["https://backend.com"]
     assert settings.devices.connections == [com.get_config()]
+
+
+def test_duplicate_device_serials(settings:Settings, com):
+    settings.devices.add_connection(com, ChangeSource.LOCAL)
+
+    com2 = com._clone_with_host(HostInfo("192.168.1.2", com.port, com.mac))
+
+
+    assert com2.get_SN() == com.get_SN()
+
+    settings.devices.add_connection(com2, ChangeSource.LOCAL)
+    assert len(settings.devices.connections) == 1

@@ -6,6 +6,8 @@ from server.blackboard import BlackBoard
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.harvestFactory import HarvestFactory
 from server.network.network_utils import NetworkUtils
+import server.tests.config_defaults as cfg
+
 
 def test_harvest_from_two_devices_with_one_device_reconnection():
     # Setup
@@ -17,18 +19,21 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     device.connect.return_value = True
     device.is_disconnected.return_value = False
     device.is_open.return_value = True
-    device.get_SN.return_value = NetworkUtils.INVALID_MAC
+    device.get_SN.return_value = "device1"
     device.compare_host.return_value = False
+    device.get_config.return_value = {**cfg.TCP_CONFIG, "sn": "device1"}
     
     bb.devices.add(device)
     assert device in bb.devices.lst
     
     # Create and connect second device
-    device2 = MagicMock()
+    device2 = MagicMock(spec=ICom)
     device2.connect.return_value = True
     device2.is_open.return_value = True
     device2.is_disconnected.return_value = False
     device2.compare_host.return_value = False
+    device2.get_SN.return_value = "device2"
+    device2.get_config.return_value = {**cfg.TCP_CONFIG, "sn": "device2"}
     bb.devices.add(device2)
     assert device2 in bb.devices.lst
     

@@ -133,7 +133,7 @@ class ModbusTCP(Modbus, TCPDevice):
         return self.mac
 
     def _create_client(self, **kwargs) -> None:
-        self.client =  ModbusClient(host=self.ip, port=self.port, unit_id=self.slave_id, **kwargs)
+        self.client = ModbusClient(host=self.ip, port=self.port, unit_id=self.slave_id, **kwargs)
 
     def _read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
         resp = None

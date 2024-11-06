@@ -122,8 +122,9 @@ class Settings(Observable):
             config = connection.get_config()
             if config not in self._connections:
 
-                # Remove old configs that are the same
-                old_configs = [x for x in self._connections if connection.compare_host(IComFactory.create_com(x))]
+                # Remove old configs that are the same either the same host or the same serial number
+                old_configs = [x for x in self._connections if connection.compare_host(IComFactory.create_com(x)) or connection.get_SN() == IComFactory.create_com(x).get_SN()]
+
                 for old_config in old_configs:
                     self._connections.remove(old_config)
 
