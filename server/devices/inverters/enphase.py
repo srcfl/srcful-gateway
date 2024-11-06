@@ -52,6 +52,9 @@ class Enphase(TCPDevice):
             Enphase.bearer_token_key(): 'string, Bearer token for the device'
         }
 
+    def make_get_request(self, path: str) -> requests.Response:
+        return self.session.get(self.base_url + path)
+
     def __init__(self, **kwargs):
         
         self.bearer_token: str = kwargs.get(self.bearer_token_key(), None)
@@ -61,6 +64,8 @@ class Enphase(TCPDevice):
         
         ip: str = kwargs.get(self.IP, None)
         TCPDevice.__init__(self, ip, kwargs.get(self.PORT, 80))
+        
+        self.base_url = f"http://{self.ip}:{self.port}"
         
         self.headers: dict = {"Authorization": f"Bearer {self.bearer_token}"}
         
@@ -76,7 +81,7 @@ class Enphase(TCPDevice):
         self.session.verify = False
 
         # make a request to the first production endpoint to check if the device is reachable
-        response = self.session.get(self.ip + self.ENDPOINTS[Enphase.PRODUCTION])
+        response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
         
         if response.status_code != 200:
             logger.error(f"Failed to connect to {self.ip}. Reason: {response.text}")
@@ -94,7 +99,7 @@ class Enphase(TCPDevice):
         data: dict = {}
         # Read data from all endpoints and return the result
         for endpoint_name, endpoint_path in self.ENDPOINTS.items():
-            response = self.session.get("http://" + self.ip + endpoint_path)
+            response = self.make_get_request(endpoint_path)
             # logger.info(f"Response: {response.json()}")
             if response.status_code != 200:
                 logger.error(f"Failed to read data from endpoint {endpoint_name}")
@@ -103,7 +108,7 @@ class Enphase(TCPDevice):
         return data
        
     def is_open(self) -> bool:
-        return self.session and self.session.get(self.ip + self.ENDPOINTS[Enphase.PRODUCTION]).status_code == 200
+        return self.session and self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION]).status_code == 200
     
     def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
         return 1000*60*10 # 10 minutes
