@@ -77,27 +77,19 @@ def test_execute_when_mining(mock_send_entropy, mock_get_cert_and_key, mock_blac
     mock_send_entropy.assert_called_once()
     assert result == task
 
-@pytest.fixture
-def reset_last_instance_id():
-    global _LAST_INSTANCE_ID
-    original_value = _LAST_INSTANCE_ID
-    _LAST_INSTANCE_ID = 0
-    yield
-    _LAST_INSTANCE_ID = original_value
+def test_last_instance_id_increments(mock_blackboard):
 
-def test_last_instance_id_increments(mock_blackboard, reset_last_instance_id):
     first_instance_id = _LAST_INSTANCE_ID
     task1 = EntropyTask(0, mock_blackboard)
     task2 = EntropyTask(0, mock_blackboard)
     task3 = EntropyTask(0, mock_blackboard)
 
-    assert task1.instance_id == first_instance_id + 1
-    assert task2.instance_id == 2
-    assert task3.instance_id == 3
+    assert task2.instance_id == task1.instance_id + 1
+    assert task3.instance_id == task2.instance_id + 1
 
 @patch.object(EntropyTask, '_get_cert_and_key')
 @patch.object(EntropyTask, 'send_entropy')
-def test_only_latest_instance_executes(mock_send_entropy, mock_get_cert_and_key, mock_blackboard, reset_last_instance_id):
+def test_only_latest_instance_executes(mock_send_entropy, mock_get_cert_and_key, mock_blackboard):
     mock_get_cert_and_key.return_value = ("cert_pem", "private_key")
 
     task1 = EntropyTask(0, mock_blackboard)
@@ -116,7 +108,7 @@ def test_only_latest_instance_executes(mock_send_entropy, mock_get_cert_and_key,
     mock_send_entropy.assert_called_once()
 
 @patch('logging.Logger.info')
-def test_non_latest_instance_logs_termination(mock_log_info, mock_blackboard, reset_last_instance_id):
+def test_non_latest_instance_logs_termination(mock_log_info, mock_blackboard):
     task1 = EntropyTask(0, mock_blackboard)
     task2 = EntropyTask(0, mock_blackboard)
 
@@ -128,7 +120,7 @@ def test_non_latest_instance_logs_termination(mock_log_info, mock_blackboard, re
 
 @patch.object(EntropyTask, '_get_cert_and_key')
 @patch.object(EntropyTask, 'send_entropy')
-def test_latest_instance_executes_multiple_times(mock_send_entropy, mock_get_cert_and_key, mock_blackboard, reset_last_instance_id):
+def test_latest_instance_executes_multiple_times(mock_send_entropy, mock_get_cert_and_key, mock_blackboard):
     mock_get_cert_and_key.return_value = ("cert_pem", "private_key")
 
     task = EntropyTask(0, mock_blackboard)

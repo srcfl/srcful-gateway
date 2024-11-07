@@ -18,11 +18,8 @@ from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
-<<<<<<< HEAD
 import server.tasks.entropyTask as entropy
-=======
 from server.settings_device_listener import SettingsDeviceListener
->>>>>>> main
 
 from server.blackboard import BlackBoard
 
@@ -145,6 +142,21 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 else:
                     logger.info("No need to save settings to backend as the source is the backend")
 
+    class SettingsEntropyListener(DebouncedMonitorBase):
+        def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
+            super().__init__(debounce_delay)
+            self.blackboard = blackboard
+
+        def _perform_action(self, source: ChangeSource):
+            logger.info("SettingsEntropyListener detected a change, adding entropy task")
+            if self.blackboard.settings.entropy.do_mine:
+                logger.info("Entropy mining is enabled, adding entropy task")
+                self.blackboard.add_task(entropy.EntropyTask(self.blackboard.time_ms() + entropy.generate_poisson_delay(), self.blackboard))
+
+    bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
+    bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
+    bb.settings.entropy.add_listener(SettingsEntropyListener(bb).on_change)
+    
     
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
