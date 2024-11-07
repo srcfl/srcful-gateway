@@ -1,13 +1,15 @@
 import random
 import time
+import logging
 import server.crypto.crypto as crypto
 from server.message import Message
 from server.tasks.itask import ITask
 from server.settings import Settings, ChangeSource
-import logging
-from server.inverters.ICom import ICom
+from server.devices.ICom import ICom
+from server.network.network_utils import HostInfo
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class BlackBoard:
@@ -44,8 +46,8 @@ class BlackBoard:
         self._settings.entropy.set_mqtt_port(8883, ChangeSource.LOCAL)
         self._settings.entropy.set_mqtt_topic("entropy/srcful", ChangeSource.LOCAL)
         self._crypto_state = crypto_state if crypto_state is not None else {}
-
-
+        self.available_devices = {}
+        
     def add_task(self, task: ITask):
         self._tasks.append(task)
     
@@ -129,6 +131,7 @@ class BlackBoard:
         state['crypto'] = self.crypto_state()
         state['network'] = self.network_state()
         state['devices'] = self.devices_state()
+        state['available_devices'] = [device.get_config() for device in self.get_available_devices()]
         return state
     
     def message_state(self) -> dict:
@@ -174,7 +177,13 @@ class BlackBoard:
         ret['supported'] = supported.Handler().get_supported_inverters()
         return ret
     
-
+    def get_available_devices(self) -> list[ICom]:
+        return self.available_devices
+    
+    def set_available_devices(self, devices: list[ICom]):
+        self.available_devices = devices
+        self._save_state()
+    
     @property
     def chip_death_count(self):
         return self._chip_death_count
@@ -210,7 +219,7 @@ class BlackBoard:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_version(self) -> str:
-        return "0.14.3"
+        return "0.15.6"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:
@@ -234,10 +243,28 @@ class BlackBoard:
 
         def remove_listener(self, observer):
             self._observers.remove(observer)
+            
+        def contains(self, device: ICom) -> bool:
+            return self.find_sn(device.get_SN()) is not None
+
+        def find_sn(self, sn: str) -> ICom | None:
+            for d in self.lst:
+                if d.get_SN() == sn:
+                    return d
+            return None
 
         def add(self, device:ICom):
             assert device.is_open(), "Only open devices can be added to the blackboard"
+            
+            existing_device = self.find_sn(device.get_SN())
+            if existing_device == device:
+                return
+            
+            if existing_device:
+                self.remove(existing_device)
+            
             self.lst.append(device)
+                
             for o in self._observers:
                 o.add_device(device)
 
@@ -246,5 +273,7 @@ class BlackBoard:
                 self.lst.remove(device)
                 for o in self._observers:
                     o.remove_device(device)
+                    
+                    
 
 

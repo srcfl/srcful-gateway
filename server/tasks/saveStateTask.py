@@ -1,8 +1,7 @@
+import logging
 from server.blackboard import BlackBoard
-from server.settings import Settings
 from .configurationMutationTask import ConfigurationMutationTask
 
-import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -35,8 +34,6 @@ class SaveStatePerpetualTask(SaveStateTask  ):
         super()._on_200(reply)
         self.time = self.time + 1000 * 60 * 5 # 5 minutes
         self.data = self.bb.state
-        logger.info("##State##: %s", self.data)
-        logger.info("##Time##: %s", self.time)
         return self
 
     def _on_error(self, reply):

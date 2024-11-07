@@ -34,6 +34,7 @@ class GetNameTask(SrcfulAPICallTask):
         return {"query": q}
 
     def _on_error(self, reply: requests.Response) -> int:
+        self.name = None
         return 0
 
     def _on_200(self, reply: requests.Response):

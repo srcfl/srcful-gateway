@@ -5,9 +5,9 @@ from unittest.mock import MagicMock
 import pytest
 
 from server.web.handler.requestData import RequestData
-from server.web.handler.get.modbus import HoldingHandler, InputHandler  # adapt to your actual module import
+from server.web.handler.get.modbus_read import HoldingHandler, InputHandler  # adapt to your actual module import
 from server.blackboard import BlackBoard
-from server.inverters.modbus import Modbus
+from server.devices.inverters.modbus import Modbus
 
 @pytest.fixture
 def inverter_fixture():

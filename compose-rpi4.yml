@@ -1,17 +1,15 @@
-version: '2.4'
+# RPI4
 
 services:
-
   web:
-    ports:
-      - "80:5000"
     build: ./server
-    container_name: srcful-gw
+    container_name: eGW-web
     restart: always
+    network_mode: host
     environment:
       - HOST_IP
       - REST_SERVICE_PORT=80 # should correspond to the port in the web service below
-      - REST_SERVICE_PORT_INTERNAL=5000 # should correspond to the port in the web service below
+      - REST_SERVICE_PORT_INTERNAL=80 # should correspond to the port in the web service below
       - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
       - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
     devices:
@@ -20,20 +18,20 @@ services:
       - srcful-data:/data/srcful
       - /var/run/dbus:/host/run/dbus
     labels:
-      io.balena.features.supervisor-api: 1  # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
+      io.balena.features.supervisor-api: 1 # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
 
   bluetooth:
     build: ./bluetooth
-    container_name: ble
+    container_name: eGW-ble
     privileged: true
-    network_mode: host
-    restart: always
+    network_mode: host # could be needed for ble communication, test?
     environment:
       - HOST_IP
       - REST_SERVICE_PORT=80
-      - REST_SERVICE_PORT_INTERNAL=5000
+      - REST_SERVICE_PORT_INTERNAL=80
       - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
       - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
+    restart: always
     depends_on:
       - "web"
     volumes:
@@ -41,6 +39,5 @@ services:
       - /sys:/sys
       - /lib/modules:/lib/modules
 
-  
 volumes:
   srcful-data:

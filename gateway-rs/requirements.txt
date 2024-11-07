@@ -1,0 +1,7 @@
+Flask==3.0.3
+Werkzeug==3.0.6
+waitress==3.0.1
+base58==2.1.1
+protobuf==5.27.1
+grpcio==1.64.1
+requests==2.32.0

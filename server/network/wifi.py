@@ -3,6 +3,7 @@ import uuid
 import sys
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 try:
     import dbus
@@ -64,7 +65,7 @@ else:
                     logger.debug("device ip address %s", address_data[0]['address'])
                     if address_data[0]['address'] != '127.0.0.1':
                         return address_data[0]['address']
-        print("No active connection found")
+        logger.info("No active connection found")
         return '0.0.0.0'
     
 

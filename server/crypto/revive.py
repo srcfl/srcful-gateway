@@ -18,6 +18,7 @@ from cryptoauthlib import (
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def sleep():
@@ -31,7 +32,6 @@ def get_pubkey():
     code = atcab_get_pubkey(0, public_key)
     msg = f"atcab_get_pubkey: {code} {public_key.hex()}"
     logger.debug(msg)
-    print(msg)
     return code
 
 
@@ -41,7 +41,6 @@ def get_info():
     code = atcab_info(info)
     msg = f"atcab_info: {code} {info.hex()}"
     logger.debug(msg)
-    print(msg)
     return code
 
 
@@ -82,5 +81,5 @@ def run():
 
 if __name__ == "__main__":
     ret = run()
-    print(f"final return value (0 == success): {ret}")
+    logger.info(f"final return value (0 == success): {ret}")
     sys.exit(ret)

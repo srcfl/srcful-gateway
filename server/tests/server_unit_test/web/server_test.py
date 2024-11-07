@@ -43,7 +43,7 @@ def test_handler_api_get_enpoints_params(mock_setup, mock_handle, mock_finish):
     path, query = h.pre_do("/api/inverter/modbus/holding/1234?test=hello")
 
     # this could really be any handler
-    from server.web.handler.get.modbus import HoldingHandler
+    from server.web.handler.get.modbus_read import HoldingHandler
     handlers = {"inverter/modbus/holding/{address}": HoldingHandler()}
 
     handler, params = h.get_api_handler(path, "/api/", h.convert_keys_to_regex(handlers))

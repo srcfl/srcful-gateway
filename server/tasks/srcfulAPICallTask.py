@@ -3,13 +3,12 @@ import logging
 import requests
 from typing import List, Union, Tuple
 from .itask import ITask
-
 from server.blackboard import BlackBoard
-
 from .task import Task
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def arg_2_str(arg):
@@ -49,15 +48,15 @@ class SrcfulAPICallTask(Task, ABC):
             # pylint: disable=assignment-from-none
             data = self._data()
             if data is not None:
-                log.debug("%s %s", self.post_url, arg_2_str(data))
+                logger.debug("%s %s", self.post_url, arg_2_str(data))
                 return requests.post(self.post_url, data=data, timeout=5)
             else:
                 json = self._json()
                 if json is not None:
-                    log.debug("%s %s", self.post_url, arg_2_str(json))
+                    logger.debug("%s %s", self.post_url, arg_2_str(json))
                     return requests.post(self.post_url, json=json, timeout=5)
                 else:
-                    log.debug("%s %s", self.post_url, "no data or json")
+                    logger.debug("%s %s", self.post_url, "no data or json")
                     return requests.post(self.post_url, timeout=5)
 
         try:
@@ -85,7 +84,7 @@ class SrcfulAPICallTask(Task, ABC):
                 return tasks
                 
         except Exception as e:
-            log.exception("Error in SrcfulAPICallTask %s", e)
+            logger.exception("Error in SrcfulAPICallTask %s", e)
             self.reply = requests.Response()
             retry_delay = self._on_error(self.reply)
             if retry_delay > 0:

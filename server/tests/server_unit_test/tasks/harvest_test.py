@@ -1,12 +1,16 @@
+import json
+import time
+from server.devices.ICom import HarvestDataType, ICom
 import server.tasks.harvest as harvest
 import server.tasks.harvestTransport as harvestTransport
 import server.tasks.openDevicePerpetualTask as oit
 from unittest.mock import Mock, patch
 import pytest
-from server.inverters.supported_inverters.profiles import InverterProfile
-
+from unittest.mock import MagicMock
 from server.blackboard import BlackBoard
 from server.settings import Settings, ChangeSource
+from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
+from server.tasks.openDeviceTask import OpenDeviceTask
 
 
 
@@ -23,6 +27,7 @@ def test_create_harvest_transport():
 def test_inverter_terminated():
     mock_inverter = Mock()
     mock_inverter.is_open.return_value = False
+    mock_inverter.is_disconnected.return_value = False
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
@@ -31,15 +36,16 @@ def test_inverter_terminated():
 
 
 def test_execute_harvest():
-    mock_inverter = Mock()
+    mock_inverter = Mock(spec=ICom)
     registers = {"1": "1717"}
     mock_inverter.read_harvest_data.return_value = registers
     mock_inverter.connect.return_value = True
+    mock_inverter.get_backoff_time_ms.return_value = 1000
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
     assert ret is t
-    assert t.barn[17] == registers
+    assert t.barn[max(t.barn.keys())] == registers
     assert len(t.barn) == 1
     assert t.time > 17
 
@@ -47,21 +53,26 @@ def test_execute_harvest_x10():
     # in this test we check that we get the desired behavior when we execute a harvest task 10 times
     # the first 9 times we should get the same task back
     # the 10th time we should get a list of 2 tasks back
-    mock_inverter = Mock()
+    mock_inverter = Mock(spec=ICom)
     registers = [{"1": 1717 + x} for x in range(10)]
     bb = BlackBoard()
     bb.settings.harvest.clear_endpoints(ChangeSource.LOCAL)
     bb.settings.harvest.add_endpoint("http://dret.com:8080", ChangeSource.LOCAL)
     t = harvest.Harvest(0, bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     mock_inverter.connect.return_value = True
+    mock_inverter.get_backoff_time_ms.return_value = 1000
 
+    index_time_map = {}
 
     for i in range(9):
         mock_inverter.read_harvest_data.return_value = registers[i]
         ret = t.execute(i)
         assert ret is t
-        assert t.barn[i] == registers[i]
+        # the largest key is the last one
+        assert t.barn[max(t.barn.keys())] == registers[i]
         assert len(t.barn) == i + 1
+        index_time_map[i] = max(t.barn.keys())
+        time.sleep(0.01) # we need to sleep a bit to avoid writing on the same key on the barn
 
     mock_inverter.read_harvest_data.return_value = registers[9]
     ret = t.execute(17)
@@ -70,94 +81,39 @@ def test_execute_harvest_x10():
     assert len(ret) == 2
     assert ret[0] is t
     assert ret[1] is not t
-    assert ret[1].barn == {
-        0: registers[0],
-        1: registers[1],
-        2: registers[2],
-        3: registers[3],
-        4: registers[4],
-        5: registers[5],
-        6: registers[6],
-        7: registers[7],
-        8: registers[8],
-        17: registers[9],
+    expected_barn = {
+        index_time_map[0]: registers[0],
+        index_time_map[1]: registers[1],
+        index_time_map[2]: registers[2],
+        index_time_map[3]: registers[3],
+        index_time_map[4]: registers[4],
+        index_time_map[5]: registers[5],
+        index_time_map[6]: registers[6],
+        index_time_map[7]: registers[7],
+        index_time_map[8]: registers[8],
+        max(ret[1].barn.keys()): registers[9],
     }
+
+    assert ret[1].barn == expected_barn
 
     # check that the transport has the correct post_url according to the settings
     assert ret[1].post_url == bb.settings.harvest.endpoints[0]
 
 
-# def test_adaptive_backoff():
-#     mock_inverter = Mock()
-#     mock_inverter.connect.return_value = True
-    
-#     mock_bb = Mock()
-#     mock_bb.time_ms.return_value = 1000
-
-#     t = harvest.Harvest(0, mock_bb, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
-#     t.execute(17)
-
-#     assert t.backoff_time == 1966
-
-#     # Mock one failed poll -> We back off by 2 seconds instead of 1
-#     t.device.read_harvest_data.side_effect = Exception("mocked exception")
-#     t.execute(17)
-
-#     assert t.backoff_time == 3932
-
-#     # Save the initial minbackoff_time to compare with the actual minbackoff_time later on
-#     backoff_time = t.backoff_time
-
-#     # Number of times we want to reach max backoff time, could be anything
-#     num_of_lost_connections = 900
-
-#     # Now we fail until we reach max backoff time
-#     for _i in range(num_of_lost_connections):
-#         t.execute(17)
-#         backoff_time *= 2
-
-#         if backoff_time > 256000:
-#             backoff_time = 256000
-
-#         assert t.backoff_time == backoff_time
-#         assert t.backoff_time <= 256000
-
-
-# def test_adaptive_poll():
-#     mock_inverter = Mock()
-#     mock_inverter.connect.return_value = True
-
-#     mock_bb = Mock()
-#     mock_bb.time_ms.return_value = 1000
-
-#     t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
-#     t.execute(17)
-
-#     assert t.backoff_time == 1966
-
-#     t.device.read_harvest_data.side_effect = Exception("mocked exception")
-#     t.backoff_time = t.max_backoff_time
-#     t.execute(17)
-
-#     assert t.backoff_time == 256000
-
-#     t.device.read_harvest_data.side_effect = None
-#     t.execute(17)
-
-#     assert t.backoff_time == 230400.0
-
-
 def _create_mock_bb():
-    mock_bb = Mock()
+    mock_bb = Mock(spec=BlackBoard)
     mock_bb.time_ms.return_value = 1000
     mock_bb.settings = Settings()
     mock_bb.settings.harvest.add_endpoint("http://localhost:8080", ChangeSource.LOCAL)
     return mock_bb
 
 def test_execute_harvest_no_transport():
-    mock_inverter = Mock()
-    mock_inverter.is_terminated.return_value = False
+    mock_inverter = Mock(spec=ICom)
+    mock_inverter.is_disconnected.return_value = False
+    mock_inverter.get_backoff_time_ms.return_value = 1000
+
     registers = [{"1": 1717 + x} for x in range(10)]
+
 
     mock_bb = _create_mock_bb()
 
@@ -165,6 +121,7 @@ def test_execute_harvest_no_transport():
 
     for i in range(len(registers)):
         mock_inverter.read_harvest_data.return_value = registers[i]
+        mock_bb.time_ms.return_value = 1000 + i * 1000
         t = t.execute(i)
 
     # we should now have issued a transport and the barn should be empty
@@ -179,110 +136,22 @@ def test_execute_harvest_no_transport():
     assert len(transport.barn) == 10
 
 def test_execute_harvest_device_terminated():
-    mock_inverter = Mock()
+    mock_inverter = Mock(spec=ICom)
     registers = {"1": "1717"}
     mock_inverter.read_harvest_data.return_value = registers
     mock_inverter.connect.return_value = True
+    mock_inverter.get_backoff_time_ms.return_value = 1000
 
     t = harvest.Harvest(0, BlackBoard(), mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
     assert ret is t
-    assert t.barn[17] == registers
+    assert t.barn[max(t.barn.keys())] == registers
     assert len(t.barn) == 1
     assert t.time > 17
 
     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
     ret = t.execute(17)
     assert len(ret) == 2
-  
-
-# def test_execute_harvest_incremental_backoff_increasing():
-#     mock_inverter = Mock()
-#     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
-#     mock_inverter.is_terminated.return_value = False
-
-#     mock_bb = _create_mock_bb()
-
-
-#     t = harvest.Harvest(0, mock_bb, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
-
-#     while t.backoff_time < t.max_backoff_time:
-#         old_time = t.backoff_time
-#         ret = t.execute(17)
-#         assert ret is t
-#         assert ret.backoff_time > old_time
-#         assert ret.time == 17 + ret.backoff_time
-
-#     assert ret.backoff_time == t.max_backoff_time
-
-
-# def test_execute_harvest_incremental_backoff_reset():
-#     mock_inverter = Mock()
-#     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
-#     mock_inverter.is_terminated.return_value = False
-    
-#     mock_bb = _create_mock_bb()
-
-#     t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
-
-#     while t.backoff_time < t.max_backoff_time:
-#         ret = t.execute(17)
-
-#     mock_inverter.read_harvest_data.side_effect = None
-#     mock_inverter.read_harvest_data.return_value = {"1": 1717}
-#     ret = t.execute(17)
-#     assert ret is t
-#     assert ret.time == 17 + ret.backoff_time
-
-
-# def test_execute_harvest_incremental_backoff_terminate_on_max():
-#     mock_inverter = Mock()
-#     mock_inverter.read_harvest_data.side_effect = Exception("mocked exception")
-#     mock_inverter.connect.return_value = True
-    
-#     mock_bb = _create_mock_bb()
-
-#     t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
-
-#     while t.backoff_time < t.max_backoff_time:
-#         ret = t.execute(17)
-
-#     # we are now at max backoff time and the inverter should be terminated
-#     # the tasks returned should be t and the open inverter task
-#     ret = t.execute(17)
-#     assert len(ret) == 2
-#     oit_ix = 0 if type(ret[0]) is oit.DevicePerpetualTask else 1
-#     assert type(ret[oit_ix]) is oit.DevicePerpetualTask
-#     assert ret[(oit_ix + 1) % 2] is t
-
-#     # make sure the open inverter task has a cloned inverter
-#     assert mock_inverter.clone.call_count == 1
-    
-#     # assert that inverter has been terminated
-#     assert t.device.disconnect.call_count == 1
-#     mock_inverter.is_open.return_value = False
-
-#     # make sure we get nothing as the barn is empty
-#     assert t.execute(17) == []
-
-#     # Test that the execute method returns a HarvestTransport object when the has some data
-#     t.barn[17] = {"1": 1717}
-#     ret = t.execute(17)
-#     assert type(ret[0]) is harvestTransport.HarvestTransport
-
-# def test_max_backoftime_leq_than_max():
-#     registers = [{"1": 1717 + x} for x in range(10)]
-#     mock_inverter = Mock()
-#     mock_inverter.read_harvest_data.return_value = registers[0]
-#     mock_inverter.is_terminated.return_value = False
-    
-#     mock_bb = _create_mock_bb()
-#     mock_bb.time_ms.return_value = 999999999999999999
-
-#     t = harvest.Harvest(0, mock_bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
-
-#     t.execute(17)  # this will cause a really long elapsed time
-#     assert t.backoff_time <= t.max_backoff_time
 
 
 @pytest.fixture
@@ -332,3 +201,57 @@ def test_on_error():
     instance = harvestTransport.HarvestTransport(0, {}, {}, headers)
     instance._on_error(response)
 
+
+def test_execute_harvests_from_two_devices():
+    bb = BlackBoard()
+    device = MagicMock()
+    device.connect.return_value = True
+    device.is_open.return_value = True
+    device.compare_host.return_value = False
+    task = OpenDeviceTask(0, bb, device)
+    task.execute(0)
+    
+    assert device in bb.devices.lst
+    
+    assert task.execute(0) is None # It is already in the blackboard
+    
+    # We add a second device
+    device2 = MagicMock()
+    device2.connect.return_value = True
+    device2.is_open.return_value = True
+    device2.compare_host.return_value = False
+    task2 = OpenDeviceTask(0, bb, device2)
+    task2.execute(0)
+    
+    assert device2 in bb.devices.lst
+    
+    assert task2.execute(0) is None # It is already in the blackboard
+    
+    
+    # Now we create a harvest task
+    harvest_task = harvest.Harvest(0, bb, device, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task.execute(0)
+    
+    assert device.read_harvest_data.called
+    
+    harvest_task2 = harvest.Harvest(0, bb, device2, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task2.execute(0)
+    
+    assert device2.read_harvest_data.called
+
+def test_create_headers():
+    device = MagicMock(spec=ICom)
+    device.get_harvest_data_type.return_value = HarvestDataType.MODBUS_REGISTERS
+    device.get_SN.return_value = "1234567890"
+    device.get_name.return_value = "Volvo 240"
+
+    bb = BlackBoard()
+    harvest_task = harvest.Harvest(0, bb, device, harvestTransport.DefaultHarvestTransportFactory())
+
+    headers = harvest_task._create_headers(device)
+
+    #  check so the headers can be json serialized
+    try:
+        json.dumps(headers)
+    except Exception as e:
+        assert False

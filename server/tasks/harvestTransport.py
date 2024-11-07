@@ -1,15 +1,13 @@
 import logging
 import requests
-from server.inverters.supported_inverters.profiles import InverterProfile
-from server.inverters.der import DER
-from server.inverters.modbus import Modbus
+from server.devices.ICom import ICom
 from server.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run
-
 from .srcfulAPICallTask import SrcfulAPICallTask
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class IHarvestTransport(SrcfulAPICallTask):
@@ -17,7 +15,7 @@ class IHarvestTransport(SrcfulAPICallTask):
 
 
 class ITransportFactory:
-    def __call__(self, event_time: int, bb: BlackBoard, der: DER, barn: dict) -> IHarvestTransport:
+    def __call__(self, event_time: int, bb: BlackBoard, barn: dict, headers: dict) -> IHarvestTransport:
         pass
 
 
@@ -34,8 +32,8 @@ class HarvestTransport(IHarvestTransport):
             try:
                 jwt = chip.build_jwt(self.barn, self.headers, 5)
                 HarvestTransport.do_increase_chip_death_count = True
-            except crypto.ChipError as e:
-                log.error("Error creating JWT: %s", e)
+            except crypto.Chip.Error as e:
+                logger.error("Error creating JWT: %s", e)
                 raise e
         
         return jwt
@@ -47,6 +45,7 @@ class HarvestTransport(IHarvestTransport):
         while retries > 0:
             try:
                 jwt = self._create_jwt()
+                logger.debug("HarvestTransport JWT: %s", jwt)
                 return jwt
             except crypto.ChipError as e:
                 exception = e
@@ -56,20 +55,20 @@ class HarvestTransport(IHarvestTransport):
                 
             except Exception as e:
                 exception = e
-                log.error("Error creating JWT: %s", e)
+                logger.error("Error creating JWT: %s", e)
 
         # if we end up here the chip has not been revived        
         if HarvestTransport.do_increase_chip_death_count:
             self.bb.increment_chip_death_count()
             HarvestTransport.do_increase_chip_death_count = False
-        log.info("Incrementing chip death count to: %i ", self.bb.chip_death_count)
+        logger.info("Incrementing chip death count to: %i ", self.bb.chip_death_count)
         raise exception
 
     def _on_200(self, reply):
-        log.info("Response: %s", reply)
+        logger.info("Response: %s", reply)
 
     def _on_error(self, reply: requests.Response):
-        log.warning("Error in harvest transport: %s", str(reply))
+        logger.warning("Error in harvest transport: %s", str(reply))
         return 0
     
 
@@ -109,18 +108,18 @@ class LocalHarvestTransportTimedSignature(HarvestTransportTimedSignature):
         super().__init__(event_time, bb, barn, headers)
     
     def _create_header(self):
-        log.info("Creating New Header...")
+        logger.info("Creating New Header...")
         super()._create_header()
-        log.debug("Created New Header: %s", HarvestTransportTimedSignature._header)
-        log.debug("Created New Signature: %s", HarvestTransportTimedSignature._signature_base64)
+        logger.debug("Created New Header: %s", HarvestTransportTimedSignature._header)
+        logger.debug("Created New Signature: %s", HarvestTransportTimedSignature._signature_base64)
 
     def execute(self, event_time):
         try:
-            jwt = self._data()
-            log.debug("No sending in local harvest burning that barn!")
-            #log.info("JWT: %s", jwt)
-        except crypto.ChipError as e:
-            log.error("Error creating JWT: %s", e)
+            # jwt = self._data()
+            # log.info("JWT: %s", jwt)
+            logger.debug("No sending in local harvest, burning that barn!")
+        except crypto.Chip.Error as e:
+            logger.error("Error creating JWT: %s", e)
             return 0
 
 

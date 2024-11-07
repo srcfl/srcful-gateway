@@ -1,8 +1,9 @@
 import pytest
 import json
+from server.network.network_utils import HostInfo
 from server.settings import Settings, ChangeSource
-from server.inverters.ModbusTCP import ModbusTCP
-
+from server.devices.inverters.ModbusTCP import ModbusTCP
+import server.tests.config_defaults as cfg
 
 @pytest.fixture
 def settings():
@@ -10,7 +11,11 @@ def settings():
 
 @pytest.fixture
 def com():
-    return ModbusTCP(("192.168.1.1", 502, "solaredge", 17))
+    return ModbusTCP(**cfg.TCP_ARGS)
+
+@pytest.fixture
+def com2():
+    return ModbusTCP(**cfg.TCP_ARGS)
 
 def test_constants(settings):
     assert settings.SETTINGS == "settings"
@@ -26,15 +31,14 @@ def test_devices_add_connection(settings, com):
 
     settings.devices.add_connection(com, ChangeSource.LOCAL)
     assert len(settings.devices.connections) == 1
-    assert settings.devices.connections[0]["host"] == "192.168.1.1"
+    assert settings.devices.connections[0]["ip"] == "localhost"
     assert settings.devices.to_dict()[settings.devices.CONNECTIONS][0] == expected_connection
 
-def test_add_duplicate_device_but_different_casing(settings, com):
-    com2 = ModbusTCP(("192.168.1.1", 502, "SolarEdge", 17))
+def test_add_duplicate_device_but_different_casing(settings, com, com2):
     settings.devices.add_connection(com, ChangeSource.LOCAL)
     settings.devices.add_connection(com2, ChangeSource.LOCAL)
     assert len(settings.devices.connections) == 1
-    assert settings.devices.connections[0]["type"] == "solaredge"
+    assert settings.devices.connections[0]["device_type"] == "solaredge"
 
 def test_devices_listener(settings, com):
     called = False
@@ -318,3 +322,29 @@ def test_update_from_backend(settings:Settings, com):
     assert called
     assert settings.harvest.endpoints == ["https://backend.com"]
     assert settings.devices.connections == [com.get_config()]
+
+
+def test_duplicate_device_serials(settings:Settings, com):
+    settings.devices.add_connection(com, ChangeSource.LOCAL)
+
+    com2 = com._clone_with_host(HostInfo("192.168.1.2", com.port, com.mac))
+
+
+    assert com2.get_SN() == com.get_SN()
+
+    settings.devices.add_connection(com2, ChangeSource.LOCAL)
+    assert len(settings.devices.connections) == 1
+
+def test_remove_connection_old_format(settings:Settings):
+    old_format_settings = {
+        "host": "192.168.1.2",
+        "port": 502,
+        "type": "solaredge",
+        "slave_id": 1,
+        "connection": "TCP"
+    }
+    settings.devices._connections = [old_format_settings]
+
+    com = ModbusTCP(**old_format_settings)
+    settings.devices.remove_connection(com, ChangeSource.LOCAL)
+    assert len(settings.devices.connections) == 0

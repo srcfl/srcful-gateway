@@ -1,11 +1,10 @@
 import logging
-
 from server.blackboard import BlackBoard
-from server.inverters.modbus import Modbus
 from .task import Task
-from ..inverters.ICom import ICom
+from ..devices.ICom import ICom
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class OpenDeviceTask(Task):
@@ -17,41 +16,36 @@ class OpenDeviceTask(Task):
         logger.info("##########################################################")
         logger.info("#################### OpenDeviceTask ####################")
         logger.info("##########################################################")
-        try:
 
-            if self._is_open(self.device):
-                logger.info("Device already open: %s", self.device.get_config())
+        for device in self.bb.devices.lst:
+            if self.device.compare_host(device):
                 return None
-            
+        
+        try:
             if self.device.connect():
-                logger.info("Opening: %s", self.device.get_config())
-                
-                # terminate and remove all inverters from the blackboard
-                for i in self.bb.devices.lst:
-                    i.disconnect()
-                    self.bb.devices.remove(i)
-                
-                logger.info("Device opened: %s", self.device.get_config())
 
+                if self.bb.devices.contains(self.device) and not self.device.is_open():
+                    message = "Device is already in the blackboard, no action needed"
+                    logger.error(message)
+                    self.bb.add_error(message)
+                    return None
+                    
+                message = "Device opened: " + str(self.device.get_config())
+                logger.info(message)
                 self.bb.devices.add(self.device)
-                self.bb.add_info("Device opened: " + str(self.device.get_config()))
-
+                self.bb.add_info(message)
                 return None
             else:
                 self.device.disconnect()
                 message = "Failed to open device: " + str(self.device.get_config())
-                logger.info(message)
+                logger.error(message)
                 self.bb.add_error(message)
                 return None
+            
         except Exception as e:
             logger.exception("Exception opening device: %s", e)
             message = "Failed to open device: " + str(self.device.get_config())
             self.bb.add_error(message)
             self.time = event_time + 10000
             return None
-        
-    def _is_open(self, device: ICom):
-        for i in self.bb.devices.lst:
-            if i.get_config() == device.get_config() and i.is_open():
-                return True
-        return False
+

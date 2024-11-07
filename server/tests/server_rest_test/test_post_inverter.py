@@ -18,7 +18,7 @@ def postInverter(inverterSettings):
     if 'status' in inverterSettings and inverterSettings['status'] == 'no inverter':
         return  
 
-    url = settings.API_URL + "invertertcp"
+    url = settings.API_URL + "device"
     headers = {'user-agent': 'vscode-restclient'}
 
     # remap host to ip
@@ -34,13 +34,12 @@ def test_postInverter():
 
     deleteInverter()
 
-    inverter_settings = {
-        "connection": settings.INVERTER_CONNECTION,
-        "host": settings.INVERTER_HOST,
-        "type": settings.INVERTER_TYPE,
-        "address": settings.INVERTER_ADDRESS,
+    inverter_settings = {settings.INVERTER_CONNECTION: {
+        "ip": settings.INVERTER_HOST,
+        "device_type": settings.INVERTER_TYPE,
+        "slave_id": settings.INVERTER_ADDRESS,
         "port": settings.INVERTER_PORT
-    }
+    }}
 
     response = postInverter(inverter_settings)
 

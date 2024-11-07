@@ -1,34 +1,77 @@
-TCP_CONFIG = {
+import server.devices.inverters as inverter
+import server.devices.p1meters as p1meter
+from server.network.network_utils import NetworkUtils
+
+
+TCP_ARGS = {
     "connection": "TCP",
-    "host": "localhost",
+    "ip": "localhost",
+    "mac": NetworkUtils.INVALID_MAC,
     "port": 502,
-    "type": "solaredge",
-    "address": 4,
+    "device_type": "solaredge",
+    "slave_id": 4,
 }
 
-RTU_CONFIG = {
+RTU_ARGS = {
     "connection": "RTU",
     "port": "/dev/ttyS0",
     "baudrate": 9600,
     "bytesize": 8,
     "parity": "N",
     "stopbits": 1,
-    "type": "lqt40s",
-    "address": 1,
+    "device_type": "lqt40s",
+    "slave_id": 1,
 }
 
-SOLARMAN_CONFIG = {
+SOLARMAN_ARGS = {
     "connection": "SOLARMAN",
-    "host": "localhost",
-    "serial": 1234567890,
+    "ip": "localhost",
+    "mac": NetworkUtils.INVALID_MAC,
     "port": 502,
-    "type": "deye",
-    "address": 1
+    "device_type": "deye",
+    "sn": 1234567890,
+    "slave_id": 1,
+    "verbose": True
 }
 
-SUNSPEC_CONFIG = {
+SUNSPEC_ARGS = {
     "connection": "SUNSPEC",
-    "host": "localhost",
+    "ip": "localhost",
+    "mac": NetworkUtils.INVALID_MAC,
     "port": 502,
-    "address": 1
+    "slave_id": 1
+}
+
+P1_TELNET_ARGS = {
+    "connection": "P1Telnet",
+    "ip": "localhost",
+    "port": 23,
+}
+
+ENPHASE_ARGS = {
+    "connection": "ENPHASE", 
+    "ip": "192.168.1.110",
+    "bearer_token": "eyJraWQiOiIasdasdadsI1NiJ9.eyJhdWQiOiIyMDIyMTUwMDMwMjgiLCJpc3Miasdn21wmVEUuQ"
+}
+
+P1_JEMAC_ARGS = {
+    "connection": "P1Jemac",
+    "ip": "192.168.1.110",
+}
+
+# Config snapshots after device creation
+TCP_CONFIG = {**TCP_ARGS, "sn": NetworkUtils.INVALID_MAC}
+RTU_CONFIG = {**RTU_ARGS, "sn": "N/A"}
+SOLARMAN_CONFIG = {**SOLARMAN_ARGS, "sn": 1234567890}
+SUNSPEC_CONFIG = {**SUNSPEC_ARGS, "sn": "SUNSPEC135792468"}
+P1_TELNET_CONFIG = {**P1_TELNET_ARGS, "meter_serial_number": "abc5qwerty"}
+ENPHASE_CONFIG = {**ENPHASE_ARGS, "sn": "00:00:00:00:00:00"}
+
+class_config_map = {
+    inverter.ModbusTCP: TCP_ARGS,
+    inverter.ModbusSolarman: SOLARMAN_ARGS,
+    inverter.ModbusSunspec: SUNSPEC_ARGS,
+    inverter.Enphase: ENPHASE_ARGS,
+    p1meter.P1Telnet: P1_TELNET_ARGS,
+    p1meter.P1Jemac: P1_JEMAC_ARGS,
 }

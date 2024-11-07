@@ -1,57 +1,89 @@
 import logging
+from typing import Optional
 from server.blackboard import BlackBoard
-from server.web.handler.get.network import ModbusScanHandler
+from server.devices.IComFactory import IComFactory
+from server.settings import ChangeSource
 from .task import Task
-from server.inverters.ICom import ICom
+from server.devices.ICom import ICom
+from server.network.network_utils import NetworkUtils
+
 
 logger = logging.getLogger(__name__)
 
 class DevicePerpetualTask(Task):
     def __init__(self, event_time: int, bb: BlackBoard, device: ICom):
         super().__init__(event_time, bb)
-        self.device = device
-        self.scanner = ModbusScanHandler()
+        self.device:ICom = device
+        self.old_device: Optional[ICom] = None
+
+
+    def in_settings(self, device: ICom):
+        for settings in self.bb.settings.devices.connections:
+            settings_device = IComFactory.create_com(settings)
+            if settings_device.get_SN() == self.device.get_SN():
+                return True
+        return False
 
     def execute(self, event_time):
+        logger.info("*************************************************************")
+        logger.info("******************** DevicePerpetualTask ********************")
+        logger.info("*************************************************************")
         
-        # has a device been opened? This is needed as some other task may open a device before this task is executed
-        if len(self.bb.devices.lst) > 0 and self.bb.devices.lst[0].is_open():
-            logger.debug("A device is already open, removing self.device from the blackboard")
-            self.bb.devices.remove(self.device)
-            if self.device.is_open():
-                self.device.disconnect()
-            return
+        # Check if the device is already in the blackboard and is open
+        # If it is, we don't need to do anything. This check is necessary to ensure 
+        # that a device does not get opened multiple times.
+        existing_device = self.bb.devices.find_sn(self.device.get_SN())
+        if existing_device and existing_device.is_open():
+            return None
+        
+        # If the device is not in the settings list it has probably been closed so lets not do anything
+        if not self.in_settings(self.device):
+            return None
+        
         try:
             if self.device.connect():
-                # terminate and remove all devices from the blackboard
-                logger.debug("Removing all devices from the blackboard after opening a new device")
-                for i in self.bb.devices.lst:
-                    i.disconnect()
-                    self.bb.devices.remove(i)
+                
+                if self.bb.devices.contains(self.device) and not self.device.is_open():
+                    message = "Device is already in the blackboard, no action needed"
+                    logger.error(message)
+                    self.bb.add_error(message)
+                    return None
 
+                message = "Device opened: " + str(self.device.get_config())
+                logger.info(message)
+
+                if self.old_device:
+                    self.bb.settings.devices.remove_connection(self.old_device, ChangeSource.LOCAL)
+                
                 self.bb.devices.add(self.device)
-                self.bb.add_info("Inverter opened: " + str(self.device.get_config()))
-                return
+                self.bb.add_info(message)
+                return None
             
             else:
-                port = self.device.get_config()['port'] # get the port from the previous inverter config
-                hosts = self.scanner.scan_ports([int(port)], 0.01) # overwrite hosts with the new result of the scan
                 
-                if len(hosts) > 0:
-                    # At least one device was found on the port
-                    self.device = self.device.clone(hosts[0]['ip'])
-                    logger.info("Found inverter at %s, retry in 5 seconds...", hosts[0]['ip']) 
+                if self.old_device:
+                    logger.info("Device not found in two steps, giving up the perpetual task: %s, %s", self.old_device.get_SN(), self.device.get_SN())
+                    logger.info("Removing device from settings: %s", self.old_device.get_SN())
+                    self.bb.settings.devices.remove_connection(self.old_device, ChangeSource.LOCAL)
+
+                tmp_device = self.device.find_device() # find the device on the network
+                
+                if tmp_device is not None:
+
+                    self.old_device = self.device
+                    self.device = tmp_device
+                    logger.info("Found a device at %s, retry in 5 seconds...", self.device.get_config())
                     self.time = event_time + 5000
+                    self.bb.add_info("Found a device at " + self.device.get_name() + ", retry in 5 seconds...")
                 else:
-                    # possibly we should create a new device object. We have previously had trouble with reconnecting in the Harvester
-                    message = "Failed to open inverter, retry in 5 minutes: " + str(self.device.get_config())
+                    message = "Failed to find %s, rescan and retry in 5 minutes", self.device.get_SN()
                     logger.info(message)
                     self.bb.add_error(message)
                     self.time = event_time + 60000 * 5
-
+                    
             return self
         
         except Exception as e:
-            logger.exception("Exception opening inverter: %s", e)
+            logger.exception("Exception opening a device: %s", e)
             self.time = event_time + 10000
             return self

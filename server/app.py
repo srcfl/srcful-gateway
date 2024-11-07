@@ -3,21 +3,26 @@ import sys
 import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from server.inverters.IComFactory import IComFactory
+from server.network.network_utils import NetworkUtils
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 from server.tasks.saveStateTask import SaveStatePerpetualTask
 import server.web.server
 from server.tasks.itask import ITask
+from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
-from server.inverters.ModbusTCP import ModbusTCP
+from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
-from server.bootstrap import Bootstrap
+from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
+<<<<<<< HEAD
 import server.tasks.entropyTask as entropy
+=======
+from server.settings_device_listener import SettingsDeviceListener
+>>>>>>> main
 
 from server.blackboard import BlackBoard
 
@@ -103,7 +108,7 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     scheduler.main_loop()
 
 
-def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP.Setup | None = None, bootstrap_file: str | None = None): 
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None): 
 
     from server.web.handler.get.crypto import Handler as CryptoHandler
     try:
@@ -127,8 +132,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     tasks = queue.PriorityQueue()
 
-    bootstrap = Bootstrap(bootstrap_file)
-
     class BackendSettingsSaver(DebouncedMonitorBase):
             """ Monitors settings changes and schedules a save to the backend, ignores changes from the backend """
             def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
@@ -142,49 +145,10 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 else:
                     logger.info("No need to save settings to backend as the source is the backend")
 
-    class SettingsDeviceListener(DebouncedMonitorBase):
-        def __init__(self, blackboard: BlackBoard, bootstrap: Bootstrap, debounce_delay: float = 0.5):
-            super().__init__(debounce_delay)
-            self.blackboard = blackboard
-            self.bootstrap = bootstrap
-            self.first_run = True
-
-        def _perform_action(self, source: ChangeSource):
-            logger.info("SettingsDeviceListener detected a change, opening all devices")
-            # Open all devices in the list
-            for connection in self.blackboard.settings.devices.connections:
-                logger.info("Opening device: %s", connection)
-                self.first_run = False
-                # TODO: if the device has been connected to before then it should be a perpetual task
-                self.blackboard.add_task(OpenDeviceTask(self.blackboard.time_ms(), self.blackboard, IComFactory.parse_and_create_com(connection)))
-        
-            # if we have not got any devices on the first run then go for the bootstrap
-            if self.first_run:
-                logger.info("First run and no devices found, going for bootstrap")
-                self.first_run = False
-
-                for task in self.bootstrap.get_tasks(bb.time_ms() + 2000, bb):
-                    self.blackboard.add_task(task)
-            else:
-                logger.info("First run complete, not going for bootstrap")
     
-    class SettingsEntropyListener(DebouncedMonitorBase):
-        def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
-            super().__init__(debounce_delay)
-            self.blackboard = blackboard
-
-        def _perform_action(self, source: ChangeSource):
-            logger.info("SettingsEntropyListener detected a change, adding entropy task")
-            if self.blackboard.settings.entropy.do_mine:
-                logger.info("Entropy mining is enabled, adding entropy task")
-                self.blackboard.add_task(entropy.EntropyTask(self.blackboard.time_ms() + entropy.generate_poisson_delay(), self.blackboard))
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
-    bb.settings.devices.add_listener(SettingsDeviceListener(bb, bootstrap).on_change)
-    bb.settings.entropy.add_listener(SettingsEntropyListener(bb).on_change)
-
-    # bootstrap is deprecated so is should not listen to this anymore
-    # bb.devices.add_listener(bootstrap)
+    bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
 
     tasks.put(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
 
@@ -192,12 +156,13 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     tasks.put(GetSettingsTask(bb.time_ms() + 500, bb))
 
     if inverter is not None:
-        tasks.put(OpenDeviceTask(bb.time_ms(), bb, ModbusTCP(inverter)))
+        tasks.put(OpenDeviceTask(bb.time_ms(), bb, inverter))
 
     
 
     tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
+    tasks.put(DiscoverModbusDevicesTask(bb.time_ms() + 5000, bb))
     # tasks.put(CryptoReviveTask(bb.time_ms() + 7000, bb))
 
     try:
@@ -210,6 +175,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     finally:
         for i in bb.devices.lst:
             i.disconnect()
+        
+        bb.devices.lst.clear()
         web_server.close()
         graphql_client.stop()
         graphql_client.join()
@@ -224,5 +191,12 @@ if __name__ == "__main__":
     # handler = logging.StreamHandler(sys.stdout)
     # logging.root.addHandler(handler)
     logging.root.setLevel(logging.INFO)
-    # main(('localhost', 5000), ("localhost", 502, "huawei", 1), 'bootstrap.txt')
-    main(("localhost", 5000), ("localhost", 5000), None, "bootstrap.txt")
+    args = {
+        NetworkUtils.IP_KEY: "192.168.1.100",
+        NetworkUtils.MAC_KEY: NetworkUtils.INVALID_MAC,
+        NetworkUtils.PORT_KEY: 502,
+        ModbusTCP.slave_id_key(): 1,  
+        ModbusTCP.device_type_key(): "huawei"
+    }
+    modbus_tcp = ModbusTCP(**args)
+    main(("localhost", 5000), ("localhost", 5000), modbus_tcp)

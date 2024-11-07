@@ -20,17 +20,20 @@ class Endpoints:
             "name": handler.get.name.Handler(),
             "logger": handler.get.logger.Handler(),
             "inverter": handler.get.inverter.Handler(),
+            "inverter/modbus/scan": handler.get.modbus_scan.ModbusScanHandler(),
+            "inverter/supported": handler.get.supported.Handler(), # Remove this after November release
             # "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
             # "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
-            "inverter/modbus/scan": handler.get.network.ModbusScanHandler(),
-            "inverter/supported": handler.get.supported.Handler(),
+            "device": handler.get.device.Handler(),
+            "device/supported": handler.get.supported_devices.Handler(),
+            "device/supported/configurations": handler.get.supported_devices.SupportedConfigurations(),
+            # "supported": handler.get.supported.Handler(), # Remove this after November release
             "network": handler.get.network.NetworkHandler(),
             "network/address": handler.get.network.AddressHandler(),
             "uptime": handler.get.uptime.Handler(),
             "wifi": handler.get.wifi.Handler(),
             "wifi/scan": handler.get.wifi.ScanHandler(),
             "version": handler.get.version.Handler(),
-            "supported": handler.get.supported.Handler(),
             "notification": handler.get.notification.ListHandler(),
             "notification/{id}": handler.get.notification.MessageHandler(),
             "settings": handler.get.settings.Handler(),
@@ -38,21 +41,20 @@ class Endpoints:
         }
 
         self.api_post_dict = {
-            "invertertcp": handler.post.modbusTCP.Handler(),
-            "inverterrtu": handler.post.modbusRTU.Handler(),
-            "invertersolarman": handler.post.modbusSolarman.Handler(),
-            "modbus_device": handler.post.modbusDevice.Handler(),
+            "device": handler.post.device.Handler(),
             "wifi": handler.post.wifi.Handler(),
             "initialize": handler.post.initialize.Handler(),
-            "inverter/modbus": handler.post.modbus.Handler(),
+            # "inverter/modbus": handler.post.modbus_read_write.Handler(),
             "logger": handler.post.logger.Handler(),
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),
+            "crypto/sign": handler.post.crypto_sign.Handler(),
             "entropy": handler.post.entropy.Handler(),
         }
 
         self.api_delete_dict = {
-            "inverter": handler.delete.inverter.Handler(),
+            "device": handler.delete.device.Handler(),
+            "inverter": handler.delete.modbusDevice.Handler(),
             "notification/{id}": handler.delete.notification.Handler(),
         }
 

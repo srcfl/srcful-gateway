@@ -1,6 +1,5 @@
 import logging
 import requests
-
 from typing import List, Union, Tuple
 import server.crypto.crypto as crypto
 from server.blackboard import BlackBoard
@@ -9,7 +8,8 @@ from .itask import ITask
 
 from .srcfulAPICallTask import SrcfulAPICallTask
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class InitializeTask(SrcfulAPICallTask):
@@ -50,8 +50,8 @@ class InitializeTask(SrcfulAPICallTask):
                 "gatewayInitialization:{dryRun:true, idAndWallet",
             )
 
-        log.info("Preparing intialization of wallet %s with sn %s", self.wallet, serial)
-        log.debug("Query: %s", m)
+        logger.info("Preparing intialization of wallet %s with sn %s", self.wallet, serial)
+        logger.debug("Query: %s", m)
 
         return {"query": m}
 
@@ -67,5 +67,5 @@ class InitializeTask(SrcfulAPICallTask):
             self.is_initialized = False
 
     def _on_error(self, reply: requests.Response) -> Union[int, Tuple[int, Union[List[ITask], ITask, None]]]:
-        log.warning("Failed to initialize wallet %s", self.wallet)
+        logger.warning("Failed to initialize wallet %s", self.wallet)
         return 0

@@ -103,7 +103,18 @@ def public_key_to_compact(pub_key:bytearray) -> bytes:
 
     return x_as_b58_encoded
 
-class ChipError(Exception):
+
+
+class Chip:
+    _lock = threading.Lock()
+    _lock_count = 0
+
+
+    # def __init__(self, crypto_impl: CryptoInterface = SoftwareCrypto()):
+    def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto()):
+        self.crypto_impl = crypto_impl
+
+    class Error(Exception):
         def __init__(self, code, message):
             self.code = code
             self.message = message

@@ -1,40 +1,38 @@
-import requests
 import logging
 import time
-from typing import List, Union, Tuple
-from .itask import ITask
-
 from datetime import datetime, timezone
-
+from typing import List, Union, Tuple
+import requests
+from .itask import ITask
 import server.crypto.crypto as crypto
 from server.blackboard import BlackBoard
-
 from .srcfulAPICallTask import SrcfulAPICallTask
 from server.settings import ChangeSource
-log = logging.getLogger(__name__)
-
 from server.tasks.saveSettingsTask import SaveSettingsTask
-
 import json
 
 
+logger = logging.getLogger(__name__)
+logger.setLevel(level=logging.INFO)
+
+
 def handle_settings(bb: BlackBoard, raw_json_data_from_api: dict):
-    log.info("Got settings: %s", raw_json_data_from_api)
+    logger.info("Got settings: %s", raw_json_data_from_api)
 
     try:
         
         if raw_json_data_from_api is not None and raw_json_data_from_api["data"] is not None:
-            log.info("Updating settings: %s", raw_json_data_from_api)
+            logger.info("Updating settings: %s", raw_json_data_from_api)
             bb.settings.update_from_dict(json.loads(raw_json_data_from_api["data"]), ChangeSource.BACKEND)
         else:
-            log.error("Settings are None")
+            logger.error("Settings are None")
             # save the default settings
             return SaveSettingsTask(1017, bb)
     except KeyError:
-        log.error("Wrong json format: %s", raw_json_data_from_api)
+        logger.error("Wrong json format: %s", raw_json_data_from_api)
         return None
     except TypeError:
-        log.error("Wrong json format: %s", raw_json_data_from_api)
+        logger.error("Wrong json format: %s", raw_json_data_from_api)
         return None
 
 def create_query_json(chip: crypto.Chip, subkey: str):

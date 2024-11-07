@@ -1,12 +1,14 @@
 import pytest
 import json
+from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.network import NetworkHandler
 from server.web.handler.get.network import AddressHandler
-from server.web.handler.get.network import ModbusScanHandler
+from server.web.handler.get.modbus_scan import ModbusScanHandler
 from server.network.wifi import get_connection_configs
 from server.blackboard import BlackBoard
 from unittest.mock import patch
+from server.network.network_utils import NetworkUtils
 
 # To-do: Break down the test cases into smaller test cases and in their respective classes 
 # (e.g. NetworkHandlerTest, AddressHandlerTest, ModbusScanHandlerTest)
@@ -44,47 +46,58 @@ def test_network_address(request_data):
     assert response[handler.WLAN0_MAC]
 
 def test_parse_ports():
-    handler = ModbusScanHandler()
-    assert handler.parse_ports("80,443") == [80, 443]
-    assert handler.parse_ports("80-82,90") == [80, 81, 82, 90]
+    assert NetworkUtils.parse_ports("80,443") == [80, 443]
+    assert NetworkUtils.parse_ports("80-82,90") == [80, 81, 82, 90]
 
-@patch('server.web.handler.get.network.ModbusScanHandler.scan_ports')
-@patch('server.web.handler.get.network.ModbusScanHandler.scan_ip')
-def test_modbus_scan(mock_scan_ip, mock_scan_ports):
+@patch('server.web.handler.get.modbus_scan.NetworkUtils')
+def test_modbus_scan(mock_network_utils):
     handler = ModbusScanHandler()
-
     ports = "502"
-    assert handler.parse_ports(ports) == [502]
-
-    ports = "502,503-510,1502"
-    parsed_ports = handler.parse_ports(ports)
-    assert parsed_ports == [502, 503, 504, 505, 506, 507, 508, 509, 510, 1502]
+    assert NetworkUtils.parse_ports(ports) == [502]
     
+    assert NetworkUtils.is_port_open(ip="localhost", port=502, timeout=0.01) == False
 
-    # Mock the scan_ip method to return False
-    mock_scan_ip.return_value = False
-    assert handler.scan_ip("localhost", 502, 0.01) == False
+    mock_network_utils.get_hosts.return_value = [{NetworkUtils.IP_KEY: "192.168.50.220",
+                                                  NetworkUtils.PORT_KEY: 502}]
+    
+    bb = BlackBoard()
 
-    # Mock the scan_ports method to return an empty list
-    mock_scan_ports.return_value = []
-    assert handler.scan_ports(parsed_ports, 0.001) == []
-
-    # We mock the scan_ports method to return an empty list
-    mock_scan_ports.return_value = []
-    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {handler.PORTS: ports}, {}))
+    status_code, response = handler.do_get(RequestData(bb, {}, {NetworkUtils.PORTS_KEY: ports}, {}))
     assert status_code == 200
-    response = json.loads(response)
-
-    assert handler.DEVICES in response
-    assert response[handler.DEVICES] == []
-
-    # Now we mock the scan_ports method to return a list of one device
-    mock_scan_ports.return_value = [{handler.IP: "192.168.50.220"}]
-    status_code, response = handler.do_get(RequestData(BlackBoard(), {}, {handler.PORTS: ports}, {}))
-    assert status_code == 200
-    response = json.loads(response)
-
-    assert handler.DEVICES in response
-    assert response[handler.DEVICES] == [{handler.IP: "192.168.50.220"}]
-
-
+    
+    assert len(bb._tasks) == 1
+    assert isinstance(bb._tasks[0], DiscoverModbusDevicesTask)
+    
+    
+def test_parse_address():
+    # Test valid IP addresses
+    assert NetworkUtils.normalize_ip_url("192.168.1.1") == "http://192.168.1.1"
+    assert NetworkUtils.normalize_ip_url("10.0.0.1") == "http://10.0.0.1"
+    
+    # Test valid URLs with IP addresses
+    assert NetworkUtils.normalize_ip_url("http://192.168.1.1") == "http://192.168.1.1"
+    assert NetworkUtils.normalize_ip_url("https://192.168.1.1") == "https://192.168.1.1"
+    assert NetworkUtils.normalize_ip_url("http://192.168.1.1:8080") == "http://192.168.1.1:8080"
+    
+    # Test invalid inputs
+    assert NetworkUtils.normalize_ip_url("") is None
+    assert NetworkUtils.normalize_ip_url("invalid_ip") is None
+    assert NetworkUtils.normalize_ip_url("envoy.local") is None
+    assert NetworkUtils.normalize_ip_url("256.256.256.256") is None
+    assert NetworkUtils.normalize_ip_url("http://google.com") is None  # Hostname instead of IP
+    assert NetworkUtils.normalize_ip_url("192.168.1") is None  # Incomplete IP
+    
+    
+def test_extract_ip():
+    # Test valid inputs
+    assert NetworkUtils.extract_ip("192.168.1.1") == "192.168.1.1"
+    assert NetworkUtils.extract_ip("http://192.168.1.1") == "192.168.1.1"
+    assert NetworkUtils.extract_ip("https://192.168.1.1") == "192.168.1.1"
+    assert NetworkUtils.extract_ip("http://192.168.1.1:8080") == "192.168.1.1"
+    
+    # Test invalid inputs
+    assert NetworkUtils.extract_ip("") is None
+    assert NetworkUtils.extract_ip("invalid_ip") is None
+    assert NetworkUtils.extract_ip("256.256.256.256") is None
+    assert NetworkUtils.extract_ip("http://google.com") is None
+    assert NetworkUtils.extract_ip("192.168.1") is None

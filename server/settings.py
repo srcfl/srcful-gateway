@@ -1,15 +1,13 @@
 from __future__ import annotations
-
 import json
 import logging
 import threading
-
 from enum import Enum
 from typing import Callable, List
-
 from abc import ABC, abstractmethod
 from typing import Optional
-from server.inverters.ICom import ICom
+from server.devices.ICom import ICom
+from server.devices.IComFactory import IComFactory
 
 
 logger = logging.getLogger(__name__)
@@ -165,19 +163,34 @@ class Settings(Observable):
     class Devices(Observable):
         def __init__(self, parent: Optional[Observable] = None):
             super().__init__(parent)
-            self._connections = []
+            self._connections: List[dict] = []
 
 
         def add_connection(self, connection: ICom, source: ChangeSource):
-            dict = connection.get_config()
-            if dict not in self._connections:
-                self._connections.append(dict)
+            config = connection.get_config()
+            if config not in self._connections:
+
+                # Remove old configs that are the same either the same host or the same serial number
+                old_configs = [x for x in self._connections if connection.compare_host(IComFactory.create_com(x)) or connection.get_SN() == IComFactory.create_com(x).get_SN()]
+
+                for old_config in old_configs:
+                    self._connections.remove(old_config)
+
+                self._connections.append(config)
                 self.notify_listeners(source)
 
         def remove_connection(self, connection: ICom, source: ChangeSource):
-            data = connection.get_config()
-            if data in self._connections:
-                self._connections.remove(data)
+            config = connection.get_config()
+            removed = False
+
+            # configurations may change format between version, so we need to check for equivalent configs
+            equivalent_configs = [x for x in self._connections if x in self._connections or IComFactory.create_com(x).get_config() in self._connections]
+
+            for equivalent_config in equivalent_configs:
+                self._connections.remove(equivalent_config)
+
+            # notify if something was removed
+            if len(equivalent_configs) > 0:
                 self.notify_listeners(source)
 
         @property
