@@ -7,7 +7,7 @@ import protos.wifi_connect_pb2 as wifi_connect_pb2
 import threading
 import egwttp
 import constants
-
+import time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -24,6 +24,8 @@ class SrcfulGateway:
                 break
             except Exception as e:
                 logger.error(f"Error initializing srcful gateway: {e}")
+                logger.warning("Retrying in 1 second...")
+                time.sleep(1)
 
     def _fetch_network_info(self) -> None:
         try:

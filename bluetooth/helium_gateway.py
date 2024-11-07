@@ -4,23 +4,32 @@ import requests
 import constants
 import protos.add_gateway_pb2 as add_gateway_pb2
 import json
+import time
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class HeliumGateway:
     def __init__(self):
-        logger.warning("Helium Gateway initialized")
+        logger.warning("Initializing Helium Gateway...")
         self.animal_name = ""
         self.payer_name = ""
         self.payer_address = ""
         self.fetch_animal_name()
         
     def fetch_animal_name(self) -> None:
-        url = f"{constants.HELIUM_API_ENDPOINT}/name"
-        response = requests.get(url)
-        self.animal_name = response.json()['name']
+        """
+        Fetch the animal name from the gateway-rs API
+        """
+        try:        
+            url = f"{constants.HELIUM_API_ENDPOINT}/name"
+            response = requests.get(url)
+            logger.debug(f"Response: {response.json()}")
+            self.animal_name = response.json()['name']
+        except Exception as e:
+            logger.error(f"Error fetching animal name: {e}")
+            self.animal_name = "Unknown"
     
     def create_add_gateway_txn(self, value) -> bytes:
         """
@@ -39,6 +48,9 @@ class HeliumGateway:
         return self._send_api_request(payload)
 
     def _parse_gateway_details(self, value):
+        """
+        Parse the gateway details from the value
+        """
         byte_data = bytes(value)
         add_gw_details = add_gateway_pb2.add_gateway_v1()
         add_gw_details.ParseFromString(byte_data)
@@ -55,6 +67,9 @@ class HeliumGateway:
         return owner_encoded
 
     def _prepare_payload(self, owner):
+        """
+        Prepare the payload for the API request
+        """
         return {
             "owner": owner,
             "mode": "full",
@@ -62,6 +77,9 @@ class HeliumGateway:
         }
 
     def _send_api_request(self, payload):
+        """
+        Send the API request
+        """
         url = f"{constants.HELIUM_API_ENDPOINT}/add_gateway"
         headers = {'Content-Type': 'application/json'}
         
@@ -96,6 +114,8 @@ class HeliumGateway:
 
             self._set_payer_info(maker)
         except Exception as e:
+            self.payer_address = "Unknown"
+            self.payer_name = "Unknown"   
             logger.error(f"Error fetching payer: {e}")
 
     def _get_maker_id(self, gateway_address: str) -> str:

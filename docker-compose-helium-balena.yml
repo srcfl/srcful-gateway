@@ -8,10 +8,10 @@ x-environment: &shared_env
 
 services:
   web:
-    ports:
-      - 80:5000
     build: ./server
     container_name: eGW-web
+    ports:
+      - 80:5000
     restart: always
     network_mode: host
     environment:
@@ -32,7 +32,6 @@ services:
     environment:
       <<: *shared_env
       GPIO_BUTTON_PIN: 7
-
     restart: always
     labels:
       io.balena.features.dbus: 1 # needed for ble communication over bluez
@@ -52,7 +51,6 @@ services:
       - GATEWAY_SETTINGS=/app/settings.toml
 
   packet-forwarder:
-    # Use pre-defined image
     build: ./udp-packet-forwarder
     restart: no
     privileged: true # set this to true or define the required devices to share with the container under the `devices` tag below
@@ -60,7 +58,7 @@ services:
 
     environment:
       MODEL: "RAK7248"
-      USE_LIBGPIOD: 0
+      USE_LIBGPIOD: 1
       RESET_GPIO: 25
       HAS_GPS: 0
 
