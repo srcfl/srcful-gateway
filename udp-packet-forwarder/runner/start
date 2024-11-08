@@ -671,7 +671,7 @@ case $REGION in
     "US915")
         BAND="us_902_928"
         ;;
-    "AU915_SB1" | "AU915_SB2")
+    "AU915_SB1" | "AU915_SB2" | "AU915") #
         BAND="au_915_928"
         ;;
     "EU433")
