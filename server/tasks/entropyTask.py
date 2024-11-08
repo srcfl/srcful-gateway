@@ -1,4 +1,5 @@
 import logging
+import threading
 import requests
 from server.blackboard import BlackBoard
 import server.crypto.crypto as crypto
@@ -109,10 +110,15 @@ class EntropyTask(Task):
         client_id = f"gateway-{random.randint(0, 1000000)}"
         mqtt_client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311)
 
+        # Use an event to track MQTT protocol connection
+        mqtt_connected = threading.Event()
+
         # Add logging callbacks
         def on_connect(client, userdata, flags, rc):
-            logger.info(f"MQTT Connect result: {rc}")
-            if rc != 0:
+            logger.debug(f"MQTT Connect result: {rc}")
+            if rc == 0:
+                mqtt_connected.set()
+            else:
                 logger.error(f"Connection failed with code {rc}")
                 # Reference: https://github.com/eclipse/paho.mqtt.python/blob/master/src/paho/mqtt/client.py#L49
                 codes = {
@@ -136,6 +142,11 @@ class EntropyTask(Task):
         def on_log(client, userdata, level, buf):
             logger.debug(f"MQTT Log: {buf}")
 
+        def on_connect_fail(client, rc):
+            logger.error(f"MQTT Connect failed with result code: {rc}")
+            logger.error(f"Failed to connect to MQTT broker with error code {rc}: {mqtt.connack_string(rc)}")
+
+        mqtt_client.on_connect_fail = on_connect_fail
         mqtt_client.on_connect = on_connect
         mqtt_client.on_disconnect = on_disconnect
         mqtt_client.on_publish = on_publish
@@ -147,10 +158,19 @@ class EntropyTask(Task):
  
         mqtt_client.tls_set_context(ssl_context)
 
+        mqtt_client.loop_start()
+
         # Connect to the broker
         logger.debug(f"Connecting to MQTT broker {config.mqtt_broker}:{config.mqtt_port}")
-        mqtt_client.connect(config.mqtt_broker, config.mqtt_port)
-        mqtt_client.loop_start()
+        rc = mqtt_client.connect(config.mqtt_broker, config.mqtt_port)
+        if rc != mqtt.MQTTErrorCode.MQTT_ERR_SUCCESS:
+            mqtt_client.loop_stop()
+            raise Exception(f"Failed to connect to MQTT broker with error code {rc}: {mqtt.connack_string(rc)}")
+        if not mqtt_connected.wait(timeout=5.0):
+            mqtt_client.loop_stop()
+            raise Exception("MQTT protocol connection timeout")
+
+        logger.debug("MQTT connection fully established")
 
         return mqtt_client
 
