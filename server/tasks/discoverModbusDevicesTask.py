@@ -22,10 +22,10 @@ class DiscoverModbusDevicesTask(Task):
         ports = NetworkUtils.parse_ports(ports)
         timeout = NetworkUtils.DEFAULT_TIMEOUT
 
-        ip_port_mac_dict = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
+        hosts = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         
         icoms = []
-        for host in ip_port_mac_dict:
+        for host in hosts:
             args = {
                 ModbusTCP.ip_key(): host.ip,
                 ModbusTCP.port_key(): host.port,

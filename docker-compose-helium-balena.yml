@@ -60,7 +60,7 @@ services:
 
     environment:
       MODEL: "RAK7248"
-      USE_LIBGPIOD: 0
+      USE_LIBGPIOD: 1
       RESET_GPIO: 25
       HAS_GPS: 0
 

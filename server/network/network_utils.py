@@ -1,10 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 import socket
 import ipaddress
 from server.network.wifi import get_ip_address
 from furl import furl
+from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -15,6 +16,9 @@ class HostInfo:
     ip: str
     port: int
     mac: str
+    
+    def __iter__(self):
+        yield from asdict(self).items()
 
 
 class NetworkUtils:
@@ -162,21 +166,37 @@ class NetworkUtils:
         """Check if a specific port is open on a given IP address."""
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(timeout)
+            sock.settimeout(float(timeout))
 
             sock.connect((ip, port))
             sock.close()
             return True
-        except socket.error:
+        except (socket.error, ValueError):
             return False
         
     @staticmethod
+    def _check_host(ip_port: Tuple[str, int], timeout: float) -> Optional[HostInfo]:
+        """Helper method to check a single IP:port combination"""
+        ip_str, port = ip_port
+        if NetworkUtils.is_port_open(ip_str, port, timeout):
+            return HostInfo(
+                ip=ip_str,
+                port=port,
+                mac=NetworkUtils.get_mac_from_ip(ip_str)
+            )
+        return None
+
+    @staticmethod
     def get_hosts(ports: list[int], timeout: float) -> list[HostInfo]:
         """
-        Scan the local network for modbus devices on the given ports.
+        Scan the local network for modbus devices on the given ports using parallel threading.
         """
-        local_ip = get_ip_address()
-        
+        try:
+            timeout = float(timeout)
+        except (TypeError, ValueError):
+            logger.warning("Invalid timeout value, using default: %s", NetworkUtils.DEFAULT_TIMEOUT)
+            timeout = NetworkUtils.DEFAULT_TIMEOUT
+
         try:
             local_ip = get_ip_address()
         except Exception as e:
@@ -196,21 +216,26 @@ class NetworkUtils:
         
         logger.info("Scanning subnet %s for modbus devices on ports %s with timeout %s", subnet, ports, timeout)
         
-        ip_port_dict = []
-
-        for ip in subnet.hosts():
-            ip_str:str = str(ip)
-            for port in ports:
-                if NetworkUtils.is_port_open(ip_str, port, float(timeout)):
-                    host_info = HostInfo(
-                        ip=ip_str,
-                        port=port,
-                        mac=NetworkUtils.get_mac_from_ip(ip_str)
-                    )
-                    ip_port_dict.append(host_info)
-        if not ip_port_dict:
+        # Create list of all IP:port combinations to check
+        ip_port_combinations = [(str(ip), port) for ip in subnet.hosts() for port in ports]
+        logger.info("Checking %s IP:port combinations", len(ip_port_combinations))
+        logger.info("First 10: %s", ip_port_combinations[:10])
+        
+        # Use ThreadPoolExecutor for parallel scanning
+        with ThreadPoolExecutor(max_workers=255) as executor:
+            results = executor.map(
+                lambda x: NetworkUtils._check_host(x, timeout),
+                ip_port_combinations
+            )
+        
+        # Filter out None results and convert to list
+        hosts = [result for result in results if result is not None]
+        
+        if not hosts:
             logger.info("No IPs with given port(s) %s open found in the subnet %s", ports, subnet)
             return []
         
-        return ip_port_dict
+        logger.info("Found %s hosts: %s", len(hosts), hosts)
+        
+        return hosts
 

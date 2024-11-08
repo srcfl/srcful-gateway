@@ -35,11 +35,12 @@ class ModbusScanHandler(GetHandler):
         ports = data.query_params.get(NetworkUtils.PORTS_KEY, "502,1502,6607,8899")
         ports = NetworkUtils.parse_ports(ports)
         timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, 0.01) # 10ms may be too short for some networks?
-
+    
         available_devices = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         
         # call discover modbus devices task
-        task = DiscoverModbusDevicesTask(event_time=data.bb.time_ms() + 1000, bb=data.bb)
-        data.bb.add_task(task)
-    
-        return 200, json.dumps({"status": "Scanning for modbus devices"})
+        # task = DiscoverModbusDevicesTask(event_time=data.bb.time_ms() + 1000, bb=data.bb)
+
+        available_devices = json.dumps([dict(host) for host in available_devices])
+        
+        return 200, available_devices

@@ -127,17 +127,6 @@ class Modbus(Device, ABC):
     def get_name(self) -> str:
         return self.profile.name
     
-    def find_device(self) -> 'ICom':
-        
-        port = self.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config
-        hosts = NetworkUtils.get_hosts([int(port)], 0.01)
-        
-        if len(hosts) > 0:
-            for host in hosts:
-                if host[NetworkUtils.MAC_KEY] == self.get_config()[NetworkUtils.MAC_KEY]:
-                    return self.clone(host[NetworkUtils.IP_KEY])
-        return None
-    
     def get_config(self) -> dict:
         return {
             self.DEVICE_TYPE: self.device_type,
