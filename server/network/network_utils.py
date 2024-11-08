@@ -36,7 +36,7 @@ class NetworkUtils:
     DEVICE_KEY = 'device'
     TIMEOUT_KEY = 'timeout'
     DEFAULT_MODBUS_PORTS = "502,6607,8899"
-    DEFAULT_TIMEOUT = 0.1
+    DEFAULT_TIMEOUT = 1
 
     INVALID_MAC = "00:00:00:00:00:00"
 

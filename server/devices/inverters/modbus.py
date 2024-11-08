@@ -3,8 +3,7 @@ import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from server.devices.Device import Device
 from server.devices.profile_keys import OperationKey
-from ..ICom import HarvestDataType, ICom
-from server.network.network_utils import NetworkUtils
+from ..ICom import HarvestDataType
 from ..supported_devices.profiles import ModbusDeviceProfiles
 
 
@@ -52,10 +51,8 @@ class Modbus(Device, ABC):
 
         if self.device_type:
             self.device_type = self.device_type.lower()
+            self.profile: ModbusDeviceProfiles = ModbusDeviceProfiles().get(self.device_type)
             
-        profiles = ModbusDeviceProfiles()
-        
-        self.profile: ModbusDeviceProfiles = ModbusDeviceProfiles().get(self.device_type)
     
     def _read_harvest_data(self, force_verbose) -> dict:
         regs = []
