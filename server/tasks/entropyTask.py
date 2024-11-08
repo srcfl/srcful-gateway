@@ -39,8 +39,8 @@ def generate_poisson_delay():
         U = random.random()
 
     delay_minutes = -AVERAGE_DELAY_MINUTES * math.log(U)
-    return 1000 * 60
-    # return int(delay_minutes * 60 * 1000)
+    # return 1000 * 60
+    return int(delay_minutes * 60 * 1000)
 
 def generate_entropy(chip: crypto.Chip):
         random_bytes = chip.get_random()
