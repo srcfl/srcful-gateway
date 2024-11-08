@@ -74,6 +74,10 @@ class EntropyTask(Task):
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
+
+        context.minimum_version = ssl.TLSVersion.TLSv1_2  # Enforce minimum TLS version
+        context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1  # Disable older TLS versions
+        context.set_ciphers('ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256')  # Set strong ciphers
         
         # Create temporary files for the certificate and key
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as cert_file, \
@@ -102,7 +106,41 @@ class EntropyTask(Task):
 
     def _setup_mqtt(self, cert_pem, cert_private_key, config:Settings.Entropy) -> mqtt.Client:
 
-        mqtt_client = mqtt.Client()
+        client_id = f"gateway-{random.randint(0, 1000000)}"
+        mqtt_client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311)
+
+        # Add logging callbacks
+        def on_connect(client, userdata, flags, rc):
+            logger.info(f"MQTT Connect result: {rc}")
+            if rc != 0:
+                logger.error(f"Connection failed with code {rc}")
+                # Reference: https://github.com/eclipse/paho.mqtt.python/blob/master/src/paho/mqtt/client.py#L49
+                codes = {
+                    1: "incorrect protocol version",
+                    2: "invalid client identifier",
+                    3: "server unavailable",
+                    4: "bad username or password",
+                    5: "not authorised",
+                }
+                logger.error(f"Error message: {codes.get(rc, 'unknown error')}")
+
+        def on_log(client, userdata, level, buf):
+            logger.debug(f"MQTT Log: {buf}")
+
+        def on_disconnect(client, userdata, rc):
+            logger.info(f"MQTT Disconnected with result code: {rc}")
+
+        def on_publish(client, userdata, mid):
+            logger.info(f"Message {mid} published successfully")
+
+        def on_log(client, userdata, level, buf):
+            logger.debug(f"MQTT Log: {buf}")
+
+        mqtt_client.on_connect = on_connect
+        mqtt_client.on_disconnect = on_disconnect
+        mqtt_client.on_publish = on_publish
+        mqtt_client.on_log = on_log
+
 
         # Set up TLS with in-memory certificates
         ssl_context = self.create_ssl_context(cert_pem, cert_private_key)
