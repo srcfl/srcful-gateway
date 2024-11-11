@@ -87,6 +87,7 @@ class ModbusSunspec(TCPDevice):
         self.inverter = None
         self.ac_model = None
         self.dc_model = None
+        self.battery = None
         self.data_type = HarvestDataType.SUNSPEC
         
     def _connect(self, **kwargs) -> bool:
@@ -116,6 +117,11 @@ class ModbusSunspec(TCPDevice):
         elif 714 in self.client.models:
             self.dc_model = self.client.models[714][0]
             
+        if 'battery' in self.client.models:
+            self.battery = self.client.battery[0]
+        elif 802 in self.client.models:
+            self.battery = self.client.models[802][0]
+            
         return len(self.client.models) > 0 and self.mac != NetworkUtils.INVALID_MAC
        
     def _disconnect(self) -> None:
@@ -132,6 +138,8 @@ class ModbusSunspec(TCPDevice):
                 self.ac_model.read()
             if self.dc_model is not None:
                 self.dc_model.read()
+            if self.battery is not None:
+                self.battery.read()
             
             if force_verbose:
                 payload_verbose = self.client.get_dict()
@@ -143,7 +151,7 @@ class ModbusSunspec(TCPDevice):
                 # the inverter would include W, Hz, and DCW, but it is not always available
                 if self.inverter is not None:
                     payload_verbose = self.inverter.get_dict()
-                else: 
+                else:
                     if self.ac_model is not None:
                         payload_verbose = {**payload_verbose, **self.ac_model.get_dict()}
                     if self.dc_model is not None:
@@ -158,6 +166,12 @@ class ModbusSunspec(TCPDevice):
                 payload["W_SF"] = payload_verbose.get("W_SF", 1)
                 payload["DCW"] = payload_verbose.get("DCW", 0)
                 payload["DCW_SF"] = payload_verbose.get("DCW_SF", 1)
+                
+                if self.battery is not None:
+                    battery_payload_verbose = {**self.battery.get_dict()}
+                    payload['SoC'] = battery_payload_verbose.get('SoC', 0)
+                    payload['SoC_SF'] = battery_payload_verbose.get('SoC_SF', 1)
+                
 
                 return payload
         except Exception as e:
