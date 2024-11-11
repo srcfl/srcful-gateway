@@ -111,7 +111,7 @@ class Enphase(TCPDevice):
         return self.session and self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION]).status_code == 200
     
     def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
-        return 1000*60*10 # 10 minutes
+        return 1000*60 # 1 minute
     
     def get_harvest_data_type(self) -> HarvestDataType:
         return HarvestDataType.REST_API
