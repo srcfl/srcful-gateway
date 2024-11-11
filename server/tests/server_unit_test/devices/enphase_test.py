@@ -8,6 +8,10 @@ import pytest
 def enphase():
     return Enphase(**cfg.ENPHASE_CONFIG)
 
+@pytest.fixture
+def config():
+    return cfg.ENPHASE_CONFIG.copy()
+
 def test_open(enphase):
     assert not enphase.is_open()
     
@@ -28,3 +32,56 @@ def test_clone_with_host(enphase):
     assert clone.bearer_token == enphase.bearer_token
     assert clone.get_name() == enphase.get_name()
     assert clone.get_SN() == enphase.get_SN()
+
+def test_init_without_token_and_credentials(config):
+    # remove the bearer token
+    config.pop(Enphase.bearer_token_key())
+    try:
+        enphase = Enphase(**config)
+        assert False
+    except Exception as e:
+        assert True
+
+def test_init_with_credentials_and_no_token(config):
+    config.pop(Enphase.bearer_token_key())
+    config[Enphase.username_key()] = "test_user"
+    config[Enphase.password_key()] = "test_password"
+    config[Enphase.iq_gw_serial_key()] = "123qwe"
+    enphase = Enphase(**config)
+    assert not enphase.bearer_token
+    assert enphase.iq_gw_serial == "123qwe"
+    assert enphase.username == "test_user"
+    assert enphase.password == "test_password"
+
+
+def test_init_with_no_token_missing_username(config):
+    config.pop(Enphase.bearer_token_key())
+    config[Enphase.password_key()] = "test_password"
+    config[Enphase.iq_gw_serial_key()] = "123qwe"
+    try:
+        enphase = Enphase(**config)
+        assert False
+    except Exception as e:
+        assert True
+
+def test_init_with_no_token_missing_password(config):
+    config.pop(Enphase.bearer_token_key())
+    config[Enphase.username_key()] = "test_user"
+    config[Enphase.iq_gw_serial_key()] = "123qwe"
+    try:
+        enphase = Enphase(**config)
+        assert False
+    except Exception as e:
+        assert True
+
+def test_init_with_no_token_missing_iq_gw_serial(config):
+    config.pop(Enphase.bearer_token_key())
+    config[Enphase.username_key()] = "test_user"
+    config[Enphase.password_key()] = "test_password"
+    try:
+        enphase = Enphase(**config)
+        assert False
+    except Exception as e:
+        assert True
+
+    

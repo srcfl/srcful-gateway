@@ -1,3 +1,5 @@
+from server.devices.ICom import ICom
+from server.devices.TCPDevice import TCPDevice
 import server.devices.inverters as inverter
 import server.devices.p1meters as p1meter
 from server.network.network_utils import NetworkUtils
@@ -49,14 +51,14 @@ P1_TELNET_ARGS = {
 }
 
 ENPHASE_ARGS = {
-    "connection": "ENPHASE", 
-    "ip": "192.168.1.110",
-    "bearer_token": "eyJraWQiOiIasdasdadsI1NiJ9.eyJhdWQiOiIyMDIyMTUwMDMwMjgiLCJpc3Miasdn21wmVEUuQ"
+    ICom.connection_key(): "ENPHASE", 
+    TCPDevice.ip_key(): "192.168.1.110",
+    inverter.Enphase.bearer_token_key(): "eyJraWQiOiIasdasdadsI1NiJ9.eyJhdWQiOiIyMDIyMTUwMDMwMjgiLCJpc3Miasdn21wmVEUuQ"
 }
 
 P1_JEMAC_ARGS = {
-    "connection": "P1Jemac",
-    "ip": "192.168.1.110",
+    ICom.connection_key(): "P1Jemac",
+    TCPDevice.ip_key(): "192.168.1.110",
 }
 
 # Config snapshots after device creation

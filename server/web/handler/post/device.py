@@ -32,7 +32,7 @@ class Handler(PostHandler):
 
         
         try:            
-            if ICom.CONNECTION_KEY not in data.data:
+            if ICom.connection_key() not in data.data:
                 logger.error(f"Missing or invalid connection type")
                 return 400, json.dumps({"status": "error", "message": "Missing or invalid connection type"})
         

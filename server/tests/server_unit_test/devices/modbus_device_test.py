@@ -83,14 +83,14 @@ def test_modbus_device_mac_not_present(modbus_devices):
         # remove the sn key
         config.pop("sn") # sn is initialized in the device class and only present in the config after the device is created
        
-        if config[ICom.CONNECTION_KEY] == "TCP":
-            config.pop(ICom.CONNECTION_KEY)
+        if config[ICom.connection_key()] == "TCP":
+            config.pop(ICom.connection_key())
             device = ModbusTCP(**config)
-        elif config[ICom.CONNECTION_KEY] == "SOLARMAN":
-            config.pop(ICom.CONNECTION_KEY)
+        elif config[ICom.connection_key()] == "SOLARMAN":
+            config.pop(ICom.connection_key())
             device = ModbusSolarman(**config)
-        elif config[ICom.CONNECTION_KEY] == "SUNSPEC":
-            config.pop(ICom.CONNECTION_KEY)
+        elif config[ICom.connection_key()] == "SUNSPEC":
+            config.pop(ICom.connection_key())
             device = ModbusSunspec(**config)
         else: 
             continue # Not an IP-based connection

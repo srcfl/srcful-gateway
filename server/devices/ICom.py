@@ -23,6 +23,10 @@ class ICom(ABC):
     CONNECTION_KEY = "connection"
     CONNECTION_IX = 0
 
+    @staticmethod
+    def connection_key():
+        return "connection"
+
 
     def get_der_types(self) -> list[DER_TYPE]:
         pass
