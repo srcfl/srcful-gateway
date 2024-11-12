@@ -44,6 +44,9 @@ class BlackBoard:
         self._crypto_state = crypto_state if crypto_state is not None else {}
         self.available_devices = {}
         
+    def get_version(self) -> str:
+        return "0.16.4"
+        
     def add_task(self, task: ITask):
         self._tasks.append(task)
     
@@ -213,9 +216,6 @@ class BlackBoard:
     @property
     def elapsed_time(self):
         return (time.monotonic_ns() - self._start_time) // 1_000_000
-
-    def get_version(self) -> str:
-        return "0.16.4"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:
