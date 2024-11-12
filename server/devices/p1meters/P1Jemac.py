@@ -5,11 +5,12 @@ import requests
 from server.devices.Device import Device
 from server.devices.ICom import HarvestDataType, ICom
 from server.devices.TCPDevice import TCPDevice
+from server.devices.p1meters.p1_scanner import scan_for_p1_device
 from server.network import mdns
 
 import logging
 
-from server.network.network_utils import HostInfo
+from server.network.network_utils import HostInfo, NetworkUtils
 
 logger = logging.getLogger(__name__)
 
@@ -110,29 +111,13 @@ class P1Jemac(TCPDevice):
         if ip is None:
             ip = self.ip
         return P1Jemac(ip, self.port, self.meter_serial_number)
-
-    def _scan_for_devices(self, domain: str) -> Optional['P1Jemac']:
-        mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
-        for service in mdns_services:
-            if service.address and service.port:
-                p1 = P1Jemac(service.address, self.port, self.meter_serial_number)
-                if p1.connect():
-                    return p1
-        return None
-    
-    def find_device(self) -> 'ICom':
+   
+    def find_device(self) -> Optional['ICom']:
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
         if self.meter_serial_number:
-            # TODO: This is unknown at this point
-            domain_names = {"_jemacp1._tcp.local.":{"name": "currently_one"},
-                            #  "_hwenergy._tcp.local.":{"name": "home_wizard_p1"},
-                           }
-
-            for domain, info in domain_names.items():
-                p1 = self._scan_for_devices(domain)
-                if p1:
-                    p1.model_name = info["name"]
-                    return p1
+            return scan_for_p1_device(self.meter_serial_number)
+                
+        # notthing to connect to
         return None
     
     def get_SN(self) -> str:
