@@ -27,14 +27,10 @@ class Enphase(TCPDevice):
     
     # Endpoint names
     PRODUCTION = "production"
-    CONSUMPTION = "consumption"
-    ENERGY = "energy"
     
     # Endpoint paths
     ENDPOINTS = {
-        PRODUCTION: "/api/v1/production",
-        CONSUMPTION: "/ivp/meters/reports/consumption",
-        ENERGY: "/ivp/pdm/energy"
+        PRODUCTION: "/production.json"
     }
     
     model_name: str
