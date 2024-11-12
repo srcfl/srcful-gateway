@@ -16,15 +16,15 @@ logger.setLevel(logging.INFO)
 
 
 class SimpleTelnet:
-    def __init__(self, host, port, timeout=5):
-        self.host = host
+    def __init__(self, ip, port, timeout=5):
+        self.ip = ip
         self.port = port
         self.timeout = timeout
         self.socket = None
         self.buffer = b""
 
     def connect(self):
-        self.socket = socket.create_connection((self.host, self.port), self.timeout)
+        self.socket = socket.create_connection((self.ip, self.port), self.timeout)
         self.socket.setblocking(False)
 
     def close(self):

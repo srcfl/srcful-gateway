@@ -29,8 +29,8 @@ class DataReader:
         pass
     
 class MockTelnet:
-    def __init__(self, host, port, timeout):
-        self.host = host
+    def __init__(self, ip, port, timeout):
+        self.ip = ip
         self.port = port
         self.timeout = timeout
 

@@ -83,5 +83,3 @@ def test_init_with_no_token_missing_iq_gw_serial(config):
         assert False
     except Exception as e:
         assert True
-
-    

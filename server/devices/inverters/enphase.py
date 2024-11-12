@@ -32,7 +32,7 @@ class Enphase(TCPDevice):
     
     # Endpoint paths
     ENDPOINTS = {
-        PRODUCTION: "/api/v1/production/inverters",
+        PRODUCTION: "/api/v1/production",
         CONSUMPTION: "/ivp/meters/reports/consumption",
         ENERGY: "/ivp/pdm/energy"
     }
@@ -68,7 +68,7 @@ class Enphase(TCPDevice):
             Enphase.password_key(): 'string, (optional) Password for the device',
             Enphase.iq_gw_serial_key(): 'string, (optional) IQ Gateway serial number'
         }
-
+    
     def make_get_request(self, path: str) -> requests.Response:
         return self.session.get(self.base_url + path)
 
@@ -89,21 +89,27 @@ class Enphase(TCPDevice):
         
         self.base_url = f"http://{self.ip}:{self.port}"
         
-        self.headers: dict = {"Authorization": f"Bearer {self.bearer_token}"}
-        
         self.session: requests.Session = None
         self.mac: str = kwargs.get(NetworkUtils.MAC_KEY, NetworkUtils.INVALID_MAC)
     
     def _connect(self, **kwargs) -> bool:
         """Connect to the device by url and return True if successful, False otherwise."""
-        self.session = requests.Session()
-        self.session.headers = self.headers
 
         if not self.bearer_token:
             self.bearer_token = self._get_bearer_token(self.iq_gw_serial, self.username, self.password)
+            
+            # If the bearer token is still empty, there is no point in continuing
+            if not self.bearer_token:
+                return False
         
-         # Disable SSL certificate verification
+        self.session = requests.Session()
+        
+        # Disable SSL certificate verification
         self.session.verify = False
+        
+        # Update headers with current bearer token
+        self.headers = {"Authorization": f"Bearer {self.bearer_token}"}
+        self.session.headers = self.headers
 
         # make a request to the first production endpoint to check if the device is reachable
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
