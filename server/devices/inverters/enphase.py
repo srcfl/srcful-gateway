@@ -104,8 +104,7 @@ class Enphase(TCPDevice):
         self.session.verify = False
         
         # Update headers with current bearer token
-        self.headers = {"Authorization": f"Bearer {self.bearer_token}"}
-        self.session.headers = self.headers
+        self.session.headers = {"Authorization": f"Bearer {self.bearer_token}"}
 
         # make a request to the first production endpoint to check if the device is reachable
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])

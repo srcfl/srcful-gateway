@@ -46,6 +46,7 @@ class P1Jemac(TCPDevice):
         self.meter_serial_number = meter_serial_number
         self.model_name = model_name
         self.endpoint = "/telegram.json"
+        self._has_connected = False
 
     def _connect(self, **kwargs) -> bool:
         try:
@@ -53,9 +54,11 @@ class P1Jemac(TCPDevice):
             harvest = self.read_harvest_data(False)
             if self.meter_serial_number == "":
                 self.meter_serial_number = harvest['serial_number']
+                self._has_connected = True
                 return True
             else:
-                return self.meter_serial_number == harvest['serial_number']
+                self._has_connected = self.meter_serial_number == harvest['serial_number']
+                return self._has_connected
         except Exception as e:
             logger.error(f"Failed to connect to {self.ip}:{self.port}: {str(e)}")
             return False
@@ -65,7 +68,7 @@ class P1Jemac(TCPDevice):
         pass
        
     def is_open(self) -> bool:
-        return self._connect()
+        return self._has_connected and self._connect()
     
     def _parse_p1_message(self, p1_message: dict) -> dict:
         p1_message = p1_message.get('data', {})

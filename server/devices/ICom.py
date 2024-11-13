@@ -55,6 +55,7 @@ class ICom(ABC):
 
     @abstractmethod
     def is_open(self) -> bool:
+        ''' Check if the device is open and connected. Should only return True if connect has been called and returned True, and the connection is still open/valid.'''
         pass
     
     @abstractmethod
