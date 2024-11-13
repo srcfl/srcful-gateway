@@ -41,7 +41,7 @@ class P1Jemac(TCPDevice):
     meter_serial_number: str
     model_name: str
 
-    def __init__(self, ip: str, port: int = 23, meter_serial_number: str = "", model_name: str = "jema_p1_meter"):
+    def __init__(self, ip: str, port: int = 23, meter_serial_number: str = "", model_name: str = "jemac_p1_meter"):
         super().__init__(ip=ip, port=port)
         self.meter_serial_number = meter_serial_number
         self.model_name = model_name

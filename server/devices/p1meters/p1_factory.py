@@ -14,14 +14,19 @@ def _connect_device(p1: ICom, error_message: str) -> Optional[ICom]:
         logger.info(f"{error_message}: {str(e)}")
     return None
 
-def create_rest_device(meter_serial_number:str, host: HostInfo) -> Optional[ICom]:
+def create_rest_device_msn(meter_serial_number:Optional[str], host: HostInfo) -> Optional[ICom]:
     from server.devices.p1meters.P1Jemac import P1Jemac
 
-    p1 = P1Jemac(host.ip, host.port, meter_serial_number)
-    return _connect_device(p1, f"Could not create P1 Jemac from {host.ip}:{host.port}")
+    if meter_serial_number:
+        p1 = P1Jemac(host.ip, host.port, meter_serial_number)
+    else:
+        p1 = P1Jemac(host.ip, host.port)
+    return _connect_device(p1, f"Could not create P1 Jemac from {host.ip}:{host.port} with serial number {meter_serial_number}")
 
-def create_telnet_device(meter_serial_number:str, host: HostInfo) -> Optional[ICom]:
+def create_telnet_device_msn(meter_serial_number:Optional[str], host: HostInfo) -> Optional[ICom]:
     from server.devices.p1meters.P1Telnet import P1Telnet
-
-    p1 = P1Telnet(host.ip, host.port, meter_serial_number)
-    return _connect_device(p1, f"Could not create P1 Telnet from {host.ip}:{host.port}")
+    if meter_serial_number:
+        p1 = P1Telnet(host.ip, host.port, meter_serial_number)
+    else:
+        p1 = P1Telnet(host.ip, host.port)
+    return _connect_device(p1, f"Could not create P1 Telnet from {host.ip}:{host.port} with serial number {meter_serial_number}")
