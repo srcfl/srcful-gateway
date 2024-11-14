@@ -1,5 +1,5 @@
 import logging
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from .task import Task
 from ..devices.ICom import ICom
 

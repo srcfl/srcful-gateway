@@ -1,6 +1,6 @@
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from unittest.mock import MagicMock
-from server.message import Message
+from server.app.message import Message
 from server.devices.ICom import ICom
 import pytest
 import time

@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 from server.web.handler.get.root import Handler
 from server.web.handler.requestData import RequestData
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 
 import server.crypto.crypto as crypto
 

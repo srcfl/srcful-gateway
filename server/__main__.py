@@ -1,5 +1,5 @@
 import argparse
-import server.app as app
+import server.app.app as app
 import logging
 import os
 import socket

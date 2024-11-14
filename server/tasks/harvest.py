@@ -3,7 +3,7 @@ import logging
 from typing import List, Union
 from server.tasks.itask import ITask
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from .task import Task
 from .harvestTransport import ITransportFactory
 from server.devices.ICom import ICom

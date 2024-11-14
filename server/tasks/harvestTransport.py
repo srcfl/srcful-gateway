@@ -1,7 +1,7 @@
 import logging
 import requests
 from server.devices.ICom import ICom
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run
 from .srcfulAPICallTask import SrcfulAPICallTask

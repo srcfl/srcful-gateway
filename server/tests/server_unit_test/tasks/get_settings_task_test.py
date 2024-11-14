@@ -6,8 +6,8 @@ from unittest.mock import Mock, patch
 
 from server.tasks.saveSettingsTask import SaveSettingsTask
 
-from server.blackboard import BlackBoard
-from server.settings import Settings, ChangeSource
+from server.app.blackboard import BlackBoard
+from server.app.settings import Settings, ChangeSource
 
 import server.crypto.crypto as crypto
 

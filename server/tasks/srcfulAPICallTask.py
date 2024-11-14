@@ -3,7 +3,7 @@ import logging
 import requests
 from typing import List, Union, Tuple
 from .itask import ITask
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from .task import Task
 
 

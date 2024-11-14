@@ -2,7 +2,7 @@ import server.web.handler.post.logger as post_logger
 import json
 import logging
 from server.web.handler.requestData import RequestData
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 
 logger = logging.getLogger(__name__)
 

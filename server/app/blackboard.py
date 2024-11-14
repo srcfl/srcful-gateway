@@ -2,9 +2,9 @@ import random
 import time
 import logging
 import server.crypto.crypto as crypto
-from server.message import Message
+from server.app.message import Message
 from server.tasks.itask import ITask
-from server.settings import Settings, ChangeSource
+from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
 from server.network.network_utils import HostInfo
 

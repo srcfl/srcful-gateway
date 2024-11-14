@@ -1,9 +1,9 @@
 from server.devices.ICom import ICom
 from server.devices.IComFactory import IComFactory
-from server.settings import ChangeSource
-from server.settings_device_listener import SettingsDeviceListener
+from server.app.settings import ChangeSource
+from server.app.settings_device_listener import SettingsDeviceListener
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
 from unittest.mock import MagicMock, patch
 from server.devices.inverters.modbus import Modbus

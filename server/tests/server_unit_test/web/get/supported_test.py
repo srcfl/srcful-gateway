@@ -2,7 +2,7 @@ import pytest
 import json
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.supported import Handler
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 
 
 @pytest.fixture

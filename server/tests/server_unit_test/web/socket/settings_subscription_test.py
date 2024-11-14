@@ -1,9 +1,9 @@
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
 import pytest
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from unittest.mock import patch
 import server.crypto.crypto as crypto
-from server.settings import ChangeSource
+from server.app.settings import ChangeSource
 
 @pytest.fixture
 def blackboard():

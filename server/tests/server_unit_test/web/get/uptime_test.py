@@ -3,7 +3,7 @@ import json
 import logging
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.uptime import Handler
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 
 @pytest.fixture
 def request_data():

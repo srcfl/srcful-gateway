@@ -1,7 +1,7 @@
 import requests
 
 import server.crypto.crypto as crypto
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 
 from .srcfulAPICallTask import SrcfulAPICallTask
 

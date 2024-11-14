@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 from server.web.handler.post.modbus_read_write import Handler
 from server.tasks.modbusWriteTask import ModbusWriteTask, log
 from server.web.handler.requestData import RequestData
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 
 
 # Test that doPost parses commands into tasks correctly 
