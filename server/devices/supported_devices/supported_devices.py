@@ -221,6 +221,47 @@ supported_devices = {
             ],
         },
         {
+            ProfileKey.NAME: "deye_micro",
+            ProfileKey.VERSION: "V1.1b3",
+            ProfileKey.VERBOSE_ALWAYS: False,
+            ProfileKey.DISPLAY_NAME: "Deye Micro-inverter",
+            ProfileKey.PROTOCOL: ProtocolKey.SOLARMAN,
+            ProfileKey.DESCRIPTION: "Another inverter profile...",
+            ProfileKey.REGISTERS_VERBOSE: [
+                {
+                    RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 0,
+                    RegistersKey.NUM_OF_REGISTERS: 120,
+                }
+            ],
+            ProfileKey.REGISTERS: [
+                # Grid Frequency
+                {
+                    RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 79,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                },
+                # PV 1 V & A 
+                {
+                    RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 109,
+                    RegistersKey.NUM_OF_REGISTERS: 2,
+                },
+                # PV 2 V & A
+                {
+                    RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 111,
+                    RegistersKey.NUM_OF_REGISTERS: 2,
+                },
+                # PV 3 V & A
+                {
+                    RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 113,
+                    RegistersKey.NUM_OF_REGISTERS: 2,
+                },
+            ],
+        },
+        {
             ProfileKey.NAME: "growatt",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
