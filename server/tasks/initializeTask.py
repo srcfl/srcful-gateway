@@ -2,7 +2,7 @@ import logging
 import requests
 from typing import List, Union, Tuple
 import server.crypto.crypto as crypto
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from .itask import ITask
 
 

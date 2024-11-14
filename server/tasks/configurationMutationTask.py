@@ -1,7 +1,7 @@
 import json
 import logging
 from typing import Dict, Any
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.tasks.srcfulAPICallTask import SrcfulAPICallTask
 import server.crypto.crypto as crypto
 

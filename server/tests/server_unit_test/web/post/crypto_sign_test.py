@@ -4,7 +4,7 @@ import json
 import datetime
 from server.web.handler.post.crypto_sign import Handler
 from server.web.handler.requestData import RequestData
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.crypto import crypto
 
 @pytest.fixture

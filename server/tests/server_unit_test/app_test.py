@@ -4,10 +4,10 @@ import queue
 from unittest.mock import MagicMock
 import pytest
 
-from server import app
+from server.app import app
 
-from server.app import main_loop
-from server.blackboard import BlackBoard
+from server.app.app import main_loop
+from server.app.blackboard import BlackBoard
 from server.tasks.itask import ITask
 
 

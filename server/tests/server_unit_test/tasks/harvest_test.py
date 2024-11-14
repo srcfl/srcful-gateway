@@ -7,8 +7,8 @@ import server.tasks.openDevicePerpetualTask as oit
 from unittest.mock import Mock, patch
 import pytest
 from unittest.mock import MagicMock
-from server.blackboard import BlackBoard
-from server.settings import Settings, ChangeSource
+from server.app.blackboard import BlackBoard
+from server.app.settings import Settings, ChangeSource
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.openDeviceTask import OpenDeviceTask
 

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch
 import json
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.tasks.requestResponseTask import RequestTask, ResponseTask, handle_request, handle_request_task
 from server.web import handler
 

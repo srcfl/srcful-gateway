@@ -1,7 +1,7 @@
 # test for server.web.handler.post.wifi
 from server.web.handler.post.wifi import Handler
 from server.web.handler.requestData import RequestData
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.tasks.openWiFiConTask import OpenWiFiConTask
 import json
 import queue

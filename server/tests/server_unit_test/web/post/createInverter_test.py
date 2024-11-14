@@ -1,7 +1,7 @@
 from server.web.handler.post.device import Handler as DeviceHandler
 from server.web.handler.requestData import RequestData
 from server.tasks.openDeviceTask import OpenDeviceTask
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 import server.tests.config_defaults as cfg
 
 import queue

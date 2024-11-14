@@ -2,7 +2,7 @@ import logging
 
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from .task import Task
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.network.network_utils import NetworkUtils
 
 logger = logging.getLogger(__name__)

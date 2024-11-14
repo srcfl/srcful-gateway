@@ -1,6 +1,6 @@
 import server.crypto.revive_run as revive_run
 
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from .task import Task
 
 
