@@ -60,6 +60,7 @@ class P1Jemac(TCPDevice):
                 self._has_connected = self.meter_serial_number == harvest['serial_number']
                 return self._has_connected
         except Exception as e:
+            self._has_connected = False
             logger.error(f"Failed to connect to {self.ip}:{self.port}: {str(e)}")
             return False
 
