@@ -1,6 +1,7 @@
 import queue
 import sys
 import logging
+from server.app.backend_settings_saver import BackendSettingsSaver
 from server.app.task_scheduler import TaskScheduler
 from server.network.network_utils import NetworkUtils
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
@@ -10,9 +11,7 @@ from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
-from server.app.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.getSettingsTask import GetSettingsTask
-from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
 from server.app.settings_device_listener import SettingsDeviceListener
@@ -51,21 +50,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     tasks: queue.PriorityQueue = queue.PriorityQueue()
 
-    class BackendSettingsSaver(DebouncedMonitorBase):
-            """ Monitors settings changes and schedules a save to the backend, ignores changes from the backend """
-            def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
-                super().__init__(debounce_delay)
-                self.blackboard = blackboard
-
-            def _perform_action(self, source: ChangeSource):
-                if source != ChangeSource.BACKEND:
-                    logger.info("Settings change detected, scheduling a save to backend")
-                    self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard))
-                else:
-                    logger.info("No need to save settings to backend as the source is the backend")
-
-    
-
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
 
@@ -76,8 +60,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     if inverter is not None:
         tasks.put(OpenDeviceTask(bb.time_ms(), bb, inverter))
-
-    
 
     tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
