@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from server.app import app
+from server.app import task_scheduler
 
 from server.app.app import main_loop
 from server.app.blackboard import BlackBoard
@@ -68,7 +69,7 @@ def test_app():
 
 
 def test_main_loop_exiting(tasks, bb, stop_task, caplog):
-    app.logger.setLevel(level=logging.INFO)
+    task_scheduler.logger.setLevel(level=logging.INFO)
     
     tasks.put(stop_task)
     main_loop(tasks, bb)
@@ -76,7 +77,7 @@ def test_main_loop_exiting(tasks, bb, stop_task, caplog):
 
 
 def test_main_loop_normal_task(tasks, bb, normal_task, stop_task, caplog):
-    app.logger.setLevel(level=logging.INFO)
+    task_scheduler.logger.setLevel(level=logging.INFO)
     
     tasks.put(normal_task)
     tasks.put(stop_task)
@@ -87,7 +88,7 @@ def test_main_loop_normal_task(tasks, bb, normal_task, stop_task, caplog):
 
 
 def test_main_loop_future_task(tasks, bb, normal_task, stop_task, caplog):
-    app.logger.setLevel(level=logging.INFO)
+    task_scheduler.logger.setLevel(level=logging.INFO)
     
     normal_task.get_time.return_value = bb.time_ms() + 1500
     tasks.put(normal_task)
@@ -99,12 +100,13 @@ def test_main_loop_future_task(tasks, bb, normal_task, stop_task, caplog):
 
 
 def test_main_loop_past_task(tasks, bb, normal_task, stop_task, caplog):
-    app.logger.setLevel(level=logging.INFO)
+    task_scheduler.logger.setLevel(level=logging.INFO)
 
-    child_task = create_normal_task(bb.time_ms() + 500)
-    child_task.get_time.return_value = bb.time_ms() - 1500
+    child_task = create_normal_task(bb.time_ms() - 1500)
     normal_task.execute.return_value = child_task
 
+    assert normal_task < stop_task
+    assert child_task < stop_task
     assert child_task < normal_task
     
     normal_task.get_time.return_value = bb.time_ms() - 1500
@@ -112,12 +114,12 @@ def test_main_loop_past_task(tasks, bb, normal_task, stop_task, caplog):
     tasks.put(stop_task)
     main_loop(tasks, bb)
     assert "StopIteration received" in caplog.text
-    assert normal_task < child_task
     assert "is in the past " in caplog.text
+    assert normal_task < child_task
     assert "Failed to execute task" not in caplog.text
 
 def test_main_loop_task_from_list_same_time(tasks, bb, normal_task, stop_task, caplog):
-    app.logger.setLevel(level=logging.INFO)
+    task_scheduler.logger.setLevel(level=logging.INFO)
 
     child_task1 = create_normal_task(normal_task.get_time() + 100)
     child_task2 = create_normal_task(normal_task.get_time() + 100)
@@ -133,7 +135,7 @@ def test_main_loop_task_from_list_same_time(tasks, bb, normal_task, stop_task, c
     assert child_task2.execute.called
 
 def test_main_loop_task_from_bb(tasks, bb, normal_task, stop_task, caplog):
-    app.logger.setLevel(level=logging.INFO)
+    task_scheduler.logger.setLevel(level=logging.INFO)
 
     child_task = create_normal_task(normal_task.get_time() + 100)
     bb.add_task(child_task)
@@ -146,7 +148,7 @@ def test_main_loop_task_from_bb(tasks, bb, normal_task, stop_task, caplog):
     assert child_task.execute.called
 
 def test_main_loop_task_from_bb_2(tasks, bb, normal_task, stop_task, caplog):
-    app.logger.setLevel(level=logging.INFO)
+    task_scheduler.logger.setLevel(level=logging.INFO)
 
     child_task = create_normal_task(normal_task.get_time() + 100)
     bb.add_task(child_task)
@@ -160,7 +162,7 @@ def test_main_loop_task_from_bb_2(tasks, bb, normal_task, stop_task, caplog):
 
 
 def test_main_loop_task_failure(tasks, bb, fail_task, stop_task, caplog):
-    app.logger.setLevel(level=logging.INFO)
+    task_scheduler.logger.setLevel(level=logging.INFO)
 
     fail_task.name = "fail_task"
     stop_task.name = "stop_task"
