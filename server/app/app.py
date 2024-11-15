@@ -21,11 +21,6 @@ from server.app.blackboard import BlackBoard
 logger = logging.getLogger(__name__)
 
 
-def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
-    scheduler = TaskScheduler(4, tasks, bb)
-    scheduler.main_loop()
-
-
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None): 
 
     from server.web.handler.get.crypto import Handler as CryptoHandler
@@ -35,6 +30,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         logger.error(f"Failed to get crypto state: {e}")
         crypto_state = {'error': 'no crypto key or chip'}
     bb = BlackBoard(crypto_state)
+    scheduler = TaskScheduler(max_workers=4, system_time=bb, task_source=bb)
 
     HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
 
@@ -48,26 +44,25 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     graphql_client = GraphQLSubscriptionClient(bb, "wss://api.srcful.dev/")
     graphql_client.start()
 
-    tasks: queue.PriorityQueue = queue.PriorityQueue()
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
 
-    tasks.put(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
+    scheduler.add_task(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
 
     # put some initial tasks in the queue
-    tasks.put(GetSettingsTask(bb.time_ms() + 500, bb))
+    scheduler.add_task(GetSettingsTask(bb.time_ms() + 500, bb))
 
     if inverter is not None:
-        tasks.put(OpenDeviceTask(bb.time_ms(), bb, inverter))
+        bb.task_scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
 
-    tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
-    tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
-    tasks.put(DiscoverModbusDevicesTask(bb.time_ms() + 5000, bb))
+    scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
+    scheduler.add_task(ScanWiFiTask(bb.time_ms() + 45000, bb))
+    scheduler.add_task(DiscoverModbusDevicesTask(bb.time_ms() + 5000, bb))
     # tasks.put(CryptoReviveTask(bb.time_ms() + 7000, bb))
 
     try:
-        main_loop(tasks, bb)
+        scheduler.main_loop()
     except KeyboardInterrupt:
         pass
     except Exception as e:

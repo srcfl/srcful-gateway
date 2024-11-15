@@ -7,20 +7,16 @@ import pytest
 from server.app import app
 from server.app import task_scheduler
 
-from server.app.app import main_loop
 from server.app.blackboard import BlackBoard
 from server.tasks.itask import ITask
 
 
 @pytest.fixture
-def tasks():
-    return queue.PriorityQueue()
-
-
-@pytest.fixture
 def bb():
     return BlackBoard()
-
+@pytest.fixture
+def scheduler(bb):
+    return task_scheduler.TaskScheduler(max_workers=4, system_time=bb, task_source=bb)
 
 def create_normal_task(time):
 
@@ -68,38 +64,38 @@ def test_app():
     assert app is not None
 
 
-def test_main_loop_exiting(tasks, bb, stop_task, caplog):
+def test_main_loop_exiting(scheduler, bb, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
     
-    tasks.put(stop_task)
-    main_loop(tasks, bb)
+    scheduler.add_task(stop_task)
+    scheduler.main_loop()
     assert "StopIteration received" in caplog.text
 
 
-def test_main_loop_normal_task(tasks, bb, normal_task, stop_task, caplog):
+def test_main_loop_normal_task(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
     
-    tasks.put(normal_task)
-    tasks.put(stop_task)
-    main_loop(tasks, bb)
+    scheduler.add_task(normal_task)
+    scheduler.add_task(stop_task)
+    scheduler.main_loop()
     assert "StopIteration received" in caplog.text
     assert "is in the past" not in caplog.text
     assert "Failed to execute task:" not in caplog.text
 
 
-def test_main_loop_future_task(tasks, bb, normal_task, stop_task, caplog):
+def test_main_loop_future_task(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
     
     normal_task.get_time.return_value = bb.time_ms() + 1500
-    tasks.put(normal_task)
-    tasks.put(stop_task)
-    main_loop(tasks, bb)
+    scheduler.add_task(normal_task)
+    scheduler.add_task(stop_task)
+    scheduler.main_loop()
     assert "StopIteration received" in caplog.text
     assert "is in the past" not in caplog.text
     assert "Failed to execute task:" not in caplog.text
 
 
-def test_main_loop_past_task(tasks, bb, normal_task, stop_task, caplog):
+def test_main_loop_past_task(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
 
     child_task = create_normal_task(bb.time_ms() - 1500)
@@ -110,15 +106,15 @@ def test_main_loop_past_task(tasks, bb, normal_task, stop_task, caplog):
     assert child_task < normal_task
     
     normal_task.get_time.return_value = bb.time_ms() - 1500
-    tasks.put(normal_task)
-    tasks.put(stop_task)
-    main_loop(tasks, bb)
+    scheduler.add_task(normal_task)
+    scheduler.add_task(stop_task)
+    scheduler.main_loop()
     assert "StopIteration received" in caplog.text
     assert "is in the past " in caplog.text
     assert normal_task < child_task
     assert "Failed to execute task" not in caplog.text
 
-def test_main_loop_task_from_list_same_time(tasks, bb, normal_task, stop_task, caplog):
+def test_main_loop_task_from_list_same_time(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
 
     child_task1 = create_normal_task(normal_task.get_time() + 100)
@@ -127,14 +123,14 @@ def test_main_loop_task_from_list_same_time(tasks, bb, normal_task, stop_task, c
     stop_task.adjust_time(normal_task.get_time() + 200)
     normal_task.execute.return_value = [child_task1, child_task2]
 
-    tasks.put(normal_task)
-    tasks.put(stop_task)
-    main_loop(tasks, bb)
+    scheduler.add_task(normal_task)
+    scheduler.add_task(stop_task)
+    scheduler.main_loop()
     assert normal_task.execute.called
     assert child_task1.execute.called
     assert child_task2.execute.called
 
-def test_main_loop_task_from_bb(tasks, bb, normal_task, stop_task, caplog):
+def test_main_loop_task_from_bb(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
 
     child_task = create_normal_task(normal_task.get_time() + 100)
@@ -142,12 +138,12 @@ def test_main_loop_task_from_bb(tasks, bb, normal_task, stop_task, caplog):
     stop_task.adjust_time(normal_task.get_time() + 200)
     normal_task.execute.return_value = None
 
-    tasks.put(normal_task)
-    tasks.put(stop_task)
-    main_loop(tasks, bb)
+    scheduler.add_task(normal_task)
+    scheduler.add_task(stop_task)
+    scheduler.main_loop()
     assert child_task.execute.called
 
-def test_main_loop_task_from_bb_2(tasks, bb, normal_task, stop_task, caplog):
+def test_main_loop_task_from_bb_2(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
 
     child_task = create_normal_task(normal_task.get_time() + 100)
@@ -155,13 +151,13 @@ def test_main_loop_task_from_bb_2(tasks, bb, normal_task, stop_task, caplog):
     stop_task.adjust_time(normal_task.get_time() + 200)
     normal_task.execute.return_value = []
 
-    tasks.put(normal_task)
-    tasks.put(stop_task)
-    main_loop(tasks, bb)
+    scheduler.add_task(normal_task)
+    scheduler.add_task(stop_task)
+    scheduler.main_loop()
     assert child_task.execute.called
 
 
-def test_main_loop_task_failure(tasks, bb, fail_task, stop_task, caplog):
+def test_main_loop_task_failure(scheduler, bb, fail_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
 
     fail_task.name = "fail_task"
@@ -172,9 +168,9 @@ def test_main_loop_task_failure(tasks, bb, fail_task, stop_task, caplog):
 
     assert fail_task < stop_task
 
-    tasks.put(fail_task)
-    tasks.put(stop_task)
-    main_loop(tasks, bb)
+    scheduler.add_task(fail_task)
+    scheduler.add_task(stop_task)
+    scheduler.main_loop()
     assert "StopIteration received" in caplog.text
     assert "Failed to execute task" in caplog.text
 
@@ -202,18 +198,18 @@ def long_task(bb):
     return task
 
 
-def test_main_loop_with_blocking_task(tasks, bb, short_task, long_task):
+def test_main_loop_with_blocking_task(scheduler, bb, short_task, long_task):
 
     short_task.execute_time = 0
     short_task_time = short_task.get_time()
-    tasks.put(long_task)
-    tasks.put(short_task)
+    scheduler.add_task(long_task)
+    scheduler.add_task(short_task)
 
     # assert that short task ios scheduled after long task but not too long after
     assert short_task_time > long_task.get_time()
     assert short_task_time < long_task.get_time() + 500
 
-    main_loop(tasks, bb)
+    scheduler.main_loop()
 
     # assert that the short task was executed
     assert short_task.execute_time > 0

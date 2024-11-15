@@ -2,6 +2,7 @@ import random
 import time
 import logging
 from server.app.isystem_time import ISystemTime
+from server.app.itask_source import ITaskSource
 from server.app.task_scheduler import TaskScheduler
 import server.crypto.crypto as crypto
 from server.app.message import Message
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class BlackBoard(ISystemTime):
+class BlackBoard(ISystemTime, ITaskSource):
     """
     Blackboard class is the publisher class of the observer pattern.
     It is responsible for maintaining the state of the system and notifying
@@ -32,9 +33,10 @@ class BlackBoard(ISystemTime):
     _settings: Settings
     _crypto_state: dict
     _available_devices: list[ICom]
+    _tasks: list[ITask]
 
     def __init__(self, crypto_state:dict = None):
-        self._task_scheduler = TaskScheduler(max_workers=4, system_time=self)
+        self._tasks = []
         self._devices = BlackBoard.Devices()
         self._start_time = time.monotonic_ns()
         self._rest_server_port = 80
@@ -50,11 +52,13 @@ class BlackBoard(ISystemTime):
         return "0.16.4"
         
     def add_task(self, task: ITask):
-        self._task_scheduler.add_task(task)
-    
-    @property
-    def task_scheduler(self) -> TaskScheduler:
-        return self._task_scheduler
+        self._tasks.append(task)
+
+    def purge_tasks(self) -> list[ITask]:
+        ret = self._tasks
+        self._tasks = []
+        return ret
+
 
     def _save_state(self):
         from server.tasks.saveStateTask import SaveStateTask
