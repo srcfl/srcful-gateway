@@ -1,3 +1,5 @@
+import json
+import time
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from server.tasks.entropyTask import EntropyTask, generate_poisson_delay, generate_entropy, _LAST_INSTANCE_ID
@@ -24,8 +26,8 @@ def create_mock_chip_instance():
     mock_chip_instance = Mock()
 
     mock_chip_instance.get_random.return_value = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08'
-    mock_chip_instance.get_serial.return_value = "1234567890"
-    mock_chip_instance.sign_data.return_value = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08'
+    mock_chip_instance.get_serial_number.return_value = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01'
+    mock_chip_instance.get_signature.return_value = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08'
 
     return mock_chip_instance
 
@@ -159,3 +161,29 @@ def test_latest_instance_executes_multiple_times(mock_chip, mock_send_entropy, m
 
     assert mock_get_cert_and_key.call_count == 1
     assert mock_send_entropy.call_count == 3
+
+
+def test_entropy_task_with_software_crypto(mock_blackboard):
+    ''' enable with software crypto'''
+    with crypto.Chip() as chip:
+        hardware_crypto = chip.is_hardware_crypto()
+
+    if hardware_crypto:
+        pytest.skip("Skipping test for hardware crypto")
+
+    mock_blackboard.time_ms.return_value = int(time.time() * 1000)
+
+    entropy_task = EntropyTask(0, mock_blackboard)
+    data = entropy_task._create_entropy_data()
+    assert isinstance(data, dict)
+    assert 'entropy' in data
+    assert isinstance(data['entropy'], int)
+    assert 0 <= data['entropy'] < 2**64
+    assert isinstance(data['serial'], str)
+    assert isinstance(data['sig'], str)
+    assert isinstance(data['timestamp_sec'], int)
+    json_data = json.dumps(data)
+    assert len(json_data) > 0
+
+
+# {'entropy': 9380403298322624419, 'serial': 'f42ea576ac87184445', 'sig': '91628a5e0db092ebb1b94b0049cf0403fa13baccf1590a9ae331679a4fb4b49b86db7417644cb70469f673bbf378f313a531f4892ee4b2a86f623accb8a5622a', 'timestamp_sec': 1731935173}

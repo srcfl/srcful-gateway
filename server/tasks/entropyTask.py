@@ -19,7 +19,7 @@ from server.app.settings import Settings
 from .srcfulAPICallTask import SrcfulAPICallTask
 from .task import Task
 from .getSettingsTask import create_query_json as create_settings_query_json
-from typing import Optional
+from typing import Dict, Optional
 import paho.mqtt.client as mqtt
 import ssl
 import json
@@ -65,12 +65,13 @@ class EntropyTask(Task):
         self.instance_id = _LAST_INSTANCE_ID
     
             
-    def _create_entropy_data(self):
+    def _create_entropy_data(self) -> Dict[str, int | str]:
         with crypto.Chip() as chip:
             entropy = generate_entropy(chip)
-            serial = chip.get_serial()
-            signature = chip.sign_data(chip, str(entropy) + serial).hex()
-        return {"entropy": entropy, "serial": serial, "sig": signature}
+            serial = chip.get_serial_number().hex()
+            timestamp_sec = self.bb.time_ms() // 1000
+            signature = chip.get_signature(str(entropy) + serial + str(timestamp_sec)).hex()
+        return {"entropy": entropy, "serial": serial, "sig": signature, "timestamp_sec": timestamp_sec}
 
 
     def create_ssl_context(self, cert_string, key_string):

@@ -121,7 +121,8 @@ class Chip:
     #def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto()):
         self.crypto_impl = crypto_impl
 
-    
+    def is_hardware_crypto(self):
+        return isinstance(self.crypto_impl, HardwareCrypto)
 
     def __enter__(self):
         """Prepare the chip. Automatically run at the start of `with` block."""
