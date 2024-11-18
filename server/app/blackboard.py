@@ -45,7 +45,7 @@ class BlackBoard:
         self.available_devices = {}
         
     def get_version(self) -> str:
-        return "0.16.4"
+        return "0.16.5"
         
     def add_task(self, task: ITask):
         self._tasks.append(task)
