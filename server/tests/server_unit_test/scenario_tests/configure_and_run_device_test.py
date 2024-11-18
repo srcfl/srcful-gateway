@@ -2,7 +2,7 @@ from server.devices.ICom import ICom
 import server.tasks.harvest as harvest
 import server.tasks.harvestTransport as harvestTransport
 from unittest.mock import MagicMock
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.harvestFactory import HarvestFactory
 from server.network.network_utils import NetworkUtils

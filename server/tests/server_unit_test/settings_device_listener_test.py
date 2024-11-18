@@ -1,8 +1,8 @@
-from server.settings_device_listener import SettingsDeviceListener
+from server.app.settings_device_listener import SettingsDeviceListener
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
-from server.blackboard import BlackBoard
-from server.settings import ChangeSource
+from server.app.blackboard import BlackBoard
+from server.app.settings import ChangeSource
 from server.network.network_utils import NetworkUtils
 import pytest 
 from unittest.mock import MagicMock

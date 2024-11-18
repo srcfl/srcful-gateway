@@ -1,6 +1,6 @@
 from unittest.mock import patch
 import server.web.handler.get.crypto as get_crypto
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.web.handler.requestData import RequestData
 import pytest
 import json

@@ -23,6 +23,10 @@ class ICom(ABC):
     CONNECTION_KEY = "connection"
     CONNECTION_IX = 0
 
+    @staticmethod
+    def connection_key():
+        return "connection"
+
 
     def get_der_types(self) -> list[DER_TYPE]:
         pass
@@ -51,6 +55,7 @@ class ICom(ABC):
 
     @abstractmethod
     def is_open(self) -> bool:
+        ''' Check if the device is open and connected. Should only return True if connect has been called and returned True, and the connection is still open/valid.'''
         pass
     
     @abstractmethod

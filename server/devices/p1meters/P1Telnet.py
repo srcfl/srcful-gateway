@@ -6,6 +6,7 @@ from typing import Callable, List, Optional
 
 from server.devices.Device import Device
 from server.devices.TCPDevice import TCPDevice
+from server.devices.p1meters.p1_scanner import scan_for_p1_device
 from server.network import mdns as mdns
 from server.network.network_utils import HostInfo
 from ..ICom import HarvestDataType, ICom
@@ -16,15 +17,15 @@ logger.setLevel(logging.INFO)
 
 
 class SimpleTelnet:
-    def __init__(self, host, port, timeout=5):
-        self.host = host
+    def __init__(self, ip, port, timeout=5):
+        self.ip = ip
         self.port = port
         self.timeout = timeout
         self.socket = None
         self.buffer = b""
 
     def connect(self):
-        self.socket = socket.create_connection((self.host, self.port), self.timeout)
+        self.socket = socket.create_connection((self.ip, self.port), self.timeout)
         self.socket.setblocking(False)
 
     def close(self):
@@ -189,32 +190,13 @@ class P1Telnet(TCPDevice):
             ip = self.ip
         return P1Telnet(ip, self.port, self.meter_serial_number)
 
-    def _scan_for_devices(self, domain: str) -> Optional['P1Telnet']:
-        mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
-        for service in mdns_services:
-            if service.address and service.port:
-                p1 = P1Telnet(service.address, self.port, self.meter_serial_number)
-                if p1.connect():
-                    return p1
-        return None
     
     def find_device(self) -> Optional[ICom]:
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
         if self.meter_serial_number:
-            domain_names = {"_currently._tcp.local.":{"name": "currently_one"},
-                            #  "_hwenergy._tcp.local.":{"name": "home_wizard_p1"},
-                           }
-
-            for domain, info in domain_names.items():
-                p1 = self._scan_for_devices(domain)
-                if p1:
-                    p1.model_name = info["name"]
-                    return p1
-            
-            # nothing found
-            # TODO: Would it be a good idea to scan for telnet ports, open and check the serial number?
-            # This would likely work, but it would potentially be slow i.g. connecting to open telenet ports that are not P1 meters
-
+            return scan_for_p1_device(self.meter_serial_number)
+                
+        # notthing to connect to
         return None
 
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:

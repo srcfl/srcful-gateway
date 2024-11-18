@@ -4,7 +4,7 @@ import json
 import time
 from ..handler import PostHandler
 from ..requestData import RequestData
-from server.settings import ChangeSource
+from server.app.settings import ChangeSource
 import server.crypto.crypto as crypto
 
 class Handler(PostHandler):

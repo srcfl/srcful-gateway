@@ -52,10 +52,10 @@ class IComFactory:
             ValueError: If the connection type (first element of the tuple) is unsupported.
         """
 
-        connection = config[ICom.CONNECTION_KEY]
+        connection = config[ICom.connection_key()]
         
         # Strip the connection key and sn from the config
-        stripped_config = {k: v for k, v in config.items() if k != ICom.CONNECTION_KEY}
+        stripped_config = {k: v for k, v in config.items() if k != ICom.connection_key()}
         
         log.info("####################################################")
         log.info("Creating ICom object for connection connection: %s", connection)

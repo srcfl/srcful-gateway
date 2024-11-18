@@ -1,10 +1,13 @@
 import random
 import time
 import logging
+from server.app.isystem_time import ISystemTime
+from server.app.itask_source import ITaskSource
+from server.app.task_scheduler import TaskScheduler
 import server.crypto.crypto as crypto
-from server.message import Message
+from server.app.message import Message
 from server.tasks.itask import ITask
-from server.settings import Settings, ChangeSource
+from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
 from server.network.network_utils import HostInfo
 
@@ -12,7 +15,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class BlackBoard:
+class BlackBoard(ISystemTime, ITaskSource):
     """
     Blackboard class is the publisher class of the observer pattern.
     It is responsible for maintaining the state of the system and notifying
@@ -26,18 +29,19 @@ class BlackBoard:
     _rest_server_port: int
     _rest_server_ip: str
     _messages: list[Message]
-    _tasks: list[ITask]
     _chip_death_count: int
     _settings: Settings
     _crypto_state: dict
+    _available_devices: list[ICom]
+    _tasks: list[ITask]
 
     def __init__(self, crypto_state:dict = None):
+        self._tasks = []
         self._devices = BlackBoard.Devices()
         self._start_time = time.monotonic_ns()
         self._rest_server_port = 80
         self._rest_server_ip = "localhost"
         self._messages = []
-        self._tasks = []
         self._chip_death_count = 0
         self._settings = Settings()
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
@@ -46,15 +50,19 @@ class BlackBoard:
         self._settings.entropy.set_mqtt_port(8883, ChangeSource.LOCAL)
         self._settings.entropy.set_mqtt_topic("entropy/srcful", ChangeSource.LOCAL)
         self._crypto_state = crypto_state if crypto_state is not None else {}
-        self.available_devices = {}
+        self._available_devices = []
+        
+    def get_version(self) -> str:
+        return "0.16.4"
         
     def add_task(self, task: ITask):
         self._tasks.append(task)
-    
-    def purge_tasks(self):
-        tasks = self._tasks
+
+    def purge_tasks(self) -> list[ITask]:
+        ret = self._tasks
         self._tasks = []
-        return tasks
+        return ret
+
 
     def _save_state(self):
         from server.tasks.saveStateTask import SaveStateTask
@@ -178,10 +186,10 @@ class BlackBoard:
         return ret
     
     def get_available_devices(self) -> list[ICom]:
-        return self.available_devices
+        return self._available_devices
     
     def set_available_devices(self, devices: list[ICom]):
-        self.available_devices = devices
+        self._available_devices = devices
         self._save_state()
     
     @property
@@ -217,9 +225,6 @@ class BlackBoard:
     @property
     def elapsed_time(self):
         return (time.monotonic_ns() - self._start_time) // 1_000_000
-
-    def get_version(self) -> str:
-        return "0.15.6"
 
     def get_chip_info(self):
         with crypto.Chip() as chip:

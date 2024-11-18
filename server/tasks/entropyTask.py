@@ -1,7 +1,7 @@
 import logging
 import threading
 import requests
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run
 import random
@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.backends import default_backend
 
-from server.settings import Settings
+from server.app.settings import Settings
 
 from .srcfulAPICallTask import SrcfulAPICallTask
 from .task import Task
@@ -68,7 +68,9 @@ class EntropyTask(Task):
     def _create_entropy_data(self):
         with crypto.Chip() as chip:
             entropy = generate_entropy(chip)
-        return {"entropy": entropy}
+            serial = chip.get_serial()
+            signature = chip.sign_data(chip, str(entropy) + serial).hex()
+        return {"entropy": entropy, "serial": serial, "sig": signature}
 
 
     def create_ssl_context(self, cert_string, key_string):

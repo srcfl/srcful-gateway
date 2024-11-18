@@ -18,9 +18,18 @@ class HeliumGateway:
         self.fetch_animal_name()
         
     def fetch_animal_name(self) -> None:
-        url = f"{constants.HELIUM_API_ENDPOINT}/name"
-        response = requests.get(url)
-        self.animal_name = response.json()['name']
+        """
+        Fetch the animal name from the gateway-rs API
+        """
+        try:        
+            url = f"{constants.HELIUM_API_ENDPOINT}/name"
+            response = requests.get(url)
+            logger.debug(f"Response: {response.json()}")
+            self.animal_name = response.json()['name']
+        except Exception as e:
+            logger.error(f"Error fetching animal name: {e}")
+            self.animal_name = "Unknown"
+
     
     def create_add_gateway_txn(self, value) -> bytes:
         """
@@ -96,6 +105,8 @@ class HeliumGateway:
 
             self._set_payer_info(maker)
         except Exception as e:
+            self.payer_address = "Unknown"
+            self.payer_name = "Unknown"   
             logger.error(f"Error fetching payer: {e}")
 
     def _get_maker_id(self, gateway_address: str) -> str:

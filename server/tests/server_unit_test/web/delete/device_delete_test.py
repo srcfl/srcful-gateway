@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
-from server.blackboard import BlackBoard
-from server.settings_device_listener import SettingsDeviceListener
+from server.app.blackboard import BlackBoard
+from server.app.settings_device_listener import SettingsDeviceListener
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.web.handler.delete.device import Handler

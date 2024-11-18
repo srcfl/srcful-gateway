@@ -1,6 +1,6 @@
 import logging
 from server.devices.inverters.modbus import Modbus
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from .task import Task
 
 log = logging.getLogger(__name__)

@@ -18,21 +18,19 @@ logger.setLevel(logging.INFO)
 
 class Enphase(TCPDevice):
     """
-    Enphase device class
+    Enphase device class fetching data from Enphase IQ Gateway using the local REST API.
+    A token is required to access the REST API. The token can be provided either directly or using the username/password and IQ Gateway serial number. If the token is provided the username/password and IQ Gateway serial number are ignored.
+    The token is automatically fetched when the device is connected (it there is no token)
     """
 
     CONNECTION = "ENPHASE"
     
     # Endpoint names
     PRODUCTION = "production"
-    CONSUMPTION = "consumption"
-    ENERGY = "energy"
     
     # Endpoint paths
     ENDPOINTS = {
-        PRODUCTION: "/api/v1/production/inverters",
-        CONSUMPTION: "/ivp/meters/reports/consumption",
-        ENERGY: "/ivp/pdm/energy"
+        PRODUCTION: "/production.json"
     }
     
     model_name: str
@@ -42,6 +40,18 @@ class Enphase(TCPDevice):
         return "bearer_token"
 
     @staticmethod
+    def username_key():
+        return "username"
+    
+    @staticmethod
+    def password_key():
+        return "password"
+    
+    @staticmethod
+    def iq_gw_serial_key():
+        return "iq_gw_serial"
+    
+    @staticmethod
     def get_supported_devices():
         return {Enphase.CONNECTION: {'device_type': 'enphase', 'display_name': 'Enphase', 'protocol': 'http'}}
     
@@ -49,36 +59,52 @@ class Enphase(TCPDevice):
     def get_config_schema():
         return {
             **TCPDevice.get_config_schema(Enphase.CONNECTION),
-            Enphase.bearer_token_key(): 'string, Bearer token for the device'
+            Enphase.bearer_token_key(): 'string, (optional) Bearer token for the device, either the token is provided or the username/password and iq gateway serial number.',
+            Enphase.username_key(): 'string, (optional) Username for the device',
+            Enphase.password_key(): 'string, (optional) Password for the device',
+            Enphase.iq_gw_serial_key(): 'string, (optional) IQ Gateway serial number'
         }
-
+    
     def make_get_request(self, path: str) -> requests.Response:
         return self.session.get(self.base_url + path)
 
-    def __init__(self, **kwargs):
-        
-        self.bearer_token: str = kwargs.get(self.bearer_token_key(), None)
-        
-        if not self.bearer_token:
-            raise ValueError("Bearer token is required")
+    def __init__(self, **kwargs) -> None:
+
+        self.username: str = kwargs.get(self.username_key(), "")
+        self.password: str = kwargs.get(self.password_key(), "")
+        self.iq_gw_serial: str = kwargs.get(self.iq_gw_serial_key(), "")
+
+        self.bearer_token: str = kwargs.get(self.bearer_token_key(), "")
+
+        if self.bearer_token == "":
+            if not self.username or not self.password or not self.iq_gw_serial:
+                raise ValueError("Bearer token or username/password is required")
         
         ip: str = kwargs.get(self.IP, None)
         TCPDevice.__init__(self, ip, kwargs.get(self.PORT, 80))
         
         self.base_url = f"http://{self.ip}:{self.port}"
         
-        self.headers: dict = {"Authorization": f"Bearer {self.bearer_token}"}
-        
         self.session: requests.Session = None
         self.mac: str = kwargs.get(NetworkUtils.MAC_KEY, NetworkUtils.INVALID_MAC)
     
     def _connect(self, **kwargs) -> bool:
         """Connect to the device by url and return True if successful, False otherwise."""
-        self.session = requests.Session()
-        self.session.headers = self.headers
+
+        if not self.bearer_token:
+            self.bearer_token = self._get_bearer_token(self.iq_gw_serial, self.username, self.password)
+            
+            # If the bearer token is still empty, there is no point in continuing
+            if not self.bearer_token:
+                return False
         
-         # Disable SSL certificate verification
+        self.session = requests.Session()
+        
+        # Disable SSL certificate verification
         self.session.verify = False
+        
+        # Update headers with current bearer token
+        self.session.headers = {"Authorization": f"Bearer {self.bearer_token}"}
 
         # make a request to the first production endpoint to check if the device is reachable
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
@@ -90,6 +116,17 @@ class Enphase(TCPDevice):
         self.mac = NetworkUtils.get_mac_from_ip(self.ip)
         
         return self.mac != NetworkUtils.INVALID_MAC
+    
+    def _get_bearer_token(self, serial: str, username: str, password: str) -> str:
+        envoy_serial=serial
+        data = {'user[email]': username, 'user[password]': password}
+        response = requests.post('http://enlighten.enphaseenergy.com/login/login.json?', data=data, timeout=10) 
+        response_data = response.json()
+        data = {'session_id': response_data['session_id'], 'serial_num': envoy_serial, 'username': username}
+        response = requests.post('http://entrez.enphaseenergy.com/tokens', json=data, timeout=10)
+        token_raw = response.text
+
+        return token_raw
 
     def _disconnect(self) -> None:
         self.session.close()
@@ -111,7 +148,7 @@ class Enphase(TCPDevice):
         return self.session and self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION]).status_code == 200
     
     def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
-        return 1000*60*10 # 10 minutes
+        return 1000*60 # 1 minute
     
     def get_harvest_data_type(self) -> HarvestDataType:
         return HarvestDataType.REST_API

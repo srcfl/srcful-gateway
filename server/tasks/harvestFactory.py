@@ -1,8 +1,8 @@
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.devices.ICom import ICom
 from .harvest import Harvest
 from .harvestTransport import DefaultHarvestTransportFactory
-from server.settings import ChangeSource
+from server.app.settings import ChangeSource
 import logging
 
 logger = logging.getLogger(__name__)

@@ -3,8 +3,8 @@ import pytest
 from server.tasks.saveSettingsTask import SaveSettingsTask
 from unittest.mock import patch
 
-from server.blackboard import BlackBoard
-from server.settings import Settings, ChangeSource
+from server.app.blackboard import BlackBoard
+from server.app.settings import Settings, ChangeSource
 
 import server.crypto.crypto as crypto
 

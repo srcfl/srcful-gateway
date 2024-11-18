@@ -5,11 +5,12 @@ import requests
 from server.devices.Device import Device
 from server.devices.ICom import HarvestDataType, ICom
 from server.devices.TCPDevice import TCPDevice
+from server.devices.p1meters.p1_scanner import scan_for_p1_device
 from server.network import mdns
 
 import logging
 
-from server.network.network_utils import HostInfo
+from server.network.network_utils import HostInfo, NetworkUtils
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +41,12 @@ class P1Jemac(TCPDevice):
     meter_serial_number: str
     model_name: str
 
-    def __init__(self, ip: str, port: int = 23, meter_serial_number: str = "", model_name: str = "jema_p1_meter"):
+    def __init__(self, ip: str, port: int = 80, meter_serial_number: str = "", model_name: str = "jemac_p1_meter"):
         super().__init__(ip=ip, port=port)
         self.meter_serial_number = meter_serial_number
         self.model_name = model_name
         self.endpoint = "/telegram.json"
+        self._has_connected = False
 
     def _connect(self, **kwargs) -> bool:
         try:
@@ -52,10 +54,13 @@ class P1Jemac(TCPDevice):
             harvest = self.read_harvest_data(False)
             if self.meter_serial_number == "":
                 self.meter_serial_number = harvest['serial_number']
+                self._has_connected = True
                 return True
             else:
-                return self.meter_serial_number == harvest['serial_number']
+                self._has_connected = self.meter_serial_number == harvest['serial_number']
+                return self._has_connected
         except Exception as e:
+            self._has_connected = False
             logger.error(f"Failed to connect to {self.ip}:{self.port}: {str(e)}")
             return False
 
@@ -64,7 +69,7 @@ class P1Jemac(TCPDevice):
         pass
        
     def is_open(self) -> bool:
-        return self._connect()
+        return self._has_connected and self._connect()
     
     def _parse_p1_message(self, p1_message: dict) -> dict:
         p1_message = p1_message.get('data', {})
@@ -110,29 +115,13 @@ class P1Jemac(TCPDevice):
         if ip is None:
             ip = self.ip
         return P1Jemac(ip, self.port, self.meter_serial_number)
-
-    def _scan_for_devices(self, domain: str) -> Optional['P1Jemac']:
-        mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
-        for service in mdns_services:
-            if service.address and service.port:
-                p1 = P1Jemac(service.address, self.port, self.meter_serial_number)
-                if p1.connect():
-                    return p1
-        return None
-    
-    def find_device(self) -> 'ICom':
+   
+    def find_device(self) -> Optional['ICom']:
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
         if self.meter_serial_number:
-            # TODO: This is unknown at this point
-            domain_names = {"_jemacp1._tcp.local.":{"name": "currently_one"},
-                            #  "_hwenergy._tcp.local.":{"name": "home_wizard_p1"},
-                           }
-
-            for domain, info in domain_names.items():
-                p1 = self._scan_for_devices(domain)
-                if p1:
-                    p1.model_name = info["name"]
-                    return p1
+            return scan_for_p1_device(self.meter_serial_number)
+                
+        # notthing to connect to
         return None
     
     def get_SN(self) -> str:

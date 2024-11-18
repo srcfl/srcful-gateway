@@ -4,7 +4,7 @@ import select
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import unquote_plus
 
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from . import handler
 
 import logging

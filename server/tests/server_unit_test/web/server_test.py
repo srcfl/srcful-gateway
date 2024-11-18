@@ -7,7 +7,7 @@ import json
 
 import server.crypto.crypto as crypto
 
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 
 from http.server import HTTPServer
 

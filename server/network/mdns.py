@@ -45,3 +45,4 @@ def scan(duration: int = 5, service_type: str = "_http._tcp.local.") -> List[Ser
     browser.cancel()
     zeroconf.close()
     return list(listener.services.values())
+    

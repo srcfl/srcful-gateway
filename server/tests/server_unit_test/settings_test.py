@@ -1,7 +1,7 @@
 import pytest
 import json
 from server.network.network_utils import HostInfo
-from server.settings import Settings, ChangeSource
+from server.app.settings import Settings, ChangeSource
 from server.devices.inverters.ModbusTCP import ModbusTCP
 import server.tests.config_defaults as cfg
 

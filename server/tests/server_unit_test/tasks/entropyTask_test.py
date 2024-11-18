@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from server.tasks.entropyTask import EntropyTask, generate_poisson_delay, generate_entropy, _LAST_INSTANCE_ID
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import paho.mqtt.client as mqtt
 import ssl
@@ -20,10 +20,18 @@ def mock_blackboard():
     bb.time_ms.return_value = 1000
     return bb
 
+def create_mock_chip_instance():
+    mock_chip_instance = Mock()
+
+    mock_chip_instance.get_random.return_value = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08'
+    mock_chip_instance.get_serial.return_value = "1234567890"
+    mock_chip_instance.sign_data.return_value = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08'
+
+    return mock_chip_instance
+
 @patch('server.crypto.crypto.Chip')
 def test_generate_entropy(mock_chip):
-    mock_chip_instance = Mock()
-    mock_chip_instance.get_random.return_value = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08'
+    mock_chip_instance = create_mock_chip_instance()
     mock_chip.return_value = mock_chip_instance
 
     entropy = generate_entropy(mock_chip_instance)
@@ -32,8 +40,7 @@ def test_generate_entropy(mock_chip):
 
 @patch('server.crypto.crypto.Chip')
 def test_create_entropy_data(mock_chip, mock_blackboard):
-    mock_chip_instance = Mock()
-    mock_chip_instance.get_random.return_value = b'\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08\x00\x01\x02\x03\x04\x05\x06\x07\x08'
+    mock_chip_instance = create_mock_chip_instance()
     mock_chip.return_value.__enter__.return_value = mock_chip_instance
 
     task = EntropyTask(0, mock_blackboard)
@@ -67,7 +74,12 @@ def test_execute_when_not_mining(mock_blackboard):
 
 @patch.object(EntropyTask, '_get_cert_and_key')
 @patch.object(EntropyTask, 'send_entropy')
-def test_execute_when_mining(mock_send_entropy, mock_get_cert_and_key, mock_blackboard):
+@patch('server.crypto.crypto.Chip')
+def test_execute_when_mining(mock_chip, mock_send_entropy, mock_get_cert_and_key, mock_blackboard):
+    mock_chip_instance = create_mock_chip_instance()
+    mock_chip.return_value.__enter__.return_value = mock_chip_instance
+
+
     mock_get_cert_and_key.return_value = ("cert_pem", "private_key")
     
     task = EntropyTask(0, mock_blackboard)
@@ -89,7 +101,11 @@ def test_last_instance_id_increments(mock_blackboard):
 
 @patch.object(EntropyTask, '_get_cert_and_key')
 @patch.object(EntropyTask, 'send_entropy')
-def test_only_latest_instance_executes(mock_send_entropy, mock_get_cert_and_key, mock_blackboard):
+@patch('server.crypto.crypto.Chip')
+def test_only_latest_instance_executes(mock_chip, mock_send_entropy, mock_get_cert_and_key, mock_blackboard):
+    mock_chip_instance = create_mock_chip_instance()
+    mock_chip.return_value.__enter__.return_value = mock_chip_instance
+
     mock_get_cert_and_key.return_value = ("cert_pem", "private_key")
 
     task1 = EntropyTask(0, mock_blackboard)
@@ -108,7 +124,11 @@ def test_only_latest_instance_executes(mock_send_entropy, mock_get_cert_and_key,
     mock_send_entropy.assert_called_once()
 
 @patch('logging.Logger.info')
-def test_non_latest_instance_logs_termination(mock_log_info, mock_blackboard):
+@patch('server.crypto.crypto.Chip')
+def test_non_latest_instance_logs_termination(mock_chip, mock_log_info, mock_blackboard):
+    mock_chip_instance = create_mock_chip_instance()
+    mock_chip.return_value.__enter__.return_value = mock_chip_instance
+
     task1 = EntropyTask(0, mock_blackboard)
     task2 = EntropyTask(0, mock_blackboard)
 
@@ -120,7 +140,11 @@ def test_non_latest_instance_logs_termination(mock_log_info, mock_blackboard):
 
 @patch.object(EntropyTask, '_get_cert_and_key')
 @patch.object(EntropyTask, 'send_entropy')
-def test_latest_instance_executes_multiple_times(mock_send_entropy, mock_get_cert_and_key, mock_blackboard):
+@patch('server.crypto.crypto.Chip') 
+def test_latest_instance_executes_multiple_times(mock_chip, mock_send_entropy, mock_get_cert_and_key, mock_blackboard):
+    mock_chip_instance = create_mock_chip_instance()
+    mock_chip.return_value.__enter__.return_value = mock_chip_instance
+
     mock_get_cert_and_key.return_value = ("cert_pem", "private_key")
 
     task = EntropyTask(0, mock_blackboard)

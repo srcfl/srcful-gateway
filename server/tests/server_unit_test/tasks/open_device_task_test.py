@@ -1,6 +1,6 @@
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.openDeviceTask import OpenDeviceTask
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
 import server.tests.config_defaults as cfg
 

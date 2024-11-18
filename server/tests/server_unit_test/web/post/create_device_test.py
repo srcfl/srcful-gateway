@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import MagicMock
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 from server.tasks.openDeviceTask import OpenDeviceTask
 import server.tests.config_defaults as cfg
 from server.web.handler.post.device import Handler as DeviceHandler

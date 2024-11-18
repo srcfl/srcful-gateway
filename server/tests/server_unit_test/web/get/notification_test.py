@@ -1,8 +1,8 @@
 import json
 import pytest
 from server.web.handler.get.notification import ListHandler, MessageHandler
-from server.message import Message 
-from server.blackboard import BlackBoard
+from server.app.message import Message 
+from server.app.blackboard import BlackBoard
 
 # Assuming Message class has a constructor accepting these parameters
 @pytest.fixture

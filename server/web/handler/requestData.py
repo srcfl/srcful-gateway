@@ -1,4 +1,4 @@
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 
 
 class RequestData:

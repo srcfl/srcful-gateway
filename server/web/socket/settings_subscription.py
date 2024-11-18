@@ -3,12 +3,12 @@ import time
 import logging
 from websocket import WebSocketApp
 import json
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import signal
 from typing import Callable
 from datetime import datetime, timezone
-from server.settings import Settings, ChangeSource
+from server.app.settings import Settings, ChangeSource
 from server.tasks.getSettingsTask import handle_settings
 from server.tasks.requestResponseTask import handle_request_task, RequestTask
 

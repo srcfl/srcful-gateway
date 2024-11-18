@@ -3,8 +3,7 @@ import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from server.devices.Device import Device
 from server.devices.profile_keys import OperationKey
-from ..ICom import HarvestDataType, ICom
-from server.network.network_utils import NetworkUtils
+from ..ICom import HarvestDataType
 from ..supported_devices.profiles import ModbusDeviceProfiles
 
 
@@ -52,10 +51,8 @@ class Modbus(Device, ABC):
 
         if self.device_type:
             self.device_type = self.device_type.lower()
+            self.profile: ModbusDeviceProfiles = ModbusDeviceProfiles().get(self.device_type)
             
-        profiles = ModbusDeviceProfiles()
-        
-        self.profile: ModbusDeviceProfiles = ModbusDeviceProfiles().get(self.device_type)
     
     def _read_harvest_data(self, force_verbose) -> dict:
         regs = []
@@ -126,17 +123,6 @@ class Modbus(Device, ABC):
     
     def get_name(self) -> str:
         return self.profile.name
-    
-    def find_device(self) -> 'ICom':
-        
-        port = self.get_config()[NetworkUtils.PORT_KEY] # get the port from the previous inverter config
-        hosts = NetworkUtils.get_hosts([int(port)], 0.01)
-        
-        if len(hosts) > 0:
-            for host in hosts:
-                if host[NetworkUtils.MAC_KEY] == self.get_config()[NetworkUtils.MAC_KEY]:
-                    return self.clone(host[NetworkUtils.IP_KEY])
-        return None
     
     def get_config(self) -> dict:
         return {
