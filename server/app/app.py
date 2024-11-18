@@ -1,21 +1,17 @@
 import queue
 import sys
 import logging
-import threading
-from concurrent.futures import ThreadPoolExecutor
+from server.app.backend_settings_saver import BackendSettingsSaver
+from server.app.task_scheduler import TaskScheduler
 from server.network.network_utils import NetworkUtils
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 from server.tasks.saveStateTask import SaveStatePerpetualTask
 import server.web.server
-from server.tasks.itask import ITask
-from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
-from server.app.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.getSettingsTask import GetSettingsTask
-from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
 from server.app.settings_device_listener import SettingsDeviceListener
@@ -23,85 +19,6 @@ from server.app.settings_device_listener import SettingsDeviceListener
 from server.app.blackboard import BlackBoard
 
 logger = logging.getLogger(__name__)
-
-
-class TaskScheduler:
-
-    def __init__(self, max_workers, initial_tasks, bb):
-        self.bb = bb
-        self.executor = ThreadPoolExecutor(max_workers=max_workers)
-        self.tasks = queue.PriorityQueue()
-        self.active_threads = 0
-        self.new_tasks_condition = threading.Condition()
-        self.stop_event = threading.Event()
-
-        while initial_tasks.qsize() > 0:
-            self.tasks.put(initial_tasks.get())
-
-    
-    def add_task(self, task: ITask):
-        with self.new_tasks_condition:
-
-            if task.get_time() <= self.bb.time_ms():
-                logger.warning("Task (%s) is in the past by %d ms, adjusting time to now", task, self.bb.time_ms() - task.get_time())
-                task.adjust_time(self.bb.time_ms() + 100)
-
-            self.tasks.put(task)
-            self.new_tasks_condition.notify()
-
-    def stop(self):
-        self.stop_event.set()
-
-    def worker(self, task: ITask):
-        try:
-            new_tasks = task.execute(self.bb.time_ms())
-            if new_tasks is None:
-                new_tasks = []
-        except StopIteration:
-            logger.info("StopIteration received, stopping TaskScheduler")
-            self.stop()
-            new_tasks = None
-        except Exception as e:
-            logging.error(f"Failed to execute task {task}: {e}")
-            new_tasks = None
-            
-        if new_tasks is not None:
-            if not isinstance(new_tasks, list):
-                new_tasks = [new_tasks]
-            new_tasks = new_tasks + self.bb.purge_tasks()
-            for new_task in new_tasks:
-                self.add_task(new_task)
-        
-        with self.new_tasks_condition:
-            self.active_threads -= 1
-            self.new_tasks_condition.notify()
-
-    def main_loop(self):
-        while not self.stop_event.is_set():
-            with self.new_tasks_condition:
-                while (self.active_threads >= self.executor._max_workers) or self.tasks.empty() or self.tasks.queue[0].get_time() > self.bb.time_ms():
-                    if self.stop_event.is_set():
-                        break
-
-                    if not self.tasks.empty():
-                        # wake the loop up gain when the next task is due (note that it may wake up before that if a new task is added)
-                        delay = max(0, (self.tasks.queue[0].get_time() - self.bb.time_ms()) / 1000)
-                        self.new_tasks_condition.wait(delay)
-                    else:
-                        self.new_tasks_condition.wait()
-
-                if self.stop_event.is_set():
-                    break
-                
-                if not self.tasks.empty() and self.tasks.queue[0].get_time() <= self.bb.time_ms():
-                    task = self.tasks.get()
-                    self.executor.submit(self.worker, task)
-                    self.active_threads += 1
-
-
-def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
-    scheduler = TaskScheduler(4, tasks, bb)
-    scheduler.main_loop()
 
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None): 
@@ -113,6 +30,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         logger.error(f"Failed to get crypto state: {e}")
         crypto_state = {'error': 'no crypto key or chip'}
     bb = BlackBoard(crypto_state)
+    scheduler = TaskScheduler(max_workers=4, system_time=bb, task_source=bb)
 
     HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
 
@@ -126,43 +44,25 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     graphql_client = GraphQLSubscriptionClient(bb, "wss://api.srcful.dev/")
     graphql_client.start()
 
-    tasks = queue.PriorityQueue()
-
-    class BackendSettingsSaver(DebouncedMonitorBase):
-            """ Monitors settings changes and schedules a save to the backend, ignores changes from the backend """
-            def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
-                super().__init__(debounce_delay)
-                self.blackboard = blackboard
-
-            def _perform_action(self, source: ChangeSource):
-                if source != ChangeSource.BACKEND:
-                    logger.info("Settings change detected, scheduling a save to backend")
-                    self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard))
-                else:
-                    logger.info("No need to save settings to backend as the source is the backend")
-
-    
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
 
-    tasks.put(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
+    scheduler.add_task(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
 
     # put some initial tasks in the queue
-    tasks.put(GetSettingsTask(bb.time_ms() + 500, bb))
+    scheduler.add_task(GetSettingsTask(bb.time_ms() + 500, bb))
 
     if inverter is not None:
-        tasks.put(OpenDeviceTask(bb.time_ms(), bb, inverter))
+        bb.task_scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
 
-    
-
-    tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
-    tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
-    tasks.put(DiscoverModbusDevicesTask(bb.time_ms() + 5000, bb))
+    scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
+    scheduler.add_task(ScanWiFiTask(bb.time_ms() + 45000, bb))
+    scheduler.add_task(DiscoverModbusDevicesTask(bb.time_ms() + 5000, bb))
     # tasks.put(CryptoReviveTask(bb.time_ms() + 7000, bb))
 
     try:
-        main_loop(tasks, bb)
+        scheduler.main_loop()
     except KeyboardInterrupt:
         pass
     except Exception as e:
