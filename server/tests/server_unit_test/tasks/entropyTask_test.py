@@ -181,7 +181,7 @@ def test_latest_instance_executes_multiple_times(mock_chip, mock_send_entropy, m
     assert mock_send_entropy.call_count == 3
 
 
-def test_entropy_task_with_software_crypto(mock_blackboard):
+def test_create_entropy_data_with_software_crypto(mock_blackboard):
     ''' enable with software crypto'''
     with crypto.Chip() as chip:
         hardware_crypto = chip.is_hardware_crypto()
@@ -205,5 +205,20 @@ def test_entropy_task_with_software_crypto(mock_blackboard):
     json_data = json.dumps(data)
     assert len(json_data) > 0
 
+
+def test_has_mined_srcful_data(mock_blackboard):
+
+    # modify to use a gateway that has data if this fails.
+    task = EntropyTask(0, mock_blackboard)
+    mock_blackboard.settings.api.gql_endpoint = "https://api.srcful.dev"
+    mock_blackboard.settings.api.gql_timeout = 10
+    assert task._has_mined_srcful_data("0123b0e69662744eee")
+
+def test_has_not_mined_srcful_data(mock_blackboard):
+    task = EntropyTask(0, mock_blackboard)
+    mock_blackboard.settings.api.gql_endpoint = "https://api.srcful.dev"
+    mock_blackboard.settings.api.gql_timeout = 10
+    assert not task._has_mined_srcful_data("f42ea576ac87184445")
+    
 
 # {'entropy': 9380403298322624419, 'serial': 'f42ea576ac87184445', 'sig': '91628a5e0db092ebb1b94b0049cf0403fa13baccf1590a9ae331679a4fb4b49b86db7417644cb70469f673bbf378f313a531f4892ee4b2a86f623accb8a5622a', 'timestamp_sec': 1731935173}

@@ -29,7 +29,7 @@ class Gateway:
     @classmethod
     def _get_ders_query(cls, serial: str) -> str:
         return f"""
-            {{
+            query {{
                 gateway {{
                     gateway(id:"{serial}") {{
                         ders {{

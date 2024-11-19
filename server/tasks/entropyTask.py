@@ -20,7 +20,7 @@ from server.app.settings import Settings
 from .srcfulAPICallTask import SrcfulAPICallTask
 from .task import Task
 from .getSettingsTask import create_query_json as create_settings_query_json
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 import paho.mqtt.client as mqtt
 import ssl
 import json
@@ -231,15 +231,16 @@ class EntropyTask(Task):
         # otherwise return false
 
         gateway = backend.Gateway(serial)
-        ders = gateway.get_ders(self.bb.settings.api.gql_endpoint)
+        connection = backend.Connection(self.bb.settings.api.gql_endpoint, self.bb.settings.api.gql_timeout)
+        ders:List[backend.DER] = gateway.get_ders(connection)
         resolution = backend.Histogram.Resolution(backend.Histogram.Resolution.Type.HOUR, 1)
 
         for der in ders:
-            histogram = der.histogram_from_now(self.bb.settings.api.gql_endpoint, timedelta(hours=24), resolution)
+            histogram = der.histogram_from_now(connection, timedelta(hours=24), resolution)
             if len(histogram) > 0:
                 return True
 
-        return True
+        return False
     
     def execute(self, event_time):
         if self.instance_id != _LAST_INSTANCE_ID:

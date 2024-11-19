@@ -16,10 +16,13 @@ class DER:
         self.type = type
 
     def _construct_query(self, start_time:datetime, stop_time:datetime, resolution:Histogram.Resolution) -> str:
-        return f"""derData{{
-                {self.type.value}(sn:"{self.serial}") {
-                    {SolarHistogram.construct_query(self.serial, start_time, stop_time, resolution)}
-                }
+        return f"""
+            query {{
+                derData{{
+                    {self.type.value}(sn:"{self.serial}") {{
+                        {SolarHistogram.construct_query(self.serial, start_time, stop_time, resolution)}
+                    }}
+                }}
             }}
         """ 
 
