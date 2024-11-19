@@ -14,11 +14,21 @@ DOUBLE_CLICK_TIMEFRAME_SECONDS = 0.75
 
 class GpioButton:
     def __init__(self, pin_number, when_double_clicked: Callable[[], None]):
-        logger.info("Initializing GPIO button on pin %s",pin_number)
-        self.gpio = SysfsGPIO(pin_number)
-        logger.info("GPIO object: %s", self.gpio)
-        self.gpio.export = True
-        self.gpio.direction = 'in'
+        logger.info("Initializing GPIO button on pin %s", pin_number)
+        try:
+            self.gpio = SysfsGPIO(pin_number)
+            # Try to unexport first in case it's already exported
+            try:
+                self.gpio.export = False
+            except:
+                pass
+            # Now try to export
+            self.gpio.export = True
+            self.gpio.direction = 'in'
+        except OSError as e:
+            logger.error(f"Failed to initialize GPIO on pin {pin_number}: {e}")
+            raise RuntimeError(f"GPIO initialization failed: {e}")
+        
         self.when_double_clicked = when_double_clicked
         self.last_clicked_at = None
         self.click_count = 0

@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 
-SERVICE_NAME = f"Sourceful Energy Gateway {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
+SERVICE_NAME = f"Sourceful Gateway {macAddr.get().replace(':', '')[-6:]}"  # we cannot use special characters in the name as this will mess upp the bluez service name filepath
 
 SERVER = None
 gateway = None
@@ -101,12 +101,16 @@ async def run(gpio_button_pin: int = -1):
 
     logger.info("Server started successfully!")
 
-    # if we are using the bluez backend and gpio buttin is set then we stop advertising after 3 minutes and also set up the button
+    # if we are using the bluez backend and gpio button is set then we stop advertising after 3 minutes and also set up the button
     if sys.platform == "linux" and gpio_button_pin >= 0:
         logger.warning("Using bluez backend, adding button on pin %s", gpio_button_pin)
         await stop_advertising()
-        button = GpioButton(gpio_button_pin, start_advertising)
-        asyncio.create_task(button.run())
+        try:
+            button = GpioButton(gpio_button_pin, start_advertising)
+            asyncio.create_task(button.run())
+        except Exception as e:
+            logger.error(f"Failed to initialize GPIO button: {e}")
+            logger.warning("Continuing without GPIO button functionality")
     else:
         logger.warning(
             "Not using bluez backend or pin < 0 (pin is: %s), advertising indefinitely",

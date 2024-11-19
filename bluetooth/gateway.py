@@ -31,11 +31,11 @@ class Gateway:
         self.helium_gw = HeliumGateway()
         logger.debug("Gateway Created")
         
-    def update_diagnostics(self, characteristic: BlessGATTCharacteristic):
+    def update_diagnostics(self, characteristic: BlessGATTCharacteristic):        
         swarm_id = self.srcful_gw.get_swarm_id()
         self.helium_gw.fetch_animal_name()
         self.helium_gw.fetch_payer(swarm_id)
-                
+        
         services = diagnostics_pb2.diagnostics_v1()
         services.diagnostics['Name:'] = self.helium_gw.animal_name
         services.diagnostics['Payer: '] = self.helium_gw.payer_name
