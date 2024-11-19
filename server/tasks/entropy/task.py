@@ -9,17 +9,11 @@ import random
 import math
 import tempfile
 
-
-from cryptography import x509
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.hazmat.backends import default_backend
-
 from server.app.settings import Settings
+from server.tasks.entropy.settings import EntropySettings
 
-from .srcfulAPICallTask import SrcfulAPICallTask
-from .task import Task
-from .getSettingsTask import create_query_json as create_settings_query_json
+from ..task import Task
+from ..getSettingsTask import create_query_json as create_settings_query_json
 from typing import Dict, List, Optional
 import paho.mqtt.client as mqtt
 import ssl
@@ -111,7 +105,7 @@ class EntropyTask(Task):
         
         return context
 
-    def _setup_mqtt(self, cert_pem, cert_private_key, config:Settings.Entropy) -> mqtt.Client:
+    def _setup_mqtt(self, cert_pem, cert_private_key, config:EntropySettings) -> mqtt.Client:
 
         client_id = f"gateway-{random.randint(0, 1000000)}"
         mqtt_client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311)
@@ -180,7 +174,7 @@ class EntropyTask(Task):
 
         return mqtt_client
 
-    def _publish_entropy(self, client:mqtt.Client, entropy_data:dict, config:Settings.Entropy):
+    def _publish_entropy(self, client:mqtt.Client, entropy_data:dict, config:EntropySettings):
         payload = json.dumps(entropy_data)
         response:mqtt.MQTTMessageInfo = client.publish(config.mqtt_topic, payload)
 

@@ -13,15 +13,15 @@ from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
-from server.settings import DebouncedMonitorBase, ChangeSource
+from server.app.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
 from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
-import server.tasks.entropyTask as entropy
-from server.settings_device_listener import SettingsDeviceListener
+import server.tasks.entropy.task as entropy
+from server.app.settings_device_listener import SettingsDeviceListener
 
-from server.blackboard import BlackBoard
+from server.app.blackboard import BlackBoard
 
 logger = logging.getLogger(__name__)
 

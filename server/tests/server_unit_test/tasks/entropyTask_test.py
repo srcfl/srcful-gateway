@@ -3,7 +3,7 @@ import time
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from server.crypto.crypto_state import CryptoState
-from server.tasks.entropyTask import EntropyTask, generate_poisson_delay, generate_entropy, _LAST_INSTANCE_ID
+from server.tasks.entropy.task import EntropyTask, generate_poisson_delay, generate_entropy, _LAST_INSTANCE_ID
 from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import paho.mqtt.client as mqtt

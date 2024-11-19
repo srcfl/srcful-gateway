@@ -2,19 +2,16 @@ from __future__ import annotations
 import json
 import logging
 import threading
-from enum import Enum
 from typing import Callable, List
 from abc import ABC, abstractmethod
 from typing import Optional
+from server.app.settings_observable import Observable, ChangeSource
+from server.app.settings_registry import SettingsRegistry
 from server.devices.ICom import ICom
 from server.devices.IComFactory import IComFactory
 
 
 logger = logging.getLogger(__name__)
-
-class ChangeSource(Enum):
-    LOCAL = 1
-    BACKEND = 2
 
 
 class DebouncedMonitorBase(ABC):
@@ -46,35 +43,22 @@ class DebouncedMonitorBase(ABC):
         self.debounce_action(source)
 
 
-
-class Observable:
-    def __init__(self, parent: Optional[Observable] = None):
-        self._listeners: List[Callable[[ChangeSource], None]] = []
-        self._parent = parent
-
-    def add_listener(self, listener: Callable[[ChangeSource], None]):
-        if listener not in self._listeners:
-            self._listeners.append(listener)
-
-    def remove_listener(self, listener: Callable[[ChangeSource], None]):
-        if listener in self._listeners:
-            self._listeners.remove(listener)
-
-    def notify_listeners(self, source: ChangeSource):
-        for listener in self._listeners:
-            listener(source)
-        if self._parent:
-            self._parent.notify_listeners(source)
-
-
-
 class Settings(Observable):
     def __init__(self):
         super().__init__()
         self._harvest = self.Harvest(self)
         self._devices = self.Devices(self)
-        self._entropy = self.Entropy(self)
+        # self._entropy = self.Entropy(self)
         self._api = self.API(self)
+
+        self._modules = SettingsRegistry.create_settings(self)
+        
+    def __getattr__(self, name: str):
+        """Allow accessing registered settings as properties"""
+        if name in self._modules:
+            return self._modules[name]
+        raise AttributeError(f"'Settings' has no attribute '{name}'")
+
     @property
     def API_SUBKEY(self):
         return "settings"
@@ -91,9 +75,9 @@ class Settings(Observable):
     def devices(self) -> 'Settings.Devices':
         return self._devices
     
-    @property
-    def entropy(self) -> 'Settings.Entropy':
-        return self._entropy
+    # @property
+    # def entropy(self) -> 'Settings.Entropy':
+    #     return self._entropy
 
     @property
     def api(self) -> 'Settings.API':
@@ -104,15 +88,23 @@ class Settings(Observable):
             settings_data = data[self.SETTINGS]
             self.harvest.update_from_dict(settings_data.get(self.harvest.HARVEST, {}), source)
             self.devices.update_from_dict(settings_data.get(self.devices.DEVICES, {}), source)
-            self.entropy.update_from_dict(settings_data.get(self.entropy.ENTROPY, {}), source)
+
+            for key, module in self._modules.items():
+                if key in settings_data:
+                    module.update_from_dict(settings_data[key], source)
+            # self.entropy.update_from_dict(settings_data.get(self.entropy.ENTROPY, {}), source)
+
     def to_dict(self) -> dict:
-        return {
+        ret = {
             self.SETTINGS: {
-                self.harvest.HARVEST: self._harvest.to_dict(),
-                self.devices.DEVICES: self.devices.to_dict(),
-                self.entropy.ENTROPY: self.entropy.to_dict()
+                key: module.to_dict() for key, module in self._modules.items()
             }
         }
+
+        ret[self.SETTINGS][self.harvest.HARVEST] = self._harvest.to_dict()
+        ret[self.SETTINGS][self.devices.DEVICES] = self.devices.to_dict()
+
+        return ret
 
     def from_json(self, json_str: str, source: ChangeSource):
         data = json.loads(json_str)
@@ -259,81 +251,81 @@ class Settings(Observable):
                 self._endpoints.clear()
                 self.notify_listeners(source)   
 
-    class Entropy(Observable):
-        def __init__(self, parent: Optional[Observable] = None):
-            super().__init__(parent)
-            self._do_mine = False
-            self._mqtt_broker = "localhost"
-            self._mqtt_port = 1883
-            self._mqtt_topic = "entropy"
+    # class Entropy(Observable):
+    #     def __init__(self, parent: Optional[Observable] = None):
+    #         super().__init__(parent)
+    #         self._do_mine = False
+    #         self._mqtt_broker = "localhost"
+    #         self._mqtt_port = 1883
+    #         self._mqtt_topic = "entropy"
 
-        @property
-        def ENTROPY(self):
-            return "entropy"
+    #     @property
+    #     def ENTROPY(self):
+    #         return "entropy"
         
-        @property
-        def DO_MINE(self):
-            return "do_mine"
+    #     @property
+    #     def DO_MINE(self):
+    #         return "do_mine"
         
-        @property
-        def MQTT_BROKER(self):
-            return "mqtt_broker"
+    #     @property
+    #     def MQTT_BROKER(self):
+    #         return "mqtt_broker"
         
-        @property
-        def MQTT_PORT(self):
-            return "mqtt_port"
+    #     @property
+    #     def MQTT_PORT(self):
+    #         return "mqtt_port"
         
-        @property
-        def MQTT_TOPIC(self):
-            return "mqtt_topic"
+    #     @property
+    #     def MQTT_TOPIC(self):
+    #         return "mqtt_topic"
         
 
-        def update_from_dict(self, data: dict, source: ChangeSource):
-            self._do_mine = data.get(self.DO_MINE, self._do_mine)
-            self._mqtt_broker = data.get(self.MQTT_BROKER, self._mqtt_broker)
-            self._mqtt_port = data.get(self.MQTT_PORT, self._mqtt_port)
-            self._mqtt_topic = data.get(self.MQTT_TOPIC, self._mqtt_topic)
-            self.notify_listeners(source)
+    #     def update_from_dict(self, data: dict, source: ChangeSource):
+    #         self._do_mine = data.get(self.DO_MINE, self._do_mine)
+    #         self._mqtt_broker = data.get(self.MQTT_BROKER, self._mqtt_broker)
+    #         self._mqtt_port = data.get(self.MQTT_PORT, self._mqtt_port)
+    #         self._mqtt_topic = data.get(self.MQTT_TOPIC, self._mqtt_topic)
+    #         self.notify_listeners(source)
                 
-        def to_dict(self) -> dict:
-            return {
-                self.DO_MINE: self._do_mine,
-                self.MQTT_BROKER: self._mqtt_broker,
-                self.MQTT_PORT: self._mqtt_port,
-                self.MQTT_TOPIC: self._mqtt_topic
-            }
+    #     def to_dict(self) -> dict:
+    #         return {
+    #             self.DO_MINE: self._do_mine,
+    #             self.MQTT_BROKER: self._mqtt_broker,
+    #             self.MQTT_PORT: self._mqtt_port,
+    #             self.MQTT_TOPIC: self._mqtt_topic
+    #         }
 
-        @property
-        def do_mine(self):
-            return self._do_mine
+    #     @property
+    #     def do_mine(self):
+    #         return self._do_mine
         
-        @property
-        def mqtt_broker(self):
-            return self._mqtt_broker
+    #     @property
+    #     def mqtt_broker(self):
+    #         return self._mqtt_broker
         
-        @property
-        def mqtt_port(self):
-            return self._mqtt_port
+    #     @property
+    #     def mqtt_port(self):
+    #         return self._mqtt_port
         
-        @property
-        def mqtt_topic(self):
-            return self._mqtt_topic
+    #     @property
+    #     def mqtt_topic(self):
+    #         return self._mqtt_topic
         
-        def set_do_mine(self, do_mine: bool, source: ChangeSource):
-            self._do_mine = do_mine
-            self.notify_listeners(source)
+    #     def set_do_mine(self, do_mine: bool, source: ChangeSource):
+    #         self._do_mine = do_mine
+    #         self.notify_listeners(source)
 
-        def set_mqtt_broker(self, mqtt_broker: str, source: ChangeSource):
-            self._mqtt_broker = mqtt_broker
-            self.notify_listeners(source)
+    #     def set_mqtt_broker(self, mqtt_broker: str, source: ChangeSource):
+    #         self._mqtt_broker = mqtt_broker
+    #         self.notify_listeners(source)
 
-        def set_mqtt_port(self, mqtt_port: int, source: ChangeSource):
-            self._mqtt_port = mqtt_port
-            self.notify_listeners(source)
+    #     def set_mqtt_port(self, mqtt_port: int, source: ChangeSource):
+    #         self._mqtt_port = mqtt_port
+    #         self.notify_listeners(source)
 
-        def set_mqtt_topic(self, mqtt_topic: str, source: ChangeSource):
-            self._mqtt_topic = mqtt_topic
-            self.notify_listeners(source)
+    #     def set_mqtt_topic(self, mqtt_topic: str, source: ChangeSource):
+    #         self._mqtt_topic = mqtt_topic
+    #         self.notify_listeners(source)
 
     def subscribe_all(self, listener: Callable[[ChangeSource], None]):
         """
