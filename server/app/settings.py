@@ -73,7 +73,6 @@ class Settings(Observable):
         super().__init__()
         self._harvest = self.Harvest(self)
         self._devices = self.Devices(self)
-        self._entropy = self.Entropy(self)
         self._api = self.API(self)
     @property
     def API_SUBKEY(self):
@@ -92,10 +91,6 @@ class Settings(Observable):
         return self._devices
     
     @property
-    def entropy(self) -> 'Settings.Entropy':
-        return self._entropy
-
-    @property
     def api(self) -> 'Settings.API':
         return self._api
 
@@ -104,13 +99,11 @@ class Settings(Observable):
             settings_data = data[self.SETTINGS]
             self.harvest.update_from_dict(settings_data.get(self.harvest.HARVEST, {}), source)
             self.devices.update_from_dict(settings_data.get(self.devices.DEVICES, {}), source)
-            self.entropy.update_from_dict(settings_data.get(self.entropy.ENTROPY, {}), source)
     def to_dict(self) -> dict:
         return {
             self.SETTINGS: {
                 self.harvest.HARVEST: self._harvest.to_dict(),
                 self.devices.DEVICES: self.devices.to_dict(),
-                self.entropy.ENTROPY: self.entropy.to_dict()
             }
         }
 
@@ -258,82 +251,6 @@ class Settings(Observable):
             if len(self._endpoints) > 0:
                 self._endpoints.clear()
                 self.notify_listeners(source)   
-
-    class Entropy(Observable):
-        def __init__(self, parent: Optional[Observable] = None):
-            super().__init__(parent)
-            self._do_mine = False
-            self._mqtt_broker = "localhost"
-            self._mqtt_port = 1883
-            self._mqtt_topic = "entropy"
-
-        @property
-        def ENTROPY(self):
-            return "entropy"
-        
-        @property
-        def DO_MINE(self):
-            return "do_mine"
-        
-        @property
-        def MQTT_BROKER(self):
-            return "mqtt_broker"
-        
-        @property
-        def MQTT_PORT(self):
-            return "mqtt_port"
-        
-        @property
-        def MQTT_TOPIC(self):
-            return "mqtt_topic"
-        
-
-        def update_from_dict(self, data: dict, source: ChangeSource):
-            self._do_mine = data.get(self.DO_MINE, self._do_mine)
-            self._mqtt_broker = data.get(self.MQTT_BROKER, self._mqtt_broker)
-            self._mqtt_port = data.get(self.MQTT_PORT, self._mqtt_port)
-            self._mqtt_topic = data.get(self.MQTT_TOPIC, self._mqtt_topic)
-            self.notify_listeners(source)
-                
-        def to_dict(self) -> dict:
-            return {
-                self.DO_MINE: self._do_mine,
-                self.MQTT_BROKER: self._mqtt_broker,
-                self.MQTT_PORT: self._mqtt_port,
-                self.MQTT_TOPIC: self._mqtt_topic
-            }
-
-        @property
-        def do_mine(self):
-            return self._do_mine
-        
-        @property
-        def mqtt_broker(self):
-            return self._mqtt_broker
-        
-        @property
-        def mqtt_port(self):
-            return self._mqtt_port
-        
-        @property
-        def mqtt_topic(self):
-            return self._mqtt_topic
-        
-        def set_do_mine(self, do_mine: bool, source: ChangeSource):
-            self._do_mine = do_mine
-            self.notify_listeners(source)
-
-        def set_mqtt_broker(self, mqtt_broker: str, source: ChangeSource):
-            self._mqtt_broker = mqtt_broker
-            self.notify_listeners(source)
-
-        def set_mqtt_port(self, mqtt_port: int, source: ChangeSource):
-            self._mqtt_port = mqtt_port
-            self.notify_listeners(source)
-
-        def set_mqtt_topic(self, mqtt_topic: str, source: ChangeSource):
-            self._mqtt_topic = mqtt_topic
-            self.notify_listeners(source)
 
     def subscribe_all(self, listener: Callable[[ChangeSource], None]):
         """
