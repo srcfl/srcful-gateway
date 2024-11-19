@@ -1,15 +1,21 @@
 import queue
 from unittest.mock import Mock, patch
+
+import pytest
+from server.crypto.crypto_state import CryptoState
 from server.web.handler.post.modbus_read_write import Handler
 from server.tasks.modbusWriteTask import ModbusWriteTask, log
 from server.web.handler.requestData import RequestData
 from server.app.blackboard import BlackBoard
 
 
+@pytest.fixture
+def bb():
+    return BlackBoard(Mock(spec=CryptoState))
+
 # Test that doPost parses commands into tasks correctly 
-def test_do_post():
+def test_do_post(bb: BlackBoard):
     inverter = Mock()
-    bb = BlackBoard()
     bb.devices.add(inverter)
 
     handler = Handler()
@@ -39,24 +45,23 @@ def test_do_post():
     assert isinstance(task.commands[1], ModbusWriteTask.PauseCommand)
 
 # Test error handling for missing 'commands' field
-def test_missing_commands():
+def test_missing_commands(bb: BlackBoard):
     handler = Handler()
-    rd = RequestData(BlackBoard(), {}, {}, {})
+    rd = RequestData(bb, {}, {}, {})
     response_code, response_body = handler.do_post(rd)
     assert response_code == 400
 # Test error handling for Missing inverter field
-def test_missing_inverter():
+def test_missing_inverter(bb: BlackBoard):
     handler = Handler()
-    rd = RequestData(BlackBoard(), {}, {}, {'commands': []})
+    rd = RequestData(bb, {}, {}, {'commands': []})
     response_code, response_body = handler.do_post(rd)
     assert response_code == 400
 
 # Test that malformed command objects are handled and an error is returned
-def test_malformed_commands():
+def test_malformed_commands(bb: BlackBoard):
     handler = Handler()
 
     def requestData(data):
-        bb = BlackBoard()
         bb.devices.add(Mock())
         return RequestData(bb, {}, {}, data)
 

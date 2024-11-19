@@ -1,13 +1,14 @@
+from server.crypto.crypto_state import CryptoState
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
 import pytest
 from server.app.blackboard import BlackBoard
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import server.crypto.crypto as crypto
 from server.app.settings import ChangeSource
 
 @pytest.fixture
 def blackboard():
-    return BlackBoard()
+    return BlackBoard(Mock(spec=CryptoState))
 
 def test_get_settings_with_chip(blackboard):
     client = GraphQLSubscriptionClient(blackboard, "ws://example.com")

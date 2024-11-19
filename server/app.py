@@ -109,7 +109,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     from server.web.handler.get.crypto import Handler as CryptoHandler
     try:
-        crypto_state = CryptoHandler().get_crypto_state(0)
+        crypto_state = CryptoHandler().get_crypto_state_dict(0)
     except Exception as e:
         logger.error(f"Failed to get crypto state: {e}")
         crypto_state = {'error': 'no crypto key or chip'}

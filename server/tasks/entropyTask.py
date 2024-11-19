@@ -1,3 +1,4 @@
+from datetime import timedelta
 import logging
 import threading
 import requests
@@ -24,6 +25,8 @@ import paho.mqtt.client as mqtt
 import ssl
 import json
 import os
+
+import server.backend as backend
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +224,22 @@ class EntropyTask(Task):
                 return entropy_cert_data["cert_pem"], entropy_cert_data["cert_private_key"]
         
         raise Exception("Failed to get certificate and key") 
-        
+
+    def _has_mined_srcful_data(self, serial:str) -> bool:
+        # check the DERs of the gateway and get the last 24h of data
+        # if there is any data return true
+        # otherwise return false
+
+        gateway = backend.Gateway(serial)
+        ders = gateway.get_ders(self.bb.settings.api.gql_endpoint)
+        resolution = backend.Histogram.Resolution(backend.Histogram.Resolution.Type.HOUR, 1)
+
+        for der in ders:
+            histogram = der.histogram_from_now(self.bb.settings.api.gql_endpoint, timedelta(hours=24), resolution)
+            if len(histogram) > 0:
+                return True
+
+        return True
     
     def execute(self, event_time):
         if self.instance_id != _LAST_INSTANCE_ID:
@@ -229,6 +247,11 @@ class EntropyTask(Task):
             return None
         
         if self.bb.settings.entropy.do_mine:
+            if not self._has_mined_srcful_data(self.bb.crypto_state.serial_number):
+                logger.info("No srcful data mined in 24h, skipping entropy, better luck next hour")
+                self.adjust_time(self.bb.time_ms() + 60000)
+                return self
+            
             if self.cert_pem is None or self.cert_private_key is None:
                 # fetch the cert and key from the settings with subkey entropy
                 try:

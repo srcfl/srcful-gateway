@@ -1,5 +1,6 @@
 import pytest
 
+from server.crypto.crypto_state import CryptoState
 from server.tasks.getSettingsTask import GetSettingsTask, handle_settings
 
 from unittest.mock import Mock, patch
@@ -15,7 +16,7 @@ import server.crypto.crypto as crypto
 
 @pytest.fixture
 def blackboard():
-    return BlackBoard()
+    return BlackBoard(Mock(spec=CryptoState))
 
 def test_make_the_call_with_task(blackboard):
     with patch("server.crypto.crypto.HardwareCrypto.atcab_init", return_value=crypto.ATCA_SUCCESS):

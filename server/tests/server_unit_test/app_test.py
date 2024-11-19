@@ -1,19 +1,20 @@
 import time
 import logging
 import queue
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 import pytest
 
 from server.app import app
 from server.app import task_scheduler
 
 from server.app.blackboard import BlackBoard
+from server.crypto.crypto_state import CryptoState
 from server.tasks.itask import ITask
 
 
 @pytest.fixture
 def bb():
-    return BlackBoard()
+    return BlackBoard(Mock(spec=CryptoState))
 @pytest.fixture
 def scheduler(bb):
     return task_scheduler.TaskScheduler(max_workers=4, system_time=bb, task_source=bb)

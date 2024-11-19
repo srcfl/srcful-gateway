@@ -2,12 +2,13 @@ import pytest
 from unittest.mock import Mock, patch
 import json
 from server.app.blackboard import BlackBoard
+from server.crypto.crypto_state import CryptoState
 from server.tasks.requestResponseTask import RequestTask, ResponseTask, handle_request, handle_request_task
 from server.web import handler
 
 @pytest.fixture
 def blackboard():
-    return BlackBoard()
+    return BlackBoard(Mock(spec=CryptoState))
 
 @pytest.fixture
 def mock_handler():

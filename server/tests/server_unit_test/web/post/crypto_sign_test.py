@@ -1,7 +1,8 @@
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock
 import json
 import datetime
+from server.crypto.crypto_state import CryptoState
 from server.web.handler.post.crypto_sign import Handler
 from server.web.handler.requestData import RequestData
 from server.app.blackboard import BlackBoard
@@ -13,7 +14,7 @@ def handler():
 
 @pytest.fixture
 def mock_request_data():
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
     return RequestData(bb, {}, {}, {})
 
 @pytest.fixture

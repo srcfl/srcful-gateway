@@ -1,13 +1,14 @@
 from server.app.blackboard import BlackBoard
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 from server.app.message import Message
+from server.crypto.crypto_state import CryptoState
 from server.devices.ICom import ICom
 import pytest
 import time
 
 
 def test_blackboard():
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
     assert bb is not None
     assert bb.devices is not None
     assert bb.devices.lst is not None
@@ -15,14 +16,14 @@ def test_blackboard():
     assert len(bb.settings.harvest.endpoints) > 0
 
 def test_blackboard_get_version():
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
 
     # assert that string contains two dots
     assert bb.get_version().count(".") == 2
 
 def test_blackboard_add_device():
     listener = MagicMock()
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
     hw = MagicMock()
     bb.devices.add_listener(listener)
     bb.devices.add(hw)
@@ -32,7 +33,7 @@ def test_blackboard_add_device():
 
 def test_blackboard_remove_device():
     listener = MagicMock()
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
     hw = MagicMock()
     bb.devices.add_listener(listener)
     bb.devices.add(hw)
@@ -43,7 +44,7 @@ def test_blackboard_remove_device():
 
 @pytest.fixture
 def message_container() -> BlackBoard:
-    return BlackBoard()  # Replace with actual constructor if there are parameters
+    return BlackBoard(Mock(spec=CryptoState))  # Replace with actual constructor if there are parameters
 
 @pytest.fixture
 def test_messages():
@@ -113,13 +114,13 @@ def test_message_list_limit(message_container):
     assert len(messages) <= 10
 
 def test_time_ms():
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
     # the time must be an UTC time that corresponds to the current time
     assert bb.time_ms() <= int(time.time() * 1000)
 
 def test_elapsed_time():
     start_time = time.monotonic_ns() // 1_000_000
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
 
     time.sleep(0.2)
     end_time = time.monotonic_ns() // 1_000_000
@@ -130,7 +131,7 @@ def test_elapsed_time():
 
 
 def test_chip_death_count():
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
     assert bb.chip_death_count == 0
     bb.increment_chip_death_count()
     assert bb.chip_death_count == 1

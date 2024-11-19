@@ -6,6 +6,7 @@ from server.app.itask_source import ITaskSource
 from server.app.task_scheduler import TaskScheduler
 import server.crypto.crypto as crypto
 from server.app.message import Message
+from server.crypto.crypto_state import CryptoState
 from server.tasks.itask import ITask
 from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
@@ -31,11 +32,11 @@ class BlackBoard(ISystemTime, ITaskSource):
     _messages: list[Message]
     _chip_death_count: int
     _settings: Settings
-    _crypto_state: dict
+    _crypto_state: CryptoState
     _available_devices: list[ICom]
     _tasks: list[ITask]
 
-    def __init__(self, crypto_state:dict = None):
+    def __init__(self, crypto_state: CryptoState):
         self._tasks = []
         self._devices = BlackBoard.Devices()
         self._start_time = time.monotonic_ns()
@@ -49,7 +50,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._settings.entropy.set_mqtt_broker("aumwfe410clfv-ats.iot.us-east-1.amazonaws.com", ChangeSource.LOCAL)
         self._settings.entropy.set_mqtt_port(8883, ChangeSource.LOCAL)
         self._settings.entropy.set_mqtt_topic("entropy/srcful", ChangeSource.LOCAL)
-        self._crypto_state = crypto_state if crypto_state is not None else {}
+        self._crypto_state = crypto_state
         self._available_devices = []
         
     def get_version(self) -> str:
@@ -62,8 +63,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         ret = self._tasks
         self._tasks = []
         return ret
-
-
+    
     def _save_state(self):
         from server.tasks.saveStateTask import SaveStateTask
         self.add_task(SaveStateTask(self.time_ms() + 100, self))
@@ -136,7 +136,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         state = dict()
         state['status'] = {'version': self.get_version(), 'uptime': self.elapsed_time, 'messages': self.message_state()}
         state['timestamp'] = self.time_ms()
-        state['crypto'] = self.crypto_state()
+        state['crypto'] = self.crypto_state().to_dict(self.chip_death_count)
         state['network'] = self.network_state()
         state['devices'] = self.devices_state()
         state['available_devices'] = [device.get_config() for device in self.get_available_devices()]
@@ -154,8 +154,7 @@ class BlackBoard(ISystemTime, ITaskSource):
             ret.append(m_dict)
         return ret
 
-    def crypto_state(self) -> dict:
-        self._crypto_state['chipDeathCount'] = self.chip_death_count
+    def crypto_state(self) -> CryptoState:
         return self._crypto_state
     
     def network_state(self) -> dict:

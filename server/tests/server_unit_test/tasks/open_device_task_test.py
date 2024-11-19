@@ -1,14 +1,19 @@
+import pytest
+from server.crypto.crypto_state import CryptoState
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.app.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
 import server.tests.config_defaults as cfg
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 
-def test_execute_invertert_added():
-    bb = BlackBoard()
+@pytest.fixture
+def bb():
+    return BlackBoard(Mock(spec=CryptoState))
+
+def test_execute_invertert_added(bb : BlackBoard):
 
     device = MagicMock()
     device.open.return_value = True
@@ -20,8 +25,7 @@ def test_execute_invertert_added():
     assert ret is None
     assert bb.purge_tasks()[0] is not None
 
-def test_execute_inverter_already_open():
-    bb = BlackBoard()
+def test_execute_inverter_already_open(bb : BlackBoard):
     device = MagicMock()
     device.is_open.return_value = True
     device.get_config.return_value = cfg.TCP_ARGS
@@ -39,8 +43,7 @@ def test_execute_inverter_already_open():
     assert not device.connect.called
 
 
-def test_execute_invertert_could_not_open():
-    bb = BlackBoard()
+def test_execute_invertert_could_not_open(bb : BlackBoard):
 
     device = MagicMock()
     device.connect.return_value = False
@@ -53,8 +56,7 @@ def test_execute_invertert_could_not_open():
     assert ret is None
     assert len(bb.purge_tasks()) == 1
 
-def test_second_inverter_opened():
-    bb = BlackBoard()
+def test_second_inverter_opened(bb : BlackBoard):
     device = MagicMock()
     device.connect.return_value = True
     device.compare_host.return_value = False
@@ -78,8 +80,7 @@ def test_second_inverter_opened():
     assert len(bb.devices.lst) == 2
     
 
-def test_remove_device():
-    bb = BlackBoard()
+def test_remove_device(bb : BlackBoard):
     device = MagicMock()
     device.connect.return_value = True
     task = OpenDeviceTask(0, bb, device)
@@ -95,8 +96,7 @@ def test_remove_device():
     # assert device.disconnect.called
     
 
-def test_retry_on_exception():
-    bb = BlackBoard()
+def test_retry_on_exception(bb : BlackBoard):
     device = MagicMock()
     device.connect.side_effect = Exception("test")
     task = OpenDeviceTask(0, bb, device)
@@ -107,8 +107,7 @@ def test_retry_on_exception():
     assert len(bb.purge_tasks()) == 1 # state save task added as error message is generated
     
     
-def test_execute_inverter_not_on_local_network():
-    bb = BlackBoard()
+def test_execute_inverter_not_on_local_network(bb : BlackBoard):
     device = MagicMock(spec=ModbusTCP)
     device.connect.return_value = False
     device.get_config.return_value = cfg.TCP_ARGS # MAC is 00:00:00:00:00:00, which is NetworkUtils.INVALID_MAC, so probably not on the local network
@@ -127,8 +126,7 @@ def test_execute_inverter_not_on_local_network():
     assert len(bb.purge_tasks()) == 1 # state save task added as error message is generated
 
 
-def test_add_multiple_devices():
-    bb = BlackBoard()
+def test_add_multiple_devices(bb : BlackBoard):
     device1 = MagicMock()
     device1.connect.return_value = True
     device1.is_open.return_value = True
@@ -153,8 +151,7 @@ def test_add_multiple_devices():
     assert len(bb.devices.lst) == 2
 
 
-def test_open_device_that_is_already_open():
-    bb = BlackBoard()
+def test_open_device_that_is_already_open(bb : BlackBoard):
     device = MagicMock()
     device.connect.return_value = True
     device.is_open.return_value = True
@@ -174,8 +171,7 @@ def test_open_device_that_is_already_open():
     assert device2 not in bb.devices.lst
 
 
-def test_open_device_that_is_already_open_no_sn():
-    bb = BlackBoard()
+def test_open_device_that_is_already_open_no_sn(bb : BlackBoard):
     device = MagicMock()
     device.connect.return_value = True
     device.is_open.return_value = True

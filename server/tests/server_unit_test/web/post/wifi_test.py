@@ -1,4 +1,8 @@
 # test for server.web.handler.post.wifi
+from unittest.mock import Mock
+
+import pytest
+from server.crypto.crypto_state import CryptoState
 from server.web.handler.post.wifi import Handler
 from server.web.handler.requestData import RequestData
 from server.app.blackboard import BlackBoard
@@ -10,14 +14,18 @@ import queue
 def mock__init__(self, SSID, PSK):
     pass
 
+
+@pytest.fixture
+def bb():
+    return BlackBoard(Mock(spec=CryptoState))
+
 #@patch.object(WifiHandler, '__init__', mock__init__)
-def test_doPost():
+def test_doPost(bb: BlackBoard):
     data_params = {
         "ssid": "test",
         "psk": "test",
     }
-    tasks = queue.PriorityQueue()
-    request_data = RequestData(BlackBoard(), post_params={}, query_params={}, data=data_params)
+    request_data = RequestData(bb, post_params={}, query_params={}, data=data_params)
 
     handler = Handler()
 
@@ -37,7 +45,7 @@ def test_doPost_bad_data():
         "password": "test",
     }
     tasks = queue.PriorityQueue()
-    request_data = RequestData(BlackBoard(), post_params={}, query_params={}, data=data_params)
+    request_data = RequestData(bb, post_params={}, query_params={}, data=data_params)
 
     handler = Handler()
 

@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+from server.crypto.crypto_state import CryptoState
 import server.web.handler.post.logger as post_logger
 import json
 import logging
@@ -7,7 +9,7 @@ from server.app.blackboard import BlackBoard
 logger = logging.getLogger(__name__)
 
 def requestData(data):
-    return RequestData(BlackBoard(), {}, {}, data)
+    return RequestData(BlackBoard(Mock(spec=CryptoState)), {}, {}, data)
 
 def test_post_root():
     handler = post_logger.Handler()

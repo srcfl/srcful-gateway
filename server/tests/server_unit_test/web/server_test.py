@@ -1,5 +1,6 @@
 from io import BytesIO
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+from server.crypto.crypto_state import CryptoState
 from server.web.server import Server, request_handler_factory, Endpoints
 from http.server import BaseHTTPRequestHandler
 import pytest
@@ -34,6 +35,10 @@ def mock_setup():
 def mock_finish():
     pass
 
+@pytest.fixture
+def bb():
+    return BlackBoard(Mock(spec=CryptoState))
+
 
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")
@@ -54,8 +59,8 @@ def test_handler_api_get_enpoints_params(mock_setup, mock_handle, mock_finish):
     assert query["test"] == "hello"
 
 
-def test_open_close():
-    s = Server(("localhost", 8081), BlackBoard())
+def test_open_close(bb: BlackBoard):
+    s = Server(("localhost", 8081), bb)
     assert isinstance(s._web_server, HTTPServer)
     s.close()
     assert s._web_server is None
@@ -105,9 +110,9 @@ def test_handler_get_post_data():
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")
 @patch.object(BaseHTTPRequestHandler, "setup")
-def test_handler_get_root(mock_setup, mock_handle, mock_finish):
+def test_handler_get_root(mock_setup, mock_handle, mock_finish, bb: BlackBoard):
     # test that the root handler is used when no other handler matches
-    h = request_handler_factory(BlackBoard())(None, None, None)
+    h = request_handler_factory(bb)(None, None, None)
 
     # we need to mock the base class methods
     h.path = ""
@@ -125,19 +130,19 @@ def test_handler_get_root(mock_setup, mock_handle, mock_finish):
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")
 @patch.object(BaseHTTPRequestHandler, "setup")
-def test_handler_get_returns_exception(mock_setup, mock_handle, mock_finish):
+def test_handler_get_returns_exception(mock_setup, mock_handle, mock_finish, bb: BlackBoard):
     # test that exceptions are handled and retuns an exception message
-    h = request_handler_factory(BlackBoard())(None, None, None)
+    h = request_handler_factory(bb)(None, None, None)
 
     # we need to mock the base class methods
     h.path = "/api/crypto"
+    bb._crypto_state.to_dict.side_effect = Exception("test")
     h.send_response = lambda x: None
     h.send_header = lambda x, y: None
     h.end_headers = lambda: None
     h.wfile = BytesIO()
 
-    with patch("server.crypto.crypto.HardwareCrypto.atcab_init", side_effect=Exception("test")), patch('server.crypto.software.SoftwareCrypto.atcab_init', side_effect=Exception("test")):
-        h.do_GET()
+    h.do_GET()
     v = h.wfile.getvalue().decode("utf-8")
     assert "test" in v
     assert "exception" in v
@@ -145,8 +150,8 @@ def test_handler_get_returns_exception(mock_setup, mock_handle, mock_finish):
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")
 @patch.object(BaseHTTPRequestHandler, "setup")
-def test_hanler_post_returns_exception(mock_setup, mock_handle, mock_finish):
-    h = request_handler_factory(BlackBoard())(None, None, None)
+def test_hanler_post_returns_exception(mock_setup, mock_handle, mock_finish, bb: BlackBoard):
+    h = request_handler_factory(bb)(None, None, None)
 
     # we need to mock the base class methods
     h.path = "/api/echo"
@@ -169,9 +174,9 @@ def test_hanler_post_returns_exception(mock_setup, mock_handle, mock_finish):
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")
 @patch.object(BaseHTTPRequestHandler, "setup")
-def test_handler_get_do_get(mock_setup, mock_handle, mock_finish):
+def test_handler_get_do_get(mock_setup, mock_handle, mock_finish, bb: BlackBoard):
     # check that all get handlers have a doGet method
-    h = request_handler_factory(BlackBoard())(None, None, None)
+    h = request_handler_factory(bb)(None, None, None)
     for handler in h.endpoints.api_get.values():
         assert hasattr(handler, "do_get")
         assert hasattr(handler, "schema")
@@ -185,9 +190,9 @@ def test_handler_get_do_get(mock_setup, mock_handle, mock_finish):
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")
 @patch.object(BaseHTTPRequestHandler, "setup")
-def test_handler_get_do_post(mock_setup, mock_handle, mock_finish):
+def test_handler_get_do_post(mock_setup, mock_handle, mock_finish, bb: BlackBoard):
     # check that all post handlers have a doPost method
-    h = request_handler_factory(BlackBoard())(None, None, None)
+    h = request_handler_factory(bb)(None, None, None)
     for handler in h.endpoints.api_post.values():
         assert hasattr(handler, "do_post")
         assert hasattr(handler, "schema")
@@ -201,9 +206,9 @@ def test_handler_get_do_post(mock_setup, mock_handle, mock_finish):
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")
 @patch.object(BaseHTTPRequestHandler, "setup")
-def test_handler_get_do_delete(mock_setup, mock_handle, mock_finish):
+def test_handler_get_do_delete(mock_setup, mock_handle, mock_finish, bb: BlackBoard):
     # check that all post handlers have a doPost method
-    h = request_handler_factory(BlackBoard())(None, None, None)
+    h = request_handler_factory(bb)(None, None, None)
     for handler in h.endpoints.api_delete.values():
         assert hasattr(handler, "do_delete")
         assert hasattr(handler, "schema")

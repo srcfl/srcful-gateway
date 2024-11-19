@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+from server.crypto.crypto_state import CryptoState
 from server.web.handler.post.device import Handler as DeviceHandler
 from server.web.handler.requestData import RequestData
 from server.tasks.openDeviceTask import OpenDeviceTask
@@ -6,12 +8,19 @@ import server.tests.config_defaults as cfg
 
 import queue
 
+import pytest
+from server.crypto.crypto_state import CryptoState
 
-def test_post_create_inverter_tcp():
+@pytest.fixture
+def bb():
+    return BlackBoard(Mock(spec=CryptoState))
+
+
+def test_post_create_inverter_tcp(bb: BlackBoard):
     conf = cfg.TCP_CONFIG
 
     handler = DeviceHandler()
-    rd = RequestData(BlackBoard(), {}, {}, conf)
+    rd = RequestData(bb, {}, {}, conf)
 
     handler.do_post(rd)
 
@@ -39,11 +48,11 @@ def test_post_create_inverter_tcp():
 #     assert task.device.get_config() == conf
 
 
-def test_post_create_inverter_solarman():
+def test_post_create_inverter_solarman(bb: BlackBoard):
     conf = cfg.SOLARMAN_CONFIG
     
     handler = DeviceHandler()
-    rd = RequestData(BlackBoard(), {}, {}, conf)
+    rd = RequestData(bb, {}, {}, conf)
 
     handler.do_post(rd)
     

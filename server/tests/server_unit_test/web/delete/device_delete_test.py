@@ -1,7 +1,8 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 from server.app.blackboard import BlackBoard
 from server.app.settings_device_listener import SettingsDeviceListener
+from server.crypto.crypto_state import CryptoState
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.web.handler.delete.device import Handler
@@ -15,7 +16,7 @@ def handler():
 
 @pytest.fixture
 def blackboard():
-    return BlackBoard()
+    return BlackBoard(Mock(spec=CryptoState))
 
 @pytest.fixture
 def mock_device():

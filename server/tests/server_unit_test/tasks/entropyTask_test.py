@@ -2,6 +2,7 @@ import json
 import time
 import pytest
 from unittest.mock import Mock, patch, MagicMock
+from server.crypto.crypto_state import CryptoState
 from server.tasks.entropyTask import EntropyTask, generate_poisson_delay, generate_entropy, _LAST_INSTANCE_ID
 from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
@@ -13,6 +14,7 @@ import os
 @pytest.fixture
 def mock_blackboard():
     bb = Mock(spec=BlackBoard)
+    bb._crypto_state = Mock(spec=CryptoState)
     bb.settings = Mock()
     bb.settings.entropy = Mock()
     bb.settings.entropy.mqtt_broker = "test.mosquitto.org"
@@ -85,6 +87,7 @@ def test_execute_when_mining(mock_chip, mock_send_entropy, mock_get_cert_and_key
     mock_get_cert_and_key.return_value = ("cert_pem", "private_key")
     
     task = EntropyTask(0, mock_blackboard)
+    task._has_mined_srcful_data = Mock(return_value=True)
     result = task.execute(0)
 
     mock_get_cert_and_key.assert_called_once()
@@ -111,8 +114,11 @@ def test_only_latest_instance_executes(mock_chip, mock_send_entropy, mock_get_ce
     mock_get_cert_and_key.return_value = ("cert_pem", "private_key")
 
     task1 = EntropyTask(0, mock_blackboard)
+    task1._has_mined_srcful_data = Mock(return_value=True)
     task2 = EntropyTask(0, mock_blackboard)
+    task2._has_mined_srcful_data = Mock(return_value=True)
     task3 = EntropyTask(0, mock_blackboard)
+    task3._has_mined_srcful_data = Mock(return_value=True)
 
     result1 = task1.execute(0)
     result2 = task2.execute(0)
@@ -124,6 +130,16 @@ def test_only_latest_instance_executes(mock_chip, mock_send_entropy, mock_get_ce
 
     mock_get_cert_and_key.assert_called_once()
     mock_send_entropy.assert_called_once()
+
+def test_no_mined_srcful_data(mock_blackboard):
+    task = EntropyTask(0, mock_blackboard)
+    task._has_mined_srcful_data = Mock(return_value=False)
+    task._send_entropy = Mock()
+    result = task.execute(0)
+    assert result == task
+    assert task._send_entropy.call_count == 0
+    assert task.get_time() == mock_blackboard.time_ms() + 60000
+    
 
 @patch('logging.Logger.info')
 @patch('server.crypto.crypto.Chip')
@@ -151,6 +167,8 @@ def test_latest_instance_executes_multiple_times(mock_chip, mock_send_entropy, m
 
     task = EntropyTask(0, mock_blackboard)
 
+    task._has_mined_srcful_data = Mock(return_value=True)
+
     result1 = task.execute(0)
     result2 = task.execute(0)
     result3 = task.execute(0)
@@ -173,7 +191,9 @@ def test_entropy_task_with_software_crypto(mock_blackboard):
 
     mock_blackboard.time_ms.return_value = int(time.time() * 1000)
 
-    entropy_task = EntropyTask(0, mock_blackboard)
+    bb = BlackBoard(CryptoState())
+
+    entropy_task = EntropyTask(0, bb)
     data = entropy_task._create_entropy_data()
     assert isinstance(data, dict)
     assert 'entropy' in data

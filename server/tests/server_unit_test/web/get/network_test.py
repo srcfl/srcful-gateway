@@ -1,5 +1,6 @@
 import pytest
 import json
+from server.crypto.crypto_state import CryptoState
 from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.network import NetworkHandler
@@ -7,7 +8,7 @@ from server.web.handler.get.network import AddressHandler
 from server.web.handler.get.modbus_scan import ModbusScanHandler
 from server.network.wifi import get_connection_configs
 from server.app.blackboard import BlackBoard
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from server.network.network_utils import NetworkUtils
 
 # To-do: Break down the test cases into smaller test cases and in their respective classes 
@@ -15,7 +16,7 @@ from server.network.network_utils import NetworkUtils
 
 @pytest.fixture
 def request_data():
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
     bb.rest_server_port = 8081
     bb.rest_server_ip = "127.0.0.1"
     return RequestData(bb, {}, {}, {})
@@ -60,7 +61,7 @@ def test_modbus_scan(mock_network_utils):
     mock_network_utils.get_hosts.return_value = [{NetworkUtils.IP_KEY: "192.168.50.220",
                                                   NetworkUtils.PORT_KEY: 502}]
     
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
 
     status_code, response = handler.do_get(RequestData(bb, {}, {NetworkUtils.PORTS_KEY: ports}, {}))
     assert status_code == 200

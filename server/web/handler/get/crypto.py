@@ -1,6 +1,7 @@
 import json
 import logging
 
+from server.crypto.crypto_state import CryptoState
 import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run
 
@@ -12,53 +13,21 @@ log = logging.getLogger(__name__)
 
 class Handler(GetHandler):
 
-    @property
-    def DEVICE(self):
-        return "deviceName"
-    
-    @property   
-    def SERIAL_NO(self):
-        return "serialNumber"
-    
-    @property
-    def PUBLIC_KEY(self):
-        return "publicKey"
-    
-    @property
-    def COMPACT_KEY(self):
-        return "compactKey"
-    
-    @property
-    def CHIP_DEATH_COUNT(self):
-        return "chipDeathCount"
-
     def schema(self) -> dict:
         return self.create_schema(
             "Get crypo chip information",
             returns={
-                self.DEVICE: "string, device name",
-                self.SERIAL_NO: "string, serial number as hex string",
-                self.PUBLIC_KEY: "string, public key as hex string",
-                self.COMPACT_KEY: "string, compact form of public key ecc swarm key used in Helium",
-                self.CHIP_DEATH_COUNT: "int, number of times the chip has died"
+                CryptoState.device_key(): "string, device name",
+                CryptoState.serial_no_key(): "string, serial number as hex string",
+                CryptoState.public_key_key(): "string, public key as hex string",
+                CryptoState.compact_key_key(): "string, compact form of public key ecc swarm key used in Helium",
+                CryptoState.chip_death_count_key(): "int, number of times the chip has died"
                 
             }
         )
     
-    def get_crypto_state(self, death_count: int) -> dict:
-        ret = {}
-        with crypto.Chip() as chip:
-            pub_key = chip.get_public_key()
-            ret[self.DEVICE] = chip.get_device_name()
-            ret[self.SERIAL_NO] = chip.get_serial_number().hex()
-            ret[self.PUBLIC_KEY] = pub_key.hex()
-            ret[self.COMPACT_KEY] = crypto.public_key_to_compact(pub_key).decode("utf-8")
-            ret[self.CHIP_DEATH_COUNT] = death_count
-        return ret
-
     def do_get(self, data: RequestData):
-        # return the json data {'serial:' crypto.serial, 'pubkey': crypto.publicKey}
-        ret = self.get_crypto_state(data.bb.chip_death_count)
+        ret = data.bb.crypto_state().to_dict(data.bb.chip_death_count)
         return 200, json.dumps(ret)
 
 

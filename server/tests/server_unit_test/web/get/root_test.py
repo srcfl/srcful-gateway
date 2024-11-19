@@ -1,9 +1,9 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from server.web.handler.get.root import Handler
 from server.web.handler.requestData import RequestData
 from server.app.blackboard import BlackBoard
-
+from server.crypto.crypto_state import CryptoState
 import server.crypto.crypto as crypto
 
 
@@ -15,7 +15,7 @@ def test_doGet():
         with patch("server.crypto.crypto.atcab_read_serial_number", return_value=crypto.ATCA_SUCCESS):
 
             # Create a RequestData object with the parameters you want to test
-            request_data = RequestData(BlackBoard(), post_params={}, query_params={}, data={})
+            request_data = RequestData(BlackBoard(Mock(spec=CryptoState)), post_params={}, query_params={}, data={})
 
             # Create an instance of Handler
             handler = Handler()

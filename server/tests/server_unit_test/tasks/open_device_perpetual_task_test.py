@@ -1,3 +1,4 @@
+from server.crypto.crypto_state import CryptoState
 from server.devices.ICom import ICom
 from server.devices.IComFactory import IComFactory
 from server.app.settings import ChangeSource
@@ -5,7 +6,7 @@ from server.app.settings_device_listener import SettingsDeviceListener
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.app.blackboard import BlackBoard
 from server.tasks.harvestFactory import HarvestFactory
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 from server.devices.inverters.modbus import Modbus
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.devices.inverters.ModbusSolarman import ModbusSolarman
@@ -19,6 +20,10 @@ def set_up_listeners(blackboard: BlackBoard):
     blackboard.settings.devices.add_listener(settings_device_listener.on_change)
 
 @pytest.fixture
+def bb():
+    return BlackBoard(Mock(spec=CryptoState))
+
+@pytest.fixture
 def modbus_devices():
     devices: list[Modbus] = []
     
@@ -29,8 +34,7 @@ def modbus_devices():
     devices.append(ModbusSolarman(**solarman_conf))
     
 
-def test_execute_invertert_added():
-    bb = BlackBoard()
+def test_execute_invertert_added(bb : BlackBoard):
     set_up_listeners(bb)
 
     # Add a device to the settings
@@ -49,8 +53,7 @@ def test_execute_invertert_added():
     assert bb.purge_tasks()[0] is not None
 
 
-def test_retry_on_exception():
-    bb = BlackBoard()
+def test_retry_on_exception(bb : BlackBoard):
     set_up_listeners(bb)
 
     inverter = MagicMock()
@@ -65,8 +68,7 @@ def test_retry_on_exception():
     assert ret is task
     assert len(bb.purge_tasks()) == 0
 
-def test_execute_inverter_not_found():
-    bb = BlackBoard()
+def test_execute_inverter_not_found(bb : BlackBoard):
     set_up_listeners(bb)
     
     device = MagicMock()
@@ -87,8 +89,7 @@ def test_execute_inverter_not_found():
     assert len(bb.purge_tasks()) == 1   # info message is added wich triggers a saveStateTask
     
 
-def test_execute_new_inverter_added_after_rescan():
-    bb = BlackBoard()
+def test_execute_new_inverter_added_after_rescan(bb : BlackBoard):
     set_up_listeners(bb)
     
     inverter = MagicMock()
@@ -111,8 +112,7 @@ def test_execute_new_inverter_added_after_rescan():
     
     
 @patch('server.tasks.openDevicePerpetualTask.NetworkUtils')
-def test_reconnect_does_not_find_known_device(mock_network_utils):
-    bb = BlackBoard()
+def test_reconnect_does_not_find_known_device(mock_network_utils, bb : BlackBoard):
     set_up_listeners(bb)
     
     inverter = MagicMock()
@@ -144,8 +144,7 @@ def test_reconnect_does_not_find_known_device(mock_network_utils):
     assert len(task.bb.devices.lst) == 0
 
 
-def test_execute_inverter_not_on_local_network():
-    bb = BlackBoard()
+def test_execute_inverter_not_on_local_network(bb : BlackBoard):
     set_up_listeners(bb)
     
     inverter = MagicMock(spec=ModbusTCP)
@@ -167,8 +166,7 @@ def test_execute_inverter_not_on_local_network():
     assert len(bb.purge_tasks()) == 1 # state save task added as error message is generated
     
 
-def test_add_multiple_devices():
-    bb = BlackBoard()
+def test_add_multiple_devices(bb : BlackBoard):
     set_up_listeners(bb)
     
     device1 = MagicMock(spec=ICom)
@@ -205,13 +203,12 @@ def test_add_multiple_devices():
     assert len(bb.devices.lst) == 2
     
     
-def test_device_witn_sn_already_open():
+def test_device_witn_sn_already_open(bb : BlackBoard):
     existing_device = MagicMock(spec=ICom)
     existing_device.get_SN.return_value = IComFactory.create_com(cfg.P1_TELNET_CONFIG).get_SN()
     existing_device.is_open.return_value = True
     existing_device.get_config.return_value = cfg.P1_TELNET_CONFIG
     
-    bb = BlackBoard()
     set_up_listeners(bb)
     
     bb.devices.add(existing_device)

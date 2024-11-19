@@ -1,9 +1,10 @@
 import json
 import struct
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
+from server.crypto.crypto_state import CryptoState
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.modbus_read import HoldingHandler, InputHandler  # adapt to your actual module import
 from server.app.blackboard import BlackBoard
@@ -24,7 +25,7 @@ def inverter_fixture():
 
 @pytest.fixture
 def request_data():
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
     inv = MagicMock()
     bb.devices.add(inv)
 
@@ -63,7 +64,7 @@ def test_InputHandler(request_data):
 def test_missing_address(inverter_fixture):
     handler = HoldingHandler()
 
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
     bb.devices.add(inverter_fixture)
 
     request_data = RequestData(bb, {}, {}, {})
@@ -74,7 +75,7 @@ def test_missing_address(inverter_fixture):
 
 def test_inverter_not_initialized():
     handler = HoldingHandler()
-    request_data = RequestData(BlackBoard(), {'address': '0'}, {}, {})
+    request_data = RequestData(BlackBoard(Mock(spec=CryptoState)), {'address': '0'}, {}, {})
     status_code, response = handler.do_get(request_data)
     assert status_code == 400
     assert json.loads(response).get('error') == 'inverter not initialized'

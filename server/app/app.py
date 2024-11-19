@@ -3,6 +3,7 @@ import sys
 import logging
 from server.app.backend_settings_saver import BackendSettingsSaver
 from server.app.task_scheduler import TaskScheduler
+from server.crypto.crypto_state import CryptoState
 from server.network.network_utils import NetworkUtils
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 from server.tasks.saveStateTask import SaveStatePerpetualTask
@@ -25,10 +26,10 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     from server.web.handler.get.crypto import Handler as CryptoHandler
     try:
-        crypto_state = CryptoHandler().get_crypto_state(0)
-    except Exception as e:
+        crypto_state = CryptoState()
+    except Exception as e:  
         logger.error(f"Failed to get crypto state: {e}")
-        crypto_state = {'error': 'no crypto key or chip'}
+        return
     bb = BlackBoard(crypto_state)
     scheduler = TaskScheduler(max_workers=4, system_time=bb, task_source=bb)
 

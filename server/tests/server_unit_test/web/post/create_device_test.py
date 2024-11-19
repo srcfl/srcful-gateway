@@ -1,6 +1,7 @@
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 from server.app.blackboard import BlackBoard
+from server.crypto.crypto_state import CryptoState
 from server.tasks.openDeviceTask import OpenDeviceTask
 import server.tests.config_defaults as cfg
 from server.web.handler.post.device import Handler as DeviceHandler
@@ -26,7 +27,7 @@ def test_post_create_p1_telnet():
     conf = cfg.P1_TELNET_CONFIG
     
     handler = DeviceHandler()
-    rd = RequestData(BlackBoard(), {}, {}, conf)
+    rd = RequestData(BlackBoard(Mock(spec=CryptoState)), {}, {}, conf)
 
     handler.do_post(rd)
     

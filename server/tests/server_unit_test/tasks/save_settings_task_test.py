@@ -1,7 +1,8 @@
 import pytest
 
+from server.crypto.crypto_state import CryptoState
 from server.tasks.saveSettingsTask import SaveSettingsTask
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from server.app.blackboard import BlackBoard
 from server.app.settings import Settings, ChangeSource
@@ -11,7 +12,7 @@ import server.crypto.crypto as crypto
 
 @pytest.fixture
 def blackboard():
-    return BlackBoard()
+    return BlackBoard(Mock(spec=CryptoState))
 
 @pytest.fixture
 def settings():

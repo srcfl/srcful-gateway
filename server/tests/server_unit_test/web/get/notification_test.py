@@ -1,5 +1,7 @@
 import json
+from unittest.mock import Mock
 import pytest
+from server.crypto.crypto_state import CryptoState
 from server.web.handler.get.notification import ListHandler, MessageHandler
 from server.app.message import Message 
 from server.app.blackboard import BlackBoard
@@ -18,7 +20,7 @@ def mock_request_data(mock_messages):
     class MockRequestData:
         def __init__(self, messages):
             self.post_params = {}
-            self.bb = BlackBoard()
+            self.bb = BlackBoard(Mock(spec=CryptoState))
             
             messages[0] = self.bb.add_error(messages[0].message)
             messages[1] = self.bb.add_warning(messages[1].message)

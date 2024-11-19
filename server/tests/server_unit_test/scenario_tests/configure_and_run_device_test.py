@@ -1,7 +1,8 @@
+from server.crypto.crypto_state import CryptoState
 from server.devices.ICom import ICom
 import server.tasks.harvest as harvest
 import server.tasks.harvestTransport as harvestTransport
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 from server.app.blackboard import BlackBoard
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.harvestFactory import HarvestFactory
@@ -11,7 +12,7 @@ import server.tests.config_defaults as cfg
 
 def test_harvest_from_two_devices_with_one_device_reconnection():
     # Setup
-    bb = BlackBoard()
+    bb = BlackBoard(Mock(spec=CryptoState))
     HarvestFactory(bb)
 
     # Create and connect first device

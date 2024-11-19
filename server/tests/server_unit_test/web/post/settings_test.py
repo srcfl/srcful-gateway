@@ -1,7 +1,8 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 import json
+from server.crypto.crypto_state import CryptoState
 from server.web.handler.requestData import RequestData
 from server.web.handler.post.settings import Handler
 from server.app.blackboard import BlackBoard
@@ -17,7 +18,7 @@ def request_data():
         }
     }
      
-    return RequestData(BlackBoard(), {}, {}, new_settings)
+    return RequestData(BlackBoard(Mock(spec=CryptoState)), {}, {}, new_settings)
 
 def test_settings(request_data):
 
