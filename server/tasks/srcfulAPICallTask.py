@@ -84,7 +84,8 @@ class SrcfulAPICallTask(Task, ABC):
                 return tasks
                 
         except Exception as e:
-            logger.exception("Error in SrcfulAPICallTask %s", e)
+            logger.error("Error in SrcfulAPICallTask")
+            # logger.exception("Error in SrcfulAPICallTask %s", e)
             self.reply = requests.Response()
             retry_delay = self._on_error(self.reply)
             if retry_delay > 0:
