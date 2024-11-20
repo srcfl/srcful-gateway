@@ -14,9 +14,14 @@ class EntropySettings(Observable):
         super().__init__(parent)
         # Private attributes with defaults
         self._do_mine = False
-        self._mqtt_broker = "localhost"
-        self._mqtt_port = 1883
-        self._mqtt_topic = "entropy"
+        self._mqtt_broker = "aumwfe410clfv-ats.iot.us-east-1.amazonaws.com"
+        self._mqtt_port = 8883
+        self._mqtt_topic = "entropy/srcful"
+
+        # self._settings.entropy.set_do_mine(True, ChangeSource.LOCAL)
+        # self._settings.entropy.set_mqtt_broker("aumwfe410clfv-ats.iot.us-east-1.amazonaws.com", ChangeSource.LOCAL)
+        # self._settings.entropy.set_mqtt_port(8883, ChangeSource.LOCAL)
+        # self._settings.entropy.set_mqtt_topic("entropy/srcful", ChangeSource.LOCAL)
 
     @property
     def do_mine(self) -> bool:
@@ -71,3 +76,4 @@ class EntropySettings(Observable):
 
 # Register with settings registry
 SettingsRegistry.register("entropy", EntropySettings)
+

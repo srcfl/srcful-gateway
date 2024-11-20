@@ -186,7 +186,7 @@ def request_handler_factory(bb: BlackBoard):
                     path, "/api/", self.endpoints.api_post
                 )
                 if api_handler is not None:
-                    self.send_api_response(200, api_handler.jsonSchema())
+                    self.send_api_response(200, json.dumps(api_handler.schema(), indent=3))
                     return
                 else:
                     code, htlm = handler.get.root.Handler().do_get(rdata)
