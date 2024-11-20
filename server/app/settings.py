@@ -48,7 +48,6 @@ class Settings(Observable):
         super().__init__()
         self._harvest = self.Harvest(self)
         self._devices = self.Devices(self)
-        # self._entropy = self.Entropy(self)
         self._api = self.API(self)
 
         self._modules = SettingsRegistry.create_settings(self)
@@ -75,10 +74,6 @@ class Settings(Observable):
     def devices(self) -> 'Settings.Devices':
         return self._devices
     
-    # @property
-    # def entropy(self) -> 'Settings.Entropy':
-    #     return self._entropy
-
     @property
     def api(self) -> 'Settings.API':
         return self._api
