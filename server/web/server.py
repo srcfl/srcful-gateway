@@ -49,6 +49,7 @@ class Endpoints:
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),
             "crypto/sign": handler.post.crypto_sign.Handler(),
+            "entropy": handler.post.entropy.Handler(),
         }
 
         self.api_delete_dict = {
