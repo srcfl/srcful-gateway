@@ -1,6 +1,9 @@
 from typing import Dict, Optional
+import logging
 from server.app.settings import Observable, ChangeSource
 from server.app.settings_registry import SettingsRegistry
+
+logger = logging.getLogger(__name__)
 
 class EntropySettings(Observable):
     """Entropy settings with observable properties"""
@@ -17,6 +20,8 @@ class EntropySettings(Observable):
         self._mqtt_broker = "aumwfe410clfv-ats.iot.us-east-1.amazonaws.com"
         self._mqtt_port = 8883
         self._mqtt_topic = "entropy/srcful"
+
+        logger.info("Entropy settings initialized")
 
         # self._settings.entropy.set_do_mine(True, ChangeSource.LOCAL)
         # self._settings.entropy.set_mqtt_broker("aumwfe410clfv-ats.iot.us-east-1.amazonaws.com", ChangeSource.LOCAL)

@@ -22,7 +22,13 @@ from server.app.blackboard import BlackBoard
 logger = logging.getLogger(__name__)
 
 
+def imports():
+    import server.tasks.entropy
+
+
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None): 
+
+    imports()
 
     from server.web.handler.get.crypto import Handler as CryptoHandler
     try:
