@@ -186,10 +186,7 @@ def test_latest_instance_executes_multiple_times(mock_chip, mock_send_entropy, m
 
 def test_create_entropy_data_with_software_crypto(mock_blackboard):
     ''' enable with software crypto'''
-    with crypto.Chip() as chip:
-        hardware_crypto = chip.is_hardware_crypto()
-
-    if hardware_crypto:
+    if crypto.DO_HARDWARE_CRYPTO:
         pytest.skip("Skipping test for hardware crypto")
 
     mock_blackboard.time_ms.return_value = int(time.time() * 1000)

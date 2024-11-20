@@ -112,13 +112,19 @@ class ChipError(Exception):
         def __str__(self) -> str:
             return super().__str__() + f" cryptauthlib error code: {self.code}"
 
+DO_HARDWARE_CRYPTO = False
+if DO_HARDWARE_CRYPTO:
+    crypto_default_impl: CryptoInterface = HardwareCrypto()
+else:
+    crypto_default_impl = SoftwareCrypto()
+
 class Chip:
     _lock = threading.Lock()
     _lock_count = 0
 
     
     #def __init__(self, crypto_impl: CryptoInterface = SoftwareCrypto()):
-    def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto()):
+    def __init__(self, crypto_impl: CryptoInterface = crypto_default_impl):
         self.crypto_impl = crypto_impl
 
     def is_hardware_crypto(self):
