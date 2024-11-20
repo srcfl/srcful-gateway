@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 from server.app.blackboard import BlackBoard
 from server.devices.IComFactory import IComFactory
-from server.app.settings import ChangeSource
+from server.app.settings.settings_observable import ChangeSource
 from .task import Task
 from server.devices.ICom import ICom
 from server.network.network_utils import NetworkUtils

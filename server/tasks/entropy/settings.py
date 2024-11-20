@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 import logging
-from server.app.settings import Observable, ChangeSource
-from server.app.settings_registry import SettingsRegistry
+from server.app.settings.settings_observable import Observable, ChangeSource
+from server.app.settings.settings_registry import SettingsRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -80,5 +80,5 @@ class EntropySettings(Observable):
         }
 
 # Register with settings registry
-SettingsRegistry.register("entropy", EntropySettings)
+SettingsRegistry.register(EntropySettings.ENTROPY, EntropySettings)
 

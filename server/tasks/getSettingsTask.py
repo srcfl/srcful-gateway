@@ -7,7 +7,7 @@ from .itask import ITask
 import server.crypto.crypto as crypto
 from server.app.blackboard import BlackBoard
 from .srcfulAPICallTask import SrcfulAPICallTask
-from server.app.settings import ChangeSource
+from server.app.settings.settings_observable import ChangeSource
 from server.tasks.saveSettingsTask import SaveSettingsTask
 import json
 

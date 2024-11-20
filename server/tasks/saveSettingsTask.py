@@ -1,5 +1,5 @@
 from server.app.blackboard import BlackBoard
-from server.app.settings import Settings
+from server.app.settings.settings import Settings
 from .configurationMutationTask import ConfigurationMutationTask
 
 class SaveSettingsTask(ConfigurationMutationTask):

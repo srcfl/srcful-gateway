@@ -2,7 +2,10 @@ import json
 import time
 import pytest
 from unittest.mock import Mock, patch, MagicMock
+from server.app.settings.settings import Settings
+from server.app.settings.settings_observable import ChangeSource
 from server.crypto.crypto_state import CryptoState
+from server.tasks import entropy
 from server.tasks.entropy.task import EntropyTask, generate_poisson_delay, generate_entropy, _LAST_INSTANCE_ID
 from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
@@ -220,5 +223,55 @@ def test_has_not_mined_srcful_data(mock_blackboard):
     mock_blackboard.settings.api.gql_timeout = 10
     assert not task._has_mined_srcful_data("f42ea576ac87184445")
     
+
+def test_to_json_default_values():
+    settings = Settings()
+    json_str = settings.to_json()
+    entropy_settings = entropy.EntropySettings()
+    expected = {
+        settings.entropy.DO_MINE: entropy_settings.do_mine,
+        settings.entropy.MQTT_BROKER: entropy_settings.mqtt_broker,
+        settings.entropy.MQTT_PORT: entropy_settings.mqtt_port,
+        settings.entropy.MQTT_TOPIC: entropy_settings.mqtt_topic
+    }
+
+    for key, value in expected.items():
+        assert json.loads(json_str)[settings.SETTINGS][settings.entropy.ENTROPY][key] == value
+
+def test_to_json_custom_values():
+    settings = Settings()
+    entropy_settings = settings.entropy
+    entropy_settings.set_do_mine(True, ChangeSource.LOCAL)
+    entropy_settings.set_mqtt_broker("broker", ChangeSource.LOCAL)
+    entropy_settings.set_mqtt_port(1717, ChangeSource.LOCAL)
+    entropy_settings.set_mqtt_topic("topic", ChangeSource.LOCAL)
+    json_str = settings.to_json()
+    expected = {
+                settings.entropy.DO_MINE: entropy_settings.do_mine,
+                settings.entropy.MQTT_BROKER: entropy_settings.mqtt_broker,
+                settings.entropy.MQTT_PORT: entropy_settings.mqtt_port,
+                settings.entropy.MQTT_TOPIC: entropy_settings.mqtt_topic
+    }
+
+    for key, value in expected.items():
+        assert json.loads(json_str)[settings.SETTINGS][entropy.EntropySettings.ENTROPY][key] == value
+        
+
+def test_from_json_custom_values():
+    settings = Settings()
+    expected_settings = entropy.EntropySettings()
+    expected_settings.set_do_mine(True, ChangeSource.LOCAL)
+    expected_settings.set_mqtt_broker("broker", ChangeSource.LOCAL)
+    expected_settings.set_mqtt_port(1717, ChangeSource.LOCAL)
+    expected_settings.set_mqtt_topic("topic", ChangeSource.LOCAL)
+
+    settings_dict = { settings.SETTINGS: { entropy.EntropySettings.ENTROPY: expected_settings.to_dict() } }
+
+    settings.from_json(json.dumps(settings_dict), ChangeSource.LOCAL)
+
+    assert settings.entropy.do_mine == expected_settings.do_mine
+    assert settings.entropy.mqtt_broker == expected_settings.mqtt_broker
+    assert settings.entropy.mqtt_port == expected_settings.mqtt_port
+    assert settings.entropy.mqtt_topic == expected_settings.mqtt_topic
 
 # {'entropy': 9380403298322624419, 'serial': 'f42ea576ac87184445', 'sig': '91628a5e0db092ebb1b94b0049cf0403fa13baccf1590a9ae331679a4fb4b49b86db7417644cb70469f673bbf378f313a531f4892ee4b2a86f623accb8a5622a', 'timestamp_sec': 1731935173}

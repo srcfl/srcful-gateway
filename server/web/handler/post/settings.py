@@ -3,7 +3,8 @@ import logging
 
 from ..handler import PostHandler
 from ..requestData import RequestData
-from server.app.settings import Settings, ChangeSource
+from server.app.settings.settings import Settings
+from server.app.settings.settings_observable import ChangeSource
 
 log = logging.getLogger(__name__)
 

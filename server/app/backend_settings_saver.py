@@ -1,4 +1,6 @@
-from server.app.settings import DebouncedMonitorBase, ChangeSource
+from server.app.settings.settings import DebouncedMonitorBase
+from server.app.settings.settings_observable import ChangeSource
+
 from server.app.blackboard import BlackBoard
 from server.tasks.saveSettingsTask import SaveSettingsTask
 import logging

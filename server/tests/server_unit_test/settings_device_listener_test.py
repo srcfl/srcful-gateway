@@ -3,7 +3,7 @@ from server.crypto.crypto_state import CryptoState
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.app.blackboard import BlackBoard
-from server.app.settings import ChangeSource
+from server.app.settings.settings_observable import ChangeSource
 from server.network.network_utils import NetworkUtils
 import pytest 
 from unittest.mock import MagicMock, Mock

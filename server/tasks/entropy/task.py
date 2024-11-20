@@ -9,7 +9,7 @@ import random
 import math
 import tempfile
 
-from server.app.settings import Settings
+from server.app.settings.settings import Settings
 from server.tasks.entropy.settings import EntropySettings
 
 from ..task import Task

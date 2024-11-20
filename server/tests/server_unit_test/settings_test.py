@@ -1,7 +1,8 @@
 import pytest
 import json
 from server.network.network_utils import HostInfo
-from server.app.settings import Settings, ChangeSource
+from server.app.settings.settings import Settings
+from server.app.settings.settings_observable import ChangeSource
 from server.devices.inverters.ModbusTCP import ModbusTCP
 import server.tests.config_defaults as cfg
 
@@ -105,34 +106,20 @@ def test_to_json(settings):
             },
             settings.devices.DEVICES: {
                 settings.devices.CONNECTIONS: []
-            },
-            settings.entropy.ENTROPY: {
-                settings.entropy.DO_MINE: False,
-                settings.entropy.MQTT_BROKER: "localhost",
-                settings.entropy.MQTT_PORT: 1883,
-                settings.entropy.MQTT_TOPIC: "entropy"
-
             }
         }
     }
-    assert json.loads(json_str) == expected
+    
+    # we check that everything in expected exists in actual recursively (there may be more things depending on when setting modules are added)
+    def check(expected, actual):
+        if isinstance(expected, dict):
+            assert isinstance(actual, dict)
+            for key, value in expected.items():
+                check(value, actual[key])
+        else:
+            assert expected == actual
 
-def test_entropy_from_json(settings):
-    json_str = json.dumps({
-        settings.SETTINGS: {
-            settings.entropy.ENTROPY: {
-                settings.entropy.DO_MINE: True,
-                settings.entropy.MQTT_BROKER: "broker",
-                settings.entropy.MQTT_PORT: 1717,
-                settings.entropy.MQTT_TOPIC: "topic"
-            }
-        }
-    })
-    settings.from_json(json_str, ChangeSource.LOCAL)
-    assert settings.entropy.mqtt_broker == "broker"
-    assert settings.entropy.mqtt_port == 1717
-    assert settings.entropy.mqtt_topic == "topic"
-    assert settings.entropy.do_mine
+    check(expected, json.loads(json_str))
 
 def test_from_json(settings):
     json_str = json.dumps({

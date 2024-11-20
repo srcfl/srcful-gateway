@@ -9,7 +9,8 @@ from unittest.mock import Mock, patch
 import pytest
 from unittest.mock import MagicMock
 from server.app.blackboard import BlackBoard
-from server.app.settings import Settings, ChangeSource
+from server.app.settings.settings import Settings
+from server.app.settings.settings_observable import ChangeSource
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.openDeviceTask import OpenDeviceTask
 

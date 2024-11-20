@@ -4,7 +4,7 @@ import pytest
 from server.app.blackboard import BlackBoard
 from unittest.mock import Mock, patch
 import server.crypto.crypto as crypto
-from server.app.settings import ChangeSource
+from server.app.settings.settings_observable import ChangeSource
 
 @pytest.fixture
 def blackboard():
