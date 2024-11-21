@@ -224,3 +224,104 @@ def test_device_witn_sn_already_open(bb : BlackBoard):
     
     assert len(bb.devices.lst) == 1
     assert new_device not in bb.devices.lst
+
+def test_bloated_settings_device_list(bb : BlackBoard):
+    # in this test case there are multiple devices with the same sn but different connection parameters
+    # this should not happen in the wild but we should handle it gracefully
+
+    set_up_listeners(bb)
+
+    def mock_create_com(settings: dict):
+        device = MagicMock(spec=ICom)
+        device.get_SN.return_value = "17"
+        device.get_config.return_value = settings
+        device.connect.return_value = False
+        return device
+
+    with patch('server.devices.IComFactory.IComFactory.create_com', mock_create_com):
+
+        device = MagicMock(spec=ICom)
+        device.get_SN.return_value = "17"
+        device.get_config.return_value = {"key": "value_1"}
+        device.connect.return_value = False
+        bb.settings.devices._connections.append({"key": "value_1"})
+        bb.settings.devices._connections.append({"key": "value_2"})
+        bb.settings.devices._connections.append({"key": "value_3"})
+        
+        assert len(bb.settings.devices.connections) == 3
+
+        # in the case of starting there will be 3 perpetual tasks running
+        # all will find the same device on the network and will try to open it
+    
+        for settings_device in bb.settings.devices.connections:
+            device = MagicMock(spec=ICom)
+            device.get_SN.return_value = "17"
+            device.get_config.return_value = settings_device
+            device.connect.return_value = False
+            device.find_device.return_value = None
+
+            task = DevicePerpetualTask(0, bb, device)
+            task.execute(0)
+            assert task is not None
+
+        assert len(bb.settings.devices.connections) == 3
+
+        # now lets pretend we find a device on the network i.e. the first device was correct
+        found_device = MagicMock(spec=ICom)
+        found_device.get_SN.return_value = "17"
+        found_device.get_config.return_value = {"key": "value_1"}
+        found_device.connect.return_value = True
+        found_device.is_open.return_value = True
+        found_device.compare_host.return_value = False
+
+        tasks = []
+        for settings_device in bb.settings.devices.connections:
+            device = MagicMock(spec=ICom)
+            device.get_SN.return_value = "17"
+            device.get_config.return_value = settings_device
+            device.connect.return_value = False
+            device.find_device.return_value = found_device
+
+            task = DevicePerpetualTask(0, bb, device)
+            tasks.append(task)
+            task.execute(0)
+            assert task is not None
+
+        # the next time we run this the first task will sucessfully connect - the others should be removed from the settings no more tasks should be created
+        for task in tasks:
+            assert task.execute(0) is None
+
+        assert len(bb.devices.lst) == 1
+        assert found_device in bb.devices.lst
+        assert len(bb.settings.devices.connections) == 1
+
+
+def test_device_found_but_fails_to_connect(bb : BlackBoard):
+    existing_device = MagicMock(spec=ICom)
+    existing_device.get_SN.return_value = IComFactory.create_com(cfg.P1_TELNET_CONFIG).get_SN()
+    existing_device.is_open.return_value = False
+    existing_device.connect.return_value = False
+    existing_device.get_config.return_value = cfg.P1_TELNET_CONFIG
+    existing_device.find_device.return_value = existing_device
+
+    set_up_listeners(bb)
+
+    bb.settings.devices.add_connection(existing_device, ChangeSource.LOCAL)
+
+    task = DevicePerpetualTask(0, bb, existing_device)
+    assert task.execute(0) is not None
+
+    # assert task.old_device is not None
+
+    # we now execute again the device can still not be opened
+    task =task.execute(0)
+
+    assert task is not None
+    # assert task.old_device is not None
+
+    # we continue to try to open the device a couple of times nothing should change
+    for _ in range(10):
+        task = task.execute(0)
+
+        assert task is not None
+        # assert task.old_device is not None

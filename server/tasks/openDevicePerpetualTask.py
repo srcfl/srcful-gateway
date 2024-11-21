@@ -14,7 +14,7 @@ class DevicePerpetualTask(Task):
     def __init__(self, event_time: int, bb: BlackBoard, device: ICom):
         super().__init__(event_time, bb)
         self.device:ICom = device
-        self.old_device: Optional[ICom] = None
+        # self.old_device: Optional[ICom] = None
 
 
     def in_settings(self, device: ICom):
@@ -52,8 +52,8 @@ class DevicePerpetualTask(Task):
                 message = "Device opened: " + str(self.device.get_config())
                 logger.info(message)
 
-                if self.old_device:
-                    self.bb.settings.devices.remove_connection(self.old_device, ChangeSource.LOCAL)
+                # if self.old_device:
+                #     self.bb.settings.devices.remove_connection(self.old_device, ChangeSource.LOCAL)
                 
                 self.bb.devices.add(self.device)
                 self.bb.add_info(message)
@@ -61,16 +61,16 @@ class DevicePerpetualTask(Task):
             
             else:
                 
-                if self.old_device:
-                    logger.info("Device not found in two steps, giving up the perpetual task: %s, %s", self.old_device.get_SN(), self.device.get_SN())
-                    logger.info("Removing device from settings: %s", self.old_device.get_SN())
-                    self.bb.settings.devices.remove_connection(self.old_device, ChangeSource.LOCAL)
+                # if self.old_device:
+                #     logger.info("Device not found in two steps, giving up the perpetual task: %s, %s", self.old_device.get_SN(), self.device.get_SN())
+                #     logger.info("Removing device from settings: %s", self.old_device.get_SN())
+                #     self.bb.settings.devices.remove_connection(self.old_device, ChangeSource.LOCAL)
 
-                tmp_device = self.device.find_device() # find the device on the network
-                
+                tmp_device = self.device.find_device() # find the device on the network this is the same device but the method of connection (e.g. ip can be different)
+                               
                 if tmp_device is not None:
 
-                    self.old_device = self.device
+                    # self.old_device = self.device
                     self.device = tmp_device
                     logger.info("Found a device at %s, retry in 5 seconds...", self.device.get_config())
                     self.time = event_time + 5000
