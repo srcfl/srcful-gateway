@@ -77,7 +77,7 @@ class IComFactory:
                 return P1Jemac(**stripped_config)
             case _:
                 log.error("Unknown connection type: %s", connection)
-                return None
+                raise ValueError(f"Unknown connection type: {connection}")
             
         
         
