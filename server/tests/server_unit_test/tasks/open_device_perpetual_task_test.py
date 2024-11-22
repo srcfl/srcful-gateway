@@ -325,3 +325,35 @@ def test_device_found_but_fails_to_connect(bb : BlackBoard):
 
         assert task is not None
         # assert task.old_device is not None
+
+
+def test_same_ip_different_ports(bb : BlackBoard):
+    setings_d1 = {"ip": "192.168.1.15", "sn": "7E16E274", "mac": "22:af:0b:72:5c:ff", "port": 1502, "slave_id": 1, "connection": "SUNSPEC"}
+    setings_d2 =    {"ip": "192.168.1.15", "sn": "233701000494", "mac": "22:af:0b:72:5c:ff", "port": 503, "slave_id": 1, "connection": "SUNSPEC"}
+
+
+    set_up_listeners(bb)
+
+    device1 = IComFactory.create_com(setings_d1)
+    device1.connect = Mock(return_value=True)
+    device1.is_open = Mock(return_value=True)
+
+    device2 = IComFactory.create_com(setings_d2)    
+    device2.connect = Mock(return_value=True)
+    device2.is_open = Mock(return_value=True)
+    # add to settings
+    bb.settings.devices._connections.append(setings_d1)
+    bb.settings.devices._connections.append(setings_d2)
+
+    task1 = DevicePerpetualTask(0, bb, device1)
+    task2 = DevicePerpetualTask(0, bb, device2)
+
+    task1_ret = task1.execute(0)
+    task2_ret = task2.execute(0)
+
+    assert len(bb.devices.lst) == 2
+    assert device1 in bb.devices.lst
+    assert device2 in bb.devices.lst
+
+    assert task1_ret is None
+    assert task2_ret is None

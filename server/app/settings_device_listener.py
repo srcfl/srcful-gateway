@@ -33,16 +33,20 @@ class SettingsDeviceListener(DebouncedMonitorBase):
                     # Then check if the device is open, if not, then start a perpetual task to open it
                     # TODO: This might start another DevicePerpetualTask in addition to one that might
                     # already be running from the blackboard. Consider reworking this logic
-                    if device.get_SN() == com.get_SN():
-                        # update the settings connez
-                        if not device.is_open():
-                            logger.info("Device %s from settings was found in the blackboard, but not open", com.get_SN())
-                            logger.info("Removing %s from the blackboard and opening a perpetual task to connect it", com.get_SN())
-                            self.blackboard.devices.remove(device)
-                            self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
-                        break
-                else:
+                    # if device.get_SN() == com.get_SN():
+                    #     # update the settings connez
+                    #     if not device.is_open():
+                    #         logger.info("Device %s from settings was found in the blackboard, but not open", com.get_SN())
+                    #         logger.info("Removing %s from the blackboard and opening a perpetual task to connect it", com.get_SN())
+                    #         self.blackboard.devices.remove(device)
+                    #         self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
+                    #     break
+                # else:
                     # Device not found in the blackboard, but apperantly exists in the settings,
                     # which means it was previously connected So we try to open it again
-                    logger.info("Device %s from settings was not found in the blackboard, opening a perpetual task to connect it", com.get_SN())
-                    self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
+                    if device.get_SN() != com.get_SN():
+                        logger.info("Device %s from settings was not found in the blackboard devices, opening a perpetual task to connect it", com.get_SN())
+                        self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
+                    else:
+                        logger.info("Device %s from settings was found in the blackboard devices, skipping", com.get_SN())
+                        
