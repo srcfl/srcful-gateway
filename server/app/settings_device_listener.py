@@ -23,11 +23,9 @@ class SettingsDeviceListener(DebouncedMonitorBase):
                 com = IComFactory.create_com(connection)
                 
                 # always update the config in the settings
-                # clear the dict and update it with the new config
-                connection.clear()
-                connection.update(com.get_config())
+                # clear the dict and update it with the new config              
 
-                for device in self.blackboard.devices.lst:
+                # for device in self.blackboard.devices.lst:
                     
                     # Check if the device already exists in the blackboard
                     # Then check if the device is open, if not, then start a perpetual task to open it
@@ -44,9 +42,11 @@ class SettingsDeviceListener(DebouncedMonitorBase):
                 # else:
                     # Device not found in the blackboard, but apperantly exists in the settings,
                     # which means it was previously connected So we try to open it again
-                    if device.get_SN() != com.get_SN():
-                        logger.info("Device %s from settings was not found in the blackboard devices, opening a perpetual task to connect it", com.get_SN())
-                        self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, IComFactory.create_com(connection)))
-                    else:
-                        logger.info("Device %s from settings was found in the blackboard devices, skipping", com.get_SN())
-                        
+
+
+                if self.blackboard.devices.find_sn(com.get_SN()) is None:
+                    logger.info("Device %s from settings was not found in the blackboard devices, opening a perpetual task to connect it", com.get_SN())
+                    self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, com))
+                else:
+                    logger.info("Device %s from settings was found in the blackboard devices, skipping", com.get_SN())
+
