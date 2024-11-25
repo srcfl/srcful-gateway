@@ -1,8 +1,10 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 import logging
 import threading
+import time
 import requests
 from server.app.blackboard import BlackBoard
+from server.app.settings.settings_observable import ChangeSource
 import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run
 import random
@@ -26,6 +28,16 @@ logger = logging.getLogger(__name__)
 
 _LAST_INSTANCE_ID = 0
 
+
+def register_entropy_settings_listener(bb:BlackBoard):
+
+    def on_do_mine_change(source:ChangeSource):
+        if bb.settings.entropy.do_mine:
+            logger.info("Starting entropy task")
+            bb.add_task(EntropyTask(bb.time_ms() + generate_poisson_delay(), bb))
+
+    bb.settings.entropy.add_listener(on_do_mine_change)
+
 def generate_poisson_delay():
     AVERAGE_DELAY_MINUTES = 60
     """Generate exponentially distributed delay"""
@@ -36,8 +48,8 @@ def generate_poisson_delay():
         U = random.random()
 
     delay_minutes = -AVERAGE_DELAY_MINUTES * math.log(U)
-    # return 1000 * 60
-    return int(delay_minutes * 60 * 1000)
+    return 1000 * 60
+    # return int(delay_minutes * 60 * 1000)
 
 def generate_entropy(chip: crypto.Chip):
         random_bytes = chip.get_random()
@@ -202,21 +214,32 @@ class EntropyTask(Task):
         
     
     def _get_cert_and_key(self):
+        unix_timestamp = int(time.time())
+
+        dt = datetime.fromtimestamp(unix_timestamp, tz=timezone.utc)
+
+        # Format datetime as ISO 8601 string
+        # should be something like 2024-08-26T13:02:00
+        iso_timestamp = dt.isoformat().replace('+00:00', '')
+
         with crypto.Chip() as chip:
-            q = create_settings_query_json(chip, self.SUBKEY)
-
-        res = requests.post(self.bb.settings.api.gql_endpoint, json=q, timeout=self.bb.settings.api.gql_timeout)
-
-        if res.status_code == 200:
-            data = res.json()
-
-            entropy_cert_data = data.get("data",{}).get("gatewayConfiguration", {}).get("configuration", {}).get("data", {})
-            entropy_cert_data = json.loads(entropy_cert_data)
-            logger.info(f"entropy cert: {entropy_cert_data}")
-
-            if 'cert_pem' in entropy_cert_data and 'cert_private_key' in entropy_cert_data:
-                return entropy_cert_data["cert_pem"], entropy_cert_data["cert_private_key"]
+            serial = chip.get_serial_number().hex()
+            timestamp = iso_timestamp
+            message = f"{serial}|{timestamp}"
+            signature = chip.get_signature(message).hex()
         
+        gateway = backend.Gateway(serial)
+
+        try:
+            # TODO: remove this endpoint and use the one from the settings
+            certs = gateway.get_globals(backend.Connection("https://api-test.srcful.dev/", 5), timestamp, signature, "entropy_certs")
+            cert_pem = certs["cert_pem"]
+            cert_private_key = certs["cert_private_key"]
+            return cert_pem, cert_private_key
+        except Exception as e:
+            logger.error("Failed to get certificate and key: %s", e)
+            raise e
+
         raise Exception("Failed to get certificate and key") 
 
     def _has_mined_srcful_data(self, serial:str) -> bool:
@@ -224,7 +247,9 @@ class EntropyTask(Task):
         # if there is any data return true
         # otherwise return false
 
-        gateway = backend.Gateway(serial)
+        # TODO: remove this hardcoded serial number
+        gateway = backend.Gateway("0123b0e69662744eee")
+        # gateway = backend.Gateway(serial)
         connection = backend.Connection(self.bb.settings.api.gql_endpoint, self.bb.settings.api.gql_timeout)
         ders:List[backend.DER] = gateway.get_ders(connection)
         resolution = backend.Histogram.Resolution(backend.Histogram.Resolution.Type.HOUR, 1)
@@ -242,7 +267,7 @@ class EntropyTask(Task):
             return None
         
         if self.bb.settings.entropy.do_mine:
-            if not self._has_mined_srcful_data(self.bb.crypto_state.serial_number):
+            if not self._has_mined_srcful_data(self.bb.crypto_state().serial_number.hex()):
                 logger.info("No srcful data mined in 24h, skipping entropy, better luck next hour")
                 self.adjust_time(self.bb.time_ms() + 60000)
                 return self

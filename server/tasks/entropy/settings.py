@@ -69,6 +69,8 @@ class EntropySettings(Observable):
             self._mqtt_port = data[self.MQTT_PORT]
         if self.MQTT_TOPIC in data:
             self._mqtt_topic = data[self.MQTT_TOPIC]
+
+        logger.info("Entropy settings updated: %s", data)
         self.notify_listeners(source)
 
     def to_dict(self) -> Dict:

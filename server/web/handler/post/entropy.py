@@ -2,6 +2,8 @@
 
 import json
 import time
+
+from server.tasks.entropy.settings import EntropySettings
 from ..handler import PostHandler
 from ..requestData import RequestData
 from server.app.settings.settings_observable import ChangeSource
@@ -28,7 +30,7 @@ class Handler(PostHandler):
 
     def do_post(self, data: RequestData):
         bb = data.bb
-        entropy_settings = bb.settings.entropy
+        entropy_settings:EntropySettings = bb.settings.entropy
         updated = False
 
         # Update settings if provided
