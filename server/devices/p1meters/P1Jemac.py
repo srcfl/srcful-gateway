@@ -74,7 +74,7 @@ class P1Jemac(TCPDevice):
     def _parse_p1_message(self, p1_message: dict) -> dict:
         p1_message = p1_message.get('data', {})
         data =  {
-            'serial_number': p1_message[0],
+            'serial_number': p1_message[0].replace('/', ''),
             'rows': p1_message[1:]
         }
 
