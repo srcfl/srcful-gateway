@@ -16,12 +16,12 @@ def mock_device():
 
     def create_device():
         device = Mock(spec=ICom)
-        device.get_config.return_value = {
+        device.get_config.return_value = ({
             "connection": "TCP",
             "ip": "192.168.1.100",
             "port": 502,
             "mac": "TEST123"
-        }
+        }.copy())
         device.get_SN.return_value = "TEST123"
         return device
     
@@ -94,7 +94,7 @@ def test_single_device(handler, request_data, mock_device):
     """Test handler returns correct data for a single open device"""
     mock_device.is_open.return_value = True
     request_data.bb.devices.lst = [mock_device]
-    request_data.bb.settings.devices.connections.append(mock_device.get_config())
+    request_data.bb.settings.devices.connections.append(mock_device.get_config().copy())
     
     status, response = handler.do_get(request_data)
     result = json.loads(response)

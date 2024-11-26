@@ -32,11 +32,12 @@ class Handler(GetHandler):
 
         for device in data.bb.devices.lst:
             config = device.get_config()
-            raw_configs.append(config)
+            raw_configs.append(config.copy())
 
             device_config = self._fix_config(config, device.get_SN(), "open" if device.is_open() else "closed")
 
             configs.append(device_config)
+
 
         for config in data.bb.settings.devices.connections:
             if config not in raw_configs:
