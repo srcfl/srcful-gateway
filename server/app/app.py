@@ -58,7 +58,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         bb.task_scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
 
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
-    scheduler.add_task(ScanWiFiTask(bb.time_ms() + 45000, bb))
+    scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))
     scheduler.add_task(DiscoverModbusDevicesTask(bb.time_ms() + 5000, bb))
     # tasks.put(CryptoReviveTask(bb.time_ms() + 7000, bb))
 
