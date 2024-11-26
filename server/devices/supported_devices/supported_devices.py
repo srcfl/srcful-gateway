@@ -272,8 +272,23 @@ supported_devices = {
                 {
                     RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 0,
-                    RegistersKey.NUM_OF_REGISTERS: 92,
-                }
+                    RegistersKey.NUM_OF_REGISTERS: 125,
+                },
+                {
+                    RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 125,
+                    RegistersKey.NUM_OF_REGISTERS: 125,
+                },
+                {
+                    RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 1000,
+                    RegistersKey.NUM_OF_REGISTERS: 125,
+                },
+                {
+                    RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3000,
+                    RegistersKey.NUM_OF_REGISTERS: 125,
+                },
             ],
             ProfileKey.REGISTERS: [
                 {
@@ -283,8 +298,8 @@ supported_devices = {
                 },
                 {
                     RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 1,
-                    RegistersKey.NUM_OF_REGISTERS: 3,
+                    RegistersKey.START_REGISTER: 3001,
+                    RegistersKey.NUM_OF_REGISTERS: 2,
                 },
             ],
         },
