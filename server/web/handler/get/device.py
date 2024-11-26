@@ -1,4 +1,6 @@
 import json
+
+from server.devices.IComFactory import IComFactory
 from ..handler import GetHandler
 
 from ..requestData import RequestData
@@ -17,20 +19,29 @@ class Handler(GetHandler):
             
             }],
         }
+    
+    def _fix_config(self, config: dict, id: str, status: str):
+        config["id"] = id
+        config["status"] = status
+        return config
 
     def do_get(self, data: RequestData):
         configs = []
 
+        raw_configs = []
+
         for device in data.bb.devices.lst:
             config = device.get_config()
+            raw_configs.append(config)
 
-            if device.is_open():
-                config["status"] = "open"
-            else:
-                config["status"] = "closed"
+            device_config = self._fix_config(config, device.get_SN(), "open" if device.is_open() else "closed")
 
-            config["id"] = device.get_SN()
-            configs.append(config)
-            
+            configs.append(device_config)
+
+        for config in data.bb.settings.devices.connections:
+            if config not in raw_configs:
+                device = IComFactory.create_com(config)
+                config = self._fix_config(device.get_config(), device.get_SN(), "pending")
+                configs.append(config)
 
         return 200, json.dumps(configs)
