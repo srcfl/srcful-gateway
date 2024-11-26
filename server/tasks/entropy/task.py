@@ -247,9 +247,7 @@ class EntropyTask(Task):
         # if there is any data return true
         # otherwise return false
 
-        # TODO: remove this hardcoded serial number
-        gateway = backend.Gateway("0123b0e69662744eee")
-        # gateway = backend.Gateway(serial)
+        gateway = backend.Gateway(serial)
         connection = backend.Connection(self.bb.settings.api.gql_endpoint, self.bb.settings.api.gql_timeout)
         ders:List[backend.DER] = gateway.get_ders(connection)
         resolution = backend.Histogram.Resolution(backend.Histogram.Resolution.Type.HOUR, 1)
