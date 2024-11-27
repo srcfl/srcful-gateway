@@ -118,18 +118,44 @@ else:
             config = settings_connection.GetSettings()
             ret.append(config)
         return ret
+    
+    def get_network_settings(bus: dbus.SystemBus = dbus.SystemBus()) -> dbus.Interface:
+        proxy = bus.get_object(
+                "org.freedesktop.NetworkManager",
+                "/org/freedesktop/NetworkManager/Settings",
+            )
+        settings = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Settings")
+
+        return settings
+
+    def delete_wifi_connections(bus: dbus.SystemBus = dbus.SystemBus(), settings: dbus.Interface = get_network_settings()):
+        connection_paths = settings.ListConnections()
+        logger.debug("Num of connection profiles: %i", len(connection_paths))
+        for path in connection_paths:
+            con_proxy = bus.get_object("org.freedesktop.NetworkManager", path)
+            settings_connection = dbus.Interface(
+                con_proxy, "org.freedesktop.NetworkManager.Settings.Connection"
+            )
+            config = settings_connection.GetSettings()
+            # only delete wifi connections
+            if config["connection"]["type"] == "802-11-wireless":
+                settings_connection.Delete()
+                logger.info("Deleted connection profile: %s", config["connection"]["id"])
+
+        logger.debug("Deleted all wifi connection profiles...")
 
     class WiFiHandler:
         def __init__(self, ssid, psk):
             logger.info("WiFiHandler init with SSID: %s", ssid)
             self.bus = dbus.SystemBus()  # Is this needed as a field?
-            proxy = self.bus.get_object(
-                "org.freedesktop.NetworkManager",
-                "/org/freedesktop/NetworkManager/Settings",
-            )
-            self.settings = dbus.Interface(
-                proxy, "org.freedesktop.NetworkManager.Settings"
-            )
+            # proxy = self.bus.get_object(
+            #     "org.freedesktop.NetworkManager",
+            #     "/org/freedesktop/NetworkManager/Settings",
+            # )
+            # self.settings = dbus.Interface(
+            #     proxy, "org.freedesktop.NetworkManager.Settings"
+            # )
+            self.settings = get_network_settings(self.bus)
             self.ssid = ssid
             self.psk = psk
 
@@ -186,20 +212,21 @@ else:
             self.settings.AddConnection(con)
 
         def _delete_connections(self):
-            connection_paths = self.settings.ListConnections()
-            logger.debug("Num of connection profiles: %i", len(connection_paths))
-            for path in connection_paths:
-                con_proxy = self.bus.get_object("org.freedesktop.NetworkManager", path)
-                settings_connection = dbus.Interface(
-                    con_proxy, "org.freedesktop.NetworkManager.Settings.Connection"
-                )
-                config = settings_connection.GetSettings()
-                # only delete wifi connections
-                if config["connection"]["type"] == "802-11-wireless":
-                    settings_connection.Delete()
-                    logger.debug("Deleted connection profile: %s", config["connection"]["id"])
+            # connection_paths = self.settings.ListConnections()
+            # logger.debug("Num of connection profiles: %i", len(connection_paths))
+            # for path in connection_paths:
+            #     con_proxy = self.bus.get_object("org.freedesktop.NetworkManager", path)
+            #     settings_connection = dbus.Interface(
+            #         con_proxy, "org.freedesktop.NetworkManager.Settings.Connection"
+            #     )
+            #     config = settings_connection.GetSettings()
+            #     # only delete wifi connections
+            #     if config["connection"]["type"] == "802-11-wireless":
+            #         settings_connection.Delete()
+            #         logger.debug("Deleted connection profile: %s", config["connection"]["id"])
 
-            logger.debug("Deleted all wifi connection profiles...")
+            # logger.debug("Deleted all wifi connection profiles...")
+            delete_wifi_connections(self.bus, self.settings)
 
         def connect(self):
             logger.info("Deleting connections...")
