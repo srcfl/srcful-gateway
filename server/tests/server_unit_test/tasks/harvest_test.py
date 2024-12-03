@@ -258,3 +258,23 @@ def test_create_headers(blackboard : BlackBoard):
         json.dumps(headers)
     except Exception as e:
         assert False
+
+def test_closed_device_disconnection(blackboard: BlackBoard):
+    # Setup mock device
+    mock_device = Mock(spec=ICom)
+    mock_device.is_open.return_value = False  # Device is closed
+    mock_device.is_disconnected.return_value = False  # But not disconnected
+    mock_device.clone.return_value = mock_device
+
+    # Create harvest task
+    task = harvest.Harvest(0, blackboard, mock_device, harvestTransport.DefaultHarvestTransportFactory())
+    
+    # Execute the task
+    result = task.execute(17)
+    
+    # Verify disconnect was called
+    mock_device.disconnect.assert_called_once()
+    
+    # Verify we got back the expected tasks
+    assert len(result) >= 1  # Should have at least the DevicePerpetualTask
+    assert any(isinstance(t, DevicePerpetualTask) for t in result)
