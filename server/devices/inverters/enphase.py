@@ -152,7 +152,7 @@ class Enphase(TCPDevice):
             return False
     
     def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
-        return 1000*60 # 1 minute
+        return 1000*30 # 30 seconds
     
     def get_harvest_data_type(self) -> HarvestDataType:
         return HarvestDataType.REST_API
