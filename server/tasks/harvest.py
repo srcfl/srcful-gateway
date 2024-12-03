@@ -37,6 +37,7 @@ class Harvest(Task):
             #  if the devices is not terminated, we need to start a new open device perpetual to try to reconnect
             if not self.device.is_disconnected():
                 
+                logger.info("Disconnecting device from harvest task")
                 self.device.disconnect()
                 
                 open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
