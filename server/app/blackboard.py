@@ -96,7 +96,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         return self._settings
 
     @property
-    def messages(self) -> tuple[Message]:
+    def messages(self) -> tuple[Message, ...]:
         return tuple(self._messages)
     
     def _add_message(self, message: Message) -> Message:

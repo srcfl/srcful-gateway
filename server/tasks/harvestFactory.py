@@ -32,4 +32,4 @@ class HarvestFactory:
         except ValueError:
             logger.warning("Device %s already disconnected", device)
         self.bb.settings.devices.remove_connection(device, ChangeSource.LOCAL)
-        self.bb.add_info(f"Added device {device.get_name()} : {device.get_SN()}")
+        self.bb.add_info(f"Removed device {device.get_name()} : {device.get_SN()}")
