@@ -1,5 +1,6 @@
 from server.app.blackboard import BlackBoard
 from server.devices.ICom import ICom
+from server.tasks.saveStateTask import SaveStateTask
 from .harvest import Harvest
 from .harvestTransport import DefaultHarvestTransportFactory
 from server.app.settings import ChangeSource
@@ -22,6 +23,7 @@ class HarvestFactory:
         if com.is_open():
             self.bb.add_task(Harvest(self.bb.time_ms() + 1000, self.bb, com,  DefaultHarvestTransportFactory()))
             self.bb.settings.devices.add_connection(com, ChangeSource.LOCAL)
+            self.bb.add_info(f"Added device {com.get_name()} : {com.get_SN()}")
     
     def remove_device(self, device:ICom):
         """Disconnect the device and remove it from the blackboard settings"""
@@ -30,3 +32,4 @@ class HarvestFactory:
         except ValueError:
             logger.warning("Device %s already disconnected", device)
         self.bb.settings.devices.remove_connection(device, ChangeSource.LOCAL)
+        self.bb.add_info(f"Added device {device.get_name()} : {device.get_SN()}")

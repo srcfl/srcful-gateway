@@ -46,7 +46,7 @@ class DevicePerpetualTask(Task):
                 if self.bb.devices.contains(self.device) and not self.device.is_open():
                     message = "Device is already in the blackboard, no action needed"
                     logger.error(message)
-                    self.bb.add_error(message)
+                    self.bb.add_warning(message)
                     return None
 
                 message = "Device opened: " + str(self.device.get_config())
@@ -56,7 +56,6 @@ class DevicePerpetualTask(Task):
                 #     self.bb.settings.devices.remove_connection(self.old_device, ChangeSource.LOCAL)
                 
                 self.bb.devices.add(self.device)
-                self.bb.add_info(message)
                 return None
             
             else:

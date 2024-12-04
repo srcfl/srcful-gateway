@@ -33,7 +33,6 @@ class OpenDeviceTask(Task):
                 message = "Device opened: " + str(self.device.get_config())
                 logger.info(message)
                 self.bb.devices.add(self.device)
-                self.bb.add_info(message)
                 return None
             else:
                 self.device.disconnect()
