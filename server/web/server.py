@@ -38,6 +38,7 @@ class Endpoints:
             "notification/{id}": handler.get.notification.MessageHandler(),
             "settings": handler.get.settings.Handler(),
             "state": handler.get.state.Handler(),
+            "state/update": handler.get.state.UpdateStateHandler(),
         }
 
         self.api_post_dict = {
