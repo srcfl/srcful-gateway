@@ -1,6 +1,4 @@
-# test for server.web.handler.post.wifi
 from unittest.mock import Mock
-
 import pytest
 from server.crypto.crypto_state import CryptoState
 from server.web.handler.post.wifi import Handler

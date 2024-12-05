@@ -1,9 +1,7 @@
 import json
 import struct
 from unittest.mock import MagicMock, Mock
-
 import pytest
-
 from server.crypto.crypto_state import CryptoState
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.modbus_read import HoldingHandler, InputHandler  # adapt to your actual module import

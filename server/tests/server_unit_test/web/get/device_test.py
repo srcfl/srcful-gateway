@@ -1,7 +1,7 @@
 
 import json
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from server.app.blackboard import BlackBoard
 from server.web.handler.get.device import Handler
 from server.web.handler.requestData import RequestData
