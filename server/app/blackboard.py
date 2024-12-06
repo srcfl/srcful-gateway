@@ -7,6 +7,7 @@ from server.app.task_scheduler import TaskScheduler
 import server.crypto.crypto as crypto
 from server.app.message import Message
 from server.crypto.crypto_state import CryptoState
+from server.devices.IComFactory import IComFactory
 from server.tasks.itask import ITask
 from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
@@ -166,15 +167,25 @@ class BlackBoard(ISystemTime, ITaskSource):
         except Exception as e:
             logger.error(e)
             return {"error": str(e)}
+        
+    def get_device_state(self, device: ICom) -> dict:
+        device_state = {}
+        device_state['connection'] = device.get_config()
+        device_state['is_open'] = device.is_open()
+        device_state['id'] = device.get_SN()
+        device_state['name'] = device.get_name()
+        return device_state
     
-    def devices_state(self) -> list[dict]:
-        ret = {'configured': []}
+    def configured_devices_state(self, devices: list[ICom]) -> list[dict]:        
+        return [self.get_device_state(device) for device in devices]
+    
+    def saved_devices_state(self) -> list[dict]:
+        saved_devices = [IComFactory.create_com(config) for config in self.settings.devices.connections]
+        return self.configured_devices_state(saved_devices)
 
-        for device in self._devices.lst:
-            device_state = {}
-            device_state['connection'] = device.get_config()
-            device_state['is_open'] = device.is_open()
-            ret['configured'].append(device_state)
+    def devices_state(self) -> dict:
+        ret = {'configured': self.configured_devices_state(self._devices.lst)}
+        ret["saved"] = self.saved_devices_state()
 
         import server.web.handler.get.supported as supported
         ret['supported'] = supported.Handler().get_supported_inverters()

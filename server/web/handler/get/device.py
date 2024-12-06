@@ -26,23 +26,13 @@ class Handler(GetHandler):
         return config
 
     def do_get(self, data: RequestData):
-        configs = []
+        configs = data.bb.configured_devices_state(data.bb.devices.lst)
+        raw_configs = [device.get_config() for device in data.bb.devices.lst]
 
-        raw_configs = []
-
-        for device in data.bb.devices.lst:
-            config = device.get_config()
-            raw_configs.append(config.copy())
-
-            device_config = self._fix_config(config, device.get_SN(), "open" if device.is_open() else "closed")
-
-            configs.append(device_config)
-
-
+        # aklso add devices that happen to be in settings only, this can happen if the gw is rebooted and the device in settings cannot be found anymore
         for config in data.bb.settings.devices.connections:
             if config not in raw_configs:
                 device = IComFactory.create_com(config)
-                config = self._fix_config(device.get_config(), device.get_SN(), "pending")
-                configs.append(config)
+                configs.append(data.bb.get_device_state(device))
 
         return 200, json.dumps(configs)
