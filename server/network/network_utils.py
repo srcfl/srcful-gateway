@@ -187,7 +187,7 @@ class NetworkUtils:
         return None
 
     @staticmethod
-    def get_hosts(ports: list[int], timeout: float) -> list[HostInfo]:
+    def get_hosts(ports: list[int], timeout: float = DEFAULT_TIMEOUT) -> list[HostInfo]:
         """
         Scan the local network for modbus devices on the given ports using parallel threading.
         """

@@ -35,26 +35,12 @@ class ModbusScanHandler(GetHandler):
         
         ports = data.query_params.get(NetworkUtils.PORTS_KEY, "502,1502,6607,8899")
         ports = NetworkUtils.parse_ports(ports)
-        timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, NetworkUtils.DEFAULT_TIMEOUT)
-    
-        hosts = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         
-        icoms = []
-        for host in hosts:
-            args = {
-                ModbusTCP.ip_key(): host.ip,
-                ModbusTCP.port_key(): host.port,
-                ModbusTCP.mac_key(): host.mac
-            }
-            
-            icoms.append(ModbusTCP(**args))
-        
-        data.bb.set_available_devices(icoms)
-        
-        devices:List[ICom] = scan_for_modbus_devices()
+        devices:List[ICom] = scan_for_modbus_devices(ports=ports)
         
         logger.info(f"Found {len(devices)} devices")
         logger.info([device.get_config() for device in devices])
-
         
-        return 200, json.dumps([dict(host) for host in hosts])
+        data.bb.set_available_devices(devices)
+
+        return 200, json.dumps([device.get_config() for device in devices])

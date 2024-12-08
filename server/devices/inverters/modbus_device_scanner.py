@@ -46,16 +46,15 @@ scan_for_modbus_devices()  # Entry point
 """
 
 
-def scan_for_modbus_devices() -> List[ICom]:
+def scan_for_modbus_devices(ports: List[int]) -> List[ICom]:
     """
     Scan the network for Modbus TCP devices and try to identify their make/model
     by reading the frequency register.
     """
     devices: List[ICom] = []
-    modbus_ports = [502, 6607]  # Common modbus ports
     
     # Scan network for hosts with open Modbus ports
-    hosts = NetworkUtils.get_hosts(modbus_ports, 5)
+    hosts = NetworkUtils.get_hosts(ports=ports)
     
     if not hosts:
         logger.debug("No hosts found with open Modbus ports")
