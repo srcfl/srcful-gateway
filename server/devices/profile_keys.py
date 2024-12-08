@@ -26,6 +26,7 @@ class RegistersKey(Enum):
     FCODE = 'fcode'
     START_REGISTER = 'start_register'
     NUM_OF_REGISTERS = 'num_of_registers'
+    SCALE_FACTOR = 'scale_factor'
 
 
 class OperationKey(Enum):

@@ -2,7 +2,7 @@ import typing
 from ..profile_keys import ProfileKey, RegistersKey, DeviceCategory, ProtocolKey
 from .supported_devices import supported_devices
 from abc import ABC
-
+from typing import List
 
 
 class DeviceProfile(ABC):
@@ -18,18 +18,19 @@ class DeviceProfile(ABC):
 
 class RegisterInterval:
     """Register interval class. Used to define register intervals and function codes for Modbus and Solarman V5 profiles."""
-    def __init__(self, operation, start_register, offset):
-        self.operation = operation
-        self.start_register = start_register
-        self.offset = offset
+    def __init__(self, operation: int, start_register: int, offset: int, scale_factor: float = 1.0):
+        self.operation: int = operation
+        self.start_register: int = start_register
+        self.offset: int = offset
+        self.scale_factor: float = scale_factor
 
 
 class ModbusProfile(DeviceProfile):
     """Modbus profile class. Used to define register intervals for Modbus profiles."""
     def __init__(self, profile_data: dict):
         super().__init__(profile_data)
-        self.registers_verbose = []
-        self.registers = []
+        self.registers_verbose: List[RegisterInterval] = []
+        self.registers: List[RegisterInterval] = []
         
         if ProfileKey.REGISTERS_VERBOSE in profile_data:
             for register_interval in profile_data[ProfileKey.REGISTERS_VERBOSE]:
@@ -37,7 +38,8 @@ class ModbusProfile(DeviceProfile):
                     RegisterInterval(
                         register_interval[RegistersKey.FCODE],
                         register_interval[RegistersKey.START_REGISTER],
-                        register_interval[RegistersKey.NUM_OF_REGISTERS]
+                        register_interval[RegistersKey.NUM_OF_REGISTERS],
+                        register_interval.get(RegistersKey.SCALE_FACTOR, 1.0)
                     )
                 )
 
@@ -47,7 +49,8 @@ class ModbusProfile(DeviceProfile):
                     RegisterInterval(
                         register_interval[RegistersKey.FCODE],
                         register_interval[RegistersKey.START_REGISTER],
-                        register_interval[RegistersKey.NUM_OF_REGISTERS]
+                        register_interval[RegistersKey.NUM_OF_REGISTERS],
+                        register_interval.get(RegistersKey.SCALE_FACTOR, 1.0)
                     )
                 )
     

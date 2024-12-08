@@ -5,6 +5,9 @@ from ..handler import GetHandler
 from ..requestData import RequestData
 from server.network.network_utils import NetworkUtils
 from server.devices.inverters.ModbusTCP import ModbusTCP
+from server.devices.inverters.modbus_device_scanner import scan_for_modbus_devices
+from server.devices.ICom import ICom
+from typing import List
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -47,5 +50,11 @@ class ModbusScanHandler(GetHandler):
             icoms.append(ModbusTCP(**args))
         
         data.bb.set_available_devices(icoms)
+        
+        devices:List[ICom] = scan_for_modbus_devices()
+        
+        logger.info(f"Found {len(devices)} devices")
+        logger.info([device.get_config() for device in devices])
+
         
         return 200, json.dumps([dict(host) for host in hosts])

@@ -48,7 +48,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._available_devices = []
         
     def get_version(self) -> str:
-        return "0.17.1"
+        return "0.17.2"
         
     def add_task(self, task: ITask):
         self._tasks.append(task)
