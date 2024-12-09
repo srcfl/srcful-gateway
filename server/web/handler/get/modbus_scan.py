@@ -33,7 +33,7 @@ class ModbusScanHandler(GetHandler):
     def do_get(self, data: RequestData):
         """Scan the network for modbus devices."""
         
-        ports = data.query_params.get(NetworkUtils.PORTS_KEY, "502,1502,6607,8899")
+        ports = data.query_params.get(NetworkUtils.PORTS_KEY, NetworkUtils.DEFAULT_MODBUS_PORTS)
         ports = NetworkUtils.parse_ports(ports)
         
         devices:List[ICom] = scan_for_modbus_devices(ports=ports)
@@ -41,6 +41,6 @@ class ModbusScanHandler(GetHandler):
         logger.info(f"Found {len(devices)} devices")
         logger.info([device.get_config() for device in devices])
         
-        data.bb.set_available_devices(devices)
+        data.bb.set_available_devices(devices=devices)
 
         return 200, json.dumps([device.get_config() for device in devices])
