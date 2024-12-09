@@ -35,9 +35,10 @@ class DeviceScanHandler(GetHandler):
         
         ports = data.query_params.get(NetworkUtils.PORTS_KEY, NetworkUtils.DEFAULT_MODBUS_PORTS)
         ports = NetworkUtils.parse_ports(ports)
+        timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, NetworkUtils.DEFAULT_TIMEOUT)
 
         # Scan for modbus devices
-        devices:List[ICom] = scan_for_modbus_devices(ports=ports)
+        devices:List[ICom] = scan_for_modbus_devices(ports=ports, timeout=timeout)
         
         # Scan for P1 devices
         p1_devices:List[ICom] = scan_for_p1_devices()

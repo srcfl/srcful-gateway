@@ -4,6 +4,8 @@ from server.devices.inverters.modbus_device_scanner import scan_for_modbus_devic
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.devices.supported_devices.profiles import ModbusProfile, RegisterInterval
 from server.devices.profile_keys import ProtocolKey
+from server.network.network_utils import NetworkUtils
+
 
 @pytest.fixture
 def mock_modbus_device():
@@ -41,7 +43,7 @@ def blackboard():
 def test_scan_no_hosts_found(mock_get_hosts):
     """Test scanning when no hosts are found"""
     mock_get_hosts.return_value = []
-    devices = scan_for_modbus_devices(ports=[502])
+    devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT)
     assert len(devices) == 0
 
 @patch('server.devices.inverters.modbus_device_scanner.ModbusTCP')
@@ -73,7 +75,7 @@ def test_scan_finds_single_device(mock_get_hosts, mock_profiles, mock_modbus_cla
     mock_modbus_class.return_value = mock_device
     
     # Run test
-    devices = scan_for_modbus_devices(ports=[502])
+    devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT)
     
     # Assertions
     assert len(devices) == 1

@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 
 class DiscoverDevicesTask(Task):
     """
-    Discover modbus devices on the network and cache the results in the blackboard.
+    Discover modbus and P1 devices on the network and cache the results in the blackboard.
     """
     def __init__(self, event_time: int, bb: BlackBoard):
         super().__init__(event_time, bb)
@@ -24,9 +24,10 @@ class DiscoverDevicesTask(Task):
         
         ports = NetworkUtils.DEFAULT_MODBUS_PORTS
         ports = NetworkUtils.parse_ports(ports)
+        timeout = NetworkUtils.DEFAULT_TIMEOUT
 
         # Scan for modbus devices
-        devices:List[ICom] = scan_for_modbus_devices(ports=ports)
+        devices:List[ICom] = scan_for_modbus_devices(ports=ports, timeout=timeout)
         
         # Scan for P1 devices
         p1_devices:List[ICom] = scan_for_p1_devices()
