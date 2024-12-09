@@ -18,11 +18,10 @@ class DeviceProfile(ABC):
 
 class RegisterInterval:
     """Register interval class. Used to define register intervals and function codes for Modbus and Solarman V5 profiles."""
-    def __init__(self, operation: int, start_register: int, offset: int, scale_factor: float = 1.0):
+    def __init__(self, operation: int, start_register: int, offset: int):
         self.operation: int = operation
         self.start_register: int = start_register
         self.offset: int = offset
-        self.scale_factor: float = scale_factor
 
 
 class ModbusProfile(DeviceProfile):
@@ -39,7 +38,6 @@ class ModbusProfile(DeviceProfile):
                         register_interval[RegistersKey.FCODE],
                         register_interval[RegistersKey.START_REGISTER],
                         register_interval[RegistersKey.NUM_OF_REGISTERS],
-                        register_interval.get(RegistersKey.SCALE_FACTOR, 1.0)
                     )
                 )
 
@@ -50,7 +48,6 @@ class ModbusProfile(DeviceProfile):
                         register_interval[RegistersKey.FCODE],
                         register_interval[RegistersKey.START_REGISTER],
                         register_interval[RegistersKey.NUM_OF_REGISTERS],
-                        register_interval.get(RegistersKey.SCALE_FACTOR, 1.0)
                     )
                 )
     

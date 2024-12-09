@@ -114,19 +114,17 @@ def identify_device(host: HostInfo) -> Optional[ICom]:
                     device_type=profile.name
                 )
                 
-                # Try to connect and read frequency
+                # Try to connect and read registers
                 if device.connect():
-                    frequency = read_frequency(
-                        device,
+                    registers = device.read_registers(
                         freq_register.operation,
                         freq_register.start_register,
-                        freq_register.offset,
-                        freq_register.scale_factor
+                        freq_register.offset
                     )
                     
-                    # If we got a valid frequency reading (typically 45-65 Hz)
-                    if 47 <= frequency <= 63:
-                        logger.info(f"Found {profile.name} device at {host.ip}:{host.port} with slave ID {slave_id} (Frequency: {frequency} Hz)")
+                    # If we got any registers back, we found a device
+                    if registers:
+                        logger.info(f"Found {profile.name} device at {host.ip}:{host.port} with slave ID {slave_id}")
                         return device
                 
                 device.disconnect()
@@ -139,24 +137,3 @@ def identify_device(host: HostInfo) -> Optional[ICom]:
             time.sleep(0.1)
                     
     return None
-
-def read_frequency(device: ModbusTCP, operation: str, start_register: int, num_registers: int, scale_factor: float) -> float:
-    """
-    Read the frequency value from the device and apply the scale factor.
-    """
-    try:
-        registers = device.read_registers(operation, start_register, num_registers)
-        
-        if not registers:
-            return 0.0
-            
-        if num_registers == 1:
-            # Single register (uint16) - apply scale factor
-            return registers[0] * scale_factor
-        else:
-            # Two registers (float32) - apply scale factor
-            return struct.unpack('>f', struct.pack('>HH', registers[0], registers[1]))[0] * scale_factor
-            
-    except Exception as e:
-        logger.debug(f"Error reading frequency: {str(e)}")
-        return 0.0
