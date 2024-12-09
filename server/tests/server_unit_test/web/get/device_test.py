@@ -3,9 +3,12 @@ import json
 import pytest
 from unittest.mock import Mock
 from server.app.blackboard import BlackBoard
+from server.crypto.crypto_state import CryptoState
 from server.web.handler.get.device import Handler
 from server.web.handler.requestData import RequestData
 from server.devices.ICom import ICom
+import server.tests.config_defaults as config_defaults
+
 
 @pytest.fixture
 def handler():
@@ -16,13 +19,10 @@ def mock_device():
 
     def create_device():
         device = Mock(spec=ICom)
-        device.get_config.return_value = ({
-            "connection": "TCP",
-            "ip": "192.168.1.100",
-            "port": 502,
-            "mac": "TEST123"
-        }.copy())
-        device.get_SN.return_value = "TEST123"
+        device.get_config.return_value = (config_defaults.P1_TELNET_CONFIG.copy())
+        device.get_SN.return_value = config_defaults.P1_TELNET_CONFIG["meter_serial_number"]
+        device.get_name.return_value = "Test Device"
+        device.client = None
         return device
     
     device = create_device()
@@ -30,18 +30,13 @@ def mock_device():
     
 
 @pytest.fixture
-def mock_blackboard():
-    bb = Mock(spec=BlackBoard)
-    bb.devices = Mock()
-    bb.devices.lst = []
-    bb.settings = Mock()
-    bb.settings.devices = Mock()
-    bb.settings.devices.connections = []
+def blackboard():
+    bb = BlackBoard(Mock(spec=CryptoState))
     return bb
 
 @pytest.fixture
-def request_data(mock_blackboard):
-    return RequestData(mock_blackboard, {}, {}, {})
+def request_data(blackboard):
+    return RequestData(blackboard, {}, {}, {})
 
 def test_schema(handler):
     """Test that schema returns the expected structure"""
@@ -68,11 +63,10 @@ def test_single_open_device(handler, request_data, mock_device):
     
     assert status == 200
     assert len(result) == 1
-    assert result[0]["status"] == "open"
-    assert result[0]["id"] == "TEST123"
-    assert result[0]["connection"] == "TCP"
-    assert result[0]["ip"] == "192.168.1.100"
-    assert result[0]["port"] == 502
+    assert result[0]["is_open"] == True
+    assert result[0]["id"] == "abc5qwerty"
+    assert result[0]["connection"]["connection"] == "P1Telnet"
+    assert result[0]["connection"]["ip"] == "localhost"
 
 def test_single_device_in_settings(handler, request_data, mock_device):
     """Test handler returns correct data for a single open device"""
@@ -84,11 +78,10 @@ def test_single_device_in_settings(handler, request_data, mock_device):
     
     assert status == 200
     assert len(result) == 1
-    assert result[0]["status"] == "pending"
-    assert result[0]["id"] == "TEST123"
-    assert result[0]["connection"] == "TCP"
-    assert result[0]["ip"] == "192.168.1.100"
-    assert result[0]["port"] == 502
+    assert result[0]["is_open"] == False
+    assert result[0]["id"] == "abc5qwerty"
+    assert result[0]["connection"]["connection"] == "P1Telnet"
+    assert result[0]["connection"]["ip"] == "localhost"
 
 def test_single_device(handler, request_data, mock_device):
     """Test handler returns correct data for a single open device"""
@@ -101,11 +94,10 @@ def test_single_device(handler, request_data, mock_device):
     
     assert status == 200
     assert len(result) == 1
-    assert result[0]["status"] == "open"
-    assert result[0]["id"] == "TEST123"
-    assert result[0]["connection"] == "TCP"
-    assert result[0]["ip"] == "192.168.1.100"
-    assert result[0]["port"] == 502
+    assert result[0]["is_open"] == True
+    assert result[0]["id"] == "abc5qwerty"
+    assert result[0]["connection"]["connection"] == "P1Telnet"
+    assert result[0]["connection"]["ip"] == "localhost"
 
 def test_single_closed_device(handler, request_data, mock_device):
     """Test handler returns correct data for a single closed device"""
@@ -117,8 +109,8 @@ def test_single_closed_device(handler, request_data, mock_device):
     
     assert status == 200
     assert len(result) == 1
-    assert result[0]["status"] == "closed"
-    assert result[0]["id"] == "TEST123"
+    assert result[0]["is_open"] == False
+    assert result[0]["id"] ==  "abc5qwerty"
 
 def test_multiple_devices(handler, request_data, mock_device):
     """Test handler returns correct data for multiple devices"""
@@ -127,13 +119,14 @@ def test_multiple_devices(handler, request_data, mock_device):
     device1.get_config.return_value = {"connection": "TCP", "ip": "192.168.1.100"}
     device1.is_open.return_value = True
     device1.get_SN.return_value = "DEV1"
+    device1.get_name.return_value = "Test Device 1"
     
     # Second device (closed)
     device2 = Mock(spec=ICom)
     device2.get_config.return_value = {"connection": "RTU", "port": "/dev/ttyUSB0"}
     device2.is_open.return_value = False
     device2.get_SN.return_value = "DEV2"
-    
+    device2.get_name.return_value = "Test Device 2"
     request_data.bb.devices.lst = [device1, device2]
     
     status, response = handler.do_get(request_data)
@@ -143,11 +136,11 @@ def test_multiple_devices(handler, request_data, mock_device):
     assert len(result) == 2
     
     # Check first device
-    assert result[0]["status"] == "open"
+    assert result[0]["is_open"] == True
     assert result[0]["id"] == "DEV1"
-    assert result[0]["connection"] == "TCP"
+    assert result[0]["connection"]["connection"] == "TCP"
     
     # Check second device
-    assert result[1]["status"] == "closed"
+    assert result[1]["is_open"] == False
     assert result[1]["id"] == "DEV2"
-    assert result[1]["connection"] == "RTU"
+    assert result[1]["connection"]["connection"] == "RTU"

@@ -104,6 +104,7 @@ class P1Telnet(TCPDevice):
         self.port = port
         self.meter_serial_number = meter_serial_number
         self.model_name = model_name
+        self.client = SimpleTelnet(self.ip, self.port, 5)
 
     def _connect(self, **kwargs) -> bool:
         try:
@@ -125,7 +126,7 @@ class P1Telnet(TCPDevice):
             self.client.close()
        
     def is_open(self) -> bool:
-        return self.client is not None and self.client.get_socket() is not None
+        return self.client and self.client.get_socket() is not None
     
     def _read_harvest_data(self, force_verbose) -> dict:
         try:

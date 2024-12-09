@@ -6,6 +6,7 @@ from server.devices.ICom import ICom
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.harvest import Harvest
 from server.app.settings import ChangeSource
+import server.tests.config_defaults as config_defaults
 
 @pytest.fixture
 def blackboard():
@@ -17,6 +18,7 @@ def mock_device():
     device.is_open.return_value = True
     device.get_name.return_value = "Test Device"
     device.get_SN.return_value = "123456"
+    device.get_config.return_value = config_defaults.P1_JEMAC_ARGS
     return device
 
 def test_create_harvest_factory(blackboard):
