@@ -13,7 +13,7 @@ from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.getSettingsTask import GetSettingsTask
-from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
+from server.tasks.discoverDevicesTask import DiscoverDevicesTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
 from server.app.settings_device_listener import SettingsDeviceListener
 
@@ -59,7 +59,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))
-    scheduler.add_task(DiscoverModbusDevicesTask(bb.time_ms() + 5000, bb))
+    scheduler.add_task(DiscoverDevicesTask(bb.time_ms() + 5000, bb))
     # tasks.put(CryptoReviveTask(bb.time_ms() + 7000, bb))
 
     try:

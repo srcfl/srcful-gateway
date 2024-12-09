@@ -16,3 +16,4 @@ from . import settings
 from . import state
 from . import device
 from . import supported_devices
+from . import device_scan

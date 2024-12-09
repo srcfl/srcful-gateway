@@ -16,7 +16,7 @@ from server.tasks.harvestFactory import HarvestFactory
 from server.settings import DebouncedMonitorBase, ChangeSource
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.tasks.saveSettingsTask import SaveSettingsTask
-from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
+from server.tasks.discoverDevicesTask import DiscoverDevicesTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
 import server.tasks.entropyTask as entropy
 from server.settings_device_listener import SettingsDeviceListener
@@ -174,7 +174,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
-    tasks.put(DiscoverModbusDevicesTask(bb.time_ms() + 5000, bb))
+    tasks.put(DiscoverDevicesTask(bb.time_ms() + 5000, bb))
     # tasks.put(CryptoReviveTask(bb.time_ms() + 7000, bb))
 
     try:
