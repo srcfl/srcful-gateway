@@ -295,6 +295,7 @@ supported_devices = {
                     RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 37,
                     RegistersKey.NUM_OF_REGISTERS: 1,
+                    
                 },
                 {
                     RegistersKey.FCODE: OperationKey.READ_INPUT_REGISTERS,
@@ -322,6 +323,7 @@ supported_devices = {
                     RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 1304,
                     RegistersKey.NUM_OF_REGISTERS: 1,
+                    
                 },
                 {
                     RegistersKey.FCODE: OperationKey.READ_HOLDING_REGISTERS,

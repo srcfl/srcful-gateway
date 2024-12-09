@@ -4,6 +4,9 @@ from server.devices.inverters.ModbusTCP import ModbusTCP
 from .task import Task
 from server.app.blackboard import BlackBoard
 from server.network.network_utils import NetworkUtils
+from server.devices.inverters.modbus_device_scanner import scan_for_modbus_devices
+from server.devices.ICom import ICom
+from typing import List 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -20,20 +23,12 @@ class DiscoverModbusDevicesTask(Task):
         
         ports = NetworkUtils.DEFAULT_MODBUS_PORTS
         ports = NetworkUtils.parse_ports(ports)
-        timeout = NetworkUtils.DEFAULT_TIMEOUT
 
-        hosts = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
+        devices:List[ICom] = scan_for_modbus_devices(ports=ports)
         
-        icoms = []
-        for host in hosts:
-            args = {
-                ModbusTCP.ip_key(): host.ip,
-                ModbusTCP.port_key(): host.port,
-                ModbusTCP.mac_key(): host.mac
-            }
-            
-            icoms.append(ModbusTCP(**args))
+        logger.info(f"Found {len(devices)} devices")
+        logger.info([device.get_config() for device in devices])
         
-        self.bb.set_available_devices(icoms)
+        self.bb.set_available_devices(devices=devices)
 
         return None

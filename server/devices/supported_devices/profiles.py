@@ -2,7 +2,7 @@ import typing
 from ..profile_keys import ProfileKey, RegistersKey, DeviceCategory, ProtocolKey
 from .supported_devices import supported_devices
 from abc import ABC
-
+from typing import List
 
 
 class DeviceProfile(ABC):
@@ -18,18 +18,18 @@ class DeviceProfile(ABC):
 
 class RegisterInterval:
     """Register interval class. Used to define register intervals and function codes for Modbus and Solarman V5 profiles."""
-    def __init__(self, operation, start_register, offset):
-        self.operation = operation
-        self.start_register = start_register
-        self.offset = offset
+    def __init__(self, operation: int, start_register: int, offset: int):
+        self.operation: int = operation
+        self.start_register: int = start_register
+        self.offset: int = offset
 
 
 class ModbusProfile(DeviceProfile):
     """Modbus profile class. Used to define register intervals for Modbus profiles."""
     def __init__(self, profile_data: dict):
         super().__init__(profile_data)
-        self.registers_verbose = []
-        self.registers = []
+        self.registers_verbose: List[RegisterInterval] = []
+        self.registers: List[RegisterInterval] = []
         
         if ProfileKey.REGISTERS_VERBOSE in profile_data:
             for register_interval in profile_data[ProfileKey.REGISTERS_VERBOSE]:
@@ -37,7 +37,7 @@ class ModbusProfile(DeviceProfile):
                     RegisterInterval(
                         register_interval[RegistersKey.FCODE],
                         register_interval[RegistersKey.START_REGISTER],
-                        register_interval[RegistersKey.NUM_OF_REGISTERS]
+                        register_interval[RegistersKey.NUM_OF_REGISTERS],
                     )
                 )
 
@@ -47,7 +47,7 @@ class ModbusProfile(DeviceProfile):
                     RegisterInterval(
                         register_interval[RegistersKey.FCODE],
                         register_interval[RegistersKey.START_REGISTER],
-                        register_interval[RegistersKey.NUM_OF_REGISTERS]
+                        register_interval[RegistersKey.NUM_OF_REGISTERS],
                     )
                 )
     
@@ -56,23 +56,7 @@ class ModbusProfile(DeviceProfile):
     
     def get_registers(self) -> typing.List[RegisterInterval]:
         return self.registers
-
-
-# class SunSpecProfile(DeviceProfile):
-#     """SunSpec profile class. Does not contain any register intervals since they are defined in the SunSpec models."""
-#     def __init__(self, profile_data: dict):
-#         super().__init__(profile_data)
-#         # self.model_ids = profile_data.get('model_ids', [])
-        
-
-# class RestApiProfile(DeviceProfile):
-#     """Rest API profile class. Used to define base URL and endpoints for Rest API profiles."""
-#     def __init__(self, profile_data: dict):
-#         super().__init__(profile_data)
-#         self.base_url = profile_data.get('base_url')
-#         self.endpoints = profile_data.get('endpoints', {})
-#         self.auth_method = profile_data.get('auth_method')
-
+    
 
 class ModbusDeviceProfiles:
     """Device profiles class. Used to load and manage device profiles."""
