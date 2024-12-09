@@ -1,7 +1,6 @@
 from unittest.mock import Mock
 import pytest
 import json
-import logging
 from server.web.handler.requestData import RequestData
 from server.web.handler.get.uptime import Handler
 from server.app.blackboard import BlackBoard

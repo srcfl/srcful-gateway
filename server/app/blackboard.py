@@ -3,7 +3,6 @@ import time
 import logging
 from server.app.isystem_time import ISystemTime
 from server.app.itask_source import ITaskSource
-from server.app.task_scheduler import TaskScheduler
 import server.crypto.crypto as crypto
 from server.app.message import Message
 from server.crypto.crypto_state import CryptoState
@@ -11,7 +10,6 @@ from server.devices.IComFactory import IComFactory
 from server.tasks.itask import ITask
 from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
-from server.network.network_utils import HostInfo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -51,7 +49,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._available_devices = []
         
     def get_version(self) -> str:
-        return "0.17.0"
+        return "0.17.1"
         
     def add_task(self, task: ITask):
         self._tasks.append(task)

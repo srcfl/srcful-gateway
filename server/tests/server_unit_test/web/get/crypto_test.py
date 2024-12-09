@@ -4,7 +4,6 @@ import server.web.handler.get.crypto as get_crypto
 from server.app.blackboard import BlackBoard
 from server.web.handler.requestData import RequestData
 import pytest
-import json
 import server.crypto.crypto as crypto
 
 

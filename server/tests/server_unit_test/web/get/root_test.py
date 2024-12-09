@@ -1,5 +1,4 @@
 from unittest.mock import Mock, patch
-
 from server.web.handler.get.root import Handler
 from server.web.handler.requestData import RequestData
 from server.app.blackboard import BlackBoard

@@ -1,12 +1,10 @@
 # A class to scan for modbus devices on the network
 import logging
 import json
-
-from server.devices.inverters.ModbusTCP import ModbusTCP
-from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from ..handler import GetHandler
 from ..requestData import RequestData
 from server.network.network_utils import NetworkUtils
+from server.devices.inverters.ModbusTCP import ModbusTCP
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -36,11 +34,18 @@ class ModbusScanHandler(GetHandler):
         ports = NetworkUtils.parse_ports(ports)
         timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, NetworkUtils.DEFAULT_TIMEOUT)
     
-        available_devices = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
+        hosts = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         
-        # call discover modbus devices task
-        # task = DiscoverModbusDevicesTask(event_time=data.bb.time_ms() + 1000, bb=data.bb)
-
-        available_devices = json.dumps([dict(host) for host in available_devices])
+        icoms = []
+        for host in hosts:
+            args = {
+                ModbusTCP.ip_key(): host.ip,
+                ModbusTCP.port_key(): host.port,
+                ModbusTCP.mac_key(): host.mac
+            }
+            
+            icoms.append(ModbusTCP(**args))
         
-        return 200, available_devices
+        data.bb.set_available_devices(icoms)
+        
+        return 200, json.dumps([dict(host) for host in hosts])

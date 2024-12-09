@@ -3,6 +3,7 @@ from server.network.network_utils import HostInfo
 from server.network.network_utils import NetworkUtils
 import server.tests.config_defaults as cfg
 import pytest
+from unittest.mock import Mock
 
 @pytest.fixture
 def enphase():
@@ -83,3 +84,13 @@ def test_init_with_no_token_missing_iq_gw_serial(config):
         assert False
     except Exception as e:
         assert True
+
+def test_disconnect(enphase):
+
+    mock_session = Mock()
+    enphase.session = mock_session
+    
+    enphase.disconnect()
+    mock_session.close.assert_called_once()
+    assert enphase.is_disconnected()
+    assert not enphase.is_open()

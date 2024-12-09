@@ -145,10 +145,14 @@ class Enphase(TCPDevice):
         return data
        
     def is_open(self) -> bool:
-        return self.session and self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION]).status_code == 200
+        try:
+            return self.session and self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION]).status_code == 200 and not self.is_disconnected()
+        except Exception as e:
+            logger.warning("Error checking device status: %s", str(e))
+            return False
     
     def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
-        return 1000*60 # 1 minute
+        return 1000*30 # 30 seconds
     
     def get_harvest_data_type(self) -> HarvestDataType:
         return HarvestDataType.REST_API

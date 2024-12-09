@@ -1,7 +1,5 @@
-import pytest
 import server.web.handler.get.name as get_name
 from unittest.mock import Mock, patch
-
 from server.tasks.getNameTask import GetNameTask
 
 
