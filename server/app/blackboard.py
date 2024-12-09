@@ -176,6 +176,7 @@ class BlackBoard(ISystemTime, ITaskSource):
 
         import server.web.handler.get.supported as supported
         ret['supported'] = supported.Handler().get_supported_inverters()
+        ret['available'] = [device.get_config() for device in self.get_available_devices()]
         return ret
     
     def get_available_devices(self) -> list[ICom]:

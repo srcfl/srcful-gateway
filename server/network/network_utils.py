@@ -120,7 +120,7 @@ class NetworkUtils:
     @staticmethod
     def arp_table() -> list[dict[str, str]]:
         """Refresh the ARP table from the system."""
-        logger.info("Scanning ARP table")
+        logger.debug("Scanning ARP table")
         try:
             with open('/proc/net/arp', 'r', encoding='utf-8') as f:
                 lines = f.readlines()[1:]  # Skip the header line
