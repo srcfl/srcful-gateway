@@ -63,7 +63,7 @@ def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFA
     # Use ThreadPoolExecutor for parallel host scanning only
     with ThreadPoolExecutor(max_workers=min(32, len(hosts))) as executor:
         future_to_host = {
-            executor.submit(identify_device, host): host 
+            executor.submit(identify_device, host): host
             for host in hosts
         }
         

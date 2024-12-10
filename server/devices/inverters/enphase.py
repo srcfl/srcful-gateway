@@ -6,7 +6,7 @@ from ..ICom import HarvestDataType, ICom
 from typing import List, Optional
 from server.network.network_utils import HostInfo, NetworkUtils
 import urllib3
-
+from server.devices.inverters.enphase_scanner import scan_for_enphase_device
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -184,26 +184,11 @@ class Enphase(TCPDevice):
         config[self.port_key()] = host.port
         return Enphase(**config)
     
-    def _scan_for_devices(self, domain: str) -> Optional['Enphase']:
-        mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
-        for service in mdns_services:
-            if service.address and service.port:
-                enphase = Enphase(ip=service.address, port=service.port, bearer_token=self.bearer_token)
-                if enphase.connect():
-                    return enphase
-        return None
     
     def find_device(self) -> 'ICom':
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
-        if self.mac != NetworkUtils.INVALID_MAC:
-            # TODO: This is unknown at this point
-            domain_names = {"_enphase-envoy._tcp.local.":{"name": "Enphase IQ Gateway"}}
-
-            for domain, info in domain_names.items():
-                enphase = self._scan_for_devices(domain)
-                if enphase:
-                    enphase.model_name = info["name"]
-                    return enphase
+        if self.mac:
+            return scan_for_enphase_device(self.mac)
         return None
             
     def get_SN(self) -> str:
