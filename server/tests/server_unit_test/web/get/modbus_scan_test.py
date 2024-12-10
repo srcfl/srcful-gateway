@@ -23,8 +23,8 @@ def test_do_get_saves_devices_to_state(mock_scan_for_modbus_devices, setup_handl
     
     
     mock_devices = [
-        ModbusTCP(ip=cfg.TCP_CONFIG["ip"], port=cfg.TCP_CONFIG["port"], mac=cfg.TCP_CONFIG["mac"]),
-        ModbusTCP(ip=cfg.SOLARMAN_CONFIG["ip"], port=cfg.SOLARMAN_CONFIG["port"], mac=cfg.SOLARMAN_CONFIG["mac"])
+        ModbusTCP(ip=cfg.TCP_CONFIG["ip"], port=cfg.TCP_CONFIG["port"], mac=cfg.TCP_CONFIG["mac"], device_type="huawei"),
+        ModbusTCP(ip=cfg.SOLARMAN_CONFIG["ip"], port=cfg.SOLARMAN_CONFIG["port"], mac=cfg.SOLARMAN_CONFIG["mac"], device_type="deye")
     ]
     
     mock_scan_for_modbus_devices.return_value = mock_devices
