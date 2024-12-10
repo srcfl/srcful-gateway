@@ -68,17 +68,31 @@ class ModbusSolarman(ModbusTCP):
         self.verbose = kwargs.get(self.verbose_key(), 0)
 
     def _connect(self, **kwargs) -> bool:
+        
+        self._create_client(**kwargs)
+        
         try:
-            self._create_client(**kwargs)
             if not self.client.sock:
-                log.error("FAILED to open inverter: %s", self._get_type())
+                log.error("FAILED to open inverter: %s", self.get_config())
+                return False
             if self.client.sock:
                 self.mac = NetworkUtils.get_mac_from_ip(self.ip)
-            return bool(self.client.sock)
         except Exception as e:
-            log.error("Error opening inverter: %s", self._get_type())
-            log.error(e)
+            log.error("Error opening inverter: %s", self.get_config())
             return False
+        
+        registers: dict = None
+        
+        try:
+            registers: dict = self.read_harvest_data(force_verbose=False)
+        except Exception as e:
+            log.error("Failed to connect to device. Initial register read failed: %s", self.get_config())
+            return False
+        
+        valid_reading = bool(registers and len(registers) > 0)
+        
+        return bool(self.client.sock) and self.mac != NetworkUtils.INVALID_MAC and valid_reading
+
 
     def is_open(self) -> bool:
         try:

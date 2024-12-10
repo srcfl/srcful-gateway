@@ -95,7 +95,19 @@ class ModbusTCP(Modbus, TCPDevice):
             log.error("FAILED to open Modbus TCP device: %s", self._get_type())
         if self.client.socket:
             self.mac = NetworkUtils.get_mac_from_ip(self.ip)
-        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC
+        
+        registers: dict = None
+        
+        try:    
+            # Read the first register from the profile to check if the device is compatible
+            registers: dict = self.read_harvest_data(force_verbose=False)
+        except Exception as e:
+            log.error("Failed to connect to device. Initial register read failed: %s", str(e))
+            return False
+        
+        valid_reading = bool(registers and len(registers) > 0)
+
+        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and valid_reading
         
     def _get_type(self) -> str:
         return self.device_type
