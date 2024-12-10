@@ -35,7 +35,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.01,
                 },
                 {
@@ -44,7 +44,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.I32,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "Power",
+                    RegistersKey.DESCRIPTION: "Power",
                     RegistersKey.SCALE_FACTOR: 0.001,
                 },
             ],
@@ -85,7 +85,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2, # Frequency is in the second register
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.01,
                 },
                 {
@@ -94,7 +94,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2, # Power is in the second register
                     RegistersKey.DATA_TYPE: DataType.I16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "Power",
+                    RegistersKey.DESCRIPTION: "Power",
                     RegistersKey.SCALE_FACTOR: 0.01,
                 },
             ],
@@ -125,7 +125,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.1,
                 },
                 {
@@ -134,7 +134,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.U32,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "Power",
+                    RegistersKey.DESCRIPTION: "Power",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
             ],
@@ -175,7 +175,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.U32,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.01,
                 },
                 {
@@ -184,7 +184,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.I32,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "Power",
+                    RegistersKey.DESCRIPTION: "Power",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
             ],
@@ -210,7 +210,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.F32,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
                 {
@@ -219,7 +219,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.F32,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "Power",
+                    RegistersKey.DESCRIPTION: "Power",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
             ],
@@ -255,7 +255,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.01,
                 },
                 {
@@ -264,7 +264,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "Power",
+                    RegistersKey.DESCRIPTION: "Power",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
             ],
@@ -290,7 +290,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.01,
                 },
                 {
@@ -299,7 +299,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2, # First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "PV 1 Power",
+                    RegistersKey.DESCRIPTION: "PV 1 Power",
                     RegistersKey.SCALE_FACTOR: 0.1,
                 },
                 {
@@ -308,7 +308,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2, # First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "PV 2 Power",
+                    RegistersKey.DESCRIPTION: "PV 2 Power",
                     RegistersKey.SCALE_FACTOR: 0.1,
                 },
                 {
@@ -317,7 +317,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2, # First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "PV 3 Power",
+                    RegistersKey.DESCRIPTION: "PV 3 Power",
                     RegistersKey.SCALE_FACTOR: 0.1,
                 },
             ],
@@ -358,7 +358,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.01,
                 },
                 {
@@ -367,7 +367,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.U32,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "Power",
+                    RegistersKey.DESCRIPTION: "Power",
                     RegistersKey.SCALE_FACTOR: 0.1,
                 },
             ],
@@ -393,7 +393,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.01,
                 },
                 {
@@ -402,7 +402,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2, # PV1. First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "PV 1 Power",
+                    RegistersKey.DESCRIPTION: "PV 1 Power",
                     RegistersKey.SCALE_FACTOR: 0.1,
                 },
             ],
@@ -558,7 +558,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.F32,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
                 {
@@ -567,7 +567,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.F32,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "Power",
+                    RegistersKey.DESCRIPTION: "Power",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
             ],
@@ -633,7 +633,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.01,
                 },
                 {
@@ -642,7 +642,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "PV 1 Power",
+                    RegistersKey.DESCRIPTION: "PV 1 Power",
                     RegistersKey.SCALE_FACTOR: 0.1,
                 },
                 {
@@ -651,7 +651,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "PV 2 Power",
+                    RegistersKey.DESCRIPTION: "PV 2 Power",
                     RegistersKey.SCALE_FACTOR: 0.1,
                 },
                 {
@@ -660,7 +660,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "PV 3 Power",
+                    RegistersKey.DESCRIPTION: "PV 3 Power",
                     RegistersKey.SCALE_FACTOR: 0.1,
                 },
                 {
@@ -669,7 +669,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "%",
-                    RegistersKey.DESC: "Battery 1 SOC",
+                    RegistersKey.DESCRIPTION: "Battery 1 SOC",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
                 {
@@ -678,7 +678,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataType.U16,
                     RegistersKey.UNIT: "%",
-                    RegistersKey.DESC: "Battery 2 SOC",
+                    RegistersKey.DESCRIPTION: "Battery 2 SOC",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
             ],
@@ -706,7 +706,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.F32,
                     RegistersKey.UNIT: "Hz",
-                    RegistersKey.DESC: "Grid frequency",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
                 {
@@ -715,7 +715,7 @@ supported_devices = {
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataType.F32,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESC: "Power",
+                    RegistersKey.DESCRIPTION: "Power",
                     RegistersKey.SCALE_FACTOR: 1,
                 },
             ],

@@ -28,7 +28,7 @@ class RegistersKey(Enum):
     NUM_OF_REGISTERS = 'num_of_registers'
     DATA_TYPE = 'data_type'
     UNIT = 'unit'
-    DESC = 'description'
+    DESCRIPTION = 'description'
     SCALE_FACTOR = 'scale_factor'
 
 
