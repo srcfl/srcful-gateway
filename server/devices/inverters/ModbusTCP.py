@@ -177,17 +177,17 @@ class ModbusTCP(Modbus, TCPDevice):
         config[self.IP] = host.ip
         return ModbusTCP(**config)
     
+    def _get_frequency_register(self) -> Optional[RegisterInterval]:
+        profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
+        if not profile or not profile.registers:
+            return None
+        return profile.registers[0]
 
     def _read_frequency(self) -> Optional[float]:
         """Read grid frequency using the device profile's first register"""
         try:
-            # Get device profile
-            profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
-            if not profile or not profile.registers:
-                return None
-
-            # First register is always frequency
-            freq_reg: RegisterInterval = profile.registers[0]
+           
+            freq_reg: RegisterInterval = self._get_frequency_register()
             
             # Create RegisterValue for frequency reading
             reg_value = RegisterValue(
