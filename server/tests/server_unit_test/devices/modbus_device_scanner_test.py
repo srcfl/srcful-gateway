@@ -22,10 +22,10 @@ def mock_modbus_device():
 def mock_profile():
     profile = MagicMock(spec=ModbusProfile)
     profile.protocol = ProtocolKey.MODBUS
-    profile.name = "Test Inverter"
+    profile.name = "huawei"
     profile.registers = [
         RegisterInterval(
-            operation="read",
+            operation=0x03,
             start_register=0,
             offset=1
         )
@@ -70,7 +70,7 @@ def test_scan_finds_single_device(mock_get_hosts, mock_profiles, mock_modbus_cla
     mock_device.mac = host_info.mac
     mock_device.device_type = mock_profile.name
     mock_device.connect.return_value = True
-    mock_device.read_registers.return_value = [5000]
+    mock_device.read_registers.return_value = [50]
     mock_device.slave_id = 1
     mock_modbus_class.return_value = mock_device
     

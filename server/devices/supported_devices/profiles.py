@@ -1,5 +1,6 @@
 import typing
 from ..profile_keys import ProfileKey, RegistersKey, DeviceCategory, ProtocolKey
+from ..profile_keys import DataType
 from .supported_devices import supported_devices
 from abc import ABC
 from typing import List
@@ -18,10 +19,22 @@ class DeviceProfile(ABC):
 
 class RegisterInterval:
     """Register interval class. Used to define register intervals and function codes for Modbus and Solarman V5 profiles."""
-    def __init__(self, operation: int, start_register: int, offset: int):
+    def __init__(self, 
+                 operation: int, 
+                 start_register: int, 
+                 offset: int, 
+                 data_type: DataType = DataType.U16, 
+                 unit: str = "N/A", 
+                 description: str = "N/A", 
+                 scale_factor: float = 1.0):
         self.operation: int = operation
         self.start_register: int = start_register
         self.offset: int = offset
+        self.data_type: DataType = data_type
+        self.unit: str = unit
+        self.description: str = description
+        self.scale_factor: float = scale_factor
+        
 
 
 class ModbusProfile(DeviceProfile):

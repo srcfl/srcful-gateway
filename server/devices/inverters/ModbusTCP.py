@@ -8,9 +8,11 @@ from pymodbus.exceptions import ModbusIOException
 from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
 from server.network.network_utils import HostInfo, NetworkUtils
-from server.devices.supported_devices.profiles import ModbusDeviceProfiles
+from server.devices.supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile, RegisterInterval
 import logging
 from server.devices.profile_keys import ProtocolKey
+from ..profile_keys import DataType, RegistersKey
+from ..registerValue import RegisterValue
 
 
 log = logging.getLogger(__name__)
@@ -96,18 +98,9 @@ class ModbusTCP(Modbus, TCPDevice):
         if self.client.socket:
             self.mac = NetworkUtils.get_mac_from_ip(self.ip)
         
-        registers: dict = None
-        
-        try:    
-            # Read the first register from the profile to check if the device is compatible
-            registers: dict = self.read_harvest_data(force_verbose=False)
-        except Exception as e:
-            log.error("Failed to connect to device. Initial register read failed: %s", str(e))
-            return False
-        
-        valid_reading = bool(registers and len(registers) > 0)
 
-        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and valid_reading
+
+        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC # and valid_reading
         
     def _get_type(self) -> str:
         return self.device_type
@@ -183,4 +176,34 @@ class ModbusTCP(Modbus, TCPDevice):
         config = self.get_config()
         config[self.IP] = host.ip
         return ModbusTCP(**config)
+    
+
+    def _read_frequency(self) -> Optional[float]:
+        """Read grid frequency using the device profile's first register"""
+        try:
+            # Get device profile
+            profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
+            if not profile or not profile.registers:
+                return None
+
+            # First register is always frequency
+            freq_reg: RegisterInterval = profile.registers[0]
+            
+            # Create RegisterValue for frequency reading
+            reg_value = RegisterValue(
+                address=freq_reg.start_register,
+                size=freq_reg.offset,
+                function_code=freq_reg.operation,
+                data_type=freq_reg.data_type,
+                scale_factor=freq_reg.scale_factor
+            )
+
+            # Read and interpret value
+            _, value = reg_value.read_value(self)
+            
+            return value
+
+        except Exception as e:
+            self.logger.error(f"Error reading frequency: {str(e)}")
+            return None
     

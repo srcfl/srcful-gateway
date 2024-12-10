@@ -4,11 +4,11 @@ from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOEx
 from server.devices.Device import Device
 from server.devices.profile_keys import OperationKey
 from ..ICom import HarvestDataType
-from ..supported_devices.profiles import ModbusDeviceProfiles
+from ..supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class Modbus(Device, ABC):
@@ -48,32 +48,32 @@ class Modbus(Device, ABC):
         self.sn = kwargs.get(self.SN, None)
         self.slave_id = kwargs.get(self.SLAVE_ID, None)
         self.device_type = kwargs.get(self.DEVICE_TYPE, None)
+        
+        logger.debug("Device Type: %s", str(self.device_type))
 
         if self.device_type:
             self.device_type = self.device_type.lower()
-            self.profile: ModbusDeviceProfiles = ModbusDeviceProfiles().get(self.device_type)
-            
+            self.profile: ModbusProfile = ModbusDeviceProfiles().get(self.device_type)
     
     def _read_harvest_data(self, force_verbose) -> dict:
         regs = []
         vals = []
 
         registers = []
-
+    
         if force_verbose or self.profile.verbose_always:
             registers = self.profile.get_registers_verbose()
         else:
             registers = self.profile.get_registers()
-        
+            
         for entry in registers:
             operation = entry.operation
             scan_start = entry.start_register
             scan_range = entry.offset
 
             r = self._populate_registers(scan_start, scan_range)
-            # log.debug("OK - Populating Registers: %s", str(r))
             v = self.read_registers(operation, scan_start, scan_range)
-
+                        
             regs += r
             vals += v
 

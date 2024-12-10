@@ -26,6 +26,19 @@ class RegistersKey(Enum):
     FCODE = 'fcode'
     START_REGISTER = 'start_register'
     NUM_OF_REGISTERS = 'num_of_registers'
+    DATA_TYPE = 'data_type'
+    UNIT = 'unit'
+    DESC = 'description'
+    SCALE_FACTOR = 'scale_factor'
+
+
+class DataType(Enum):
+    U16 = 'U16'    # Unsigned 16-bit integer
+    I16 = 'I16'    # Signed 16-bit integer
+    U32 = 'U32'    # Unsigned 32-bit integer
+    I32 = 'I32'    # Signed 32-bit integer
+    F32 = 'F32'    # 32-bit floating point
+    STR = 'STR'    # String
 
 
 class OperationKey(Enum):
