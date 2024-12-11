@@ -106,7 +106,7 @@ class Modbus(Device, ABC):
         
         try:
             resp = self._read_registers(operation, scan_start, scan_range)
-            logger.debug("OK - Reading: %s - %s", str(scan_start), str(scan_range))
+            logger.debug("OK - Reading %s: %s - %s", self.device_type, str(scan_start), str(scan_range))
 
         except ModbusException as me:
             # Decide whether to break or continue based on the type of ModbusException

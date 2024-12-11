@@ -64,3 +64,6 @@ class RegisterValue:
         except Exception as e:
             logger.error(f"Error interpreting value: {str(e)}")
             return None
+        
+    def __str__(self):
+        return f"RegisterValue(address={self.address}, size={self.size}, function_code={self.function_code}, data_type={self.data_type}, scale_factor={self.scale_factor})"

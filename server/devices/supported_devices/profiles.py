@@ -61,6 +61,10 @@ class ModbusProfile(DeviceProfile):
                         register_interval[RegistersKey.FCODE],
                         register_interval[RegistersKey.START_REGISTER],
                         register_interval[RegistersKey.NUM_OF_REGISTERS],
+                        register_interval[RegistersKey.DATA_TYPE],
+                        register_interval[RegistersKey.UNIT],
+                        register_interval[RegistersKey.DESCRIPTION],
+                        register_interval[RegistersKey.SCALE_FACTOR]
                     )
                 )
     
