@@ -1,6 +1,7 @@
 from server.devices.TCPDevice import TCPDevice
 import logging
 import requests
+from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from server.network import mdns as mdns
 from ..ICom import HarvestDataType, ICom
 from typing import List, Optional
@@ -169,6 +170,9 @@ class Enphase(TCPDevice):
     
     def get_name(self) -> str:
         return self.CONNECTION.lower()
+    
+    def get_client_name(self) -> str:
+        return INVERTER_CLIENT_NAME + "." + self.get_name()
     
     def clone(self) -> 'ICom':
         return Enphase(**self.get_config())

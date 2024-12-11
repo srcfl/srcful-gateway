@@ -1,5 +1,6 @@
 from typing import Optional
 from server.devices.Device import Device
+from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from server.devices.profile_keys import OperationKey
 from .ModbusTCP import ModbusTCP
 from ..ICom import ICom
@@ -113,6 +114,9 @@ class ModbusSolarman(ModbusTCP):
     
     def get_SN(self) -> str:
         return str(self.sn)
+    
+    def get_client_name(self) -> str:
+        return INVERTER_CLIENT_NAME + ".solarman." + self.get_name().lower()
 
     def get_config(self) -> dict:
         super_config = super().get_config()

@@ -60,6 +60,9 @@ def device():
         def _get_connection_type(self) -> str:
             return "test"
         
+        def get_client_name(self) -> str:
+            return "device.test"
+        
     
     return TestDevice()
 

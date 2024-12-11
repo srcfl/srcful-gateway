@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from server.devices.Device import Device
+from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from server.devices.profile_keys import OperationKey
 from ..ICom import HarvestDataType
 from ..supported_devices.profiles import ModbusDeviceProfiles
@@ -123,6 +124,9 @@ class Modbus(Device, ABC):
     
     def get_name(self) -> str:
         return self.profile.name
+    
+    def get_client_name(self) -> str:
+        return INVERTER_CLIENT_NAME + "." + self.get_name().lower()
     
     def get_config(self) -> dict:
         return {

@@ -172,6 +172,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         device_state['is_open'] = device.is_open()
         device_state['id'] = device.get_SN()
         device_state['name'] = device.get_name()
+        device_state['client_name'] = device.get_client_name()
         return device_state
     
     def configured_devices_state(self, devices: list[ICom]) -> list[dict]:        

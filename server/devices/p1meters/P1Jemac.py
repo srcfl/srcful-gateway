@@ -5,6 +5,7 @@ import requests
 from server.devices.Device import Device
 from server.devices.ICom import HarvestDataType, ICom
 from server.devices.TCPDevice import TCPDevice
+from server.devices.p1meters.common import P1_METER_CLIENT_NAME
 from server.devices.p1meters.p1_scanner import scan_for_p1_device
 from server.network import mdns
 
@@ -110,6 +111,8 @@ class P1Jemac(TCPDevice):
     
     def get_name(self) -> str:
         return "P1Jemac"
+    def get_client_name(self) -> str:
+        return P1_METER_CLIENT_NAME + "." + "jemac"
     
     def clone(self, ip: Optional[str] = None) -> 'ICom':
         if ip is None:

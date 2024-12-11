@@ -4,6 +4,7 @@ from sunspec2.modbus.client import SunSpecModbusClientError
 
 from server.devices.Device import Device
 from server.devices.TCPDevice import TCPDevice
+from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from ..ICom import ICom, HarvestDataType
 import logging
 from server.network.network_utils import HostInfo, NetworkUtils
@@ -193,6 +194,9 @@ class ModbusSunspec(TCPDevice):
         return ModbusSunspec.CONNECTION
     def get_name(self) -> str:
         return "Sunspec"
+    
+    def get_client_name(self) -> str:
+        return INVERTER_CLIENT_NAME + ".sunspec.generic" 
     
     def clone(self) -> 'ICom':
         return ModbusSunspec(**self.get_config())
