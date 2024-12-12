@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ProfileKey(Enum):
+class ProfileKey(str, Enum):
     NAME = 'name'
     VERSION = 'version'
     VERBOSE_ALWAYS = 'verbose_always'
@@ -15,24 +15,25 @@ class ProfileKey(Enum):
     ENDPOINTS = 'endpoints'
 
 
-class ProtocolKey(Enum):
+class ProtocolKey(str, Enum):
     MODBUS = 'modbus'
     SOLARMAN = 'solarman'
     SUNSPEC = 'sunspec'
     REST = 'rest'
 
 
-class RegistersKey(Enum):
-    FCODE = 'fcode'
+class RegistersKey(str, Enum):
+    FUNCTION_CODE = 'function_code'
     START_REGISTER = 'start_register'
     NUM_OF_REGISTERS = 'num_of_registers'
     DATA_TYPE = 'data_type'
     UNIT = 'unit'
     DESCRIPTION = 'description'
     SCALE_FACTOR = 'scale_factor'
+    ENDIANESS = 'endianess'
 
 
-class DataType(Enum):
+class DataTypeKey(str, Enum):
     U16 = 'U16'    # Unsigned 16-bit integer
     I16 = 'I16'    # Signed 16-bit integer
     U32 = 'U32'    # Unsigned 32-bit integer
@@ -40,13 +41,16 @@ class DataType(Enum):
     F32 = 'F32'    # 32-bit floating point
     STR = 'STR'    # String
 
+class EndiannessKey(str, Enum):
+    BIG = 'big'
+    LITTLE = 'little'
 
-class OperationKey(Enum):
+class FunctionCodeKey(int, Enum):
     READ_HOLDING_REGISTERS = 0x03
     READ_INPUT_REGISTERS = 0x04
 
 
-class DeviceCategory(Enum):
+class DeviceCategoryKey(str, Enum):
     INVERTERS = 'inverters'
     METERS = 'meters'
     

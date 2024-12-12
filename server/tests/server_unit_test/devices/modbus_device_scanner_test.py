@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 from server.devices.inverters.modbus_device_scanner import scan_for_modbus_devices
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.devices.supported_devices.profiles import ModbusProfile, RegisterInterval
-from server.devices.profile_keys import ProtocolKey, DataType
+from server.devices.profile_keys import ProtocolKey, DataTypeKey
 from server.network.network_utils import NetworkUtils
 
 
@@ -28,7 +28,7 @@ def mock_huawei_profile():
             operation=0x03,
             start_register=0,
             offset=1,
-            data_type=DataType.U16,
+            data_type=DataTypeKey.U16,
             unit="Hz",
             description="Frequency",
             scale_factor=1.0
@@ -74,7 +74,6 @@ def test_scan_finds_single_device(mock_get_hosts, mock_profiles, mock_modbus_cla
     mock_device.mac = host_info.mac
     mock_device.device_type = mock_huawei_profile.name
     mock_device.connect.return_value = True
-    mock_device.read_registers.return_value = [50]
     mock_device.slave_id = 1
     mock_modbus_class.return_value = mock_device
     

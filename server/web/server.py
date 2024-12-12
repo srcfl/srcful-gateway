@@ -16,28 +16,34 @@ class Endpoints:
         self.api_get_dict = {
             "crypto": handler.get.crypto.Handler(),
             "crypto/revive": handler.get.crypto.ReviveHandler(),
+            
             "hello": handler.get.hello.Handler(),
             "name": handler.get.name.Handler(),
             "logger": handler.get.logger.Handler(),
+            
             "inverter": handler.get.inverter.Handler(),
+            "inverter/modbus": handler.get.modbus.ModbusHandler(),
             "inverter/modbus/scan": handler.get.modbus_scan.ModbusScanHandler(),
             "inverter/supported": handler.get.supported.Handler(), # Remove this after November release
-            # "inverter/modbus/holding/{address}": handler.get.modbus.HoldingHandler(),
-            # "inverter/modbus/input/{address}": handler.get.modbus.InputHandler(),
+            
             "device": handler.get.device.Handler(),
             "device/scan": handler.get.device_scan.DeviceScanHandler(),
             "device/supported": handler.get.supported_devices.Handler(),
             "device/supported/configurations": handler.get.supported_devices.SupportedConfigurations(),
-            # "supported": handler.get.supported.Handler(), # Remove this after November release
+            
             "network": handler.get.network.NetworkHandler(),
             "network/address": handler.get.network.AddressHandler(),
-            "uptime": handler.get.uptime.Handler(),
+            
             "wifi": handler.get.wifi.Handler(),
             "wifi/scan": handler.get.wifi.ScanHandler(),
+            
+            "uptime": handler.get.uptime.Handler(),
             "version": handler.get.version.Handler(),
+            "settings": handler.get.settings.Handler(),
+            
             "notification": handler.get.notification.ListHandler(),
             "notification/{id}": handler.get.notification.MessageHandler(),
-            "settings": handler.get.settings.Handler(),
+            
             "state": handler.get.state.Handler(),
             "state/update": handler.get.state.UpdateStateHandler(),
         }
@@ -46,7 +52,7 @@ class Endpoints:
             "device": handler.post.device.Handler(),
             "wifi": handler.post.wifi.Handler(),
             "initialize": handler.post.initialize.Handler(),
-            # "inverter/modbus": handler.post.modbus_read_write.Handler(),
+            # "inverter/modbus": handler.post.modbus_read_write.Handler(), # Keep this
             "logger": handler.post.logger.Handler(),
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),

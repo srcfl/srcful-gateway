@@ -2,13 +2,13 @@ from abc import ABC, abstractmethod
 import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
 from server.devices.Device import Device
-from server.devices.profile_keys import OperationKey
+from server.devices.profile_keys import FunctionCodeKey
 from ..ICom import HarvestDataType
 from ..supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class Modbus(Device, ABC):
@@ -94,11 +94,11 @@ class Modbus(Device, ABC):
         return [x for x in range(scan_start, scan_start + scan_range, 1)]
     
     @abstractmethod
-    def _read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
+    def _read_registers(self, operation:FunctionCodeKey, scan_start, scan_range) -> list:
         """Reads a range of registers from a start address."""
         pass
 
-    def read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
+    def read_registers(self, operation:FunctionCodeKey, scan_start, scan_range) -> list:
         """
         Read a range of input registers from a start address
         """
@@ -111,10 +111,10 @@ class Modbus(Device, ABC):
         except ModbusException as me:
             # Decide whether to break or continue based on the type of ModbusException
             if isinstance(me, ConnectionException):
-                logger.error("ConnectionException occurred: %s", str(me))
+                logger.error(str(me))
                 
             if isinstance(me, ModbusIOException):
-                logger.error("ModbusIOException occurred: %s", str(me))
+                logger.error(str(me))
 
         return resp
     

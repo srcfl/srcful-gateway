@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import MagicMock
 from server.devices.registerValue import RegisterValue
-from server.devices.profile_keys import DataType
+from server.devices.profile_keys import DataTypeKey
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def test_u16_register():
         address=0,
         size=1,
         function_code=0x03,
-        data_type=DataType.U16,
+        data_type=DataTypeKey.U16,
         scale_factor=1.0
     )
     
@@ -39,7 +39,7 @@ def test_i16_register():
         address=0,
         size=1,
         function_code=0x03,
-        data_type=DataType.I16,
+        data_type=DataTypeKey.I16,
         scale_factor=1.0
     )
     
@@ -57,7 +57,7 @@ def test_u32_register():
         address=0,
         size=2,
         function_code=0x03,
-        data_type=DataType.U32,
+        data_type=DataTypeKey.U32,
         scale_factor=1.0
     )
     
@@ -75,7 +75,7 @@ def test_i32_register():
         address=0,
         size=2,
         function_code=0x03,
-        data_type=DataType.I32,
+        data_type=DataTypeKey.I32,
         scale_factor=1.0
     )
     
@@ -94,7 +94,7 @@ def test_f32_register():
         address=0,
         size=2,
         function_code=0x03,
-        data_type=DataType.F32,
+        data_type=DataTypeKey.F32,
         scale_factor=1.0
     )
     
@@ -113,7 +113,7 @@ def test_string_register():
         address=0,
         size=3,
         function_code=0x03,
-        data_type=DataType.STR,
+        data_type=DataTypeKey.STR,
         scale_factor=1.0
     )
     
@@ -131,7 +131,7 @@ def test_scale_factor():
         address=0,
         size=1,
         function_code=0x03,
-        data_type=DataType.U16,
+        data_type=DataTypeKey.U16,
         scale_factor=0.1
     )
     
@@ -150,7 +150,7 @@ def test_function_codes():
         address=0,
         size=1,
         function_code=0x03,
-        data_type=DataType.U16
+        data_type=DataTypeKey.U16
     )
     reg.read_value(device)
     device.read_registers.assert_called_with(0x03, 0, 1)
@@ -160,7 +160,7 @@ def test_function_codes():
         address=0,
         size=1,
         function_code=0x04,
-        data_type=DataType.U16
+        data_type=DataTypeKey.U16
     )
     reg.read_value(device)
     device.read_registers.assert_called_with(0x04, 0, 1)

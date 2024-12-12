@@ -1,6 +1,6 @@
 from typing import Optional
 from server.devices.Device import Device
-from server.devices.profile_keys import OperationKey
+from server.devices.profile_keys import FunctionCodeKey
 from .ModbusTCP import ModbusTCP
 from ..ICom import ICom
 from pysolarmanv5 import PySolarmanV5
@@ -152,12 +152,12 @@ class ModbusSolarman(ModbusTCP):
         except Exception as e:
             log.error("Error creating client: %s", e)
 
-    def _read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
+    def _read_registers(self, operation:FunctionCodeKey, scan_start, scan_range) -> list:
         resp = None
 
-        if operation == OperationKey.READ_INPUT_REGISTERS:
+        if operation == FunctionCodeKey.READ_INPUT_REGISTERS:
             resp = self.client.read_input_registers(register_addr=scan_start, quantity=scan_range)
-        elif operation == OperationKey.READ_HOLDING_REGISTERS:
+        elif operation == FunctionCodeKey.READ_HOLDING_REGISTERS:
             resp = self.client.read_holding_registers(register_addr=scan_start, quantity=scan_range)
 
         return resp

@@ -1,7 +1,7 @@
 import struct
 from enum import Enum
 from typing import Tuple, Optional, Union
-from .profile_keys import DataType
+from .profile_keys import DataTypeKey, FunctionCodeKey
 from .inverters.modbus import Modbus
 import logging
 
@@ -12,8 +12,8 @@ class RegisterValue:
         self,
         address: int,
         size: int,
-        function_code: int,
-        data_type: DataType,
+        function_code: FunctionCodeKey,
+        data_type: DataTypeKey,
         scale_factor: float = 1.0,
     ):
         self.address = address
@@ -26,9 +26,12 @@ class RegisterValue:
         """Reads and interprets register value from device"""
         # Read using the specified function code
         registers = device.read_registers(self.function_code, self.address, self.size)
-
-        # Convert registers to bytearray
+        
         raw = bytearray()
+        
+        if not registers:
+            return raw, None
+
         for register in registers:
             raw.extend(register.to_bytes(2, "big"))
 
@@ -41,24 +44,24 @@ class RegisterValue:
     def _interpret_value(self, raw: bytearray) -> Optional[Union[int, float, str]]:
         """Interprets raw bytes according to data type"""
         try:
-            if self.data_type == DataType.U16:
+            if self.data_type == DataTypeKey.U16:
                 return int.from_bytes(raw[0:2], "big", signed=False)
             
-            elif self.data_type == DataType.I16:
+            elif self.data_type == DataTypeKey.I16:
                 return int.from_bytes(raw[0:2], "big", signed=True)
             
-            elif self.data_type == DataType.U32:
+            elif self.data_type == DataTypeKey.U32:
                 return int.from_bytes(raw[0:4], "big", signed=False)
             
-            elif self.data_type == DataType.I32:
+            elif self.data_type == DataTypeKey.I32:
                 return int.from_bytes(raw[0:4], "big", signed=True)
             
-            elif self.data_type == DataType.F32:
+            elif self.data_type == DataTypeKey.F32:
                 # For F32, we need to keep the original byte order
                 # Most Modbus devices use ABCD order for floats
                 return struct.unpack(">f", raw[0:4])[0]
             
-            elif self.data_type == DataType.STR:
+            elif self.data_type == DataTypeKey.STR:
                 return raw.decode("ascii").strip('\x00')
             
         except Exception as e:

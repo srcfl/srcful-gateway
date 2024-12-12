@@ -5,10 +5,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from server.network.network_utils import HostInfo, NetworkUtils
 from server.devices.ICom import ICom
 from server.devices.supported_devices.profiles import ModbusProfile, ModbusDeviceProfiles
-from server.devices.profile_keys import ProtocolKey, RegistersKey
+from server.devices.profile_keys import ProtocolKey
 from server.devices.inverters.ModbusTCP import ModbusTCP
-from server.devices.registerValue import RegisterValue
-from server.devices.supported_devices.profiles import RegisterInterval
 import time
 from datetime import datetime
 
@@ -60,21 +58,13 @@ def get_timestamp():
     return datetime.now().isoformat()
 
 
-def is_valid_frequency(freq: float) -> bool:
-    """Check if the float frequency value is within a reasonable range (48-62 Hz)"""
-    logger.debug("Scanner.is_valid_frequency: Threshold: 48.0 <= %s <= 62.0", str(freq))
-    return 48.0 <= freq <= 62.0
-
-
 @log_execution_time
 def identify_device(host: HostInfo) -> Optional[ICom]:
     """
     Try to identify a device by testing profiles sequentially, then slave IDs sequentially.
     This function runs in parallel for different hosts.
     """
-    start_time = time.time()
-    logger.debug(f"[{get_timestamp()}] Starting device identification for {host.ip}:{host.port}")
-    
+    start_time = time.time()    
     profiles: List[ModbusProfile] = ModbusDeviceProfiles().get_supported_devices()
     
     # Test each profile sequentially
@@ -83,16 +73,6 @@ def identify_device(host: HostInfo) -> Optional[ICom]:
         
         if profile.protocol != ProtocolKey.MODBUS or not profile.registers:
             continue
-            
-        freq_reg: RegisterInterval = profile.registers[0]
-        
-        reg_value = RegisterValue(
-            address=freq_reg.start_register,
-            size=freq_reg.offset,
-            function_code=freq_reg.operation,
-            data_type=freq_reg.data_type,
-            scale_factor=freq_reg.scale_factor
-        )
         
         # Test each slave ID sequentially for this profile
         for slave_id in range(6):
@@ -107,16 +87,9 @@ def identify_device(host: HostInfo) -> Optional[ICom]:
                 )
                 
                 if device.connect():
-                    logger.debug(f"[{get_timestamp()}] Testing {profile.name} at {host.ip}:{host.port} "
-                               f"with slave ID {slave_id}")
-                    raw_data, value = reg_value.read_value(device)
-                    
-                    if value is not None and is_valid_frequency(value):
-                        elapsed = time.time() - start_time
-                        logger.debug(f"[{get_timestamp()}] Found {profile.name} device at {host.ip}:{host.port} "
-                                  f"with slave ID {slave_id} (freq: {value:.2f} Hz) "
-                                  f"[Elapsed: {elapsed:.2f}s]")
-                        return device
+                    logger.debug(f"[{get_timestamp()}] Found {profile.name} device at {host.ip}:{host.port} "
+                                  f"with slave ID {slave_id} (freq: {device._read_frequency():.2f} Hz). Elapsed: {time.time() - start_time:.2f}s")
+                    return device
                 
                 device.disconnect()
                 
@@ -126,11 +99,12 @@ def identify_device(host: HostInfo) -> Optional[ICom]:
                            f"with slave ID {slave_id}: {str(e)} [Took: {slave_elapsed:.2f}s]")
                 continue
             
-            time.sleep(0.1)
+            time.sleep(0.5)
         
         profile_elapsed = time.time() - profile_start
-        logger.debug(f"[{get_timestamp()}] Completed testing profile {profile.name} "
-                    f"[Took: {profile_elapsed:.2f}s]")
+        
+        logger.debug(f"[{get_timestamp()}] Completed testing profile {profile.name} and no device found "
+                    f"[Took: {profile_elapsed:.2f}s] for {host.ip}:{host.port}, {host.mac}")
                     
     total_elapsed = time.time() - start_time
     logger.debug(f"[{get_timestamp()}] Completed device identification for {host.ip}:{host.port} "
@@ -166,7 +140,6 @@ def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFA
     total_profiles = len(profiles)
     slave_ids = 6
     total_combinations = total_hosts * total_profiles * slave_ids
-    
     host_array = [(host.ip, host.port, host.mac) for host in hosts]
     
     # Log initial summary
@@ -195,7 +168,7 @@ def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFA
                 if device:
                     devices.append(device)
             except Exception as e:
-                logger.error(f"[{get_timestamp()}] Error identifying device at {host.ip}:{host.port}: {str(e)}")
+                pass
     
     identification_elapsed = time.time() - identification_start
     total_elapsed = time.time() - scan_start_time

@@ -2,9 +2,9 @@ import pytest
 from unittest.mock import patch, MagicMock
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.devices.supported_devices.profiles import ModbusProfile, RegisterInterval
-from server.devices.profile_keys import ProtocolKey, DataType, OperationKey
+from server.devices.profile_keys import ProtocolKey, DataTypeKey, FunctionCodeKey
 from server.devices.supported_devices.supported_devices import supported_devices
-from server.devices.profile_keys import DeviceCategory, ProfileKey, RegistersKey
+from server.devices.profile_keys import DeviceCategoryKey, ProfileKey, RegistersKey
 
 
 FREQUENCY_REGISTER_VALUES = {
@@ -23,7 +23,7 @@ FREQUENCY_REGISTER_VALUES = {
 
 def get_frequency_test_cases():
     test_cases = []
-    for device in supported_devices[DeviceCategory.INVERTERS]:
+    for device in supported_devices[DeviceCategoryKey.INVERTERS]:
         freq_register = device[ProfileKey.REGISTERS][0]
         device_name = device[ProfileKey.NAME]
         
@@ -33,11 +33,12 @@ def get_frequency_test_cases():
             
         test_cases.append({
             "name": device_name,
-            "operation": freq_register[RegistersKey.FCODE],
+            "operation": freq_register[RegistersKey.FUNCTION_CODE],
             "start_register": freq_register[RegistersKey.START_REGISTER],
             "num_registers": freq_register[RegistersKey.NUM_OF_REGISTERS],
             "data_type": freq_register[RegistersKey.DATA_TYPE],
             "scale_factor": freq_register[RegistersKey.SCALE_FACTOR],
+            "endianess": freq_register[RegistersKey.ENDIANESS],
             "registers": FREQUENCY_REGISTER_VALUES[device_name],
             "expected_frequency": 50.00,
         })
