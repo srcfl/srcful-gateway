@@ -1,7 +1,7 @@
 import json
 import logging
 
-from server.network.scan import WifiScanner
+from server.network.wifi import WiFiHandler
 
 from ..handler import DeleteHandler
 from ..requestData import RequestData
@@ -17,7 +17,10 @@ class Handler(DeleteHandler):
         )
     
     def do_delete(self, data: RequestData):
-        s = WifiScanner()
-        s.delete_all()
+        try:
+            s = WiFiHandler("ssid", "psk")
+            s.delete_connections()
+        except Exception as e:
+            return 500, json.dumps({"status": "error", "message": str(e)})
         
         return 404, json.dumps({"device not found: ": id})
