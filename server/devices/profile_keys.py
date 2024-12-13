@@ -30,7 +30,7 @@ class RegistersKey(str, Enum):
     UNIT = 'unit'
     DESCRIPTION = 'description'
     SCALE_FACTOR = 'scale_factor'
-    ENDIANESS = 'endianess'
+    ENDIANNESS = 'endianness'
 
 
 class DataTypeKey(str, Enum):

@@ -38,7 +38,7 @@ def get_frequency_test_cases():
             "num_registers": freq_register[RegistersKey.NUM_OF_REGISTERS],
             "data_type": freq_register[RegistersKey.DATA_TYPE],
             "scale_factor": freq_register[RegistersKey.SCALE_FACTOR],
-            "endianess": freq_register[RegistersKey.ENDIANESS],
+            "endianess": freq_register[RegistersKey.ENDIANNESS],
             "registers": FREQUENCY_REGISTER_VALUES[device_name],
             "expected_frequency": 50.00,
         })
@@ -55,7 +55,7 @@ def mock_profile_factory():
         profile.name = test_case["name"]
         profile.registers = [
             RegisterInterval(
-                operation=test_case["operation"],
+                function_code=test_case["operation"],
                 start_register=test_case["start_register"],
                 offset=test_case["num_registers"],
                 data_type=test_case["data_type"],

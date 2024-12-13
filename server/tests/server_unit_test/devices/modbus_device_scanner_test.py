@@ -25,7 +25,7 @@ def mock_huawei_profile():
     profile.name = "huawei"
     profile.registers = [
         RegisterInterval(
-            operation=0x03,
+            function_code=0x03,
             start_register=0,
             offset=1,
             data_type=DataTypeKey.U16,

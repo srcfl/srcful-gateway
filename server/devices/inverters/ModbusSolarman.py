@@ -152,17 +152,17 @@ class ModbusSolarman(ModbusTCP):
         except Exception as e:
             log.error("Error creating client: %s", e)
 
-    def _read_registers(self, operation:FunctionCodeKey, scan_start, scan_range) -> list:
+    def _read_registers(self, function_code:FunctionCodeKey, scan_start:int, scan_range:int) -> list:
         resp = None
 
-        if operation == FunctionCodeKey.READ_INPUT_REGISTERS:
+        if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
             resp = self.client.read_input_registers(register_addr=scan_start, quantity=scan_range)
-        elif operation == FunctionCodeKey.READ_HOLDING_REGISTERS:
+        elif function_code == FunctionCodeKey.READ_HOLDING_REGISTERS:
             resp = self.client.read_holding_registers(register_addr=scan_start, quantity=scan_range)
 
         return resp
 
-    def write_register(self, operation, register, value) -> bool:
+    def write_register(self, function_code: FunctionCodeKey, register: int, value: int) -> bool:
         raise NotImplementedError("Not implemented yet")
     
 

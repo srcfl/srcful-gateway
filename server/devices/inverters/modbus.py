@@ -55,7 +55,7 @@ class Modbus(Device, ABC):
             self.device_type = self.device_type.lower()
             self.profile: ModbusProfile = ModbusDeviceProfiles().get(self.device_type)
     
-    def _read_harvest_data(self, force_verbose) -> dict:
+    def _read_harvest_data(self, force_verbose: bool) -> dict:
         regs = []
         vals = []
 
@@ -67,7 +67,7 @@ class Modbus(Device, ABC):
             registers = self.profile.get_registers()
             
         for entry in registers:
-            operation = entry.operation
+            operation = entry.function_code
             scan_start = entry.start_register
             scan_range = entry.offset
 
@@ -87,25 +87,25 @@ class Modbus(Device, ABC):
         else:
             raise Exception("readHarvestData() - res is empty")
 
-    def _populate_registers(self, scan_start, scan_range) -> list:
+    def _populate_registers(self, scan_start: int, scan_range: int) -> list:
         """
         Populate a list of registers from a start address and a range
         """
         return [x for x in range(scan_start, scan_start + scan_range, 1)]
     
     @abstractmethod
-    def _read_registers(self, operation:FunctionCodeKey, scan_start, scan_range) -> list:
+    def _read_registers(self, function_code: FunctionCodeKey, scan_start: int, scan_range: int) -> list:
         """Reads a range of registers from a start address."""
         pass
 
-    def read_registers(self, operation:FunctionCodeKey, scan_start, scan_range) -> list:
+    def read_registers(self, function_code:FunctionCodeKey, scan_start: int, scan_range: int) -> list:
         """
         Read a range of input registers from a start address
         """
         resp = []
         
         try:
-            resp = self._read_registers(operation, scan_start, scan_range)
+            resp = self._read_registers(function_code, scan_start, scan_range)
             logger.debug("OK - Reading %s: %s - %s", self.device_type, str(scan_start), str(scan_range))
 
         except ModbusException as me:

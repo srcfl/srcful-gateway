@@ -25,7 +25,7 @@ def test_u16_register():
         scale_factor=1.0
     )
     
-    raw, value = reg.read_value(device)
+    raw, swapped, value = reg.read_value(device)
     assert value == 4660
     assert raw == bytes([0x12, 0x34])
 
@@ -43,7 +43,7 @@ def test_i16_register():
         scale_factor=1.0
     )
     
-    raw, value = reg.read_value(device)
+    raw, swapped, value = reg.read_value(device)
     assert value == -16
     assert raw == bytes([0xFF, 0xF0])
 
@@ -61,7 +61,7 @@ def test_u32_register():
         scale_factor=1.0
     )
     
-    raw, value = reg.read_value(device)
+    raw, swapped, value = reg.read_value(device)
     assert value == 305419896
     assert raw == bytes([0x12, 0x34, 0x56, 0x78])
 
@@ -79,7 +79,7 @@ def test_i32_register():
         scale_factor=1.0
     )
     
-    raw, value = reg.read_value(device)
+    raw, swapped, value = reg.read_value(device)
     assert value == -16
     assert raw == bytes([0xFF, 0xFF, 0xFF, 0xF0])
 
@@ -98,7 +98,7 @@ def test_f32_register():
         scale_factor=1.0
     )
     
-    raw, value = reg.read_value(device)
+    raw, swapped, value = reg.read_value(device)
     assert abs(value - 123.456) < 0.001  # Compare with tolerance
     assert raw == bytes([0x42, 0xF6, 0xE9, 0x79])
 
@@ -117,7 +117,7 @@ def test_string_register():
         scale_factor=1.0
     )
     
-    raw, value = reg.read_value(device)
+    raw, swapped, value = reg.read_value(device)
     assert value == "Hello"
     assert raw == bytes([0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x00])
 
@@ -135,7 +135,7 @@ def test_scale_factor():
         scale_factor=0.1
     )
     
-    raw, value = reg.read_value(device)
+    raw, swapped, value = reg.read_value(device)
     assert value == 466.0  # 4660 * 0.1
     assert raw == bytes([0x12, 0x34])
 

@@ -2,10 +2,12 @@ import json
 from ..handler import GetHandler
 from enum import Enum
 from ..requestData import RequestData
-from typing import List
-from server.devices.Device import Device
 from server.devices.registerValue import RegisterValue
-from server.devices.profile_keys import DataTypeKey, FunctionCodeKey
+from server.devices.profile_keys import DataTypeKey, FunctionCodeKey, EndiannessKey
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 # Example query: inverter/modbus/holding/40069?size=2&type=float&endianess=big
 
@@ -17,11 +19,13 @@ class RegisterType(str, Enum):
     SIZE = "size"
     TYPE = "type"
     ENDIANESS = "endianess"
+    SCALE_FACTOR = "scale_factor"
     
 class ReturnType(str, Enum):
     REGISTER = "register"
     SIZE = "size"
     RAW_VALUE = "raw_value"
+    SWAPPED_VALUE = "swapped_value"
     VALUE = "value"
 
 class ModbusHandler(GetHandler):
@@ -30,7 +34,7 @@ class ModbusHandler(GetHandler):
             "type": "get",
             "description": "Get data from a modbus registger",
             "required": {
-                RegisterType.DEVICE_ID: "int, device id",
+                RegisterType.DEVICE_ID: "string, device id",
                 RegisterType.ADDRESS: "int, address of the register to read url parameter",
             },
             "optional": {
@@ -38,6 +42,7 @@ class ModbusHandler(GetHandler):
                 RegisterType.SIZE: "int, size of the register to read (default: 1)",
                 RegisterType.TYPE: "string, data type of the register to read (default: none)",
                 RegisterType.ENDIANESS: "string, endianess of the register to read big or little. (default: big)",
+                RegisterType.SCALE_FACTOR: "float, scale factor to apply to the value read (default: 1.0)",
             },
             "returns": {
                 ReturnType.REGISTER: "int, address of the register read",
@@ -48,61 +53,62 @@ class ModbusHandler(GetHandler):
         }
 
     def do_get(self, request_data: RequestData):
-        address = request_data.post_params.get(RegisterType.ADDRESS, None)
-        device_id = request_data.post_params.get(RegisterType.DEVICE_ID, None)
-        function_code = request_data.post_params.get(RegisterType.FUNCTION_CODE, FunctionCodeKey.READ_INPUT_REGISTERS)
-        size = int(request_data.query_params.get(RegisterType.SIZE, 1)) # default to 1 register (2 bytes)
-        type = request_data.query_params.get(RegisterType.TYPE, DataTypeKey.U16)
-        endianess = request_data.query_params.get(RegisterType.ENDIANESS, RegisterValue.Endianness.BIG)
+        device_id: str = request_data.query_params.get(RegisterType.DEVICE_ID, None)
         
-        # print all the params
-        print(f"address: {address}")
-        print(f"device_id: {device_id}")
-        print(f"function_code: {function_code}")
-        print(f"size: {size}")
-        print(f"type: {type}")
-        print(f"endianess: {endianess}")
+        # Convert function code to enum if it's an integer
+        raw_function_code = request_data.query_params.get(RegisterType.FUNCTION_CODE, FunctionCodeKey.READ_INPUT_REGISTERS)
+        function_code: FunctionCodeKey = raw_function_code if isinstance(raw_function_code, FunctionCodeKey) else FunctionCodeKey(int(raw_function_code))
+        
+        address: int = int(request_data.query_params.get(RegisterType.ADDRESS, -1))
+        size: int = int(request_data.query_params.get(RegisterType.SIZE, 1))
+        
+        # Convert type string to enum
+        raw_type = request_data.query_params.get(RegisterType.TYPE, DataTypeKey.U16)
+        data_type: DataTypeKey = raw_type if isinstance(raw_type, DataTypeKey) else DataTypeKey(raw_type)
+        
+        # Convert endianness string to enum
+        raw_endianness = request_data.query_params.get(RegisterType.ENDIANESS, EndiannessKey.BIG)
+        endianness: EndiannessKey = raw_endianness if isinstance(raw_endianness, EndiannessKey) else EndiannessKey(raw_endianness)
+        
+        scale_factor: float = float(request_data.query_params.get(RegisterType.SCALE_FACTOR, 1.0))
+        
+        logger.debug(f"address: {address}, device_id: {device_id}, function_code: {function_code}, size: {size}, type: {data_type}, endianness: {endianness}")
         
         if device_id is None:
             return 400, json.dumps({"error": "missing device index"})
-        if address is None:
+        if address is -1:
             return 400, json.dumps({"error": "missing address"})
         if len(request_data.bb.devices.lst) == 0:
             return 400, json.dumps({"error": "No devices open"})
 
         raw = bytearray()
         
+        device = request_data.bb.devices.find_sn(device_id)
+        
+        if device is None:
+            return 400, json.dumps({"error": "device not found"})
+        
+        logger.debug(f"Using the device: {device.get_config()}")
+        
+        raw, swapped, value = RegisterValue(
+            address=address,
+            size=size,
+            function_code=function_code,
+            data_type=data_type,
+            endianness=endianness,
+            scale_factor=scale_factor
+        ).read_value(device)
 
-        try:
-            datatype = RegisterValue.Type.from_str(
-                request_data.query_params.get(RegisterType.TYPE, "none")
-            )
-            endianness = RegisterValue.Endianness.from_str(
-                request_data.query_params.get(RegisterType.ENDIANESS, "big")
-            )
-            
-            # find the device with 
-            devices: List[Device] = request_data.bb.devices.lst
-            device: Device = next((device for device in devices if device.get_SN() == device_id), None)
-            
-            if device is None:
-                return 400, json.dumps({"error": "device not found"})
-            
-            raw, value = RegisterValue(
-                address, size, self.get_register_type(), datatype, endianness
-            ).read_value(device)
+        ret = {
+            ReturnType.REGISTER: address,
+            ReturnType.SIZE: size,
+            ReturnType.RAW_VALUE: raw.hex(),
+            ReturnType.SWAPPED_VALUE: swapped.hex(),
+            ReturnType.VALUE: value
+        }
 
-            ret = {
-                ReturnType.REGISTER: address,
-                ReturnType.SIZE: size,
-                ReturnType.RAW_VALUE: raw.hex(),
-            }
-            if value is not None:
-                ret[ReturnType.VALUE] = value
-
-            return 200, json.dumps(ret)
-        except Exception as e:
-            return 400, json.dumps({"error": str(e)})
+        return 200, json.dumps(ret)
+            
 
     def get_register_type(self):
         raise NotImplementedError()
