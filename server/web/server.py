@@ -57,6 +57,7 @@ class Endpoints:
             "device": handler.delete.device.Handler(),
             "inverter": handler.delete.modbusDevice.Handler(),
             "notification/{id}": handler.delete.notification.Handler(),
+            "wifi": handler.delete.wifi.Handler(),
         }
 
         self.api_get = Endpoints.convert_keys_to_regex(self.api_get_dict)
