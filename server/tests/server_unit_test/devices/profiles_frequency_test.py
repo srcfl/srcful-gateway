@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.devices.supported_devices.profiles import ModbusProfile, RegisterInterval
-from server.devices.profile_keys import ProtocolKey, DataTypeKey, FunctionCodeKey
+from server.devices.profile_keys import ProtocolKey
 from server.devices.supported_devices.supported_devices import supported_devices
 from server.devices.profile_keys import DeviceCategoryKey, ProfileKey, RegistersKey
 
@@ -19,6 +19,7 @@ FREQUENCY_REGISTER_VALUES = {
     "goodwe": [0x1388],  # 5000 = 50.00 Hz
     "ferroamp": [0x4248, 0x0000],  # IEEE-754 float: 50.0
     "sofar": [0x1388],  # 5000 = 50.00 Hz
+    "unknown": [0x1388],  # 5000 = 50.00 Hz
 }
 
 def get_frequency_test_cases():

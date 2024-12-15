@@ -13,6 +13,7 @@ class ProfileKey(str, Enum):
     REGISTERS = 'registers'
     BASE_URL = 'base_url'
     ENDPOINTS = 'endpoints'
+    KEYWORDS = 'keywords'
 
 
 class ProtocolKey(str, Enum):

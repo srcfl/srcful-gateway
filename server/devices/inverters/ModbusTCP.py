@@ -15,7 +15,7 @@ from server.devices.registerValue import RegisterValue
 
 
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 pymodbus_apply_logging_config("INFO")
 

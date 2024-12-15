@@ -5,7 +5,7 @@ from .common.types import ModbusProtocol
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 class RegisterValue:
     def __init__(
