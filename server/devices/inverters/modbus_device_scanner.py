@@ -116,28 +116,33 @@ def identify_device(host: HostInfo, all_profiles: List[ModbusProfile]) -> Option
     
     # Lookup manufacturer and get matching profiles
     manufacturer = MacLookupService.get_manufacturer(host.mac)
-    if manufacturer:
-        logger.debug(f"[{get_timestamp()}] Found manufacturer for {host.mac}: {manufacturer}")
-        profiles = get_profile_by_manufacturer(manufacturer, all_profiles)
-        logger.debug(f"[{get_timestamp()}] Testing {len(profiles)} matching profiles for {manufacturer}")
-        
-        # Test manufacturer-specific profiles
-        for profile in profiles:
-            device = try_profile(host, profile)
-            if device:
-                elapsed = time.time() - start_time
-                logger.debug(f"[{get_timestamp()}] Device identification completed in {elapsed:.2f}s")
-                return device
+    # if manufacturer:
+    logger.debug(f"[{get_timestamp()}] Found manufacturer for {host.mac}: {manufacturer}")
+    profiles = get_profile_by_manufacturer(manufacturer, all_profiles)
+    logger.debug(f"[{get_timestamp()}] Testing {len(profiles)} matching profiles for {manufacturer}")
+    
+    if host.port == 8899:
+        return None # Solarman devices need dongle serial number so connect to, which we don't have at this point
+    
+    # Test manufacturer-specific profiles
+    for profile in profiles:
+        device = try_profile(host, profile)
+        if device:
+            elapsed = time.time() - start_time
+            logger.debug(f"[{get_timestamp()}] Device identification completed in {elapsed:.2f}s")
+            return device
     
     # If no manufacturer found or no matching device, create unknown device
     elapsed = time.time() - start_time
     logger.debug(f"[{get_timestamp()}] Device identification completed in {elapsed:.2f}s")
-    return create_unknown_device(host)
+    # return create_unknown_device(host)
+    return None
 
 def try_profile(host: HostInfo, profile: ModbusProfile) -> Optional[ICom]:
     """Helper function to try a specific profile with different slave IDs"""
     for slave_id in range(6):
         try:
+            
             device = ModbusTCP(
                 ip=host.ip,
                 port=host.port,
@@ -173,7 +178,9 @@ def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFA
     
     # Get all available profiles once
     all_profiles = [p for p in ModbusDeviceProfiles().get_supported_devices() 
-                   if p.protocol == ProtocolKey.MODBUS or ProtocolKey.SOLARMAN and p.registers]
+                   if p.protocol == ProtocolKey.MODBUS and 
+                   p.registers and 
+                   p.name != "unknown"]
     
     devices: List[ICom] = []
     

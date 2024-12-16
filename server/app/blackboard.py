@@ -49,7 +49,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._available_devices = []
         
     def get_version(self) -> str:
-        return "0.17.2"
+        return "0.17.4"
         
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -175,7 +175,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         device_state['client_name'] = device.get_client_name()
         return device_state
     
-    def configured_devices_state(self, devices: list[ICom]) -> list[dict]:        
+    def configured_devices_state(self, devices: list[ICom]) -> list[dict]:
         return [self.get_device_state(device) for device in devices]
     
     def saved_devices_state(self) -> list[dict]:
