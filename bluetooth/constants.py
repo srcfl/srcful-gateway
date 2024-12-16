@@ -22,6 +22,6 @@ HELIUM_ONBOARDING_ENDPOINT = "https://onboarding.dewi.org"
 HELIUM_TRANSACTION_ENDPOINT = "https://onboarding.dewi.org/api/v2/transactions/pay"
 
 SRCFUL_GW_API_ENDPOINT = "http://localhost"
-SRCFUL_GW_API_REQUEST_TIMEOUT = 20
+SRCFUL_GW_API_REQUEST_TIMEOUT = 60 * 5 # 5 minutes
 SRCFUL_REQUEST_CHAR = '51ff12bb-3ed8-46e5-b4f9-d64e2fec021b'
 SRCFUL_RESPONSE_CHAR = '51ff12bb-3ed8-46e5-b4f9-d64e2fec021c'

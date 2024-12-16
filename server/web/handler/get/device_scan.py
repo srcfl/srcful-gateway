@@ -4,7 +4,7 @@ import json
 from ..handler import GetHandler
 from ..requestData import RequestData
 from server.network.network_utils import NetworkUtils
-from server.devices.inverters.modbus_device_scanner import scan_for_modbus_devices
+from server.devices.inverters.modbus_device_scanner import scan_for_modbus_devices, is_scanning
 from server.devices.p1meters.p1_scanner import scan_for_p1_devices
 from server.devices.ICom import ICom
 from typing import List
@@ -39,6 +39,8 @@ class DeviceScanHandler(GetHandler):
 
         # Scan for modbus devices
         devices:List[ICom] = scan_for_modbus_devices(ports=ports, timeout=timeout)
+        if not devices and is_scanning():
+            return 409, json.dumps({"error": "A device scan is already in progress"})
         
         # Scan for P1 devices
         p1_devices:List[ICom] = scan_for_p1_devices()
