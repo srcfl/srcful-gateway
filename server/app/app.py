@@ -59,7 +59,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))
-    scheduler.add_task(DiscoverDevicesTask(bb.time_ms() + 5000, bb))
+    # scheduler.add_task(DiscoverDevicesTask(bb.time_ms() + 5000, bb))
     # tasks.put(CryptoReviveTask(bb.time_ms() + 7000, bb))
 
     try:
