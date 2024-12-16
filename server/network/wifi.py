@@ -185,7 +185,8 @@ else:
 
             self.settings.AddConnection(con)
 
-        def _delete_connections(self):
+        def delete_connections(self):
+            logger.info("Deleting wifi connections...")
             connection_paths = self.settings.ListConnections()
             logger.debug("Num of connection profiles: %i", len(connection_paths))
             for path in connection_paths:
@@ -202,7 +203,6 @@ else:
             logger.debug("Deleted all wifi connection profiles...")
 
         def connect(self):
-            logger.info("Deleting connections...")
-            self._delete_connections()
+            self.delete_connections()
             logger.info("Adding connection...")
             self._add_connection()
