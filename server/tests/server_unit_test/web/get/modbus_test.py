@@ -1,179 +1,132 @@
-import json
-import struct
-from unittest.mock import MagicMock, Mock
 import pytest
-from server.crypto.crypto_state import CryptoState
+from unittest.mock import Mock
+import json
+from server.web.handler.get.modbus import ModbusHandler, RegisterType, ReturnType
 from server.web.handler.requestData import RequestData
-from server.web.handler.get.modbus_read import HoldingHandler, InputHandler  # adapt to your actual module import
-from server.app.blackboard import BlackBoard
-from server.devices.inverters.modbus import Modbus
 
 @pytest.fixture
-def inverter_fixture():
-    inverter = MagicMock()
-
-    # These registers are word-sized, so they are 2 bytes each, e.g. the 1 in [1, 2, 3, 4] is 0x0001 (2 bytes) in hex (big endian)
-    inverter.read_registers.return_value = [1, 2, 3, 4]
-
-    assert 'read_registers' in dir(Modbus)
-
-
-    return inverter
-
+def mock_device():
+    device = Mock()
+    device.read_registers = Mock()
+    device.get_config = Mock(return_value={'some': 'config'})
+    return device
 
 @pytest.fixture
-def request_data():
-    bb = BlackBoard(Mock(spec=CryptoState))
-    inv = MagicMock()
-    bb.devices.add(inv)
+def mock_request_data(mock_device):
+    request = Mock(spec=RequestData)
+    request.query_params = {}
+    request.bb = Mock()
+    request.bb.devices = Mock()
+    request.bb.devices.lst = [mock_device]
+    request.bb.devices.find_sn = Mock(return_value=mock_device)
+    return request
 
-    def read_registers(operation, address, size):
-        return [i for i in range(address, address + size)]
-
-    inv.read_registers = read_registers
-    assert 'read_registers' in dir(Modbus)
-
-    post_params = {'address': '0'}
-    query_params = {'type': 'uint', 'size': '2', 'endianess': 'big'}
-    return RequestData(bb, post_params, query_params, {})
-
-def test_HoldingHandler(request_data):
-    handler = HoldingHandler()
-    request_data.post_params['address'] = 1
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 200
-    response = json.loads(response)
-    assert response.get('register') == 1
-    assert response.get('raw_value') == '00010002'
-    assert response.get('value') == 65538  # = 0x00010002 in uint
-
-def test_InputHandler(request_data):
-    handler = InputHandler()
-    request_data.post_params['address'] = 0
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 200
-    response = json.loads(response)
+def test_basic_u16_read(mock_request_data, mock_device):
+    """Test basic U16 register read with minimal parameters"""
+    handler = ModbusHandler()
     
-    assert response.get('register') == 0
-    assert response.get('raw_value') == '00000001' # HEX
-    assert response.get('value') == 1 
-
-
-def test_missing_address(inverter_fixture):
-    handler = HoldingHandler()
-
-    bb = BlackBoard(Mock(spec=CryptoState))
-    bb.devices.add(inverter_fixture)
-
-    request_data = RequestData(bb, {}, {}, {})
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 400
-    assert json.loads(response).get('error') == 'missing address'
-
-
-def test_inverter_not_initialized():
-    handler = HoldingHandler()
-    request_data = RequestData(BlackBoard(Mock(spec=CryptoState)), {'address': '0'}, {}, {})
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 400
-    assert json.loads(response).get('error') == 'inverter not initialized'
-
-
-def test_unknown_datatype(request_data):
-    handler = HoldingHandler()
-    request_data.query_params['type'] = 'unknown'
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 400
-    assert 'Unsupported datatype' in json.loads(response).get('error')
-
-
-def test_invalid_endianess(request_data):
-    handler = HoldingHandler()
-    request_data.query_params['endianess'] = 'wrong_endianess'
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 400
-    assert 'Unsupported endianess' in json.loads(response).get('error')
-
-
-def test_invalid_size(request_data):
-    handler = HoldingHandler()
-    request_data.query_params['size'] = '10'
-
-    def read_registers(operation, address, size):
-        raise Exception('invalid or incomplete address range')
-
-    request_data.bb.devices.lst[0].read_registers = read_registers
-    assert 'read_registers' in dir(Modbus)
-
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 400
-    assert json.loads(response).get('error') == 'invalid or incomplete address range'
-
-def test_uint_value(request_data):
-    handler = HoldingHandler()
-    request_data.post_params['address'] = 1
-    request_data.query_params['type'] = 'uint'
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 200
-    response = json.loads(response)
-    assert response.get('value') == 65538  # = 0x00010002 in uint
-
-def test_int_value(request_data):
-    handler = HoldingHandler()
-    request_data.query_params['type'] = 'int'
-    request_data.query_params['size'] = '1'
-    request_data.post_params['address'] = 2
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 200
-    response = json.loads(response)
-    assert response.get('value') == 2  # = 0x00000001 as signed int
-
-def test_float_value_BADC(request_data):
-    handler = HoldingHandler()
-    request_data.query_params['type'] = 'float'
-    request_data.query_params['size'] = '2'
-    request_data.query_params['endianess'] = 'little'
-    request_data.post_params['address'] = 0x4248
-
-    status_code, response = handler.do_get(request_data)
-
-    assert status_code == 200
-    response = json.loads(response)
-
-    print("Hex", response.get('raw_value'))
-    print("Value", response.get('value'))
+    # Setup mock request
+    mock_request_data.query_params = {
+        RegisterType.DEVICE_ID: 'test_device',
+        RegisterType.ADDRESS: '5035',
+        RegisterType.TYPE: 'U16',
+        RegisterType.SCALE_FACTOR: '0.1'
+    }
     
-    val = response.get('value') - 198949.03125
-
-    # Can't use assert equals on floating point numbers due to precision issues
-    assert abs(val) < 1e-20
+    # Setup mock device response
+    mock_device.read_registers.return_value = [500]  # Will become 50.0 after scale factor
     
-
-def test_float_value_ABCD(request_data):
-    handler = HoldingHandler()
-    request_data.query_params['type'] = 'float'
-    request_data.query_params['size'] = '2'
-    request_data.query_params['endianess'] = 'big'
-    request_data.post_params['address'] = 0x4248
-
-    assert 'read_registers' in dir(Modbus)
-
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 200
-    response = json.loads(response)
-    # Can't use assert equals on floating point numbers due to precision issues
-    val = response.get('value') - 50.314727783203125
-    assert abs(val) < 1e-5
+    # Execute request
+    status, response = handler.do_get(mock_request_data)
+    response_data = json.loads(response)
     
-def test_double_value(request_data):
-    #request_data.stats['inverter'].readHoldingRegisters.return_value = {i: bytes([i]) for i in range(8)} 
-    # This creates a dictionary where each key is an address and each value is one byte, with values from 0 to 7.
-    handler = HoldingHandler()
-    request_data.query_params['type'] = 'float'
-    request_data.query_params['size'] = '4'
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 200
-    response = json.loads(response)
-    result = response.get('value')    # round to ensure accurate comparison of floating points
-    expected = struct.unpack('>d', bytes(range(1, 9)))[0]
-    assert round(result, 9) == round(expected, 9)   # or whatever level of precision is appropriate  
+    # Verify response
+    assert status == 200
+    assert response_data[ReturnType.REGISTER] == 5035
+    assert response_data[ReturnType.SIZE] == 1
+    assert response_data[ReturnType.RAW_VALUE] == "01f4"
+    assert response_data[ReturnType.VALUE] == 50.0
+
+def test_string_read(mock_request_data, mock_device):
+    """Test string register read"""
+    handler = ModbusHandler()
+    
+    mock_request_data.query_params = {
+        RegisterType.DEVICE_ID: 'test_device',
+        RegisterType.ADDRESS: '5000',
+        RegisterType.TYPE: 'STR',
+        RegisterType.SIZE: '3'  # 6 bytes = 3 registers for "Hello"
+    }
+    
+    mock_device.read_registers.return_value = [0x4865, 0x6C6C, 0x6F00]  # "Hello"
+    
+    status, response = handler.do_get(mock_request_data)
+    response_data = json.loads(response)
+    
+    assert status == 200
+    assert response_data[ReturnType.VALUE] == "Hello"
+    assert response_data[ReturnType.RAW_VALUE] == "48656c6c6f00"
+
+def test_f32_read(mock_request_data, mock_device):
+    """Test F32 register read"""
+    handler = ModbusHandler()
+    
+    mock_request_data.query_params = {
+        RegisterType.DEVICE_ID: 'test_device',
+        RegisterType.ADDRESS: '5000',
+        RegisterType.TYPE: 'F32',
+        RegisterType.SIZE: '2',
+        RegisterType.SCALE_FACTOR: '1.0'
+    }
+    
+    mock_device.read_registers.return_value = [0x4049, 0x0FDB]  # 3.14159
+    
+    status, response = handler.do_get(mock_request_data)
+    response_data = json.loads(response)
+    
+    assert status == 200
+    assert abs(response_data[ReturnType.VALUE] - 3.14159) < 0.00001
+
+def test_missing_device_id(mock_request_data):
+    """Test error handling for missing device ID"""
+    handler = ModbusHandler()
+    
+    mock_request_data.query_params = {
+        RegisterType.ADDRESS: '5000'
+    }
+    
+    status, response = handler.do_get(mock_request_data)
+    response_data = json.loads(response)
+    
+    assert status == 400
+    assert "missing device index" in response_data["error"]
+
+def test_missing_address(mock_request_data):
+    """Test error handling for missing address"""
+    handler = ModbusHandler()
+    
+    mock_request_data.query_params = {
+        RegisterType.DEVICE_ID: 'test_device'
+    }
+    
+    status, response = handler.do_get(mock_request_data)
+    response_data = json.loads(response)
+    
+    assert status == 400
+    assert "missing address" in response_data["error"]
+
+def test_device_not_found(mock_request_data):
+    """Test error handling for device not found"""
+    handler = ModbusHandler()
+    
+    mock_request_data.query_params = {
+        RegisterType.DEVICE_ID: 'test_device',
+        RegisterType.ADDRESS: '5000'
+    }
+    mock_request_data.bb.devices.find_sn.return_value = None
+    
+    status, response = handler.do_get(mock_request_data)
+    response_data = json.loads(response)
+    
+    assert status == 400
+    assert "device not found" in response_data["error"]

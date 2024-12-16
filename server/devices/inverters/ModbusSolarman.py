@@ -1,7 +1,6 @@
 from typing import Optional
 from server.devices.Device import Device
 from server.devices.inverters.common import INVERTER_CLIENT_NAME
-from server.devices.profile_keys import OperationKey
 from .ModbusTCP import ModbusTCP
 from ..ICom import ICom
 from pysolarmanv5 import PySolarmanV5
@@ -9,6 +8,7 @@ from server.network.network_utils import HostInfo, NetworkUtils
 import logging
 from server.devices.profile_keys import ProtocolKey
 from server.devices.supported_devices.profiles import ModbusDeviceProfiles
+from server.devices.profile_keys import FunctionCodeKey
 
 
 log = logging.getLogger(__name__)
@@ -69,17 +69,31 @@ class ModbusSolarman(ModbusTCP):
         self.verbose = kwargs.get(self.verbose_key(), 0)
 
     def _connect(self, **kwargs) -> bool:
+        
+        self._create_client(**kwargs)
+        
         try:
-            self._create_client(**kwargs)
             if not self.client.sock:
-                log.error("FAILED to open inverter: %s", self._get_type())
+                log.error("FAILED to open inverter: %s", self.get_config())
+                return False
             if self.client.sock:
                 self.mac = NetworkUtils.get_mac_from_ip(self.ip)
-            return bool(self.client.sock)
         except Exception as e:
-            log.error("Error opening inverter: %s", self._get_type())
-            log.error(e)
+            log.error("Error opening inverter: %s", self.get_config())
             return False
+        
+        registers: dict = None
+        
+        try:
+            registers: dict = self.read_harvest_data(force_verbose=False)
+        except Exception as e:
+            log.error("Failed to connect to device. Initial register read failed: %s", self.get_config())
+            return False
+        
+        valid_reading = bool(registers and len(registers) > 0)
+        
+        return bool(self.client.sock) and self.mac != NetworkUtils.INVALID_MAC and valid_reading
+
 
     def is_open(self) -> bool:
         try:
@@ -142,17 +156,17 @@ class ModbusSolarman(ModbusTCP):
         except Exception as e:
             log.error("Error creating client: %s", e)
 
-    def _read_registers(self, operation:OperationKey, scan_start, scan_range) -> list:
+    def _read_registers(self, function_code:FunctionCodeKey, scan_start:int, scan_range:int) -> list:
         resp = None
 
-        if operation == OperationKey.READ_INPUT_REGISTERS:
+        if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
             resp = self.client.read_input_registers(register_addr=scan_start, quantity=scan_range)
-        elif operation == OperationKey.READ_HOLDING_REGISTERS:
+        elif function_code == FunctionCodeKey.READ_HOLDING_REGISTERS:
             resp = self.client.read_holding_registers(register_addr=scan_start, quantity=scan_range)
 
         return resp
 
-    def write_register(self, operation, register, value) -> bool:
+    def write_register(self, function_code: FunctionCodeKey, register: int, value: int) -> bool:
         raise NotImplementedError("Not implemented yet")
     
 

@@ -1,120 +1,118 @@
-# a class for interpreting a modbus register as a higher level datatype
-
 import struct
-from enum import Enum
-from .inverters.modbus import Modbus
+from typing import Tuple, Optional, Union
+from .profile_keys import DataTypeKey, FunctionCodeKey, EndiannessKey
+from .common.types import ModbusProtocol
+import logging
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class RegisterValue:
-    class RegisterType(Enum):
-        HOLDING = "holding"
-        INPUT = "input"
-
-        @classmethod
-        def from_str(cls, string):
-            if string == "holding":
-                return cls.HOLDING
-            elif string == "input":
-                return cls.INPUT
-            else:
-                raise Exception("Unsupported register type " + string)
-
-    class Endianness(Enum):
-        BIG = "big"
-        LITTLE = "little"
-
-        @classmethod
-        def from_str(cls, string):
-            if string == "big" or string == "be" or string == ">":
-                return cls.BIG
-            elif string == "little" or string == "le" or string == "<":
-                return cls.LITTLE
-            else:
-                raise Exception("Unsupported endianess " + string)
-
-    class Type(Enum):
-        UINT = "uint"
-        INT = "int"
-        FLOAT = "float"
-        ASCII = "ascii"
-        UTF16 = "utf16"
-        NONE = "none"
-
-        @classmethod
-        def from_str(cls, string):
-            if string == "uint":
-                return cls.UINT
-            elif string == "int":
-                return cls.INT
-            elif string == "float":
-                return cls.FLOAT
-            elif string == "ascii":
-                return cls.ASCII
-            elif string == "utf16":
-                return cls.UTF16
-            elif string == "none" or string == "raw" or string == "":
-                return cls.NONE
-            else:
-                raise Exception("Unsupported datatype " + string)
-
     def __init__(
         self,
-        address,
-        size,
-        register_type: RegisterType,
-        datatype: Type,
-        endianness: Endianness,
+        address: int,
+        size: int = 1,
+        function_code: FunctionCodeKey = FunctionCodeKey.READ_INPUT_REGISTERS,
+        data_type: DataTypeKey = DataTypeKey.U16,
+        scale_factor: float = 1.0,
+        endianness: EndiannessKey = EndiannessKey.BIG,
     ):
-        self.address = address
-        self.size = size
-        self.datatype = datatype
-        self.endianness = endianness
-        self.regType = register_type
-    
-    def _swap_words(self, data: bytearray) -> bytearray:
-        """Swaps the two words in a 32-bit float value"""
-        return data[2:4] + data[0:2]
+        self.address: int = address
+        self.size: int = size
+        self.data_type: DataTypeKey = data_type
+        self.function_code: FunctionCodeKey = function_code
+        self.scale_factor: float = scale_factor
+        self.endianness: EndiannessKey = endianness
+        
+    def read_value(self, device: ModbusProtocol) -> Tuple[bytearray, bytearray, Optional[Union[int, float, str]]]:
+        """Reads and interprets register value from device
+        Returns:
+            Tuple containing:
+            - raw_bytes: Original bytes as they are in memory
+            - swapped_bytes: Bytes after endianness swapping
+            - value: Interpreted value
+        """
+        # Read using the specified function code
+        registers = device.read_registers(self.function_code, self.address, self.size)
+        
+        raw = bytearray()
+        
+        if not registers:
+            return raw, raw, None
 
-    def read_value(self, inverter: Modbus):
-        """Reads the value of the register from the inverter"""
-        if self.regType == RegisterValue.RegisterType.HOLDING:
-            registers = inverter.read_registers(0x03, self.address, self.size)
-        elif self.regType == RegisterValue.RegisterType.INPUT:
-            registers = inverter.read_registers(0x04, self.address, self.size)
-
-        # currently we convert the raw values that are word based to bytearray
-        self.raw = bytearray()
+        # Create raw bytes in original order
         for register in registers:
-            byte_arr = register.to_bytes(2, "big")
-            self.raw.extend(byte_arr)
+            raw.extend(register.to_bytes(2, "big"))
 
-        if self.datatype != RegisterValue.Type.NONE:
-            return self.raw, self.get_value(self.raw)
-        return self.raw, None
+        # Get swapped bytes and interpreted value
+        swapped, value = self._interpret_value(raw)
+        return raw, swapped, value
 
-    def get_value(self, raw: bytearray):
-        """Converts a list of bytes to a value based on the datatype and endianness of the register"""
-        value = None
-        endianness = self.endianness
-
-        if self.datatype == RegisterValue.Type.UINT:
-            value = int.from_bytes(raw, byteorder=endianness.value, signed=False)
-        elif self.datatype == RegisterValue.Type.INT:
-            value = int.from_bytes(raw, byteorder=endianness.value, signed=True)
-        elif self.datatype == RegisterValue.Type.FLOAT:
-            if endianness == RegisterValue.Endianness.BIG:
-                endianness = ">"
+    def _interpret_value(self, raw: bytearray) -> Tuple[bytearray, Optional[Union[int, float, str]]]:
+        """Interprets raw bytes according to data type
+        Returns:
+            Tuple containing:
+            - swapped_bytes: Bytes after endianness swapping
+            - value: Interpreted value
+        """
+        logger.debug(f"Interpreting value - DataType: {self.data_type}, Raw: {raw.hex()}, ScaleFactor: {self.scale_factor}")
+        
+        try:
+            # Handle register pair endianness (if applicable)
+            # Example for a 32-bit value (2 registers, 4 bytes total):
+            # Original bytes: [0x12][0x34][0x56][0x78]
+            # Register 1: [0x12][0x34]
+            # Register 2: [0x56][0x78]
+            #
+            # Big Endian (default): [R1][R2] = [0x12][0x34][0x56][0x78] = 0x12345678
+            # Little Endian:        [R2][R1] = [0x56][0x78][0x12][0x34] = 0x56781234
+            #
+            # Note: Bytes within each register stay in big-endian order
+            # as per Modbus specification. We only swap the register order,
+            # not the bytes within registers.
+            
+            # For multi-register values, we need to:
+            # 1. Keep the raw bytes as they are for big-endian
+            # 2. For little-endian, interpret the value by swapping register order
+            value_bytes = raw
+            if len(raw) > 2 and self.endianness == EndiannessKey.LITTLE:
+                # For little-endian, we'll read the bytes in reverse register order
+                # but keep bytes within each register in their original order
+                registers = [raw[i:i+2] for i in range(0, len(raw), 2)]
+                value_bytes = bytearray().join(registers[::-1])
             else:
-                endianness = "<"
-                
-            raw = self._swap_words(raw)
-            value = struct.unpack(f"{endianness}f", raw)[0]
+                value_bytes = raw
 
-        elif self.datatype == RegisterValue.Type.ASCII:
-            value = raw.decode("ascii")
-        elif self.datatype == RegisterValue.Type.UTF16:
-            value = raw.decode("utf-16" + ("be" if endianness.value == "big" else "le"))
-        else:
-            raise Exception("Unsupported datatype " + self.datatype.value)
-
-        return value
+            if self.data_type == DataTypeKey.U16:
+                value = int.from_bytes(value_bytes[0:2], "big", signed=False)
+                return value_bytes, value * self.scale_factor
+            
+            elif self.data_type == DataTypeKey.I16:
+                value = int.from_bytes(value_bytes[0:2], "big", signed=True)
+                return value_bytes, value * self.scale_factor
+            
+            elif self.data_type == DataTypeKey.U32:
+                value = int.from_bytes(value_bytes[0:4], "big", signed=False)
+                return value_bytes, value * self.scale_factor
+            
+            elif self.data_type == DataTypeKey.I32:
+                value = int.from_bytes(value_bytes[0:4], "big", signed=True)
+                return value_bytes, value * self.scale_factor
+            
+            elif self.data_type == DataTypeKey.F32:
+                value = struct.unpack(">f", value_bytes[0:4])[0]
+                return value_bytes, value * self.scale_factor
+            
+            elif self.data_type == DataTypeKey.STR:
+                # For strings, we just decode the bytes as they are
+                # Register order swapping (if any) is already handled above
+                return value_bytes, value_bytes.decode("ascii").rstrip('\x00')
+            
+            return raw, None
+            
+        except Exception as e:
+            logger.error(f"Error interpreting value: {str(e)}")
+            return raw, None
+        
+    def __str__(self):
+        return f"RegisterValue(address={self.address}, size={self.size}, function_code={self.function_code}, data_type={self.data_type}, scale_factor={self.scale_factor})"
