@@ -99,11 +99,13 @@ class ModbusSunspec(TCPDevice):
         
         logger.info("Models: %s", self.client.models)
         
-        try:
-            self.sn = self.client.common[0].SN.value
-        except KeyError:
-            logger.warning("Could not get serial number, using MAC address as fallback")
-            self.sn = NetworkUtils.get_mac_from_ip(self.ip)
+        # try:
+        #     self.sn = self.client.common[0].SN.value
+        # except KeyError:
+        #     logger.warning("Could not get serial number, using MAC address as fallback")
+        #     self.sn = NetworkUtils.get_mac_from_ip(self.ip)
+        
+        self.sn = NetworkUtils.get_mac_from_ip(self.ip)
 
         if 'inverter' in self.client.models:
             self.inverter = self.client.inverter[0]
@@ -211,4 +213,4 @@ class ModbusSunspec(TCPDevice):
         return ModbusSunspec(**config)
     
     def get_SN(self) -> str:
-        return self.sn or self.mac
+        return self.mac

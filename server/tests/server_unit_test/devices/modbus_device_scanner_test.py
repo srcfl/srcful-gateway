@@ -67,7 +67,7 @@ def test_scan_finds_single_device(mock_get_hosts, mock_profiles, mock_modbus_cla
     profiles_instance.get_supported_devices.return_value = [mock_huawei_profile]
     mock_profiles.return_value = profiles_instance
     
-    # Setup ModbusTCP mock
+    # Setup ModbusTCP mock with proper frequency reading
     mock_device = MagicMock(spec=ModbusTCP)
     mock_device.ip = host_info.ip
     mock_device.port = host_info.port
@@ -75,24 +75,29 @@ def test_scan_finds_single_device(mock_get_hosts, mock_profiles, mock_modbus_cla
     mock_device.device_type = mock_huawei_profile.name
     mock_device.connect.return_value = True
     mock_device.slave_id = 1
+    mock_device._read_frequency.return_value = 50.0
     mock_modbus_class.return_value = mock_device
     
-    # Run test
-    devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT)
+    # Mock the manufacturer lookup to match the profile
+    with patch('server.devices.inverters.modbus_device_scanner.MacLookupService.get_manufacturer') as mock_mac_lookup:
+        mock_mac_lookup.return_value = "HUAWEI"
+        
+        # Run test
+        devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT)
     
-    # Assertions
-    assert len(devices) == 1
-    assert devices[0].ip == host_info.ip
-    assert devices[0].port == host_info.port
-    assert devices[0].device_type == mock_huawei_profile.name
-    
-    # Verify device was saved to state
-    blackboard.set_available_devices(devices=devices)
-    saved_devices = blackboard.get_available_devices()
-    assert len(saved_devices) == 1
-    assert saved_devices[0].ip == host_info.ip
-    assert saved_devices[0].port == host_info.port
-    assert saved_devices[0].device_type == mock_huawei_profile.name
-    assert saved_devices[0].slave_id == 1
+        # Assertions
+        assert len(devices) == 1
+        assert devices[0].ip == host_info.ip
+        assert devices[0].port == host_info.port
+        assert devices[0].device_type == mock_huawei_profile.name
+        
+        # Verify device was saved to state
+        blackboard.set_available_devices(devices=devices)
+        saved_devices = blackboard.get_available_devices()
+        assert len(saved_devices) == 1
+        assert saved_devices[0].ip == host_info.ip
+        assert saved_devices[0].port == host_info.port
+        assert saved_devices[0].device_type == mock_huawei_profile.name
+        assert saved_devices[0].slave_id == 1
     
     
