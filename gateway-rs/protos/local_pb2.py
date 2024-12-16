@@ -12,9 +12,6 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-import protos.gateway_staking_mode_pb2 as gateway__staking__mode__pb2
-
-
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0blocal.proto\x12\x0chelium.local\x1a\x1agateway_staking_mode.proto\"9\n\npubkey_res\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\x0c\x12\x1a\n\x12onboarding_address\x18\x02 \x01(\x0c\"\x0c\n\npubkey_req\")\n\tkeyed_uri\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\x0c\x12\x0b\n\x03uri\x18\x02 \x01(\t\"\x0c\n\nregion_req\"\x1c\n\nregion_res\x12\x0e\n\x06region\x18\x01 \x01(\x05\"\x0c\n\nrouter_req\",\n\nrouter_res\x12\x0b\n\x03uri\x18\x01 \x01(\t\x12\x11\n\tconnected\x18\x02 \x01(\x08\"c\n\x0f\x61\x64\x64_gateway_req\x12\r\n\x05owner\x18\x01 \x01(\x0c\x12\r\n\x05payer\x18\x02 \x01(\x0c\x12\x32\n\x0cstaking_mode\x18\x03 \x01(\x0e\x32\x1c.helium.gateway_staking_mode\"*\n\x0f\x61\x64\x64_gateway_res\x12\x17\n\x0f\x61\x64\x64_gateway_txn\x18\x01 \x01(\x0c\x32\x8c\x02\n\x03\x61pi\x12<\n\x06pubkey\x12\x18.helium.local.pubkey_req\x1a\x18.helium.local.pubkey_res\x12<\n\x06region\x12\x18.helium.local.region_req\x1a\x18.helium.local.region_res\x12<\n\x06router\x12\x18.helium.local.router_req\x1a\x18.helium.local.router_res\x12K\n\x0b\x61\x64\x64_gateway\x12\x1d.helium.local.add_gateway_req\x1a\x1d.helium.local.add_gateway_resb\x06proto3')
 
 

@@ -3,7 +3,6 @@ from server.crypto.crypto_state import CryptoState
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.app.blackboard import BlackBoard
-from server.tasks.harvestFactory import HarvestFactory
 import server.tests.config_defaults as cfg
 
 from unittest.mock import MagicMock, Mock

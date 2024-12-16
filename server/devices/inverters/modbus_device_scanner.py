@@ -1,5 +1,4 @@
 from typing import List, Optional
-import struct
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from server.network.network_utils import HostInfo, NetworkUtils

@@ -1,8 +1,6 @@
 from typing import Optional
 import sunspec2.modbus.client as client
 from sunspec2.modbus.client import SunSpecModbusClientError
-
-from server.devices.Device import Device
 from server.devices.TCPDevice import TCPDevice
 from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from ..ICom import ICom, HarvestDataType

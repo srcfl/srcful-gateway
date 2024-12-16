@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List
-
+from typing import List
 from server.backend.connection import Connection
 from server.backend.histogram import Histogram, SolarHistogram
 

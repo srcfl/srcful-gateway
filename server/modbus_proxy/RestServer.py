@@ -1,7 +1,4 @@
-import signal
-
 from flask import Flask, request, jsonify
-
 from ThreadedServer import ThreadedServer
 
 proxy_server = None

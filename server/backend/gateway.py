@@ -1,7 +1,4 @@
 from typing import Dict, List
-
-import requests
-
 from server.backend.connection import Connection
 from server.backend.der import DER
 

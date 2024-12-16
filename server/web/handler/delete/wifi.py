@@ -1,5 +1,4 @@
 import json
-import logging
 
 from server.network.wifi import WiFiHandler
 

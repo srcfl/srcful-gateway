@@ -2,13 +2,10 @@ import logging
 import select
 import socket
 import errno
-from typing import Callable, List, Optional
-
-from server.devices.Device import Device
+from typing import Optional
 from server.devices.TCPDevice import TCPDevice
 from server.devices.p1meters.common import P1_METER_CLIENT_NAME
 from server.devices.p1meters.p1_scanner import scan_for_p1_device
-from server.network import mdns as mdns
 from server.network.network_utils import HostInfo
 from ..ICom import HarvestDataType, ICom
 import time

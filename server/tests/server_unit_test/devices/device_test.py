@@ -1,7 +1,6 @@
 import pytest
-from unittest.mock import create_autospec, MagicMock
 from server.devices.Device import Device
-from server.devices.ICom import ICom, HarvestDataType, DER_TYPE
+from server.devices.ICom import ICom, HarvestDataType
 from typing import Optional
 
 from server.network.network_utils import HostInfo

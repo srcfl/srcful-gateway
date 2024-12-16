@@ -5,7 +5,6 @@ from server.crypto.crypto_state import CryptoState
 from server.devices.ICom import ICom
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.harvest import Harvest
-from server.app.settings import ChangeSource
 import server.tests.config_defaults as config_defaults
 
 @pytest.fixture

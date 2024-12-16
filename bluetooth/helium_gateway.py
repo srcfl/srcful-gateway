@@ -4,7 +4,6 @@ import requests
 import constants
 import protos.add_gateway_pb2 as add_gateway_pb2
 import json
-import time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

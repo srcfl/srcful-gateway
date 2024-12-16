@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, Mock
 from server.app.blackboard import BlackBoard
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.harvestFactory import HarvestFactory
-from server.network.network_utils import NetworkUtils
 import server.tests.config_defaults as cfg
 
 

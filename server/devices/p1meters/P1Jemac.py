@@ -1,17 +1,11 @@
-from typing import List, Optional
-
+from typing import Optional
 import requests
-
-from server.devices.Device import Device
 from server.devices.ICom import HarvestDataType, ICom
 from server.devices.TCPDevice import TCPDevice
 from server.devices.p1meters.common import P1_METER_CLIENT_NAME
 from server.devices.p1meters.p1_scanner import scan_for_p1_device
-from server.network import mdns
-
 import logging
-
-from server.network.network_utils import HostInfo, NetworkUtils
+from server.network.network_utils import HostInfo
 
 logger = logging.getLogger(__name__)
 
