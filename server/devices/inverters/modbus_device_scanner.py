@@ -175,7 +175,7 @@ def try_profile(host: HostInfo, profile: ModbusProfile) -> Optional[ICom]:
     return None
 
 @log_execution_time
-def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFAULT_TIMEOUT) -> List[ICom]:
+def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFAULT_TIMEOUT, already_open_devices: List[ICom] = []) -> List[ICom]:
     """
     Scan the network for Modbus TCP devices and try to identify their make/model.
     Returns empty list if a scan is already in progress.
@@ -203,6 +203,10 @@ def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFA
         # Scan network for hosts with open Modbus ports
         network_scan_start = time.time()
         hosts = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
+        
+        # filter out already open devices
+        hosts = [host for host in hosts if host not in already_open_devices]
+        
         network_scan_elapsed = time.time() - network_scan_start
         
         if not hosts:

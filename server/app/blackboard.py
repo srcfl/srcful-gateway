@@ -175,20 +175,20 @@ class BlackBoard(ISystemTime, ITaskSource):
         device_state['client_name'] = device.get_client_name()
         return device_state
     
-    def configured_devices_state(self, devices: list[ICom]) -> list[dict]:
+    def devices_state_to_dict(self, devices: list[ICom]) -> list[dict]:
         return [self.get_device_state(device) for device in devices]
     
     def saved_devices_state(self) -> list[dict]:
         saved_devices = [IComFactory.create_com(config) for config in self.settings.devices.connections]
-        return self.configured_devices_state(saved_devices)
+        return self.devices_state_to_dict(saved_devices)
 
     def devices_state(self) -> dict:
-        ret = {'configured': self.configured_devices_state(self._devices.lst)}
+        ret = {'configured': self.devices_state_to_dict(self._devices.lst)}
         ret["saved"] = self.saved_devices_state()
 
         import server.web.handler.get.supported as supported
         ret['supported'] = supported.Handler().get_supported_inverters()
-        ret['available'] = self.configured_devices_state(self.get_available_devices())
+        ret['available'] = self.devices_state_to_dict(self.get_available_devices())
         return ret
     
     def get_available_devices(self) -> list[ICom]:
@@ -246,7 +246,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         """Observable list of communication objects"""
 
         def __init__(self):
-            self.lst = []
+            self.lst: list[ICom] = []
             self._observers = set()
 
         def add_listener(self, observer):

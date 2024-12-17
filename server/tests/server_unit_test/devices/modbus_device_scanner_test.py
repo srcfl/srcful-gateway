@@ -47,7 +47,7 @@ def blackboard():
 def test_scan_no_hosts_found(mock_get_hosts):
     """Test scanning when no hosts are found"""
     mock_get_hosts.return_value = []
-    devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT)
+    devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT, already_open_devices=[])
     assert len(devices) == 0
 
 @patch('server.devices.inverters.modbus_device_scanner.ModbusTCP')
@@ -83,7 +83,7 @@ def test_scan_finds_single_device(mock_get_hosts, mock_profiles, mock_modbus_cla
         mock_mac_lookup.return_value = "HUAWEI"
         
         # Run test
-        devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT)
+        devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT, already_open_devices = [])
     
         # Assertions
         assert len(devices) == 1
