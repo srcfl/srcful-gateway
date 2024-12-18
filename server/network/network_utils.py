@@ -219,7 +219,6 @@ class NetworkUtils:
         # Create list of all IP:port combinations to check
         ip_port_combinations = [(str(ip), port) for ip in subnet.hosts() for port in ports]
         logger.info("Checking %s IP:port combinations", len(ip_port_combinations))
-        logger.info("First 10: %s", ip_port_combinations[:10])
         
         # Use ThreadPoolExecutor for parallel scanning
         with ThreadPoolExecutor(max_workers=255) as executor:

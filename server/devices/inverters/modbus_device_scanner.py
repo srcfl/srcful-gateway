@@ -118,38 +118,24 @@ def identify_device(host: HostInfo, all_profiles: List[ModbusProfile]) -> Option
     Try to identify a device by first checking MAC manufacturer.
     Returns unknown device if no match found.
     """
-    start_time = time.time()
-    logger.debug(f"[{get_timestamp()}] Starting device identification for {host.ip}:{host.port}")
-    
-    # Lookup manufacturer and get matching profiles
     manufacturer = MacLookupService.get_manufacturer(host.mac)
-    # if manufacturer:
-    logger.debug(f"[{get_timestamp()}] Found manufacturer for {host.mac}: {manufacturer}")
     profiles = get_profile_by_manufacturer(manufacturer, all_profiles)
-    logger.debug(f"[{get_timestamp()}] Testing {len(profiles)} matching profiles for {manufacturer}")
     
     if host.port == 8899:
-        return None # Solarman devices need dongle serial number so connect to, which we don't have at this point
+        return None  # Solarman devices need dongle serial number
     
     # Test manufacturer-specific profiles
     for profile in profiles:
         device = try_profile(host, profile)
         if device:
-            elapsed = time.time() - start_time
-            logger.debug(f"[{get_timestamp()}] Device identification completed in {elapsed:.2f}s")
             return device
     
-    # If no manufacturer found or no matching device, create unknown device
-    elapsed = time.time() - start_time
-    logger.debug(f"[{get_timestamp()}] Device identification completed in {elapsed:.2f}s")
-    # return create_unknown_device(host)
     return None
 
 def try_profile(host: HostInfo, profile: ModbusProfile) -> Optional[ICom]:
     """Helper function to try a specific profile with different slave IDs"""
     for slave_id in range(6):
         try:
-            
             device = ModbusTCP(
                 ip=host.ip,
                 port=host.port,
@@ -159,30 +145,47 @@ def try_profile(host: HostInfo, profile: ModbusProfile) -> Optional[ICom]:
             )
             
             if device.connect():
-                logger.debug(f"[{get_timestamp()}] Found {profile.name} device at {host.ip}:{host.port} "
-                           f"with slave ID {slave_id} (freq: {device._read_frequency():.2f} Hz)")
                 return device
             
             device.disconnect()
             
-        except Exception as e:
-            logger.debug(f"[{get_timestamp()}] Failed to read {profile.name} at {host.ip}:{host.port} "
-                       f"with slave ID {slave_id}: {str(e)}")
+        except Exception:
             continue
         
         time.sleep(0.5)
     
     return None
 
+
+def filter_open_devices(hosts: List[HostInfo], open_devices: List[ICom]) -> List[HostInfo]:
+    open_devices_hostinfo: List[HostInfo] = []
+    
+    for open_device in open_devices:
+        if isinstance(open_device, ModbusTCP):
+            open_device_hostinfo = HostInfo(
+                ip=open_device.ip,
+                port=open_device.port,
+                mac=open_device.mac
+            )
+
+            open_devices_hostinfo.append(open_device_hostinfo)
+            
+    def compare_hostinfo(host: HostInfo, open_device_hostinfo: HostInfo) -> bool:   
+        return host.ip == open_device_hostinfo.ip and host.port == open_device_hostinfo.port and host.mac == open_device_hostinfo.mac
+            
+    filtered_hostinfos = [host for host in hosts if not any(compare_hostinfo(host, open_device_hostinfo) for open_device_hostinfo in open_devices_hostinfo)]
+            
+    return filtered_hostinfos
+    
+
 @log_execution_time
-def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFAULT_TIMEOUT) -> List[ICom]:
+def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFAULT_TIMEOUT, open_devices: List[ICom] = []) -> List[ICom]:
     """
     Scan the network for Modbus TCP devices and try to identify their make/model.
     Returns empty list if a scan is already in progress.
     """
     global _is_scanning
     
-    # Try to acquire the lock
     if not _scan_lock.acquire(blocking=False):
         logger.warning("A Modbus device scan is already in progress. Skipping this request.")
         return []
@@ -190,9 +193,8 @@ def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFA
     try:
         _is_scanning = True
         scan_start_time = time.time()
-        logger.info(f"[{get_timestamp()}] Starting Modbus device scan")
         
-        # Get all available profiles once
+        # Get all available profiles
         all_profiles = [p for p in ModbusDeviceProfiles().get_supported_devices() 
                        if p.protocol == ProtocolKey.MODBUS and 
                        p.registers and 
@@ -200,40 +202,28 @@ def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFA
         
         devices: List[ICom] = []
         
-        # Scan network for hosts with open Modbus ports
+        # Scan network
         network_scan_start = time.time()
         hosts = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         network_scan_elapsed = time.time() - network_scan_start
         
         if not hosts:
-            logger.info(f"[{get_timestamp()}] No hosts found with open Modbus ports "
-                       f"[Network scan took: {network_scan_elapsed:.2f}s]")
+            logger.info("No hosts found with open Modbus ports")
             return devices
 
-        total_hosts = len(hosts)
-        total_profiles = len(all_profiles)
-        slave_ids = 6
-        total_combinations = total_hosts * total_profiles * slave_ids
-        host_array = [(host.ip, host.port, host.mac) for host in hosts]
+        # Filter out already open devices
+        filtered_hostinfos = filter_open_devices(hosts, open_devices)
         
-        # Log initial summary
-        logger.info("=" * 80)
-        logger.info(f"[{get_timestamp()}] Modbus Scan Summary (Start):")
-        logger.info(f"Network scan completed in {network_scan_elapsed:.2f}s")
-        logger.info(f"- Found {total_hosts} host{'s' if total_hosts != 1 else ''} with open Modbus ports")
-        logger.info(f"Hosts: {host_array}")
-        logger.info(f"- Testing {total_profiles} device profile{'s' if total_profiles != 1 else ''}")
-        logger.info(f"- Testing slave IDs 0-5 for each combination")
-        logger.info(f"- Total combinations to test: {total_combinations}")
-        logger.info(f"- Estimated time: {(total_combinations * 0.5):.1f}s (0.5s per test)")
-        logger.info("=" * 80)
+        if len(filtered_hostinfos) == 0:
+            logger.info("No new hosts found that are not already open")
+            return devices
 
         # Device identification phase
         identification_start = time.time()
-        with ThreadPoolExecutor(max_workers=min(32, len(hosts))) as executor:
+        with ThreadPoolExecutor(max_workers=min(32, len(filtered_hostinfos))) as executor:
             future_to_host = {
-                executor.submit(identify_device, host, all_profiles): host 
-                for host in hosts
+                executor.submit(identify_device, hostinfo, all_profiles): hostinfo
+                for hostinfo in filtered_hostinfos
             }
             
             for future in as_completed(future_to_host):
@@ -242,31 +232,25 @@ def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFA
                     device = future.result()
                     if device:
                         devices.append(device)
-                except Exception as e:
-                    logger.debug(f"Failed to process host {host.ip}: {str(e)}")
+                except Exception:
+                    pass
         
-        identification_elapsed = time.time() - identification_start
         total_elapsed = time.time() - scan_start_time
         
-        # Log final summary
-        logger.info("=" * 80)
-        logger.info(f"[{get_timestamp()}] Modbus Scan Complete:")
-        logger.info(f"Total scan time: {total_elapsed:.2f}s")
-        logger.info(f"- Network scan: {network_scan_elapsed:.2f}s")
-        logger.info(f"- Device identification: {identification_elapsed:.2f}s")
-        logger.info(f"- Average time per host: {(identification_elapsed/total_hosts):.2f}s")
-        logger.info(f"Found {len(devices)} device{'s' if len(devices) != 1 else ''}:")
+        # Log compact summary
+        logger.info("=" * 50)
+        logger.info("Modbus Scan Results:")
+        logger.info(f"- Scan time: {total_elapsed:.1f}s")
+        logger.info(f"- Hosts scanned: {len(filtered_hostinfos)}")
+        logger.info(f"- Devices found: {len(devices)}")
         if devices:
             for device in devices:
-                logger.info(f"- {device.device_type} at {device.ip}:{device.port} (Slave ID: {device.slave_id})")
-        else:
-            logger.info("No devices found")
-        logger.info("=" * 80)
+                logger.info(f"  * {device.get_config()}")
+        logger.info("=" * 50)
 
         return devices
 
     finally:
-        logger.debug("Cleaning up scan resources")
         _is_scanning = False
         _scan_lock.release()
 
