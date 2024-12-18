@@ -83,7 +83,7 @@ class GraphQLSubscriptionClient(threading.Thread):
             else:
                 logger.error(f"Invalid message: {message}")
         except Exception as e:
-            logger.error(f"Error processing message: {e}")
+            logger.error(f"Error processing message: {message} error: {e}")
             
 
     def on_error(self, ws, error):
