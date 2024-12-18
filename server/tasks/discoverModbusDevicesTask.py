@@ -28,10 +28,9 @@ class DiscoverModbusDevicesTask(Task):
         ports = NetworkUtils.parse_ports(ports_str)
         
         open_devices: List[ICom] = [device for device in self.bb._devices.lst if device.is_open()]
-        already_open_devices: List[ICom] = self.bb.devices_state_to_dict(devices=open_devices)
 
         # Scan for modbus devices
-        devices:List[ICom] = scan_for_modbus_devices(ports=ports, timeout=timeout, already_open_devices=already_open_devices)
+        devices:List[ICom] = scan_for_modbus_devices(ports=ports, timeout=timeout, open_devices=open_devices)
         
         
         logger.info(f"Found {len(devices)} modbus devices")

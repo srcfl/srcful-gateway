@@ -5,6 +5,7 @@ from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.devices.supported_devices.profiles import ModbusProfile, RegisterInterval
 from server.devices.profile_keys import ProtocolKey, DataTypeKey
 from server.network.network_utils import NetworkUtils
+from server.network.network_utils import HostInfo
 
 
 @pytest.fixture
@@ -47,7 +48,7 @@ def blackboard():
 def test_scan_no_hosts_found(mock_get_hosts):
     """Test scanning when no hosts are found"""
     mock_get_hosts.return_value = []
-    devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT, already_open_devices=[])
+    devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT, open_devices=[])
     assert len(devices) == 0
 
 @patch('server.devices.inverters.modbus_device_scanner.ModbusTCP')
@@ -83,7 +84,7 @@ def test_scan_finds_single_device(mock_get_hosts, mock_profiles, mock_modbus_cla
         mock_mac_lookup.return_value = "HUAWEI"
         
         # Run test
-        devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT, already_open_devices = [])
+        devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT, open_devices = [])
     
         # Assertions
         assert len(devices) == 1
@@ -100,4 +101,57 @@ def test_scan_finds_single_device(mock_get_hosts, mock_profiles, mock_modbus_cla
         assert saved_devices[0].device_type == mock_huawei_profile.name
         assert saved_devices[0].slave_id == 1
     
+
+def test_filter_out_open_devices():
+    """Test filtering out open devices"""
     
+    # Create test hosts
+    host_1 = HostInfo(
+        ip="192.168.1.100",
+        port=502,
+        mac="00:11:22:33:44:55"
+    )
+    
+    host_2 = HostInfo(
+        ip="192.168.1.101",
+        port=502,
+        mac="00:11:22:33:44:56"
+    )
+    
+    host_3 = HostInfo(
+        ip="192.168.1.102",
+        port=502,
+        mac="00:11:22:33:44:57"
+    )
+    
+    hosts = [host_1, host_2, host_3]
+    
+    # Create open devices that match some of the hosts
+    open_device_1 = MagicMock(spec=ModbusTCP)
+    open_device_1.ip = host_1.ip
+    open_device_1.port = host_1.port
+    open_device_1.mac = host_1.mac
+    
+    open_device_2 = MagicMock(spec=ModbusTCP)
+    open_device_2.ip = host_2.ip
+    open_device_2.port = host_2.port
+    open_device_2.mac = host_2.mac
+    
+    open_devices = [open_device_1, open_device_2]
+    
+    # Test filtering
+    from server.devices.inverters.modbus_device_scanner import filter_open_devices
+    filtered_hosts = filter_open_devices(hosts, open_devices)
+    
+    # Verify results
+    assert len(filtered_hosts) == 1  # Only host_3 should remain
+    assert filtered_hosts[0].ip == host_3.ip
+    assert filtered_hosts[0].port == host_3.port
+    assert filtered_hosts[0].mac == host_3.mac
+    
+    # Verify that filtered hosts don't include the open devices
+    for host in filtered_hosts:
+        for open_device in open_devices:
+            assert not (host.ip == open_device.ip and 
+                       host.port == open_device.port and 
+                       host.mac == open_device.mac)
