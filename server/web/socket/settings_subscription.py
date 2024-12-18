@@ -12,7 +12,7 @@ from server.tasks.requestResponseTask import handle_request_task, RequestTask
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 class GraphQLSubscriptionClient(threading.Thread):
     def __init__(self, bb: BlackBoard, url: str):
