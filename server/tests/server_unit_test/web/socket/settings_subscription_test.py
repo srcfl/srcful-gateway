@@ -40,4 +40,14 @@ def test_on_message(blackboard):
     blackboard.settings.harvest.clear_endpoints(ChangeSource.BACKEND)
 
     client.on_message(None, '{"type":"data","id":"1","payload":{"data":{"configurationDataChanges":{"data":"{\\u0022settings\\u0022: {\\u0022harvest\\u0022: {\\u0022endpoints\\u0022: [\\u0022https://mainnet.srcful.dev/gw/data/\\u0022]}}}","subKey":"settings"}}}}')
-    assert blackboard.settings.harvest.endpoints == ['https://mainnet.srcful.dev/gw/data/'] 
+    assert blackboard.settings.harvest.endpoints == ['https://mainnet.srcful.dev/gw/data/']
+
+def test_on_message_empty_message():
+    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client.on_message(None, '')
+    assert True
+
+def test_on_message_none_message():
+    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client.on_message(None, None)
+    assert True
