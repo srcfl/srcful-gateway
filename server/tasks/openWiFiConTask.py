@@ -22,16 +22,16 @@ class OpenWiFiConTask(Task):
             self.bb.add_task(ScanWiFiTask(self.bb.time_ms() + 1000, self.bb))
 
             # we now sleep for 30 seconds to give the graphql client a chance to reconnect
-            time.sleep(30)
-            # this is a temporary fix to get the graphql client to work when disconnected and reconnected with internet
-            log.info("Stopping graphql client")
-            from server.web.socket.settings_subscription import GraphQLSubscriptionClient
+            # time.sleep(30)
+            # # this is a temporary fix to get the graphql client to work when disconnected and reconnected with internet
+            # log.info("Stopping graphql client")
+            # from server.web.socket.settings_subscription import GraphQLSubscriptionClient
 
-            self.bb.graphql_client.stop()
-            log.info("Starting graphql client")
-            self.bb.graphql_client = GraphQLSubscriptionClient(self.bb, "wss://api.srcful.dev/")
-            self.bb.graphql_client.start()
-            log.info("Graphql client started")
+            # self.bb.graphql_client.stop()
+            # log.info("Starting graphql client")
+            # self.bb.graphql_client = GraphQLSubscriptionClient(self.bb, "wss://api.srcful.dev/")
+            # self.bb.graphql_client.start()
+            # log.info("Graphql client started")
 
             return None
         except Exception as e:

@@ -51,3 +51,35 @@ def test_on_message_none_message():
     client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
     client.on_message(None, None)
     assert True
+
+
+def test_on_message_subscription_error_reply():
+
+    error_reply = '''{
+        "type": "data",
+        "id": "1",
+        "payload": {
+            "errors": [
+            {
+                "message": "Auth token to old",
+                "locations": [
+                {
+                    "line": 3,
+                    "column": 11
+                }
+                ],
+                "path": [
+                "configurationDataChanges"
+                ]
+            }
+            ],
+            "data": null
+        }
+    }'''
+
+    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+
+    client.send_connection_init = Mock()
+    client.on_message(None, error_reply)
+
+    assert client.send_connection_init.call_count == 1

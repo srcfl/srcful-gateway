@@ -43,7 +43,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     # this is a temporary fix to get the graphql client to work when disconnected and reconnected with internet
     # the wifi connect task will recreate the graphql client and the old one will be garbage collected
-    bb.graphql_client = graphql_client
+    # bb.graphql_client = graphql_client
 
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
