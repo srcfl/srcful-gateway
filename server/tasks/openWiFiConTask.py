@@ -19,9 +19,20 @@ class OpenWiFiConTask(Task):
         try:
             self.wificon.connect()
             self.bb.add_task(ScanWiFiTask(self.bb.time_ms() + 1000, self.bb))
+
             return None
         except Exception as e:
             self.bb.notify_error("Failed to connect to WiFi. Invalid SSID or PSK: ")
             log.exception(e)
             self.time = event_time + 10000
             return self
+        finally:
+            # this is a temporary fix to get the graphql client to work when disconnected and reconnected with internet
+            from server.web.socket.settings_subscription import GraphQLSubscriptionClient
+
+            self.bb.graphql_client.stop()
+            graphql_client = GraphQLSubscriptionClient(self.bb, "wss://api.srcful.dev/")
+            graphql_client.start()
+
+            self.bb.graphql_client = graphql_client
+

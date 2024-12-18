@@ -41,6 +41,10 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     graphql_client = GraphQLSubscriptionClient(bb, "wss://api.srcful.dev/")
     graphql_client.start()
 
+    # this is a temporary fix to get the graphql client to work when disconnected and reconnected with internet
+    # the wifi connect task will recreate the graphql client and the old one will be garbage collected
+    bb.graphql_client = graphql_client
+
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
