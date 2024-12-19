@@ -9,7 +9,8 @@ from server.devices.profile_keys import DeviceCategoryKey, ProfileKey, Registers
 
 FREQUENCY_REGISTER_VALUES = {
     "huawei": [0x1388],  # 5000 = 50.00 Hz
-    "solaredge": [0x0000, 0x1388],  # Second register contains frequency
+    "solaredge": [0x1388],  # 5000 = 50.00 Hz
+    "solaredge_us": [0xC350],  # 60000 = 60.00 Hz
     "sungrow": [0x01F4],  # 500 * 0.1 = 50.0 Hz
     "sma": [0x0000, 0x1388],  # U32: 5000 = 50.00 Hz
     "fronius": [0x4248, 0x0000],  # IEEE-754 float: 50.0
@@ -17,7 +18,7 @@ FREQUENCY_REGISTER_VALUES = {
     "deye_micro": [0x1388],  # U16: 5000 = 50.00 Hz
     "growatt": [0x1388],  # 5000 = 50.00 Hz
     "goodwe": [0x1388],  # 5000 = 50.00 Hz
-    "ferroamp": [0x4248, 0x0000],  # IEEE-754 float: 50.0
+    "ferroamp": [0x0000, 0x4248],  # IEEE-754 float: 50.0
     "sofar": [0x1388],  # 5000 = 50.00 Hz
     "unknown": [0x1388],  # 5000 = 50.00 Hz
 }
@@ -39,7 +40,7 @@ def get_frequency_test_cases():
             "num_registers": freq_register[RegistersKey.NUM_OF_REGISTERS],
             "data_type": freq_register[RegistersKey.DATA_TYPE],
             "scale_factor": freq_register[RegistersKey.SCALE_FACTOR],
-            "endianess": freq_register[RegistersKey.ENDIANNESS],
+            "endianness": freq_register[RegistersKey.ENDIANNESS],
             "registers": FREQUENCY_REGISTER_VALUES[device_name],
             "expected_frequency": 50.00,
         })
@@ -62,7 +63,8 @@ def mock_profile_factory():
                 data_type=test_case["data_type"],
                 unit="Hz",
                 description="Grid frequency",
-                scale_factor=test_case["scale_factor"]
+                scale_factor=test_case["scale_factor"],
+                endianness=test_case["endianness"]
             )
         ]
         return profile

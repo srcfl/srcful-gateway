@@ -81,7 +81,7 @@ def test_scan_finds_single_device(mock_get_hosts, mock_profiles, mock_modbus_cla
     
     # Mock the manufacturer lookup to match the profile
     with patch('server.devices.inverters.modbus_device_scanner.MacLookupService.get_manufacturer') as mock_mac_lookup:
-        mock_mac_lookup.return_value = "HUAWEI"
+        mock_mac_lookup.return_value = "HUAWEI TECHNOLOGIES CO.,LTD"
         
         # Run test
         devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT, open_devices = [])

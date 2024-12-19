@@ -82,6 +82,7 @@ class RegisterValue:
                 value_bytes = bytearray().join(registers[::-1])
             else:
                 value_bytes = raw
+            
 
             if self.data_type == DataTypeKey.U16:
                 value = int.from_bytes(value_bytes[0:2], "big", signed=False)

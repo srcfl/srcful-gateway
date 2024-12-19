@@ -194,7 +194,8 @@ class ModbusTCP(Modbus, TCPDevice):
                 size=freq_reg.offset,
                 function_code=freq_reg.function_code,
                 data_type=freq_reg.data_type,
-                scale_factor=freq_reg.scale_factor
+                scale_factor=freq_reg.scale_factor,
+                endianness=freq_reg.endianness
             )
 
             log.debug(f"RegisterValue: {reg_value}")
@@ -211,5 +212,5 @@ class ModbusTCP(Modbus, TCPDevice):
     def _has_valid_frequency(self) -> bool:
         """Check if the float frequency value is within a reasonable range (48-62 Hz)"""
         frequency = self._read_frequency()
-        log.info(f"Checking frequency: {frequency}")
+        log.info(f"Final frequency value: {frequency}")
         return frequency and 48.0 <= frequency <= 62.0

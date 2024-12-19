@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from server.network.network_utils import HostInfo, NetworkUtils
 from server.devices.ICom import ICom
 from server.devices.supported_devices.profiles import ModbusProfile, ModbusDeviceProfiles
-from server.devices.profile_keys import ProtocolKey
+from server.devices.profile_keys import ProtocolKey, ProfileKey
 from server.devices.inverters.ModbusTCP import ModbusTCP
 import time
 from datetime import datetime
@@ -13,7 +13,7 @@ from threading import Lock
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 _scan_lock = Lock()
 _is_scanning = False
@@ -83,6 +83,10 @@ def get_profile_by_manufacturer(manufacturer: str, profiles: List[ModbusProfile]
     Return matching profiles based on manufacturer name, 
     or return all profiles if no manufacturer is found
     """
+    
+    # log what we got from the argument
+    logger.debug(f"Got manufacturer: {manufacturer}")
+    
     if not manufacturer:
         return profiles
         
@@ -92,9 +96,17 @@ def get_profile_by_manufacturer(manufacturer: str, profiles: List[ModbusProfile]
     for profile in profiles:
         
         # manufacturer name could for example be HUAWEI TECHNOLOGIES CO.,LTD
-        # and the profile name could be huawei, so we simply can check if 
-        # the manufacturer name contains the profile name
-        if profile.name.lower() in manufacturer.lower():
+        keywords = [profile.name.lower(), profile.display_name.lower()]
+            
+        # Add any additional keywords from profile
+        if hasattr(profile, ProfileKey.KEYWORDS):
+            keywords.extend([k.lower() for k in profile.keywords])
+            
+        # logger.debug(f"The following keywords are available for {profile.name}: {keywords}")
+        
+            
+        if any(keyword in manufacturer.lower() for keyword in keywords):
+            logger.debug(f"Found matching profile: {profile.name}, name was in {manufacturer}")
             matching_profiles.append(profile)
     
     return matching_profiles if matching_profiles else profiles
@@ -118,11 +130,15 @@ def identify_device(host: HostInfo, all_profiles: List[ModbusProfile]) -> Option
     Try to identify a device by first checking MAC manufacturer.
     Returns unknown device if no match found.
     """
-    manufacturer = MacLookupService.get_manufacturer(host.mac)
-    profiles = get_profile_by_manufacturer(manufacturer, all_profiles)
     
     if host.port == 8899:
         return None  # Solarman devices need dongle serial number
+
+    
+    manufacturer = MacLookupService.get_manufacturer(host.mac)
+    profiles = get_profile_by_manufacturer(manufacturer, all_profiles)
+    
+    logger.debug(f"The following profiles are available for {host.mac}: {[profile.name for profile in profiles]}")
     
     # Test manufacturer-specific profiles
     for profile in profiles:

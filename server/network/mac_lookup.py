@@ -1,9 +1,9 @@
 from typing import Optional
 import requests
 import logging
-from .manufacturer_mapping import ManufacturerMapping
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class MacLookupService:
     """Service to lookup MAC address manufacturer information"""
@@ -21,7 +21,9 @@ class MacLookupService:
                 data = response.json()
                 if data.get("success") and data.get("found"):
                     company = data.get("company")
-                    return ManufacturerMapping.get_standardized_manufacturer(company)
+                    logger.debug(f"Found manufacturer: {company}")
+                    # return ManufacturerMapping.get_standardized_manufacturer(company)
+                    return company
         except Exception as e:
             logger.debug(f"MAC lookup failed for {mac}: {str(e)}")
         return None 

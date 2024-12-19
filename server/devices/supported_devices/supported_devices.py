@@ -86,7 +86,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 40085,
-                    RegistersKey.NUM_OF_REGISTERS: 2, # Frequency is in the second register
+                    RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "Hz",
                     RegistersKey.DESCRIPTION: "Grid frequency",
@@ -96,11 +96,64 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 40100,
-                    RegistersKey.NUM_OF_REGISTERS: 2, # Power is in the second register
+                    RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataTypeKey.I16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "DC Power",
                     RegistersKey.SCALE_FACTOR: 0.01,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+            ],
+            ProfileKey.KEYWORDS: ["solaredge"],
+        },
+        {
+            ProfileKey.NAME: "solaredge_us",
+            ProfileKey.VERSION: "V1.1b3",
+            ProfileKey.VERBOSE_ALWAYS: False,
+            ProfileKey.DISPLAY_NAME: "SolarEdge",
+            ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
+            ProfileKey.DESCRIPTION: "Another inverter profile...",
+            ProfileKey.REGISTERS_VERBOSE: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 40000,
+                    RegistersKey.NUM_OF_REGISTERS: 69,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 40069,
+                    RegistersKey.NUM_OF_REGISTERS: 33,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 40106,
+                    RegistersKey.NUM_OF_REGISTERS: 3,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 40121,
+                    RegistersKey.NUM_OF_REGISTERS: 70,
+                },
+            ],
+            ProfileKey.REGISTERS: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 40085,
+                    RegistersKey.NUM_OF_REGISTERS: 1, 
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
+                    RegistersKey.UNIT: "Hz",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
+                    RegistersKey.SCALE_FACTOR: 0.001,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 40100,
+                    RegistersKey.NUM_OF_REGISTERS: 1, 
+                    RegistersKey.DATA_TYPE: DataTypeKey.I16,
+                    RegistersKey.UNIT: "W",
+                    RegistersKey.DESCRIPTION: "DC Power",
+                    RegistersKey.SCALE_FACTOR: 0.001,
                     RegistersKey.ENDIANNESS: EndiannessKey.BIG,
                 },
             ],
@@ -590,7 +643,7 @@ supported_devices = {
                     RegistersKey.UNIT: "Hz",
                     RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 1,
-                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                    RegistersKey.ENDIANNESS: EndiannessKey.LITTLE,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
@@ -600,7 +653,7 @@ supported_devices = {
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "DC Power",
                     RegistersKey.SCALE_FACTOR: 1,
-                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                    RegistersKey.ENDIANNESS: EndiannessKey.LITTLE,
                 },
             ],
             ProfileKey.KEYWORDS: ["ferroamp"],
