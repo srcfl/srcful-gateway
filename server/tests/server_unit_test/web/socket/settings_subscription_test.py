@@ -83,3 +83,20 @@ def test_on_message_subscription_error_reply():
     client.on_message(None, error_reply)
 
     assert client.send_connection_init.call_count == 1
+
+def test_on_message_subscription_error_reply_no_errors():
+
+    error_reply = '''{
+        "type": "data",
+        "id": "1",
+        "payload": {
+            "data": null
+        }
+    }'''
+
+    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+
+    client.send_connection_init = Mock()
+    client.on_message(None, error_reply)
+
+    assert client.send_connection_init.call_count == 0
