@@ -207,6 +207,7 @@ class ModbusTCP(Modbus, TCPDevice):
 
         except Exception as e:
             log.error(f"Error reading frequency: {str(e)}")
+            self.disconnect()
             return None
     
     def _has_valid_frequency(self) -> bool:

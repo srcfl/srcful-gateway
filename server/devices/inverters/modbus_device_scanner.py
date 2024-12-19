@@ -150,7 +150,12 @@ def identify_device(host: HostInfo, all_profiles: List[ModbusProfile]) -> Option
 
 def try_profile(host: HostInfo, profile: ModbusProfile) -> Optional[ICom]:
     """Helper function to try a specific profile with different slave IDs"""
-    for slave_id in range(6):
+    seconds_to_sleep = 0.5
+    
+    time.sleep(seconds_to_sleep)
+    logger.debug(f"Sleeping for {seconds_to_sleep} seconds")
+    
+    for slave_id in range(3):
         try:
             device = ModbusTCP(
                 ip=host.ip,
@@ -161,14 +166,15 @@ def try_profile(host: HostInfo, profile: ModbusProfile) -> Optional[ICom]:
             )
             
             if device.connect():
+                time.sleep(seconds_to_sleep)
+                device.disconnect()
+                
                 return device
             
-            device.disconnect()
-            
         except Exception:
+            time.sleep(seconds_to_sleep)
             continue
         
-        time.sleep(0.5)
     
     return None
 

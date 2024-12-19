@@ -76,7 +76,7 @@ class ModbusHandler(GetHandler):
         
         if device_id is None:
             return 400, json.dumps({"error": "missing device index"})
-        if address is -1:
+        if address == -1:
             return 400, json.dumps({"error": "missing address"})
         if len(request_data.bb.devices.lst) == 0:
             return 400, json.dumps({"error": "No devices open"})
