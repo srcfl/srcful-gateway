@@ -83,8 +83,7 @@ def get_profile_by_manufacturer(manufacturer: str, profiles: List[ModbusProfile]
     Return matching profiles based on manufacturer name, 
     or return all profiles if no manufacturer is found
     """
-    
-    # log what we got from the argument
+
     logger.debug(f"Got manufacturer: {manufacturer}")
     
     if not manufacturer:
@@ -99,15 +98,13 @@ def get_profile_by_manufacturer(manufacturer: str, profiles: List[ModbusProfile]
         keywords = [profile.name.lower(), profile.display_name.lower()]
             
         # Add any additional keywords from profile
-        if hasattr(profile, ProfileKey.KEYWORDS):
-            keywords.extend([k.lower() for k in profile.keywords])
-            
-        # logger.debug(f"The following keywords are available for {profile.name}: {keywords}")
-        
+        keywords.extend([k.lower() for k in profile.keywords])
             
         if any(keyword in manufacturer.lower() for keyword in keywords):
-            logger.debug(f"Found matching profile: {profile.name}, name was in {manufacturer}")
+            logger.info(f"Found matching profile: {profile.name}, name was in {manufacturer}. Keywords: {keywords}")
             matching_profiles.append(profile)
+            
+    logger.info(f"Matching profiles: {[profile.name for profile in matching_profiles]}")
     
     return matching_profiles if matching_profiles else profiles
 
@@ -124,7 +121,7 @@ def create_unknown_device(host: HostInfo) -> ICom:
         device_type="Unknown"
     )
 
-@log_execution_time
+# @log_execution_time
 def identify_device(host: HostInfo, all_profiles: List[ModbusProfile]) -> Optional[ICom]:
     """
     Try to identify a device by first checking MAC manufacturer.
@@ -150,10 +147,7 @@ def identify_device(host: HostInfo, all_profiles: List[ModbusProfile]) -> Option
 
 def try_profile(host: HostInfo, profile: ModbusProfile) -> Optional[ICom]:
     """Helper function to try a specific profile with different slave IDs"""
-    seconds_to_sleep = 0.5
-    
-    time.sleep(seconds_to_sleep)
-    logger.debug(f"Sleeping for {seconds_to_sleep} seconds")
+
     
     for slave_id in range(3):
         try:
@@ -166,13 +160,11 @@ def try_profile(host: HostInfo, profile: ModbusProfile) -> Optional[ICom]:
             )
             
             if device.connect():
-                time.sleep(seconds_to_sleep)
                 device.disconnect()
                 
                 return device
             
         except Exception:
-            time.sleep(seconds_to_sleep)
             continue
         
     
@@ -229,6 +221,8 @@ def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFA
         hosts = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
         network_scan_elapsed = time.time() - network_scan_start
         
+        logger.info(f"Network scan took {network_scan_elapsed:.2f} seconds")
+        
         if not hosts:
             logger.info("No hosts found with open Modbus ports")
             return devices
@@ -241,7 +235,6 @@ def scan_for_modbus_devices(ports: List[int], timeout: float = NetworkUtils.DEFA
             return devices
 
         # Device identification phase
-        identification_start = time.time()
         with ThreadPoolExecutor(max_workers=min(32, len(filtered_hostinfos))) as executor:
             future_to_host = {
                 executor.submit(identify_device, hostinfo, all_profiles): hostinfo

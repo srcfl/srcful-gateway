@@ -3,10 +3,12 @@ from unittest.mock import patch, MagicMock
 from server.devices.inverters.modbus_device_scanner import scan_for_modbus_devices
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.devices.supported_devices.profiles import ModbusProfile, RegisterInterval
-from server.devices.profile_keys import ProtocolKey, DataTypeKey
+from server.devices.profile_keys import ProtocolKey, DataTypeKey, EndiannessKey
 from server.network.network_utils import NetworkUtils
 from server.network.network_utils import HostInfo
-
+from server.devices.inverters.modbus_device_scanner import get_profile_by_manufacturer
+from server.devices.supported_devices.profiles import ModbusDeviceProfiles
+from typing import List
 
 @pytest.fixture
 def mock_modbus_device():
@@ -32,7 +34,8 @@ def mock_huawei_profile():
             data_type=DataTypeKey.U16,
             unit="Hz",
             description="Frequency",
-            scale_factor=1.0
+            scale_factor=0.01,
+            endianness=EndiannessKey.BIG,
         )
     ]
     return profile
@@ -52,55 +55,45 @@ def test_scan_no_hosts_found(mock_get_hosts):
     assert len(devices) == 0
 
 @patch('server.devices.inverters.modbus_device_scanner.ModbusTCP')
-@patch('server.devices.inverters.modbus_device_scanner.ModbusDeviceProfiles')
+@patch('server.devices.inverters.modbus_device_scanner.get_profile_by_manufacturer')
 @patch('server.devices.inverters.modbus_device_scanner.NetworkUtils.get_hosts')
-def test_scan_finds_single_device(mock_get_hosts, mock_profiles, mock_modbus_class, mock_huawei_profile, blackboard):
+def test_scan_finds_single_device(mock_get_hosts, mock_get_profile, mock_modbus_class, 
+                                mock_modbus_device, mock_huawei_profile, blackboard):
     """Test scanning finds a single device successfully and saves it to state"""
+    
     # Setup host info
-    host_info = MagicMock()
-    host_info.ip = "192.168.1.100"
-    host_info.port = 502
-    host_info.mac = "00:11:22:33:44:55"
+    host_info = MagicMock(spec=HostInfo)
+    host_info.ip = mock_modbus_device.ip
+    host_info.port = mock_modbus_device.port
+    host_info.mac = mock_modbus_device.mac
     mock_get_hosts.return_value = [host_info]
     
-    # Setup profiles
-    profiles_instance = MagicMock()
-    profiles_instance.get_supported_devices.return_value = [mock_huawei_profile]
-    mock_profiles.return_value = profiles_instance
+    # Setup profile lookup
+    mock_get_profile.return_value = [mock_huawei_profile]
     
-    # Setup ModbusTCP mock with proper frequency reading
-    mock_device = MagicMock(spec=ModbusTCP)
-    mock_device.ip = host_info.ip
-    mock_device.port = host_info.port
-    mock_device.mac = host_info.mac
-    mock_device.device_type = mock_huawei_profile.name
-    mock_device.connect.return_value = True
-    mock_device.slave_id = 1
-    mock_device._read_frequency.return_value = 50.0
-    mock_modbus_class.return_value = mock_device
+    # Use the mock_modbus_device fixture
+    mock_modbus_device.device_type = mock_huawei_profile.name
+    mock_modbus_device.slave_id = 1
+    mock_modbus_class.return_value = mock_modbus_device
     
-    # Mock the manufacturer lookup to match the profile
-    with patch('server.devices.inverters.modbus_device_scanner.MacLookupService.get_manufacturer') as mock_mac_lookup:
-        mock_mac_lookup.return_value = "HUAWEI TECHNOLOGIES CO.,LTD"
-        
-        # Run test
-        devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT, open_devices = [])
+    # Run test
+    devices = scan_for_modbus_devices(ports=[502], timeout=NetworkUtils.DEFAULT_TIMEOUT, open_devices=[])
+
+    # Assertions
+    assert len(devices) == 1
+    assert devices[0].ip == host_info.ip
+    assert devices[0].port == host_info.port
+    assert devices[0].mac == host_info.mac
+    assert devices[0].device_type == mock_huawei_profile.name
     
-        # Assertions
-        assert len(devices) == 1
-        assert devices[0].ip == host_info.ip
-        assert devices[0].port == host_info.port
-        assert devices[0].device_type == mock_huawei_profile.name
-        
-        # Verify device was saved to state
-        blackboard.set_available_devices(devices=devices)
-        saved_devices = blackboard.get_available_devices()
-        assert len(saved_devices) == 1
-        assert saved_devices[0].ip == host_info.ip
-        assert saved_devices[0].port == host_info.port
-        assert saved_devices[0].device_type == mock_huawei_profile.name
-        assert saved_devices[0].slave_id == 1
-    
+    # Verify device was saved to state
+    blackboard.set_available_devices(devices=devices)
+    saved_devices = blackboard.get_available_devices()
+    assert len(saved_devices) == 1
+    assert saved_devices[0].ip == host_info.ip
+    assert saved_devices[0].port == host_info.port
+    assert saved_devices[0].device_type == mock_huawei_profile.name
+    assert saved_devices[0].slave_id == 1
 
 def test_filter_out_open_devices():
     """Test filtering out open devices"""
@@ -155,3 +148,19 @@ def test_filter_out_open_devices():
             assert not (host.ip == open_device.ip and 
                        host.port == open_device.port and 
                        host.mac == open_device.mac)
+            
+            
+def test_get_profile_by_manufacturer():
+    """Test getting profiles by manufacturer"""
+    
+    #  
+    
+    all_profiles: List[ModbusProfile] = ModbusDeviceProfiles().get_supported_devices()
+    
+    manufacturer = "HUAWEI TECHNOLOGIES CO.,LTD"
+    
+    profiles = get_profile_by_manufacturer(manufacturer=manufacturer, profiles=all_profiles)
+    
+    assert profiles[0].name == "huawei"
+    
+    assert "huawei" in profiles[0].keywords

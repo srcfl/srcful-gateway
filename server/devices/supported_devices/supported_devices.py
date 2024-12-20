@@ -59,7 +59,7 @@ supported_devices = {
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "SolarEdge",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
-            ProfileKey.DESCRIPTION: "Another inverter profile...",
+            ProfileKey.DESCRIPTION: "SolarEdge inverter profile",
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -110,9 +110,9 @@ supported_devices = {
             ProfileKey.NAME: "solaredge_us",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "SolarEdge",
+            ProfileKey.DISPLAY_NAME: "SolarEdge US",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
-            ProfileKey.DESCRIPTION: "Another inverter profile...",
+            ProfileKey.DESCRIPTION: "SolarEdge US inverter profile",
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -259,9 +259,9 @@ supported_devices = {
             ProfileKey.NAME: "fronius",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "Fronius",
+            ProfileKey.DISPLAY_NAME: "Fronius Float",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
-            ProfileKey.DESCRIPTION: "Fronius inverter profile...",
+            ProfileKey.DESCRIPTION: "Fronius float inverter profile",
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -288,6 +288,44 @@ supported_devices = {
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "DC Power",
                     RegistersKey.SCALE_FACTOR: 1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+            ],
+            ProfileKey.KEYWORDS: ["fronius", "u-blox ag"],
+        },
+        {
+            ProfileKey.NAME: "fronius_sf",
+            ProfileKey.VERSION: "V1.1b3",
+            ProfileKey.VERBOSE_ALWAYS: False,
+            ProfileKey.DISPLAY_NAME: "Fronius SF",
+            ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
+            ProfileKey.DESCRIPTION: "Fronius SF inverter profile",
+            ProfileKey.REGISTERS_VERBOSE: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 40000,
+                    RegistersKey.NUM_OF_REGISTERS: 125,
+                }
+            ],
+            ProfileKey.REGISTERS: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 40085, 
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
+                    RegistersKey.UNIT: "Hz",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
+                    RegistersKey.SCALE_FACTOR: 0.01,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 40100,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.I16,
+                    RegistersKey.UNIT: "W",
+                    RegistersKey.DESCRIPTION: "DC Power",
+                    RegistersKey.SCALE_FACTOR: 0.01,
                     RegistersKey.ENDIANNESS: EndiannessKey.BIG,
                 },
             ],

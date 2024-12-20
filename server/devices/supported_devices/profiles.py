@@ -15,6 +15,7 @@ class DeviceProfile(ABC):
         self.display_name: str = profile_data[ProfileKey.DISPLAY_NAME]
         self.protocol: str = profile_data[ProfileKey.PROTOCOL]
         self.description: str = profile_data[ProfileKey.DESCRIPTION]
+        self.keywords: List[str] = profile_data[ProfileKey.KEYWORDS]
 
 
 class RegisterInterval:
