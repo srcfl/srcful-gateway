@@ -32,6 +32,7 @@ class Endpoints:
             "device/supported/configurations": handler.get.supported_devices.SupportedConfigurations(),
             
             "network": handler.get.network.NetworkHandler(),
+            "network/scan": handler.get.network_scan.NetworkScanHandler(),
             "network/address": handler.get.network.AddressHandler(),
             
             "wifi": handler.get.wifi.Handler(),
