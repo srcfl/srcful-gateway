@@ -97,7 +97,7 @@ class ModbusTCP(Modbus, TCPDevice):
         if self.client.socket:
             self.mac = NetworkUtils.get_mac_from_ip(self.ip)
         
-        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self._has_valid_frequency()
+        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC # and self._has_valid_frequency()
         
     def _get_type(self) -> str:
         return self.device_type

@@ -98,7 +98,7 @@ class ModbusDeviceProfiles:
         else:
             raise ValueError(f"Unsupported protocol: {protocol}")
 
-    def get(self, name: str) -> DeviceProfile:
+    def get(self, name: str) -> DeviceProfile | None:
         for profile in self.profiles:
             if profile.name.lower() == name.lower():
                 return profile
