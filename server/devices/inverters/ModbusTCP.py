@@ -12,6 +12,7 @@ from server.devices.supported_devices.profiles import ModbusDeviceProfiles, Modb
 import logging
 from server.devices.profile_keys import ProtocolKey
 from server.devices.registerValue import RegisterValue
+import time
 
 
 log = logging.getLogger(__name__)
@@ -97,7 +98,9 @@ class ModbusTCP(Modbus, TCPDevice):
         if self.client.socket:
             self.mac = NetworkUtils.get_mac_from_ip(self.ip)
         
-        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC # and self._has_valid_frequency()
+        time.sleep(1)
+        
+        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self._has_valid_frequency()
         
     def _get_type(self) -> str:
         return self.device_type
@@ -201,7 +204,9 @@ class ModbusTCP(Modbus, TCPDevice):
             log.debug(f"RegisterValue: {reg_value}")
 
             # Read and interpret value
-            _, _, value = reg_value.read_value(self)
+            a, b, value = reg_value.read_value(self)
+            
+            log.info(f"Values read during frequency reading: {a}, {b}, {value}")
             
             return value
 
@@ -213,5 +218,4 @@ class ModbusTCP(Modbus, TCPDevice):
     def _has_valid_frequency(self) -> bool:
         """Check if the float frequency value is within a reasonable range (48-62 Hz)"""
         frequency = self._read_frequency()
-        log.info(f"Final frequency value: {frequency}")
         return frequency and 48.0 <= frequency <= 62.0

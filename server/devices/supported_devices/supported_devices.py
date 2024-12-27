@@ -200,7 +200,7 @@ supported_devices = {
                     RegistersKey.ENDIANNESS: EndiannessKey.BIG,
                 },
             ],
-            ProfileKey.KEYWORDS: ["sungrow"],
+            ProfileKey.KEYWORDS: ["sungrow", "Espressif"],
         },
         {
             ProfileKey.NAME: "sungrow_sf",
@@ -243,7 +243,7 @@ supported_devices = {
                     RegistersKey.ENDIANNESS: EndiannessKey.BIG,
                 },
             ],
-            ProfileKey.KEYWORDS: ["sungrow"],
+            ProfileKey.KEYWORDS: ["sungrow", "Espressif"],
         },
         {
             ProfileKey.NAME: "sma",
