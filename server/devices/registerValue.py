@@ -48,6 +48,81 @@ class RegisterValue:
         swapped, value = self._interpret_value(raw)
         return raw, swapped, value
 
+    def write_value(self, device: ModbusProtocol, value: Union[int, float, str]) -> bool:
+        """Writes a value to the device's registers
+        Args:
+            device: The Modbus device to write to
+            value: The value to write (will be converted based on data_type)
+        Returns:
+            bool: True if write was successful, False otherwise
+        """
+        try:
+            # Scale the value before converting to bytes (inverse of read scaling)
+            if isinstance(value, (int, float)):
+                value = value / self.scale_factor
+
+            # Convert the value to bytes
+            value_bytes = self._value_to_bytes(value)
+            
+            # Split into 16-bit registers
+            registers = []
+            for i in range(0, len(value_bytes), 2):
+                register_bytes = value_bytes[i:i+2]
+                registers.append(int.from_bytes(register_bytes, "big"))
+
+            # Write the registers
+            if hasattr(device, 'write_registers'):
+                return device.write_registers(self.address, registers)
+            else:
+                logger.error("Device does not support writing registers")
+                return False
+
+        except Exception as e:
+            logger.error(f"Error writing value: {str(e)}")
+            return False
+
+    def _value_to_bytes(self, value: Union[int, float, str]) -> bytearray:
+        """Converts a value to its byte representation based on data type
+        Args:
+            value: The value to convert
+        Returns:
+            bytearray: The byte representation of the value
+        """
+        try:
+            if self.data_type == DataTypeKey.U16:
+                return bytearray(int(value).to_bytes(2, "big", signed=False))
+            
+            elif self.data_type == DataTypeKey.I16:
+                return bytearray(int(value).to_bytes(2, "big", signed=True))
+            
+            elif self.data_type == DataTypeKey.U32:
+                value_bytes = bytearray(int(value).to_bytes(4, "big", signed=False))
+                
+            elif self.data_type == DataTypeKey.I32:
+                value_bytes = bytearray(int(value).to_bytes(4, "big", signed=True))
+                
+            elif self.data_type == DataTypeKey.F32:
+                value_bytes = bytearray(struct.pack(">f", float(value)))
+                
+            elif self.data_type == DataTypeKey.STR:
+                # Pad string to fill registers
+                padded = str(value).ljust(self.size * 2, '\x00')
+                value_bytes = bytearray(padded.encode('ascii'))
+            else:
+                raise ValueError(f"Unsupported data type: {self.data_type}")
+
+            # For multi-register values, handle endianness
+            if len(value_bytes) > 2 and self.endianness == EndiannessKey.LITTLE:
+                # Split into registers and reverse their order
+                registers = [value_bytes[i:i+2] for i in range(0, len(value_bytes), 2)]
+                value_bytes = bytearray().join(registers[::-1])
+                
+            return value_bytes
+
+        except Exception as e:
+            logger.error(f"Error converting value to bytes: {str(e)}")
+            raise
+
     def _interpret_value(self, raw: bytearray) -> Tuple[bytearray, Optional[Union[int, float, str]]]:
         """Interprets raw bytes according to data type
         Returns:
@@ -82,7 +157,6 @@ class RegisterValue:
                 value_bytes = bytearray().join(registers[::-1])
             else:
                 value_bytes = raw
-            
 
             if self.data_type == DataTypeKey.U16:
                 value = int.from_bytes(value_bytes[0:2], "big", signed=False)
