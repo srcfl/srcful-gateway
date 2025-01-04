@@ -331,16 +331,6 @@ else:
                 # If no existing connection, proceed with creating new one
                 logger.info("No existing connection found. Adding and activating new connection to %s...", self.ssid)
                 connection_path = self._add_connection(priority)
-                if old_conn_path:
-                    old_ssid = old_conn_props.Get(
-                        "org.freedesktop.NetworkManager.Connection.Active",
-                        "Id"
-                    )
-                    logger.info("Currently connected to: %s", old_ssid)
-
-                # Add and activate new connection
-                logger.info("Adding and activating connection to %s...", self.ssid)
-                connection_path = self._add_connection()
                 
                 try:
                     device_path = self._find_wireless_device()
