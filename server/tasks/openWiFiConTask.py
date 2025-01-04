@@ -25,16 +25,16 @@ class OpenWiFiConTask(Task):
                 # adding a notification saves the state - hopefully this will catch the new ssid
                 return None
             else:
-                self.bb.add_warning("Failed to connect to WiFi. Invalid SSID or PSK: ")
+                self.bb.add_warning(f"Failed to connect to WiFi: {self.wificon.ssid}. Could be an invalid password.")
             return None
         except Exception as e:
             log.exception(e)
             self.retries -= 1
             if self.retries > 0:    
-                self.bb.add_error("Failed to connect to WiFi. Retry in 10 seconds")
+                self.bb.add_error(f"Failed to connect to WiFi: {self.wificon.ssid}. Retry in 10 seconds")
                 self.time = event_time + 10000
                 return self
             else:
-                self.bb.add_error("Failed to connect to WiFi. Giving up")
+                self.bb.add_error(f"Failed to connect to WiFi: {self.wificon.ssid}. Giving up")
                 return None
 
