@@ -2,6 +2,7 @@ import json
 import logging
 
 from server.network.scan import WifiScanner
+from server.tasks.scanWiFiTask import ScanWiFiTask
 
 from ..handler import GetHandler
 from ..requestData import RequestData
@@ -38,8 +39,8 @@ class ScanHandler(GetHandler):
 
     def do_get(self, data: RequestData):
         try:
-            s = WifiScanner()
-            s.scan()
+            task = ScanWiFiTask(event_time=data.bb.time_ms() + 100, bb=data.bb)
+            data.bb.add_task(task)
             return 200, json.dumps({"status": "scan initiated"})
         except Exception as e:
             logger.error(e)
