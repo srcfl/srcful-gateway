@@ -246,6 +246,6 @@ else:
             logger.debug("Deleted all wifi connection profiles...")
 
         def connect(self):
-            self.delete_connections()
+            #self.delete_connections()
             logger.info("Adding connection...")
             self._add_connection()
