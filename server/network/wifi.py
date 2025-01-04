@@ -374,7 +374,7 @@ else:
             except Exception as e:
                 logger.error("Failed to delete connection: %s", str(e))
 
-        def delete_all_wifi_connections(self):
+        def delete_connections(self):
             """Delete all WiFi connections."""
             logger.info("Deleting all wifi connections...")
             connection_paths = self.settings.ListConnections()
