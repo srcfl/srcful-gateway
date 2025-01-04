@@ -216,34 +216,14 @@ else:
                     return dev_path
             return None
 
-        def _get_active_connection(self):
-            """Get the currently active wireless connection."""
-            active_connections = self.nm_proxy.Get(
-                "org.freedesktop.NetworkManager",
-                "ActiveConnections",
-                dbus_interface="org.freedesktop.DBus.Properties"
-            )
-            
-            for conn_path in active_connections:
-                conn_proxy = self.bus.get_object("org.freedesktop.NetworkManager", conn_path)
-                conn_props = dbus.Interface(conn_proxy, "org.freedesktop.DBus.Properties")
-                
-                # Check if it's a wireless connection
-                connection_type = conn_props.Get(
-                    "org.freedesktop.NetworkManager.Connection.Active",
-                    "Type"
-                )
-                if connection_type == "802-11-wireless":
-                    return conn_path, conn_props
-            
-            return None, None
-
-        def _add_connection(self):
-            """Add a new connection profile and return its path."""
+        def _add_connection(self, priority=0):
+            """Add a new connection profile and return its path. Higher priority (more positive) connections are preferred."""
             s_con = dbus.Dictionary({
                 "type": "802-11-wireless",
                 "uuid": str(uuid.uuid4()),
                 "id": self.ssid,
+                "autoconnect": True,
+                "autoconnect-priority": dbus.Int32(priority)  # Higher number = higher priority
             })
 
             s_wifi = dbus.Dictionary({
@@ -306,14 +286,51 @@ else:
             logger.error("Connection timeout while trying to connect to %s", self.ssid)
             return False
 
-        def connect(self):
+        def _find_existing_connection_by_ssid(self):
+            """Find if there's already a connection profile for this SSID."""
+            for conn in self.settings.ListConnections():
+                con_proxy = self.bus.get_object("org.freedesktop.NetworkManager", conn)
+                settings_connection = dbus.Interface(
+                    con_proxy, "org.freedesktop.NetworkManager.Settings.Connection"
+                )
+                config = settings_connection.GetSettings()
+                
+                # Check if this is a WiFi connection
+                if config["connection"]["type"] != "802-11-wireless":
+                    continue
+                    
+                # Get the SSID from the connection settings
+                existing_ssid = bytes(config["802-11-wireless"]["ssid"]).decode('utf-8')
+                if existing_ssid == self.ssid:
+                    return conn
+            return None
+
+        def connect(self, priority=0):
             """
             Add and activate the connection with fallback handling.
+            Args:
+                priority: Connection priority (higher number = higher priority) for autoconnect after reboot
             Returns True if connected successfully, False otherwise.
             """
             try:
-                # Store the current active connection for fallback
-                old_conn_path, old_conn_props = self._get_active_connection()
+                # Check if we already have a connection for this SSID
+                existing_conn = self._find_existing_connection_by_ssid()
+                if existing_conn:
+                    logger.info("Found existing connection for SSID: %s. Will activate it.", self.ssid)
+                    device_path = self._find_wireless_device()
+                    if not device_path:
+                        raise Exception("No wireless device found")
+                        
+                    active_path = self.nm.ActivateConnection(
+                        existing_conn,
+                        device_path,
+                        "/"
+                    )
+                    return self._wait_for_connection_state(active_path)
+
+                # If no existing connection, proceed with creating new one
+                logger.info("No existing connection found. Adding and activating new connection to %s...", self.ssid)
+                connection_path = self._add_connection(priority)
                 if old_conn_path:
                     old_ssid = old_conn_props.Get(
                         "org.freedesktop.NetworkManager.Connection.Active",
@@ -349,7 +366,7 @@ else:
                     logger.error("Failed to activate connection: %s", str(e))
                     # Clean up the connection profile if activation failed
                     self.delete_connection(connection_path)
-                    raise e
+                    return False
 
             except Exception as e:
                 logger.error("Failed to connect: %s", str(e))
