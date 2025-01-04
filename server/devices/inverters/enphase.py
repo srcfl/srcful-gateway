@@ -121,10 +121,10 @@ class Enphase(TCPDevice):
     def _get_bearer_token(self, serial: str, username: str, password: str) -> str:
         envoy_serial=serial
         data = {'user[email]': username, 'user[password]': password}
-        response = requests.post('http://enlighten.enphaseenergy.com/login/login.json?', data=data, timeout=10) 
+        response = requests.post('https://enlighten.enphaseenergy.com/login/login.json?', data=data, timeout=10) 
         response_data = response.json()
         data = {'session_id': response_data['session_id'], 'serial_num': envoy_serial, 'username': username}
-        response = requests.post('http://entrez.enphaseenergy.com/tokens', json=data, timeout=10)
+        response = requests.post('https://entrez.enphaseenergy.com/tokens', json=data, timeout=10)
         token_raw = response.text
 
         return token_raw
