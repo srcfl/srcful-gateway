@@ -15,18 +15,26 @@ class OpenWiFiConTask(Task):
     def __init__(self, event_time: int, bb: BlackBoard, wificon: WiFiHandler):
         super().__init__(event_time, bb)
         self.wificon = wificon
+        self.retries = 3
 
     def execute(self, event_time):
         log.info("Opening WiFi connection to %s", self.wificon.ssid)
         try:
             if self.wificon.connect():
-                self.bb.add_task(SaveStateTask(self.bb.time_ms() + 1000, self.bb))
+                self.bb.add_info(f"Connected to WiFi: {self.wificon.ssid}")
+                # adding a notification saves the state - hopefully this will catch the new ssid
+                return None
             else:
-                self.bb.notify_error("Failed to connect to WiFi. Invalid SSID or PSK: ")
+                self.bb.add_warning("Failed to connect to WiFi. Invalid SSID or PSK: ")
             return None
         except Exception as e:
-            self.bb.notify_error("Failed to connect to WiFi. Retry in 10 seconds")
             log.exception(e)
-            self.time = event_time + 10000
-            return self
+            self.retries -= 1
+            if self.retries > 0:    
+                self.bb.add_error("Failed to connect to WiFi. Retry in 10 seconds")
+                self.time = event_time + 10000
+                return self
+            else:
+                self.bb.add_error("Failed to connect to WiFi. Giving up")
+                return None
 
