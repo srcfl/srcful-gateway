@@ -161,7 +161,7 @@ class BlackBoard(ISystemTime, ITaskSource):
             from server.web.handler.get.network import AddressHandler
             address = AddressHandler().get(self.rest_server_port)
 
-            return {"wifi": {"ssids": ssids}, "address": address}
+            return {"wifi": {"ssids": ssids, "connected": s.get_connected_ssid()}, "address": address}
         except Exception as e:
             logger.error(e)
             return {"error": str(e)}

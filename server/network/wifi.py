@@ -68,6 +68,49 @@ else:
         logger.info("No active connection found")
         return '0.0.0.0'
     
+    def get_connected_ssid() -> str:
+         # Connect to system bus
+        bus = dbus.SystemBus()
+        
+        # Get NetworkManager object
+        nm = bus.get_object('org.freedesktop.NetworkManager', 
+                        '/org/freedesktop/NetworkManager')
+        nm_interface = dbus.Interface(nm, 'org.freedesktop.NetworkManager')
+        
+        # Get all network devices
+        devices = nm_interface.GetDevices()
+        
+        for d in devices:
+            dev = bus.get_object('org.freedesktop.NetworkManager', d)
+            dev_interface = dbus.Interface(dev, 'org.freedesktop.DBus.Properties')
+            
+            # Check if device is WiFi
+            dev_type = dev_interface.Get('org.freedesktop.NetworkManager.Device', 
+                                    'DeviceType')
+            if dev_type != 2:  # 2 = WiFi device
+                continue
+                
+            # Check if device is connected
+            state = dev_interface.Get('org.freedesktop.NetworkManager.Device', 
+                                    'State')
+            if state != 100:  # 100 = activated/connected state
+                continue
+                
+            # Get active access point
+            active_ap = dev_interface.Get('org.freedesktop.NetworkManager.Device.Wireless',
+                                        'ActiveAccessPoint')
+            if active_ap == '/':
+                continue
+                
+            # Get AP object and its SSID
+            ap = bus.get_object('org.freedesktop.NetworkManager', active_ap)
+            ap_props = dbus.Interface(ap, 'org.freedesktop.DBus.Properties')
+            ssid = ap_props.Get('org.freedesktop.NetworkManager.AccessPoint', 'Ssid')
+            
+            # SSID is returned as an array of bytes, convert to string
+            return ''.join([chr(b) for b in ssid])
+        
+        return ""
 
     def get_ip_addresses_with_interfaces():
         bus = dbus.SystemBus()
