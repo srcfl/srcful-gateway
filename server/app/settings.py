@@ -77,7 +77,11 @@ class Settings(Observable):
     @property
     def API_SUBKEY(self):
         return "settings"
-
+    
+    @property
+    def SETTINGS_SUBKEY(self):
+        return "settings"
+    
     @property
     def SETTINGS(self):
         return "settings"
@@ -99,11 +103,14 @@ class Settings(Observable):
             settings_data = data[self.SETTINGS]
             self.harvest.update_from_dict(settings_data.get(self.harvest.HARVEST, {}), source)
             self.devices.update_from_dict(settings_data.get(self.devices.DEVICES, {}), source)
+            self.api.update_from_dict(settings_data.get(self.api.API, {}), source)
+            
     def to_dict(self) -> dict:
         return {
             self.SETTINGS: {
                 self.harvest.HARVEST: self._harvest.to_dict(),
                 self.devices.DEVICES: self.devices.to_dict(),
+                self.api.API: self.api.to_dict()
             }
         }
 
@@ -120,9 +127,19 @@ class Settings(Observable):
             super().__init__(parent)
             self._gql_endpoint = "https://api.srcful.dev"
             self._gql_timeout = 5
+            self._ws_endpoint = "wss://api.srcful.dev"
+
+        @property
+        def API(self):
+            return "api"
+        
         @property
         def gql_endpoint(self):
             return self._gql_endpoint
+        
+        @property
+        def ws_endpoint(self):
+            return self._ws_endpoint
         
         @property
         def gql_timeout(self):
@@ -133,13 +150,22 @@ class Settings(Observable):
             return "gql_endpoint"
         
         @property
+        def WS_ENDPOINT(self):
+            return "ws_endpoint"
+        
+        @property
         def GQL_TIMEOUT(self):
             return "gql_timeout"
+        
+        @property
+        def WS_ENDPOINT(self):
+            return "ws_endpoint"
         
         def to_dict(self) -> dict:
             return {
                 self.GQL_ENDPOINT: self._gql_endpoint,
-                self.GQL_TIMEOUT: self._gql_timeout
+                self.GQL_TIMEOUT: self._gql_timeout,
+                self.WS_ENDPOINT: self._ws_endpoint
             }
         
         def update_from_dict(self, data: dict, source: ChangeSource):
@@ -149,6 +175,9 @@ class Settings(Observable):
                 notify = True
             if self.GQL_TIMEOUT in data:
                 self._gql_timeout = data[self.GQL_TIMEOUT]
+                notify = True
+            if self.WS_ENDPOINT in data:
+                self._ws_endpoint = data[self.WS_ENDPOINT]
                 notify = True
             if notify:
                 self.notify_listeners(source)

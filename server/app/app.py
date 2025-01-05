@@ -38,7 +38,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     web_server = server.web.server.Server(web_host, bb)
     logger.info("Server started http://%s:%s", web_host[0], web_host[1])
 
-    graphql_client = GraphQLSubscriptionClient(bb, "wss://api.srcful.dev/")
+    
+    graphql_client = GraphQLSubscriptionClient(bb, bb.settings.api.ws_endpoint)
     graphql_client.start()
 
 
