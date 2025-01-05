@@ -1,5 +1,5 @@
 import struct
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional, Union, List
 from .profile_keys import DataTypeKey, FunctionCodeKey, EndiannessKey
 from .common.types import ModbusProtocol
 import logging
@@ -48,80 +48,46 @@ class RegisterValue:
         swapped, value = self._interpret_value(raw)
         return raw, swapped, value
 
-    def write_value(self, device: ModbusProtocol, value: Union[int, float, str]) -> bool:
-        """Writes a value to the device's registers
+    @staticmethod
+    def write_single(device: ModbusProtocol, address: int, value: int) -> bool:
+        """Write a single register value
         Args:
             device: The Modbus device to write to
-            value: The value to write (will be converted based on data_type)
+            address: Starting register address
+            value: Value to write (16-bit integer)
         Returns:
-            bool: True if write was successful, False otherwise
+            bool: True if write was successful
         """
         try:
-            # Scale the value before converting to bytes (inverse of read scaling)
-            if isinstance(value, (int, float)):
-                value = value / self.scale_factor
-
-            # Convert the value to bytes
-            value_bytes = self._value_to_bytes(value)
-            
-            # Split into 16-bit registers
-            registers = []
-            for i in range(0, len(value_bytes), 2):
-                register_bytes = value_bytes[i:i+2]
-                registers.append(int.from_bytes(register_bytes, "big"))
-
-            # Write the registers
             if hasattr(device, 'write_registers'):
-                return device.write_registers(self.address, registers)
-            else:
-                logger.error("Device does not support writing registers")
-                return False
-
+                return device.write_registers(address, [value & 0xFFFF])
+            
+            logger.error("Device does not support writing registers")
+            return False
         except Exception as e:
-            logger.error(f"Error writing value: {str(e)}")
+            logger.error(f"Error writing single register: {str(e)}")
             return False
 
-    def _value_to_bytes(self, value: Union[int, float, str]) -> bytearray:
-        """Converts a value to its byte representation based on data type
+    @staticmethod
+    def write_multiple(device: ModbusProtocol, address: int, values: List[int]) -> bool:
+        """Write multiple register values
         Args:
-            value: The value to convert
+            device: The Modbus device to write to
+            address: Starting register address
+            values: List of values to write (each should be 16-bit integer)
         Returns:
-            bytearray: The byte representation of the value
+            bool: True if write was successful
         """
         try:
-            if self.data_type == DataTypeKey.U16:
-                return bytearray(int(value).to_bytes(2, "big", signed=False))
-            
-            elif self.data_type == DataTypeKey.I16:
-                return bytearray(int(value).to_bytes(2, "big", signed=True))
-            
-            elif self.data_type == DataTypeKey.U32:
-                value_bytes = bytearray(int(value).to_bytes(4, "big", signed=False))
-                
-            elif self.data_type == DataTypeKey.I32:
-                value_bytes = bytearray(int(value).to_bytes(4, "big", signed=True))
-                
-            elif self.data_type == DataTypeKey.F32:
-                value_bytes = bytearray(struct.pack(">f", float(value)))
-                
-            elif self.data_type == DataTypeKey.STR:
-                # Pad string to fill registers
-                padded = str(value).ljust(self.size * 2, '\x00')
-                value_bytes = bytearray(padded.encode('ascii'))
-            else:
-                raise ValueError(f"Unsupported data type: {self.data_type}")
-
-            # For multi-register values, handle endianness
-            if len(value_bytes) > 2 and self.endianness == EndiannessKey.LITTLE:
-                # Split into registers and reverse their order
-                registers = [value_bytes[i:i+2] for i in range(0, len(value_bytes), 2)]
-                value_bytes = bytearray().join(registers[::-1])
-                
-            return value_bytes
-
+            if hasattr(device, 'write_registers'):
+                # Ensure each value is 16-bit
+                registers = [val & 0xFFFF for val in values]
+                return device.write_registers(address, registers)
+            logger.error("Device does not support writing registers")
+            return False
         except Exception as e:
-            logger.error(f"Error converting value to bytes: {str(e)}")
-            raise
+            logger.error(f"Error writing multiple registers: {str(e)}")
+            return False
 
     def _interpret_value(self, raw: bytearray) -> Tuple[bytearray, Optional[Union[int, float, str]]]:
         """Interprets raw bytes according to data type

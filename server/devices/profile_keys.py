@@ -49,6 +49,7 @@ class EndiannessKey(str, Enum):
 class FunctionCodeKey(int, Enum):
     READ_HOLDING_REGISTERS = 0x03
     READ_INPUT_REGISTERS = 0x04
+    WRITE_MULTIPLE_REGISTERS = 0x10
 
 
 class DeviceCategoryKey(str, Enum):
