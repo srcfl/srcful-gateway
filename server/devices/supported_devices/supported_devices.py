@@ -883,6 +883,142 @@ supported_devices = {
             ProfileKey.KEYWORDS: ["sofar"],
         },
         {
+            ProfileKey.NAME: "solis",
+            ProfileKey.VERSION: "V1.1b3",
+            ProfileKey.VERBOSE_ALWAYS: False,
+            ProfileKey.DISPLAY_NAME: "Solis",
+            ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
+            ProfileKey.DESCRIPTION: "Solis inverter profile",
+            ProfileKey.REGISTERS_VERBOSE: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 35000,
+                    RegistersKey.NUM_OF_REGISTERS: 1,    # Single U16 register for product definition
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3000,
+                    RegistersKey.NUM_OF_REGISTERS: 125, # 3000-3124
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3125,
+                    RegistersKey.NUM_OF_REGISTERS: 125, # 3125-3249
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3220,
+                    RegistersKey.NUM_OF_REGISTERS: 125, # 3220-3344
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3281,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3281-3405
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3406,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3406-3530
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3531,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3531-3655
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3656,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3656-3780
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3781,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3781-3905
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33601,
+                    RegistersKey.NUM_OF_REGISTERS: 105,  # 33601-33705
+                }
+            ],
+            ProfileKey.REGISTERS: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3043,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
+                    RegistersKey.UNIT: "Hz",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
+                    RegistersKey.SCALE_FACTOR: 0.01,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3007,
+                    RegistersKey.NUM_OF_REGISTERS: 2,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U32,
+                    RegistersKey.UNIT: "W",
+                    RegistersKey.DESCRIPTION: "DC Power",
+                    RegistersKey.SCALE_FACTOR: 1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+            ],
+            ProfileKey.KEYWORDS: ["solis", "Espressif"],
+        },
+        {
+            ProfileKey.NAME: "solis_hybrid",
+            ProfileKey.VERSION: "V1.1b3",
+            ProfileKey.VERBOSE_ALWAYS: False,
+            ProfileKey.DISPLAY_NAME: "Solis Hybrid",
+            ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
+            ProfileKey.DESCRIPTION: "Solis inverter profile",
+            ProfileKey.REGISTERS_VERBOSE: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 35000,
+                    RegistersKey.NUM_OF_REGISTERS: 1,    # Single U16 register for product definition
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33000,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 33000-33124
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33125,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 33125-33249
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33250,
+                    RegistersKey.NUM_OF_REGISTERS: 89,   # 33250-33338
+                }
+            ],
+            ProfileKey.REGISTERS: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33094,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
+                    RegistersKey.UNIT: "Hz",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
+                    RegistersKey.SCALE_FACTOR: 0.01,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33057,
+                    RegistersKey.NUM_OF_REGISTERS: 2,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U32,
+                    RegistersKey.UNIT: "W",
+                    RegistersKey.DESCRIPTION: "DC Power",
+                    RegistersKey.SCALE_FACTOR: 1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+            ],
+            ProfileKey.KEYWORDS: ["solis", "Espressif"],
+        },
+        {
             ProfileKey.NAME: "unknown",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
