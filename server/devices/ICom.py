@@ -73,6 +73,10 @@ class ICom(ABC):
     @abstractmethod
     def get_name(self) -> str:
         pass
+
+    @abstractmethod
+    def get_client_name(self) -> str:
+        pass
     
     @abstractmethod
     def clone(self) -> 'ICom':

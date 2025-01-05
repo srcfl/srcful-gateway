@@ -1,6 +1,5 @@
 import logging
 from server.app.blackboard import BlackBoard, ChangeSource
-from server.network.network_utils import NetworkUtils
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.devices.IComFactory import IComFactory
 from server.app.settings import DebouncedMonitorBase, ChangeSource

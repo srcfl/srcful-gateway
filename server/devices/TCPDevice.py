@@ -63,7 +63,7 @@ class TCPDevice(Device, ABC):
     
     def find_device(self) -> Optional['ICom']:
         port = self.get_config()[self.PORT] # get the port from the previous device config
-        hosts = NetworkUtils.get_hosts([int(port)], 0.1)
+        hosts = NetworkUtils.get_hosts([int(port)], NetworkUtils.DEFAULT_TIMEOUT)
         
         if len(hosts) > 0:
             for host in hosts:

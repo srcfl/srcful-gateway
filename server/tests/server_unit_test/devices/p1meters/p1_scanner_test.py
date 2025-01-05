@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock
 from server.devices.p1meters.p1_scanner import (
     scan_for_p1_device,
     scan_for_p1_devices,

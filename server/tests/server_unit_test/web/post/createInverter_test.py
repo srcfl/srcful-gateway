@@ -5,9 +5,6 @@ from server.web.handler.requestData import RequestData
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.app.blackboard import BlackBoard
 import server.tests.config_defaults as cfg
-
-import queue
-
 import pytest
 from server.crypto.crypto_state import CryptoState
 

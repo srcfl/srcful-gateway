@@ -1,6 +1,8 @@
 import logging
+import time
 from server.network.wifi import WiFiHandler
 from server.app.blackboard import BlackBoard
+from server.tasks.scanWiFiTask import ScanWiFiTask
 
 from .task import Task
 
@@ -17,9 +19,12 @@ class OpenWiFiConTask(Task):
         log.info("Opening WiFi connection to %s", self.wificon.ssid)
         try:
             self.wificon.connect()
+            self.bb.add_task(ScanWiFiTask(self.bb.time_ms() + 1000, self.bb))
+
             return None
         except Exception as e:
-            log.Error("Failed to connect to WiFi. Invalid SSID or PSK: ")
+            self.bb.notify_error("Failed to connect to WiFi. Invalid SSID or PSK: ")
             log.exception(e)
             self.time = event_time + 10000
             return self
+

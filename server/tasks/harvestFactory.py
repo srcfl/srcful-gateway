@@ -1,6 +1,5 @@
 from server.app.blackboard import BlackBoard
 from server.devices.ICom import ICom
-from server.tasks.saveStateTask import SaveStateTask
 from .harvest import Harvest
 from .harvestTransport import DefaultHarvestTransportFactory
 from server.app.settings import ChangeSource

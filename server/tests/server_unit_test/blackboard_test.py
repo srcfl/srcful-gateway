@@ -2,7 +2,6 @@ from server.app.blackboard import BlackBoard
 from unittest.mock import MagicMock, Mock
 from server.app.message import Message
 from server.crypto.crypto_state import CryptoState
-from server.devices.ICom import ICom
 import pytest
 import time
 

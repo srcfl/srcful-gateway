@@ -1,5 +1,7 @@
 import logging
 
+from server.network import wifi
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -21,6 +23,9 @@ except ImportError:
 
         def get_ssids(self):
             return self.ssids
+        
+        def get_connected_ssid(self):
+            return "Unknown"
 
 else:
 
@@ -28,6 +33,9 @@ else:
         def __init__(self):
             # property will not be set until 3 to 5 seconds after the scan is started
             self.ssids = []
+
+        def get_connected_ssid(self):
+            return wifi.get_connected_ssid()
 
         def get_ssids(self):
             if len(self.ssids) == 0:

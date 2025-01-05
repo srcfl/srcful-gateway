@@ -1,43 +1,42 @@
 # RPI4
 
+version: "2.4"
+
+x-environment: &shared_env
+  - REST_SERVICE_PORT: 80 # should correspond to the port in the web service below
+  - REST_SERVICE_PORT_INTERNAL: 80 # should correspond to the port in the web service below
+
 services:
   web:
     build: ./server
     container_name: eGW-web
+    ports:
+      - 80:5000
     restart: always
     network_mode: host
     environment:
-      - HOST_IP
-      - REST_SERVICE_PORT=80 # should correspond to the port in the web service below
-      - REST_SERVICE_PORT_INTERNAL=80 # should correspond to the port in the web service below
-      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
-      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
+      <<: *shared_env
     devices:
       - /dev/i2c-1
     volumes:
       - srcful-data:/data/srcful
       - /var/run/dbus:/host/run/dbus
-    labels:
-      io.balena.features.supervisor-api: 1 # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
 
   bluetooth:
     build: ./bluetooth
     container_name: eGW-ble
     privileged: true
-    network_mode: host # could be needed for ble communication, test?
+    network_mode: host
     environment:
-      - HOST_IP
-      - REST_SERVICE_PORT=80
-      - REST_SERVICE_PORT_INTERNAL=80
-      - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
-      - DBUS_SESSION_BUS_ADDRESS=unix:path=/session/dbus/session_bus_socket
-    restart: always
-    depends_on:
-      - "web"
+      <<: *shared_env
+      # GPIO_BUTTON_PIN: 7 # Uncomment if running on a RAK Hotspot V.2 for button
     volumes:
       - /var/run/dbus:/host/run/dbus
       - /sys:/sys
       - /lib/modules:/lib/modules
+    restart: always
+    depends_on:
+      - web
 
 volumes:
   srcful-data:

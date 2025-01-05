@@ -8,7 +8,6 @@ from server.tasks.checkForWebRequestTask import CheckForWebRequest
 from server.tasks.saveStateTask import SaveStatePerpetualTask
 import server.web.server
 from server.tasks.itask import ITask
-from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.devices.inverters.ModbusTCP import ModbusTCP

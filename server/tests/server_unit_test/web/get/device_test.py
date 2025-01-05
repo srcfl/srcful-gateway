@@ -22,6 +22,7 @@ def mock_device():
         device.get_config.return_value = (config_defaults.P1_TELNET_CONFIG.copy())
         device.get_SN.return_value = config_defaults.P1_TELNET_CONFIG["meter_serial_number"]
         device.get_name.return_value = "Test Device"
+        device.get_client_name.return_value = "device.test"
         device.client = None
         return device
     
@@ -120,13 +121,14 @@ def test_multiple_devices(handler, request_data, mock_device):
     device1.is_open.return_value = True
     device1.get_SN.return_value = "DEV1"
     device1.get_name.return_value = "Test Device 1"
-    
+    device1.get_client_name.return_value = "device.test.1"
     # Second device (closed)
     device2 = Mock(spec=ICom)
     device2.get_config.return_value = {"connection": "RTU", "port": "/dev/ttyUSB0"}
     device2.is_open.return_value = False
     device2.get_SN.return_value = "DEV2"
     device2.get_name.return_value = "Test Device 2"
+    device2.get_client_name.return_value = "device.test.2"
     request_data.bb.devices.lst = [device1, device2]
     
     status, response = handler.do_get(request_data)

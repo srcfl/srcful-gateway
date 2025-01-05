@@ -45,18 +45,22 @@ def bb():
 @patch.object(BaseHTTPRequestHandler, "setup")
 def test_handler_api_get_enpoints_params(mock_setup, mock_handle, mock_finish):
     h = Endpoints()
-    path, query = h.pre_do("/api/inverter/modbus/holding/1234?test=hello")
+    path, query = h.pre_do("/api/inverter/modbus?address=1234&device_id=00.00.00.00.00.00&function_code=0x03&size=1&type=U16&endianess=big")
 
     # this could really be any handler
-    from server.web.handler.get.modbus_read import HoldingHandler
-    handlers = {"inverter/modbus/holding/{address}": HoldingHandler()}
+    from server.web.handler.get.modbus import ModbusHandler
+    handlers = {"inverter/modbus": ModbusHandler()}
 
     handler, params = h.get_api_handler(path, "/api/", h.convert_keys_to_regex(handlers))
     assert handler is not None
     assert params is not None
     assert hasattr(handler, "do_get")
-    assert params["address"] == "1234"
-    assert query["test"] == "hello"
+    assert query["address"] == "1234"
+    assert query["device_id"] == "00.00.00.00.00.00"
+    assert query["function_code"] == "0x03"
+    assert query["size"] == "1"
+    assert query["type"] == "U16"
+    assert query["endianess"] == "big"
 
 
 def test_open_close(bb: BlackBoard):

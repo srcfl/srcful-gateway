@@ -26,10 +26,10 @@ services:
     build: ./bluetooth
     container_name: eGW-ble
     privileged: true
-    network_mode: host # could be needed for ble communication, test?
+    network_mode: host
     environment:
       <<: *shared_env
-      GPIO_BUTTON_PIN: 7
+      GPIO_BUTTON_PIN: 7 # RAK Hotspot V.2 button
     volumes:
       - /var/run/dbus:/host/run/dbus
       - /sys:/sys

@@ -5,10 +5,8 @@ from websocket import WebSocketApp
 import json
 from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
-import signal
 from typing import Callable
 from datetime import datetime, timezone
-from server.app.settings import Settings, ChangeSource
 from server.tasks.getSettingsTask import handle_settings
 from server.tasks.requestResponseTask import handle_request_task, RequestTask
 
@@ -67,20 +65,33 @@ class GraphQLSubscriptionClient(threading.Thread):
 
     def on_message(self, ws, message):
         logger.debug("Received message: %s", message)
-        
-        data = json.loads(message)
+        try:
+            data = json.loads(message)
 
-        if data.get('type') == 'connection_ack':
-            logger.info("Connection acknowledged, sending subscription")
-            self.subscribe_to_settings()
-        elif data.get('type') == 'data':
-            # This is what we should do next
-            if 'data' in data['payload'] and 'configurationDataChanges' in data['payload']['data']:
-                if data['payload']['data']['configurationDataChanges']['subKey'] == self.bb.settings.API_SUBKEY:
-                    handle_settings(self.bb, data['payload']['data']['configurationDataChanges'])
-                if data['payload']['data']['configurationDataChanges']['subKey'] == RequestTask.SUBKEY:
-                    task = handle_request_task(self.bb, data['payload']['data']['configurationDataChanges'])
-                    self.bb.add_task(task)
+            if data and isinstance(data, dict):
+                if data.get('type') == 'connection_ack':
+                    logger.info("Connection acknowledged, sending subscription")
+                    self.subscribe_to_settings()
+                elif data.get('type') == 'data':
+                    # This is what we should do next
+                    if 'data' in data['payload'] and 'configurationDataChanges' in data['payload']['data']:
+                        if data['payload']['data']['configurationDataChanges']['subKey'] == self.bb.settings.API_SUBKEY:
+                            handle_settings(self.bb, data['payload']['data']['configurationDataChanges'])
+                        if data['payload']['data']['configurationDataChanges']['subKey'] == RequestTask.SUBKEY:
+                            task = handle_request_task(self.bb, data['payload']['data']['configurationDataChanges'])
+                            self.bb.add_task(task)
+            else:
+                logger.error(f"Invalid message: {message}")
+        except json.JSONDecodeError:
+            logger.error(f"Invalid message: {message}")
+        except Exception as e:
+            logger.error(f"Error processing message: {message} error: {e}")
+            if message is not None:
+                data = json.loads(message)
+                if data.get('type') == 'data' and data.get('payload').get('errors'):
+                    logger.info("Error received, reconnecting")
+                    self.send_connection_init()
+            return
             
 
     def on_error(self, ws, error):

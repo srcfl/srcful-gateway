@@ -4,8 +4,8 @@ import json
 from ..handler import GetHandler
 from ..requestData import RequestData
 from server.network.network_utils import NetworkUtils
-from server.devices.inverters.modbus_device_scanner import scan_for_modbus_devices
 from server.devices.ICom import ICom
+from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from typing import List
 
 logger = logging.getLogger(__name__)
@@ -32,16 +32,11 @@ class ModbusScanHandler(GetHandler):
     def do_get(self, data: RequestData):
         """Scan the network for modbus devices."""
         
-        ports = data.query_params.get(NetworkUtils.PORTS_KEY, NetworkUtils.DEFAULT_MODBUS_PORTS)
-        ports = NetworkUtils.parse_ports(ports)
-        timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, NetworkUtils.DEFAULT_TIMEOUT)
-
+        scan_task = DiscoverModbusDevicesTask(event_time=0, bb=data.bb)
         
-        devices:List[ICom] = scan_for_modbus_devices(ports=ports, timeout=timeout)
+        ports_str = data.query_params.get(NetworkUtils.PORTS_KEY, NetworkUtils.DEFAULT_MODBUS_PORTS)
+        timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, NetworkUtils.DEFAULT_TIMEOUT) 
         
-        logger.info(f"Found {len(devices)} devices")
-        logger.info([device.get_config() for device in devices])
+        devices: List[ICom] = scan_task.discover_modbus_devices(ports_str=ports_str, timeout=timeout)
         
-        data.bb.set_available_devices(devices=devices)
-
         return 200, json.dumps([device.get_config() for device in devices])

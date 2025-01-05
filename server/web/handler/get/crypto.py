@@ -1,10 +1,7 @@
 import json
 import logging
-
 from server.crypto.crypto_state import CryptoState
-import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run
-
 from ..handler import GetHandler
 from ..requestData import RequestData
 

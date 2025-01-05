@@ -26,7 +26,7 @@ class Handler(GetHandler):
         return config
 
     def do_get(self, data: RequestData):
-        configs = data.bb.configured_devices_state(data.bb.devices.lst)
+        configs = data.bb.devices_state_to_dict(data.bb.devices.lst)
         raw_configs = [device.get_config() for device in data.bb.devices.lst]
 
         # aklso add devices that happen to be in settings only, this can happen if the gw is rebooted and the device in settings cannot be found anymore

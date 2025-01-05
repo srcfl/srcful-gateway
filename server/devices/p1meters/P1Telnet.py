@@ -2,12 +2,10 @@ import logging
 import select
 import socket
 import errno
-from typing import Callable, List, Optional
-
-from server.devices.Device import Device
+from typing import Optional
 from server.devices.TCPDevice import TCPDevice
+from server.devices.p1meters.common import P1_METER_CLIENT_NAME
 from server.devices.p1meters.p1_scanner import scan_for_p1_device
-from server.network import mdns as mdns
 from server.network.network_utils import HostInfo
 from ..ICom import HarvestDataType, ICom
 import time
@@ -126,7 +124,9 @@ class P1Telnet(TCPDevice):
             self.client.close()
        
     def is_open(self) -> bool:
-        return self.client and self.client.get_socket() is not None
+        if not self.client:
+            return False
+        return self.client.get_socket() is not None
     
     def _read_harvest_data(self, force_verbose) -> dict:
         try:
@@ -185,6 +185,9 @@ class P1Telnet(TCPDevice):
     
     def get_name(self) -> str:
         return "P1Telnet"
+    
+    def get_client_name(self) -> str:
+        return P1_METER_CLIENT_NAME + "." + "generic.telnet"
     
     def clone(self, ip: Optional[str] = None) -> 'ICom':
         if ip is None:

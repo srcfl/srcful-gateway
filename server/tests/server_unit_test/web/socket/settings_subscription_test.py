@@ -40,4 +40,63 @@ def test_on_message(blackboard):
     blackboard.settings.harvest.clear_endpoints(ChangeSource.BACKEND)
 
     client.on_message(None, '{"type":"data","id":"1","payload":{"data":{"configurationDataChanges":{"data":"{\\u0022settings\\u0022: {\\u0022harvest\\u0022: {\\u0022endpoints\\u0022: [\\u0022https://mainnet.srcful.dev/gw/data/\\u0022]}}}","subKey":"settings"}}}}')
-    assert blackboard.settings.harvest.endpoints == ['https://mainnet.srcful.dev/gw/data/'] 
+    assert blackboard.settings.harvest.endpoints == ['https://mainnet.srcful.dev/gw/data/']
+
+def test_on_message_empty_message():
+    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client.on_message(None, '')
+    assert True
+
+def test_on_message_none_message():
+    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client.on_message(None, None)
+    assert True
+
+
+def test_on_message_subscription_error_reply():
+
+    error_reply = '''{
+        "type": "data",
+        "id": "1",
+        "payload": {
+            "errors": [
+            {
+                "message": "Auth token to old",
+                "locations": [
+                {
+                    "line": 3,
+                    "column": 11
+                }
+                ],
+                "path": [
+                "configurationDataChanges"
+                ]
+            }
+            ],
+            "data": null
+        }
+    }'''
+
+    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+
+    client.send_connection_init = Mock()
+    client.on_message(None, error_reply)
+
+    assert client.send_connection_init.call_count == 1
+
+def test_on_message_subscription_error_reply_no_errors():
+
+    error_reply = '''{
+        "type": "data",
+        "id": "1",
+        "payload": {
+            "data": null
+        }
+    }'''
+
+    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+
+    client.send_connection_init = Mock()
+    client.on_message(None, error_reply)
+
+    assert client.send_connection_init.call_count == 0

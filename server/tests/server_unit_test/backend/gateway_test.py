@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from server.backend.gateway import Gateway
 from server.backend.der import DER
 from server.backend.connection import Connection

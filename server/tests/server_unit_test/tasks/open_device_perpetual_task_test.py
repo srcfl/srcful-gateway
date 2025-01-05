@@ -328,8 +328,8 @@ def test_device_found_but_fails_to_connect(bb : BlackBoard):
 
 
 def test_same_ip_different_ports(bb : BlackBoard):
-    setings_d1 = {"ip": "192.168.1.15", "sn": "7E16E274", "mac": "22:af:0b:72:5c:ff", "port": 1502, "slave_id": 1, "connection": "SUNSPEC"}
-    setings_d2 =    {"ip": "192.168.1.15", "sn": "233701000494", "mac": "22:af:0b:72:5c:ff", "port": 503, "slave_id": 1, "connection": "SUNSPEC"}
+    setings_d1 = {"ip": "192.168.1.15", "sn": "7E16F266", "mac": "22:af:0b:72:aa:fe", "port": 1502, "slave_id": 2, "connection": "SUNSPEC"}
+    setings_d2 =    {"ip": "192.168.1.15", "sn": "232701111494", "mac": "22:af:0b:aa:5c:fe", "port": 504, "slave_id": 1, "connection": "SUNSPEC"}
 
 
     set_up_listeners(bb)

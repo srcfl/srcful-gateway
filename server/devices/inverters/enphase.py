@@ -1,6 +1,7 @@
 from server.devices.TCPDevice import TCPDevice
 import logging
 import requests
+from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from server.network import mdns as mdns
 from ..ICom import HarvestDataType, ICom
 from typing import List, Optional
@@ -120,10 +121,10 @@ class Enphase(TCPDevice):
     def _get_bearer_token(self, serial: str, username: str, password: str) -> str:
         envoy_serial=serial
         data = {'user[email]': username, 'user[password]': password}
-        response = requests.post('http://enlighten.enphaseenergy.com/login/login.json?', data=data, timeout=10) 
+        response = requests.post('https://enlighten.enphaseenergy.com/login/login.json?', data=data, timeout=10) 
         response_data = response.json()
         data = {'session_id': response_data['session_id'], 'serial_num': envoy_serial, 'username': username}
-        response = requests.post('http://entrez.enphaseenergy.com/tokens', json=data, timeout=10)
+        response = requests.post('https://entrez.enphaseenergy.com/tokens', json=data, timeout=10)
         token_raw = response.text
 
         return token_raw
@@ -169,6 +170,9 @@ class Enphase(TCPDevice):
     
     def get_name(self) -> str:
         return self.CONNECTION.lower()
+    
+    def get_client_name(self) -> str:
+        return INVERTER_CLIENT_NAME + "." + self.get_name()
     
     def clone(self) -> 'ICom':
         return Enphase(**self.get_config())
