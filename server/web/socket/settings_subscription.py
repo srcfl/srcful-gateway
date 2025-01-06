@@ -12,7 +12,7 @@ from server.tasks.requestResponseTask import handle_request_task, RequestTask
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class CustomWebSocketApp(WebSocketApp):
