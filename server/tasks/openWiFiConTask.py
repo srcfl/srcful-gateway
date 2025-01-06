@@ -23,6 +23,12 @@ class OpenWiFiConTask(Task):
             if self.wificon.connect():
                 self.bb.add_info(f"Connected to WiFi: {self.wificon.ssid}")
                 # adding a notification saves the state - hopefully this will catch the new ssid
+
+                # we now need to restart the websocket connection
+                from server.web.socket.settings_subscription import GraphQLSubscriptionClient
+                subscription = GraphQLSubscriptionClient.getInstance(self.bb, self.bb.settings.api.ws_endpoint)
+                subscription.restart_async()
+
                 return None
             else:
                 self.bb.add_warning(f"Failed to connect to WiFi: {self.wificon.ssid}. Could be an invalid password.")

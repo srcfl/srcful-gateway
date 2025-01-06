@@ -14,6 +14,47 @@ from server.tasks.requestResponseTask import handle_request_task, RequestTask
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+
+class CustomWebSocketApp(WebSocketApp):
+    """
+    Custom WebSocketApp that handles pings and pongs with the case where the server sends unsolicited pongs and we need to reset the pong timer
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.expected_pongs = 0
+        self.last_valid_pong_tm = 0
+
+    def _send_ping(self) -> None:
+        if self.stop_ping.wait(self.ping_interval) or self.keep_running is False:
+            return
+        
+        while not self.stop_ping.wait(self.ping_interval) and self.keep_running is True:
+            if self.sock:
+ 
+                try:
+                    logger.debug("Sending ping")
+                    self.sock.ping(self.ping_payload)
+                    self.last_ping_tm = time.time()
+                    self.expected_pongs += 1
+                except Exception as e:
+                    logger.debug(f"Failed to send ping: {e}")
+
+    def _callback(self, callback, *args):
+        if callback == self.on_pong:
+            if self.expected_pongs > 0:
+                # This is a response to our ping
+                self.expected_pongs -= 1
+                self.last_valid_pong_tm = time.time()
+                super()._callback(callback, *args)
+            else:
+                # This is an unsolicited pong, reset the pong timer so we dont time out
+                logger.debug("Received unsolicited pong, resetting pong timer")
+                self.last_pong_tm = self.last_valid_pong_tm
+                return
+        else:
+            super()._callback(callback, *args)
+
+
 class GraphQLSubscriptionClient(threading.Thread):
 
 
@@ -37,27 +78,25 @@ class GraphQLSubscriptionClient(threading.Thread):
 
 
     def __init__(self, bb: BlackBoard, url: str):
-        with self._instances_lock:
-            if url in self._instances:
-                raise RuntimeError(f"Instance for URL {url} already exists. Use getInstance() instead")
-            super().__init__()
-            self.bb = bb
-            self.url = url
-            self.ws = None
-            self.stop_event = threading.Event()
-            self.stop_monitor_connection_thread = threading.Event()
-            self.last_pong_time = time.time()
-            self.headers = {
-                "Sec-WebSocket-Protocol": "graphql-ws",
-            }
-            self.PING_INTERVAL = 45  # seconds
-            self._instances[url] = self
+        if url in self._instances:
+            raise RuntimeError(f"Instance for URL {url} already exists. Use getInstance() instead")
+        super().__init__()
+        self.bb = bb
+        self.url = url
+        self.ws = None
+        self.stop_event = threading.Event()
+        self.headers = {
+            "Sec-WebSocket-Protocol": "graphql-ws",
+        }
+        self.PING_INTERVAL = 45  # seconds
+        self._instances[url] = self
 
     def run(self):
+
         while not self.stop_event.is_set():
             try:
                 logger.info(f"Attempting to connect to WebSocket at {self.url}")
-                self.ws = WebSocketApp(
+                self.ws = CustomWebSocketApp(
                     self.url,
                     on_open=self.on_open,
                     on_message=self.on_message,
@@ -69,7 +108,7 @@ class GraphQLSubscriptionClient(threading.Thread):
                 )
                 
                 logger.info(f"WebSocket connection opened")
-                self.ws.run_forever(ping_interval=self.PING_INTERVAL)
+                self.ws.run_forever(ping_interval=self.PING_INTERVAL, ping_timeout=10)
             except Exception as e:
                 logger.error(f"WebSocket error: {e} url: {self.url}")
             
@@ -94,7 +133,11 @@ class GraphQLSubscriptionClient(threading.Thread):
         restart_thread.start()
 
     def restart(self):
-        """Restarts the client thread and connection"""
+        """Restarts the client thread and connection. Note that this creates a new instance and the old instance will be dead"""
+
+        url = self.url  # Store URL before removing instance
+        bb = self.bb    # Store blackboard before removing instance
+
         logger.info(f"Restarting WebSocket client for {self.url}")
         # First stop everything
         self.stop_event.set()
@@ -102,29 +145,32 @@ class GraphQLSubscriptionClient(threading.Thread):
             self.ws.close()
         
         try:
-            self.join(timeout=3*self.PING_INTERVAL)  # 10 second timeout
+            self.join(timeout=3*self.PING_INTERVAL)
         except threading.TimeoutError:
             logger.error("Thread join timed out during restart - thread might not have cleaned up properly")
         
-        # Reset the events
-        self.stop_event.clear()
-        self.stop_monitor_connection_thread.clear()
+        # Remove this instance
+        GraphQLSubscriptionClient.removeInstance(url)
         
-        # Reset the timestamp
-        self.last_pong_time = time.time()
-        
-        # Start the thread again
-        self.start()
+        # Create and start new instance
+        GraphQLSubscriptionClient.getInstance(bb, url)
 
     def on_open(self, ws):
         logger.info("WebSocket connection opened")
         self.send_connection_init()
 
+
     def on_ping(self, ws, message):
         logger.debug(f"Received ping: {message}")
+
     def on_pong(self, ws, message):
-        logger.debug(f"Received pong: {message}")
-        self.last_pong_time = time.time()
+        formatted_time = datetime.fromtimestamp(ws.last_ping_tm).strftime('%H:%M:%S.%f')
+        logger.debug(f"Received ping at {formatted_time}: {repr(message)}")
+        formatted_time = datetime.fromtimestamp(ws.last_pong_tm).strftime('%H:%M:%S.%f')
+        logger.debug(f"Received pong at {formatted_time}: {repr(message)}")
+        diff = ws.last_pong_tm - ws.last_ping_tm
+        logger.debug(f"Ping/pong difference: {diff} seconds")
+        
 
     def on_message(self, ws, message):
         logger.debug("Received message: %s", message)
@@ -134,8 +180,6 @@ class GraphQLSubscriptionClient(threading.Thread):
             if data and isinstance(data, dict):
                 if data.get('type') == 'connection_ack':
                     logger.info("Connection acknowledged, sending subscription")
-                    self.start_monitor_connection()
-
                     self.subscribe_to_settings()
                 elif data.get('type') == 'data':
                     # This is what we should do next
@@ -164,7 +208,6 @@ class GraphQLSubscriptionClient(threading.Thread):
 
     def on_close(self, ws, close_status_code, close_msg):
         logger.info(f"WebSocket connection closed: {close_status_code} - {close_msg}")
-        self.stop_monitor_connection()
 
     def send_connection_init(self):
         init_message = {
@@ -173,7 +216,7 @@ class GraphQLSubscriptionClient(threading.Thread):
         }
         self.ws.send(json.dumps(init_message))
         logger.info("Sent connection_init message")
-        logger.info(f"socked timeout: {self.ws.sock.gettimeout()}")
+        logger.debug(f"socked timeout: {self.ws.sock.gettimeout()}")
 
 
     def _get_subscription_query(self, chip_constructor: Callable[[], crypto.Chip]):
@@ -226,20 +269,4 @@ class GraphQLSubscriptionClient(threading.Thread):
         }
 
         self.ws.send(json.dumps(subscription_message))
-
-    def stop_monitor_connection(self):
-        self.stop_monitor_connection_thread.set()
-
-    def start_monitor_connection(self):
-        self.monitor_connection_thread = threading.Thread(target=self.monitor_connection)
-        self.monitor_connection_thread.daemon = True
-        self.monitor_connection_thread.start()
-
-    def monitor_connection(self):
-        while not self.stop_event.is_set() and not self.stop_monitor_connection_thread.is_set():
-            if time.time() - self.last_pong_time > 2 * self.PING_INTERVAL:
-                logger.warning("No pong received for 90 seconds, forcing reconnection")
-                if self.ws:
-                    self.ws.close()
-            time.sleep(5)
         
