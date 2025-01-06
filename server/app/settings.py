@@ -137,13 +137,25 @@ class Settings(Observable):
         def gql_endpoint(self):
             return self._gql_endpoint
         
+        def set_gql_endpoint(self, value: str, change_source: ChangeSource):
+            self._gql_endpoint = value
+            self.notify_listeners(change_source)
+        
         @property
         def ws_endpoint(self):
             return self._ws_endpoint
         
+        def set_ws_endpoint(self, value: str, change_source: ChangeSource):
+            self._ws_endpoint = value
+            self.notify_listeners(change_source)
+        
         @property
         def gql_timeout(self):
             return self._gql_timeout
+        
+        def set_gql_timeout(self, value: int, change_source: ChangeSource):
+            self._gql_timeout = value
+            self.notify_listeners(change_source)
         
         @property
         def GQL_ENDPOINT(self):
@@ -156,11 +168,7 @@ class Settings(Observable):
         @property
         def GQL_TIMEOUT(self):
             return "gql_timeout"
-        
-        @property
-        def WS_ENDPOINT(self):
-            return "ws_endpoint"
-        
+              
         def to_dict(self) -> dict:
             return {
                 self.GQL_ENDPOINT: self._gql_endpoint,

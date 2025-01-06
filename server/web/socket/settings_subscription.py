@@ -66,14 +66,12 @@ class GraphQLSubscriptionClient(threading.Thread):
         with cls._instances_lock:
             if url not in cls._instances:
                 instance = cls(bb, url)
-                instance.start()  # Start the thread when creating instance
             return cls._instances[url]
 
     @classmethod
     def removeInstance(cls, url: str):
         with cls._instances_lock:
             if url in cls._instances:
-                cls._instances[url].stop()  # Stop the thread
                 del cls._instances[url]
 
 
@@ -118,7 +116,6 @@ class GraphQLSubscriptionClient(threading.Thread):
 
     def stop(self):
         self.stop_event.set()
-        self.stop_monitor_connection()
         if self.ws:
             self.ws.close()
 
@@ -153,7 +150,7 @@ class GraphQLSubscriptionClient(threading.Thread):
         GraphQLSubscriptionClient.removeInstance(url)
         
         # Create and start new instance
-        GraphQLSubscriptionClient.getInstance(bb, url)
+        GraphQLSubscriptionClient.getInstance(bb, url).start()
 
     def on_open(self, ws):
         logger.info("WebSocket connection opened")
