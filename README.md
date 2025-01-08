@@ -1,11 +1,11 @@
-# Srcful Energy Gateway
+# Sourceful Energy Gateway
 
-The Srcful Energy Gateway application is a bundle of services that are deployed as docker containers on a Raspberry Pi.
+The Sourceful Energy Gateway application is a bundle of services that are deployed as docker containers on a Raspberry Pi.
 
 ```
 +------------+                       +------------+
 |            |                       |            |
-|  Srcful    |                       |            |
+|  Sourceful |                       |            |
 |  Energy    |<--- modbus tcp/ip --->|  Inverter  |
 |  Gateway   |                       |            |
 |            |                       |            |
