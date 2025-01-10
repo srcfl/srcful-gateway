@@ -130,13 +130,32 @@ class Enphase(TCPDevice):
     def _get_bearer_token(self, serial: str, username: str, password: str) -> str:
         envoy_serial = serial
         data = {'user[email]': username, 'user[password]': password}
-        response = requests.post('https://enlighten.enphaseenergy.com/login/login.json?', data=data, timeout=10)
-        response_data = response.json()
-        data = {'session_id': response_data['session_id'], 'serial_num': envoy_serial, 'username': username}
-        response = requests.post('https://entrez.enphaseenergy.com/tokens', json=data, timeout=10)
-        token_raw = response.text
+        try:
+            response = requests.post('https://enlighten.enphaseenergy.com/login/login.json?', data=data, timeout=10)
+            response.raise_for_status()  # Raises an HTTPError for bad responses
+            response_data = response.json()
 
-        return token_raw
+            if 'session_id' not in response_data:
+                logger.error("Failed to get session_id from Enphase login response")
+                return ""
+
+            data = {'session_id': response_data['session_id'], 'serial_num': envoy_serial, 'username': username}
+            response = requests.post('https://entrez.enphaseenergy.com/tokens', json=data, timeout=10)
+            response.raise_for_status()
+            token_raw = response.text
+
+            if not token_raw:
+                logger.error("Received empty token from Enphase API")
+                return ""
+
+            return token_raw
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to get bearer token from Enphase: {str(e)}")
+            return ""
+        except ValueError as e:
+            logger.error(f"Failed to parse Enphase response: {str(e)}")
+            return ""
 
     def _disconnect(self) -> None:
         self.session.close()
