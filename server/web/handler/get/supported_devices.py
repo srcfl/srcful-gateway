@@ -2,6 +2,9 @@ import json
 from ..handler import GetHandler
 from ..requestData import RequestData
 from ....devices.IComFactory import IComFactory
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class Handler(GetHandler):
@@ -18,7 +21,6 @@ class Handler(GetHandler):
 
     def get_supported_inverters(self):
         supported_inverters = IComFactory.get_supported_devices()
-
         return {'devices': supported_inverters}
 
     def do_get(self, data: RequestData):
@@ -42,3 +44,20 @@ class SupportedConfigurations(GetHandler):
 
     def do_get(self, data: RequestData):
         return 200, json.dumps(self.get_supported_configurations())
+
+
+class SupportedDevicesHandler(GetHandler):
+    def schema(self):
+        return self.create_schema("returns the supported devices",
+                                  returns={"devices": {
+                                      "protocol_type": [{
+                                          "maker": "string",
+                                      }]
+                                  }})
+
+    def get_supported_devices(self):
+        supported_inverters = IComFactory.get_supported_devices(verbose=False)
+        return {'devices': supported_inverters}
+
+    def do_get(self, data: RequestData):
+        return 200, json.dumps(self.get_supported_devices())

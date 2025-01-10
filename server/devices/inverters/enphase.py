@@ -54,8 +54,16 @@ class Enphase(TCPDevice):
         return "iq_gw_serial"
 
     @staticmethod
-    def get_supported_devices():
-        return {Enphase.CONNECTION: {'device_type': 'enphase', 'maker': 'Enphase', 'display_name': 'Enphase', 'protocol': 'http'}}
+    def get_supported_devices(verbose: bool = True):
+        if verbose:
+            return {Enphase.CONNECTION: {
+                Enphase.DEVICE_TYPE: 'enphase',
+                Enphase.MAKER: 'Enphase',
+                Enphase.DISPLAY_NAME: 'Enphase',
+                Enphase.PROTOCOL: 'http'
+            }}
+        else:
+            return {Enphase.CONNECTION: {'maker': 'Enphase'}}
 
     @staticmethod
     def get_config_schema():

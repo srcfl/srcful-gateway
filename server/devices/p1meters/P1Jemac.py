@@ -15,8 +15,18 @@ class P1Jemac(TCPDevice):
     CONNECTION = "P1Jemac"
 
     @staticmethod
-    def get_supported_devices():
-        return {P1Jemac.CONNECTION: {'device_type': P1Jemac.CONNECTION, 'maker': 'Jemac', 'display_name': 'Jemac P1 Meter'}}
+    def get_supported_devices(verbose: bool = True):
+        logger.info("Getting from P1Jemac")
+        if verbose:
+            return {P1Jemac.CONNECTION: {
+                TCPDevice.DEVICE_TYPE: P1Jemac.CONNECTION,
+                TCPDevice.MAKER: 'Jemac',
+                TCPDevice.DISPLAY_NAME: 'Jemac P1 Meter'
+            }}
+        else:
+            return {P1Jemac.CONNECTION: {
+                TCPDevice.MAKER: 'Jemac'
+            }}
 
     @staticmethod
     def get_config_schema():

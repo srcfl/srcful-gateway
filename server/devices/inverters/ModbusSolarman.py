@@ -40,17 +40,27 @@ class ModbusSolarman(ModbusTCP):
         return "verbose"
 
     @staticmethod
-    def get_supported_devices():
+    def get_supported_devices(verbose: bool = True):
         supported_devices = []
-        for profile in ModbusDeviceProfiles().get_supported_devices():
-            if profile.protocol.value == ProtocolKey.SOLARMAN.value:
+        solarman_devices = [profile for profile in ModbusDeviceProfiles().get_supported_devices() if profile.protocol.value == ProtocolKey.SOLARMAN.value]
+        log.info("Getting from ModbusSolarman")
+
+        if verbose:
+            for profile in solarman_devices:
                 obj = {
                     ModbusTCP.device_type_key(): profile.name,
-                    'maker': profile.maker,
-                    'display_name': profile.display_name,
-                    'protocol': profile.protocol.value
+                    ModbusTCP.MAKER: profile.maker,
+                    ModbusTCP.DISPLAY_NAME: profile.display_name,
+                    ModbusTCP.PROTOCOL: profile.protocol.value
                 }
                 supported_devices.append(obj)
+        else:
+            for profile in solarman_devices:
+                obj = {
+                    ModbusTCP.MAKER: profile.maker,
+                }
+                if obj not in supported_devices:
+                    supported_devices.append(obj)
 
         return {ModbusSolarman.CONNECTION: supported_devices}
 

@@ -52,8 +52,19 @@ class ModbusSunspec(TCPDevice):
         return "sn"
 
     @staticmethod
-    def get_supported_devices():
-        return {ModbusSunspec.CONNECTION: {'device_type': 'sunspec', 'maker': 'SunSpec Compatible', 'display_name': 'SunSpec Device', 'protocol': 'modbus'}}
+    def get_supported_devices(verbose: bool = True):
+        logger.info("Getting from ModbusSunspec")
+        if verbose:
+            return {ModbusSunspec.CONNECTION: {
+                TCPDevice.DEVICE_TYPE: 'sunspec',
+                TCPDevice.MAKER: 'SunSpec Compatible',
+                TCPDevice.DISPLAY_NAME: 'SunSpec Device',
+                TCPDevice.PROTOCOL: 'modbus'
+            }}
+        else:
+            return {ModbusSunspec.CONNECTION: {
+                TCPDevice.MAKER: 'SunSpec Compatible'
+            }}
 
     @staticmethod
     def get_config_schema():

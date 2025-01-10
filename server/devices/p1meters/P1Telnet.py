@@ -74,8 +74,18 @@ class P1Telnet(TCPDevice):
     CONNECTION = "P1Telnet"
 
     @staticmethod
-    def get_supported_devices():
-        return {P1Telnet.CONNECTION: {'device_type': P1Telnet.CONNECTION, 'display_name': 'P1 Telnet', 'protocol': 'telnet'}}
+    def get_supported_devices(verbose: bool = True):
+        if verbose:
+            return {P1Telnet.CONNECTION: {
+                P1Telnet.DEVICE_TYPE: P1Telnet.CONNECTION,
+                P1Telnet.MAKER: 'P1 Telnet',
+                P1Telnet.DISPLAY_NAME: 'P1 Telnet',
+                P1Telnet.PROTOCOL: 'telnet'
+            }}
+        else:
+            return {P1Telnet.CONNECTION: {
+                P1Telnet.MAKER: 'P1 Telnet'
+            }}
 
     @staticmethod
     def get_config_schema():

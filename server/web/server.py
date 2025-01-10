@@ -11,40 +11,44 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Endpoints:
     def __init__(self):
         self.api_get_dict = {
             "crypto": handler.get.crypto.Handler(),
             "crypto/revive": handler.get.crypto.ReviveHandler(),
-            
+
             "hello": handler.get.hello.Handler(),
             "name": handler.get.name.Handler(),
             "logger": handler.get.logger.Handler(),
-            
+
             "inverter": handler.get.inverter.Handler(),
             "inverter/modbus": handler.get.modbus.ModbusHandler(),
             "inverter/modbus/scan": handler.get.modbus_scan.ModbusScanHandler(),
-            "inverter/supported": handler.get.supported.Handler(), # Remove this after November release
-            
+            "inverter/supported": handler.get.supported.Handler(),  # Remove this after November release
+
             "device": handler.get.device.Handler(),
             "device/scan": handler.get.device_scan.DeviceScanHandler(),
             "device/supported": handler.get.supported_devices.Handler(),
             "device/supported/configurations": handler.get.supported_devices.SupportedConfigurations(),
-            
+
+            # New slimmed supported devices endpoint
+            "device/supported/supported": handler.get.supported_devices.SupportedDevicesHandler(),
+
             "network": handler.get.network.NetworkHandler(),
             "network/scan": handler.get.network_scan.NetworkScanHandler(),
             "network/address": handler.get.network.AddressHandler(),
-            
+
             "wifi": handler.get.wifi.Handler(),
             "wifi/scan": handler.get.wifi.ScanHandler(),
-            
+
             "uptime": handler.get.uptime.Handler(),
             "version": handler.get.version.Handler(),
             "settings": handler.get.settings.Handler(),
-            
+
             "notification": handler.get.notification.ListHandler(),
             "notification/{id}": handler.get.notification.MessageHandler(),
-            
+
             "state": handler.get.state.Handler(),
             "state/update": handler.get.state.UpdateStateHandler(),
         }
@@ -70,7 +74,7 @@ class Endpoints:
         self.api_get = Endpoints.convert_keys_to_regex(self.api_get_dict)
         self.api_post = Endpoints.convert_keys_to_regex(self.api_post_dict)
         self.api_delete = Endpoints.convert_keys_to_regex(self.api_delete_dict)
-        
+
     @staticmethod
     def query_2_dict(query_string: str):
         return Endpoints.post_2_dict(query_string)
@@ -96,7 +100,7 @@ class Endpoints:
     def get_api_handler(path: str, api_root: str, api_handler_regex: dict):
         if path.startswith(api_root):
             for pattern, _handler in api_handler_regex.items():
-                match = pattern.match(path[len(api_root) :])
+                match = pattern.match(path[len(api_root):])
                 if match:
                     return _handler, match.groupdict()
         return None, None
@@ -120,7 +124,7 @@ class Endpoints:
             post_data = {}
 
         return post_data
-    
+
     @staticmethod
     def pre_do(path: str):
         parts = path.split("?")
@@ -134,7 +138,7 @@ def request_handler_factory(bb: BlackBoard):
 
             logger.info("initializing a request handler")
             self.endpoints = Endpoints()
-            
+
             super(Handler, self).__init__(*args, **kwargs)
 
         def send_api_response(self, code: int, response: str):
@@ -161,7 +165,7 @@ def request_handler_factory(bb: BlackBoard):
                     logger.exception("Exception in POST handler: %s", e)
                     code = 500
                     response = json.dumps({"exception": str(e), "endpoint": path})
-                
+
                 self.send_api_response(code, response)
                 return
             else:
@@ -247,14 +251,15 @@ def request_handler_factory(bb: BlackBoard):
 
     return Handler
 
+
 class Server:
     _web_server: HTTPServer = None
 
     def __init__(self, web_host: tuple[str, int], bb: BlackBoard):
         self._web_server = HTTPServer(web_host, request_handler_factory(bb))
-        
+
         self._web_server.timeout = 0.1
-        #self._web_server.socket.setblocking(False)
+        # self._web_server.socket.setblocking(False)
 
     def close(self):
         if self._web_server:
@@ -269,7 +274,7 @@ class Server:
         return self._web_server.request_queue_size
 
     def handle_request(self):
-        #logger.info("handling request")
+        # logger.info("handling request")
         self._web_server.handle_request()
 
     def __del__(self):
