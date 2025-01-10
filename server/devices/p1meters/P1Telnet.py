@@ -30,26 +30,26 @@ class SimpleTelnet:
         if self.socket:
             self.socket.close()
             self.socket = None
-    
+
     def clear_buffer(self):
         self.buffer = b""
 
     def read_until(self, delimiter, timeout=None):
         if timeout is None:
             timeout = self.timeout
-        
+
         start_time = time.time()
-        
+
         while True:
             if time.time() - start_time > timeout:
                 raise TimeoutError("Read operation timed out")
-            
+
             if delimiter in self.buffer:
                 index = self.buffer.index(delimiter)
                 result = self.buffer[:index + len(delimiter)]
                 self.buffer = self.buffer[index + len(delimiter):]
                 return result
-            
+
             ready = select.select([self.socket], [], [], 1.0)
             if ready[0]:
                 try:
@@ -64,21 +64,19 @@ class SimpleTelnet:
                     else:
                         logger.error(f"Socket error occurred: {str(e)}")
                         raise
-                    
 
     def get_socket(self):
         return self.socket
 
-class P1Telnet(TCPDevice):
 
+class P1Telnet(TCPDevice):
 
     CONNECTION = "P1Telnet"
 
-    
     @staticmethod
     def get_supported_devices():
         return {P1Telnet.CONNECTION: {'device_type': P1Telnet.CONNECTION, 'display_name': 'P1 Telnet', 'protocol': 'telnet'}}
-    
+
     @staticmethod
     def get_config_schema():
         return {
@@ -86,7 +84,6 @@ class P1Telnet(TCPDevice):
             "meter_serial_number": "optional string, Serial number of the meter",
             "model_name": "optional string, Model name of the meter"
         }
-
 
     """
     P1Telnet class
@@ -118,16 +115,16 @@ class P1Telnet(TCPDevice):
         except Exception as e:
             logger.error(f"Failed to connect to {self.ip}:{self.port}: {str(e)}")
             return False
-    
+
     def _disconnect(self) -> None:
         if self.client:
             self.client.close()
-       
+
     def is_open(self) -> bool:
         if not self.client:
             return False
         return self.client.get_socket() is not None
-    
+
     def _read_harvest_data(self, force_verbose) -> dict:
         try:
             p1_message = self._read_harvest_data_internal(self.client)
@@ -136,24 +133,24 @@ class P1Telnet(TCPDevice):
         except Exception as e:
             logger.error(f"Error reading P1 data: {str(e)}")
             raise
-        
+
     def _read_harvest_data_internal(self, telnet_client: SimpleTelnet) -> str:
         timeout = 20
-        
+
         # we clear the buffer so we don't get old data
         telnet_client.clear_buffer()
 
         # Read until the start of a P1 message
         telnet_client.read_until(b"/", timeout=timeout)
-        
+
         # Read the entire P1 message including the last crc check
         p1_message = "/" + telnet_client.read_until(b"!", timeout=timeout).decode('ascii') + telnet_client.read_until(b"\r\n", timeout=timeout).decode('ascii')
 
         if len(p1_message) < 5:
             logger.error(f"P1 message is too short: {p1_message}")
             raise Exception(f"P1 message is too short: {p1_message}")
-        
-        return p1_message    
+
+        return p1_message
 
     def _parse_p1_message(self, message: str) -> dict:
         lines = message.strip().split()
@@ -161,54 +158,52 @@ class P1Telnet(TCPDevice):
             'serial_number': '',
             'rows': []
         }
-        
+
         # Extract serial number from the first line remove the leading '/'
         data['serial_number'] = lines[0][1:]
-        
+
         # Add all other lines to the rows list
         data['rows'] = [line.strip() for line in lines[1:] if line.strip()]
-        
-        return data
 
+        return data
 
     def get_harvest_data_type(self) -> HarvestDataType:
         return HarvestDataType.P1_TELNET
-    
+
     def get_config(self) -> dict:
         return {
             **TCPDevice.get_config(self),
             "meter_serial_number": self.meter_serial_number
         }
-    
+
     def _get_connection_type(self) -> str:
         return P1Telnet.CONNECTION
-    
+
     def get_name(self) -> str:
         return "P1Telnet"
-    
+
     def get_client_name(self) -> str:
         return P1_METER_CLIENT_NAME + "." + "generic.telnet"
-    
+
     def clone(self, ip: Optional[str] = None) -> 'ICom':
         if ip is None:
             ip = self.ip
         return P1Telnet(ip, self.port, self.meter_serial_number)
 
-    
     def find_device(self) -> Optional[ICom]:
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
         if self.meter_serial_number:
             return scan_for_p1_device(self.meter_serial_number)
-                
+
         # notthing to connect to
         return None
 
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
-        
+
         config = self.get_config()
         config[self.IP] = host.ip
         return P1Telnet(**config)
-    
+
     def get_SN(self) -> str:
         return self.meter_serial_number
 

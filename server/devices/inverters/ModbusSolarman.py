@@ -15,11 +15,10 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
-
 class ModbusSolarman(ModbusTCP):
     """
     ModbusSolarman device class
-    
+
     Attributes:
         ip (str): The IP address or hostname of the device.
         mac (str, optional): The MAC address of the device. Defaults to "00:00:00:00:00:00" if not provided.
@@ -29,32 +28,32 @@ class ModbusSolarman(ModbusTCP):
         slave_id (int): The Modbus address of the device, typically used to identify the device on the network.
         verbose (int, optional): The verbosity level of the device. Defaults to 0.
     """
-    
+
     CONNECTION = "SOLARMAN"
-    
+
     @property
     def VERBOSE(self) -> str:
         return self.verbose_key()
-    
+
     @staticmethod
     def verbose_key() -> str:
         return "verbose"
-    
+
     @staticmethod
     def get_supported_devices():
         supported_devices = []
         for profile in ModbusDeviceProfiles().get_supported_devices():
-            if profile.protocol.value == ProtocolKey.SOLARMAN.value:    
+            if profile.protocol.value == ProtocolKey.SOLARMAN.value:
                 obj = {
                     ModbusTCP.device_type_key(): profile.name,
-                'display_name': profile.display_name,
-                'protocol': profile.protocol.value
+                    'maker': profile.maker,
+                    'display_name': profile.display_name,
+                    'protocol': profile.protocol.value
                 }
                 supported_devices.append(obj)
-            
+
         return {ModbusSolarman.CONNECTION: supported_devices}
-    
-    
+
     @staticmethod
     def get_config_schema():
         return {
@@ -62,16 +61,16 @@ class ModbusSolarman(ModbusTCP):
             **Device.get_config_schema(ModbusSolarman.CONNECTION),  # needed to set the correct connection type as ModbuTCP is also a concrete inverter class
             ModbusTCP.sn_key(): "int - Serial number of the logger stick",
         }
-    
+
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        
+
         self.verbose = kwargs.get(self.verbose_key(), 0)
 
     def _connect(self, **kwargs) -> bool:
-        
+
         self._create_client(**kwargs)
-        
+
         try:
             if not self.client.sock:
                 log.error("FAILED to open inverter: %s", self.get_config())
@@ -81,19 +80,18 @@ class ModbusSolarman(ModbusTCP):
         except Exception as e:
             log.error("Error opening inverter: %s", self.get_config())
             return False
-        
+
         registers: dict = None
-        
+
         try:
             registers: dict = self.read_harvest_data(force_verbose=False)
         except Exception as e:
             log.error("Failed to connect to device. Initial register read failed: %s", self.get_config())
             return False
-        
-        valid_reading = bool(registers and len(registers) > 0)
-        
-        return bool(self.client.sock) and self.mac != NetworkUtils.INVALID_MAC and valid_reading
 
+        valid_reading = bool(registers and len(registers) > 0)
+
+        return bool(self.client.sock) and self.mac != NetworkUtils.INVALID_MAC and valid_reading
 
     def is_open(self) -> bool:
         try:
@@ -102,7 +100,7 @@ class ModbusSolarman(ModbusTCP):
             log.error("Error checking if inverter is open: %s", self._get_type())
             log.error(e)
             return False
-        
+
     def _is_valid(self) -> bool:
         return self.get_SN() is not None
 
@@ -125,10 +123,10 @@ class ModbusSolarman(ModbusTCP):
             config[self.IP] = ip
 
         return ModbusSolarman(**config)
-    
+
     def get_SN(self) -> str:
         return str(self.sn)
-    
+
     def get_client_name(self) -> str:
         return INVERTER_CLIENT_NAME + ".solarman." + self.get_name().lower()
 
@@ -140,23 +138,23 @@ class ModbusSolarman(ModbusTCP):
             self.VERBOSE: self.verbose
         }
         return {**super_config, **my_config}
-    
+
     def _get_connection_type(self) -> str:
         return ModbusSolarman.CONNECTION
-    
+
     def _create_client(self, **kwargs) -> None:
         try:
             self.client = PySolarmanV5(address=self.ip,
-                            serial=self.sn,
-                            port=self.port,
-                            mb_slave_id=self.slave_id,
-                            v5_error_correction=False,
-                            verbose=self.verbose,
-                            **kwargs)
+                                       serial=self.sn,
+                                       port=self.port,
+                                       mb_slave_id=self.slave_id,
+                                       v5_error_correction=False,
+                                       verbose=self.verbose,
+                                       **kwargs)
         except Exception as e:
             log.error("Error creating client: %s", e)
 
-    def _read_registers(self, function_code:FunctionCodeKey, scan_start:int, scan_range:int) -> list:
+    def _read_registers(self, function_code: FunctionCodeKey, scan_start: int, scan_range: int) -> list:
         resp = None
 
         if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
@@ -168,13 +166,12 @@ class ModbusSolarman(ModbusTCP):
 
     def write_register(self, function_code: FunctionCodeKey, register: int, value: int) -> bool:
         raise NotImplementedError("Not implemented yet")
-    
 
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
 
         if host.mac != self.mac:
             return None
-        
+
         config = self.get_config()
         config[self.IP] = host.ip
         return ModbusSolarman(**config)

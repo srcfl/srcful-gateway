@@ -53,7 +53,7 @@ class ModbusSunspec(TCPDevice):
 
     @staticmethod
     def get_supported_devices():
-        return {ModbusSunspec.CONNECTION: {'device_type': 'sunspec', 'display_name': 'SunSpec Device', 'protocol': 'modbus'}}
+        return {ModbusSunspec.CONNECTION: {'device_type': 'sunspec', 'maker': 'SunSpec Compatible', 'display_name': 'SunSpec Device', 'protocol': 'modbus'}}
 
     @staticmethod
     def get_config_schema():

@@ -12,6 +12,7 @@ supported_devices = {
     DeviceCategoryKey.INVERTERS: [
         {
             ProfileKey.NAME: "huawei",
+            ProfileKey.MAKER: "Huawei",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Huawei",
@@ -55,6 +56,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "solaredge",
+            ProfileKey.MAKER: "SolarEdge",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "SolarEdge",
@@ -108,6 +110,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "solaredge_us",
+            ProfileKey.MAKER: "SolarEdge",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "SolarEdge US",
@@ -139,7 +142,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 40085,
-                    RegistersKey.NUM_OF_REGISTERS: 1, 
+                    RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "Hz",
                     RegistersKey.DESCRIPTION: "Grid frequency",
@@ -149,7 +152,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 40100,
-                    RegistersKey.NUM_OF_REGISTERS: 1, 
+                    RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataTypeKey.I16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "DC Power",
@@ -161,6 +164,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "sungrow",
+            ProfileKey.MAKER: "Sungrow",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Sungrow",
@@ -204,6 +208,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "sungrow_sf",
+            ProfileKey.MAKER: "Sungrow",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Sungrow SF",
@@ -247,6 +252,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "sma",
+            ProfileKey.MAKER: "SMA",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "SMA",
@@ -300,6 +306,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "fronius",
+            ProfileKey.MAKER: "Fronius",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Fronius Float",
@@ -315,7 +322,7 @@ supported_devices = {
             ProfileKey.REGISTERS: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 40093, # float map v1.0
+                    RegistersKey.START_REGISTER: 40093,  # float map v1.0
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataTypeKey.F32,
                     RegistersKey.UNIT: "Hz",
@@ -338,6 +345,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "fronius_sf",
+            ProfileKey.MAKER: "Fronius",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Fronius SF",
@@ -353,7 +361,7 @@ supported_devices = {
             ProfileKey.REGISTERS: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 40085, 
+                    RegistersKey.START_REGISTER: 40085,
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "Hz",
@@ -376,6 +384,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "deye",
+            ProfileKey.MAKER: "Deye",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Deye",
@@ -424,6 +433,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "deye_micro",
+            ProfileKey.MAKER: "Deye",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Deye Micro-inverter",
@@ -450,7 +460,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 109,
-                    RegistersKey.NUM_OF_REGISTERS: 2, # First register is the voltage, second is the current
+                    RegistersKey.NUM_OF_REGISTERS: 2,  # First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "PV 1 Power",
@@ -460,7 +470,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 111,
-                    RegistersKey.NUM_OF_REGISTERS: 2, # First register is the voltage, second is the current
+                    RegistersKey.NUM_OF_REGISTERS: 2,  # First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "PV 2 Power",
@@ -470,7 +480,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 113,
-                    RegistersKey.NUM_OF_REGISTERS: 2, # First register is the voltage, second is the current
+                    RegistersKey.NUM_OF_REGISTERS: 2,  # First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "PV 3 Power",
@@ -482,6 +492,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "growatt",
+            ProfileKey.MAKER: "Growatt",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Growatt",
@@ -535,6 +546,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "goodwe",
+            ProfileKey.MAKER: "GoodWe",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "GoodWe",
@@ -586,7 +598,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 35138,
-                    RegistersKey.NUM_OF_REGISTERS: 1, # PV1. First register is the voltage, second is the current
+                    RegistersKey.NUM_OF_REGISTERS: 1,  # PV1. First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataTypeKey.I16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "PV 1 Power",
@@ -598,6 +610,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "ferroamp",
+            ProfileKey.MAKER: "Ferroamp",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "ferroamp",
@@ -766,6 +779,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "sofar",
+            ProfileKey.MAKER: "Sofar",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Sofar",
@@ -884,6 +898,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "solis",
+            ProfileKey.MAKER: "Solis",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Solis",
@@ -898,17 +913,17 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 3000,
-                    RegistersKey.NUM_OF_REGISTERS: 125, # 3000-3124
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3000-3124
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 3125,
-                    RegistersKey.NUM_OF_REGISTERS: 125, # 3125-3249
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3125-3249
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 3220,
-                    RegistersKey.NUM_OF_REGISTERS: 125, # 3220-3344
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3220-3344
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
@@ -967,6 +982,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "solis_hybrid",
+            ProfileKey.MAKER: "Solis",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Solis Hybrid",
@@ -1020,6 +1036,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "unknown",
+            ProfileKey.MAKER: "Unknown",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Unknown",
@@ -1044,6 +1061,7 @@ supported_devices = {
     DeviceCategoryKey.METERS: [
         {
             ProfileKey.NAME: "lqt40s",
+            ProfileKey.MAKER: "LQT",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "LQT40S",

@@ -3,6 +3,7 @@ from enum import Enum
 
 class ProfileKey(str, Enum):
     NAME = 'name'
+    MAKER = 'maker'
     VERSION = 'version'
     VERBOSE_ALWAYS = 'verbose_always'
     MODEL_GROUP = 'model_group'
@@ -42,9 +43,11 @@ class DataTypeKey(str, Enum):
     F32 = 'F32'    # 32-bit floating point
     STR = 'STR'    # String
 
+
 class EndiannessKey(str, Enum):
     BIG = 'big'
     LITTLE = 'little'
+
 
 class FunctionCodeKey(int, Enum):
     READ_HOLDING_REGISTERS = 0x03
@@ -54,9 +57,3 @@ class FunctionCodeKey(int, Enum):
 class DeviceCategoryKey(str, Enum):
     INVERTERS = 'inverters'
     METERS = 'meters'
-    
-
-
-    
-    
-    
