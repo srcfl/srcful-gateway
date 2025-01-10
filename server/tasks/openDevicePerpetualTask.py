@@ -32,10 +32,12 @@ class DevicePerpetualTask(Task):
         # that a device does not get opened multiple times.
         existing_device = self.bb.devices.find_sn(self.device.get_SN())
         if existing_device and existing_device.is_open():
+            logger.info("Device is already open, skipping")
             return None
 
         # If the device is not in the settings list it has probably been closed so lets not do anything
         if not self.in_settings(self.device):
+            logger.info("Device is not in settings, skipping")
             return None
 
         try:
@@ -43,7 +45,7 @@ class DevicePerpetualTask(Task):
 
                 if self.bb.devices.contains(self.device) and not self.device.is_open():
                     message = "Device is already in the blackboard, no action needed"
-                    logger.error(message)
+                    logger.info(message)
                     self.bb.add_warning(message)
                     return None
 
