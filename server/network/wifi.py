@@ -155,12 +155,15 @@ else:
         settings = dbus.Interface(proxy, "org.freedesktop.NetworkManager.Settings")
         ret = []
         for conn in settings.ListConnections():
-            con_proxy = bus.get_object("org.freedesktop.NetworkManager", conn)
-            settings_connection = dbus.Interface(
-                con_proxy, "org.freedesktop.NetworkManager.Settings.Connection"
-            )
-            config = settings_connection.GetSettings()
-            ret.append(config)
+            try:
+                con_proxy = bus.get_object("org.freedesktop.NetworkManager", conn)
+                settings_connection = dbus.Interface(
+                    con_proxy, "org.freedesktop.NetworkManager.Settings.Connection"
+                )
+                config = settings_connection.GetSettings()
+                ret.append(config)
+            except Exception as e:
+                logger.error(e)
         return ret
 
     class WiFiHandler:
