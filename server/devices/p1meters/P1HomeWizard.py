@@ -95,13 +95,14 @@ class P1HomeWizard(TCPDevice):
 
     def _parse_p1_message(self, message: str) -> dict:
 
-        print(message.encode('ascii').hex())
+        # print(message.encode('ascii').hex())
 
         # this is the same as the P1Telnet device
         lines = message.strip().split()
         data = {
             'serial_number': '',
-            'rows': []
+            'rows': [],
+            'checksum': ''
         }
 
         # Extract serial number from the first line remove the leading '/'
