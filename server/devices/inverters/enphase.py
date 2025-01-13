@@ -173,9 +173,9 @@ class Enphase(TCPDevice):
             data[endpoint_name] = response.json()
         return data
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         try:
-            return self.session and self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION]).status_code == 200 and not self.is_disconnected()
+            return self.session and self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION]).status_code == 200
         except Exception as e:
             logger.warning("Error checking device status: %s", str(e))
             return False

@@ -58,10 +58,11 @@ class P1HomeWizard(TCPDevice):
             if self.meter_serial_number == "":
                 self.meter_serial_number = harvest['serial_number']
                 self._has_connected = True
-                return True
             else:
                 self._has_connected = self.meter_serial_number == harvest['serial_number']
-                return self._has_connected
+                if not self._has_connected:
+                    logger.error(f"Failed to connect to {self.ip}:{self.port}: Wrong serial number {self.meter_serial_number} vs {harvest['serial_number']}")
+            return self._has_connected
         except Exception as e:
             self._has_connected = False
             logger.error(f"Failed to connect to {self.ip}:{self.port}: {str(e)}")
@@ -70,7 +71,7 @@ class P1HomeWizard(TCPDevice):
     def _disconnect(self) -> None:
         pass
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         return self._has_connected and self._connect()
     
     def calculate_checksum(self, telegram: str) -> str:

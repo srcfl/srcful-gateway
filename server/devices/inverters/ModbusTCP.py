@@ -117,7 +117,7 @@ class ModbusTCP(Modbus, TCPDevice):
     def _get_type(self) -> str:
         return self.device_type
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         return bool(self.client) and bool(self.client.socket)
 
     def _close(self) -> None:

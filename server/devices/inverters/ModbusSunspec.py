@@ -136,7 +136,7 @@ class ModbusSunspec(TCPDevice):
     def _disconnect(self) -> None:
         self.client.disconnect()
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         return bool(self.client and self.client.is_connected())
 
     def _read_harvest_data(self, force_verbose=False) -> dict:

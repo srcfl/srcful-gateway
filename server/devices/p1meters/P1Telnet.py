@@ -130,7 +130,7 @@ class P1Telnet(TCPDevice):
         if self.client:
             self.client.close()
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         if not self.client:
             return False
         return self.client.get_socket() is not None

@@ -69,7 +69,7 @@ class P1Jemac(TCPDevice):
     def _disconnect(self) -> None:
         pass
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         return self._has_connected and self._connect()
 
     def _parse_p1_message(self, p1_message: dict) -> dict:

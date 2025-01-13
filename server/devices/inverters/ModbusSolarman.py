@@ -103,7 +103,7 @@ class ModbusSolarman(ModbusTCP):
 
         return bool(self.client.sock) and self.mac != NetworkUtils.INVALID_MAC and valid_reading
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         try:
             return bool(self.client and self.client.sock)
         except Exception as e:
