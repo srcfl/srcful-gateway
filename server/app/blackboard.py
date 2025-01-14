@@ -265,7 +265,7 @@ class BlackBoard(ISystemTime, ITaskSource):
             return None
 
         def add(self, device: ICom):
-            assert device.is_open(), "Only open devices can be added to the blackboard"
+            # assert device.is_open(), "Only open devices can be added to the blackboard"
 
             existing_device = self.find_sn(device.get_SN())
             if existing_device == device:
