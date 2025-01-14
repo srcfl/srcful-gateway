@@ -1071,6 +1071,7 @@ supported_devices = {
                     RegistersKey.ENDIANNESS: EndiannessKey.LITTLE,
                 },
             ],
+            ProfileKey.KEYWORDS: ["pzem", "High-Flying"],
         },
         {
             ProfileKey.NAME: "unknown",
