@@ -1052,7 +1052,7 @@ supported_devices = {
             ProfileKey.REGISTERS: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 0,
+                    RegistersKey.START_REGISTER: 7,
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "Hz",
