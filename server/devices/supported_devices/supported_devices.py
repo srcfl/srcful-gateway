@@ -309,7 +309,7 @@ supported_devices = {
             ProfileKey.MAKER: "Fronius",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "Fronius Float",
+            ProfileKey.DISPLAY_NAME: "Fronius",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "Fronius float inverter profile",
             ProfileKey.REGISTERS_VERBOSE: [
@@ -613,7 +613,7 @@ supported_devices = {
             ProfileKey.MAKER: "Ferroamp",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "ferroamp",
+            ProfileKey.DISPLAY_NAME: "Ferroamp",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "Another inverter profile...",
             ProfileKey.REGISTERS_VERBOSE: [
