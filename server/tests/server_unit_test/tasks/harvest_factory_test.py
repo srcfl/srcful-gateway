@@ -48,9 +48,10 @@ def test_add_closed_device_no_harvest_task(blackboard, mock_device):
     
     factory.add_device(mock_device)
     
-    # Verify no harvest task was created
+    # Verify that both the harvest and the save_config tasks were created
+    # this is a change so we don't end up with zombie devices
     tasks = blackboard.purge_tasks()
-    assert len(tasks) == 0
+    assert len(tasks) == 2
 
 def test_remove_device(blackboard, mock_device):
     factory = HarvestFactory(blackboard)
