@@ -76,7 +76,7 @@ class Enphase(TCPDevice):
         }
 
     def make_get_request(self, path: str) -> requests.Response:
-        return self.session.get(self.base_url + path)
+        return self.session.get(self.base_url + path, timeout=45)
 
     def __init__(self, **kwargs) -> None:
 
