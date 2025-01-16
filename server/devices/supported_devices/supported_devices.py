@@ -12,6 +12,7 @@ supported_devices = {
     DeviceCategoryKey.INVERTERS: [
         {
             ProfileKey.NAME: "huawei",
+            ProfileKey.MAKER: "Huawei",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Huawei",
@@ -55,6 +56,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "solaredge",
+            ProfileKey.MAKER: "SolarEdge",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "SolarEdge",
@@ -108,6 +110,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "solaredge_us",
+            ProfileKey.MAKER: "SolarEdge",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "SolarEdge US",
@@ -139,7 +142,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 40085,
-                    RegistersKey.NUM_OF_REGISTERS: 1, 
+                    RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "Hz",
                     RegistersKey.DESCRIPTION: "Grid frequency",
@@ -149,7 +152,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 40100,
-                    RegistersKey.NUM_OF_REGISTERS: 1, 
+                    RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataTypeKey.I16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "DC Power",
@@ -161,6 +164,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "sungrow",
+            ProfileKey.MAKER: "Sungrow",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Sungrow",
@@ -204,6 +208,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "sungrow_sf",
+            ProfileKey.MAKER: "Sungrow",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Sungrow SF",
@@ -247,6 +252,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "sma",
+            ProfileKey.MAKER: "SMA",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "SMA",
@@ -300,9 +306,10 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "fronius",
+            ProfileKey.MAKER: "Fronius",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "Fronius Float",
+            ProfileKey.DISPLAY_NAME: "Fronius",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "Fronius float inverter profile",
             ProfileKey.REGISTERS_VERBOSE: [
@@ -315,7 +322,7 @@ supported_devices = {
             ProfileKey.REGISTERS: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 40093, # float map v1.0
+                    RegistersKey.START_REGISTER: 40093,  # float map v1.0
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataTypeKey.F32,
                     RegistersKey.UNIT: "Hz",
@@ -338,6 +345,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "fronius_sf",
+            ProfileKey.MAKER: "Fronius",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Fronius SF",
@@ -353,7 +361,7 @@ supported_devices = {
             ProfileKey.REGISTERS: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 40085, 
+                    RegistersKey.START_REGISTER: 40085,
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "Hz",
@@ -376,6 +384,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "deye",
+            ProfileKey.MAKER: "Deye",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Deye",
@@ -424,6 +433,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "deye_micro",
+            ProfileKey.MAKER: "Deye",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Deye Micro-inverter",
@@ -450,7 +460,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 109,
-                    RegistersKey.NUM_OF_REGISTERS: 2, # First register is the voltage, second is the current
+                    RegistersKey.NUM_OF_REGISTERS: 2,  # First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "PV 1 Power",
@@ -460,7 +470,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 111,
-                    RegistersKey.NUM_OF_REGISTERS: 2, # First register is the voltage, second is the current
+                    RegistersKey.NUM_OF_REGISTERS: 2,  # First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "PV 2 Power",
@@ -470,7 +480,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 113,
-                    RegistersKey.NUM_OF_REGISTERS: 2, # First register is the voltage, second is the current
+                    RegistersKey.NUM_OF_REGISTERS: 2,  # First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "PV 3 Power",
@@ -482,6 +492,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "growatt",
+            ProfileKey.MAKER: "Growatt",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Growatt",
@@ -535,6 +546,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "goodwe",
+            ProfileKey.MAKER: "GoodWe",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "GoodWe",
@@ -586,7 +598,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 35138,
-                    RegistersKey.NUM_OF_REGISTERS: 1, # PV1. First register is the voltage, second is the current
+                    RegistersKey.NUM_OF_REGISTERS: 1,  # PV1. First register is the voltage, second is the current
                     RegistersKey.DATA_TYPE: DataTypeKey.I16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "PV 1 Power",
@@ -598,9 +610,10 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "ferroamp",
+            ProfileKey.MAKER: "Ferroamp",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "ferroamp",
+            ProfileKey.DISPLAY_NAME: "Ferroamp",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "Another inverter profile...",
             ProfileKey.REGISTERS_VERBOSE: [
@@ -766,6 +779,7 @@ supported_devices = {
         },
         {
             ProfileKey.NAME: "sofar",
+            ProfileKey.MAKER: "Sofar",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Sofar",
@@ -883,7 +897,185 @@ supported_devices = {
             ProfileKey.KEYWORDS: ["sofar"],
         },
         {
+            ProfileKey.NAME: "solis",
+            ProfileKey.MAKER: "Solis",
+            ProfileKey.VERSION: "V1.1b3",
+            ProfileKey.VERBOSE_ALWAYS: False,
+            ProfileKey.DISPLAY_NAME: "Solis",
+            ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
+            ProfileKey.DESCRIPTION: "Solis inverter profile",
+            ProfileKey.REGISTERS_VERBOSE: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 35000,
+                    RegistersKey.NUM_OF_REGISTERS: 1,    # Single U16 register for product definition
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3000,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3000-3124
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3125,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3125-3249
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3220,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3220-3344
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3281,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3281-3405
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3406,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3406-3530
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3531,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3531-3655
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3656,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3656-3780
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3781,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3781-3905
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33601,
+                    RegistersKey.NUM_OF_REGISTERS: 105,  # 33601-33705
+                }
+            ],
+            ProfileKey.REGISTERS: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3043,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
+                    RegistersKey.UNIT: "Hz",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
+                    RegistersKey.SCALE_FACTOR: 0.01,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3007,
+                    RegistersKey.NUM_OF_REGISTERS: 2,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U32,
+                    RegistersKey.UNIT: "W",
+                    RegistersKey.DESCRIPTION: "DC Power",
+                    RegistersKey.SCALE_FACTOR: 1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+            ],
+            ProfileKey.KEYWORDS: ["solis", "Espressif"],
+        },
+        {
+            ProfileKey.NAME: "solis_hybrid",
+            ProfileKey.MAKER: "Solis",
+            ProfileKey.VERSION: "V1.1b3",
+            ProfileKey.VERBOSE_ALWAYS: False,
+            ProfileKey.DISPLAY_NAME: "Solis Hybrid",
+            ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
+            ProfileKey.DESCRIPTION: "Solis inverter profile",
+            ProfileKey.REGISTERS_VERBOSE: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 35000,
+                    RegistersKey.NUM_OF_REGISTERS: 1,    # Single U16 register for product definition
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33000,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 33000-33124
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33125,
+                    RegistersKey.NUM_OF_REGISTERS: 125,  # 33125-33249
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33250,
+                    RegistersKey.NUM_OF_REGISTERS: 89,   # 33250-33338
+                }
+            ],
+            ProfileKey.REGISTERS: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33094,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
+                    RegistersKey.UNIT: "Hz",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
+                    RegistersKey.SCALE_FACTOR: 0.01,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33057,
+                    RegistersKey.NUM_OF_REGISTERS: 2,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U32,
+                    RegistersKey.UNIT: "W",
+                    RegistersKey.DESCRIPTION: "DC Power",
+                    RegistersKey.SCALE_FACTOR: 1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+            ],
+            ProfileKey.KEYWORDS: ["solis", "Espressif"],
+        },
+        {
+            ProfileKey.NAME: "pzem",
+            ProfileKey.MAKER: "PZEM",
+            ProfileKey.VERSION: "V1.1b3",
+            ProfileKey.VERBOSE_ALWAYS: False,
+            ProfileKey.DISPLAY_NAME: "PZEM-014/016",
+            ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
+            ProfileKey.DESCRIPTION: "PZEM-014/016 AC communication module",
+            ProfileKey.REGISTERS_VERBOSE: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 0,
+                    RegistersKey.NUM_OF_REGISTERS: 10,
+                }
+            ],
+            ProfileKey.REGISTERS: [
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 7,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
+                    RegistersKey.UNIT: "Hz",
+                    RegistersKey.DESCRIPTION: "Grid frequency",
+                    RegistersKey.SCALE_FACTOR: 0.1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.LITTLE,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3,
+                    RegistersKey.NUM_OF_REGISTERS: 2,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U32,
+                    RegistersKey.UNIT: "W",
+                    RegistersKey.DESCRIPTION: "AC Power",
+                    RegistersKey.SCALE_FACTOR: 0.1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.LITTLE,
+                },
+            ],
+            ProfileKey.KEYWORDS: ["pzem", "High-Flying"],
+        },
+        {
             ProfileKey.NAME: "unknown",
+            ProfileKey.MAKER: "Unknown",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "Unknown",
@@ -903,11 +1095,12 @@ supported_devices = {
                 },
             ],
             ProfileKey.KEYWORDS: ["unknown"],
-        },
+        }
     ],
     DeviceCategoryKey.METERS: [
         {
             ProfileKey.NAME: "lqt40s",
+            ProfileKey.MAKER: "LQT",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
             ProfileKey.DISPLAY_NAME: "LQT40S",

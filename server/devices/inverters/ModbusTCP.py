@@ -20,6 +20,7 @@ log.setLevel(logging.INFO)
 
 pymodbus_apply_logging_config("INFO")
 
+
 class ModbusTCP(Modbus, TCPDevice):
     """
     ModbusTCP device class.
@@ -33,8 +34,7 @@ class ModbusTCP(Modbus, TCPDevice):
     """
 
     CONNECTION = "TCP"
-    
-  
+
     @staticmethod
     def ip_key() -> str:
         return "ip"
@@ -42,29 +42,41 @@ class ModbusTCP(Modbus, TCPDevice):
     @property
     def MAC(self) -> str:
         return self.mac_key()
-    
+
     @staticmethod
     def mac_key() -> str:
         return "mac"
-    
+
     @staticmethod
     def port_key() -> str:
         return "port"
-    
+
     @staticmethod
-    def get_supported_devices():
+    def get_supported_devices(verbose: bool = True):
         supported_devices = []
-        for profile in ModbusDeviceProfiles().get_supported_devices():
-            if profile.protocol.value == ProtocolKey.MODBUS.value:    
+        modbus_devices = [profile for profile in ModbusDeviceProfiles().get_supported_devices() if profile.protocol.value == ProtocolKey.MODBUS.value]
+        log.info("Getting from ModbusTCP")
+
+        if verbose:
+            for profile in modbus_devices:
                 obj = {
                     ModbusTCP.device_type_key(): profile.name,
-                'display_name': profile.display_name,
-                'protocol': profile.protocol.value
-            }
+                    ModbusTCP.MAKER: profile.maker,
+                    ModbusTCP.DISPLAY_NAME: profile.display_name,
+                    ModbusTCP.PROTOCOL: profile.protocol.value
+                }
                 supported_devices.append(obj)
-            
+        else:
+            for profile in modbus_devices:
+                obj = {
+                    ModbusTCP.MAKER: profile.maker,
+                }
+
+                if obj not in supported_devices and profile.maker != "Unknown":
+                    supported_devices.append(obj)
+
         return {ModbusTCP.CONNECTION: supported_devices}
-    
+
     @staticmethod
     def get_config_schema():
         return {
@@ -77,11 +89,11 @@ class ModbusTCP(Modbus, TCPDevice):
     # init but with kwargs
     def __init__(self, **kwargs) -> None:
         Modbus.__init__(self, **kwargs)
-        
+
         # check if old keys are provided
         if "host" in kwargs:
             kwargs[self.ip_key()] = kwargs.pop("host")
-            
+
         # get the kwargs, and default if not provided
         ip = kwargs.get(self.ip_key(), None)
         port = kwargs.get(self.port_key(), None)
@@ -97,15 +109,15 @@ class ModbusTCP(Modbus, TCPDevice):
             log.error("FAILED to open Modbus TCP device: %s", self._get_type())
         if self.client.socket:
             self.mac = NetworkUtils.get_mac_from_ip(self.ip)
-        
+
         time.sleep(1)
-        
+
         return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self._has_valid_frequency()
-        
+
     def _get_type(self) -> str:
         return self.device_type
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         return bool(self.client) and bool(self.client.socket)
 
     def _close(self) -> None:
@@ -129,10 +141,10 @@ class ModbusTCP(Modbus, TCPDevice):
             **TCPDevice.get_config(self),
             self.MAC: self.mac,
         }
-    
+
     def _get_connection_type(self) -> str:
         return ModbusTCP.CONNECTION
-    
+
     def get_SN(self) -> str:
         # TODO: get the serial number from the device use mac for now
         return self.mac
@@ -142,7 +154,7 @@ class ModbusTCP(Modbus, TCPDevice):
 
     def _read_registers(self, function_code: FunctionCodeKey, scan_start: int, scan_range: int) -> list:
         resp = None
-                
+
         if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
             log.debug(f"Reading input registers - Start: {scan_start}, Range: {scan_range}, Slave ID: {self.slave_id}")
             resp = self.client.read_input_registers(scan_start, scan_range, slave=self.slave_id)
@@ -154,9 +166,9 @@ class ModbusTCP(Modbus, TCPDevice):
         # We solve this by raising the exception manually
         if isinstance(resp, ModbusIOException):
             raise ModbusIOException(f"ModbusIOException occurred while reading registers: {resp.message}")
-        
+
         return resp.registers
-    
+
     def write_registers(self, starting_register: int, values: list) -> bool:
         """
         Write a range of holding registers from a start address
@@ -165,20 +177,20 @@ class ModbusTCP(Modbus, TCPDevice):
             starting_register, values, slave=self.slave_id
         )
         log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
-        
+
         if isinstance(resp, ExceptionResponse):
             raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
         return resp
-    
+
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
 
         if host.mac != self.mac:
             return None
-        
+
         config = self.get_config()
         config[self.IP] = host.ip
         return ModbusTCP(**config)
-    
+
     def _get_frequency_register(self) -> Optional[RegisterInterval]:
         profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
         if not profile or not profile.registers:
@@ -188,9 +200,9 @@ class ModbusTCP(Modbus, TCPDevice):
     def _read_frequency(self) -> Optional[float]:
         """Read grid frequency using the device profile's first register"""
         try:
-           
+
             freq_reg: RegisterInterval = self._get_frequency_register()
-            
+
             # Create RegisterValue for frequency reading
             reg_value = RegisterValue(
                 address=freq_reg.start_register,
@@ -205,16 +217,16 @@ class ModbusTCP(Modbus, TCPDevice):
 
             # Read and interpret value
             a, b, value = reg_value.read_value(self)
-            
+
             log.info(f"Values read during frequency reading: {a}, {b}, {value}")
-            
+
             return value
 
         except Exception as e:
             log.error(f"Error reading frequency: {str(e)}")
             self.disconnect()
             return None
-    
+
     def _has_valid_frequency(self) -> bool:
         """Check if the float frequency value is within a reasonable range (48-62 Hz)"""
         frequency = self._read_frequency()

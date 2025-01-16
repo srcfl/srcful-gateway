@@ -27,7 +27,7 @@ def device():
         def is_valid(self) -> bool:
             return True
 
-        def is_open(self) -> bool:
+        def _is_open(self) -> bool:
             return self._is_connected
         
         

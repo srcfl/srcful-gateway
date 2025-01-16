@@ -98,6 +98,9 @@ def test_harvest_endpoints_property(settings):
 def test_to_json(settings):
     settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
     settings.harvest.add_endpoint("https://test.com", ChangeSource.LOCAL)
+    settings.api.set_gql_endpoint("https://example.com", ChangeSource.LOCAL)
+    settings.api.set_ws_endpoint("ws://example.com", ChangeSource.LOCAL)
+    settings.api.set_gql_timeout(10000, ChangeSource.LOCAL)
     json_str = settings.to_json()
     expected = {
         settings.SETTINGS: {
@@ -109,6 +112,11 @@ def test_to_json(settings):
             },
             settings.devices.DEVICES: {
                 settings.devices.CONNECTIONS: []
+            },
+            settings.api.API: {
+                settings.api.GQL_ENDPOINT: "https://example.com",
+                settings.api.WS_ENDPOINT: "ws://example.com",
+                settings.api.GQL_TIMEOUT: 10000
             }
         }
     }
