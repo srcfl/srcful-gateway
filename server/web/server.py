@@ -74,6 +74,7 @@ class Endpoints:
         self.api_get = Endpoints.convert_keys_to_regex(self.api_get_dict)
         self.api_post = Endpoints.convert_keys_to_regex(self.api_post_dict)
         self.api_delete = Endpoints.convert_keys_to_regex(self.api_delete_dict)
+        
 
     @staticmethod
     def query_2_dict(query_string: str):
@@ -138,6 +139,7 @@ def request_handler_factory(bb: BlackBoard):
 
             logger.info("initializing a request handler")
             self.endpoints = Endpoints()
+            
 
             super(Handler, self).__init__(*args, **kwargs)
 
@@ -148,6 +150,16 @@ def request_handler_factory(bb: BlackBoard):
             self.send_header("Content-Length", len(response))
             self.end_headers()
             self.wfile.write(response)
+            self.wfile.flush()
+
+        def send_html_response(self, code: int, response: str):
+            self.send_response(code)
+            self.send_header("Content-Type", "text/html")
+            response = bytes(response, "utf-8")
+            self.send_header("Content-Length", len(response))
+            self.end_headers()
+            self.wfile.write(response)
+            self.wfile.flush()
 
         # this needs to be POST as this is a direct mapping of the http method
         def do_POST(self):
@@ -185,6 +197,12 @@ def request_handler_factory(bb: BlackBoard):
             api_handler, params = Endpoints.get_api_handler(path, "/api/", self.endpoints.api_get)
             rdata = handler.RequestData(bb, params, query, {})
 
+
+            if path == "" or path == "/":
+                code, response = handler.get.root.Handler().do_get(rdata)
+                self.send_html_response(code, response)
+                return
+
             if api_handler is not None:
                 try:
                     code, response = api_handler.do_get(rdata)
@@ -201,16 +219,12 @@ def request_handler_factory(bb: BlackBoard):
                 if api_handler is not None:
                     self.send_api_response(200, api_handler.jsonSchema())
                     return
-                else:
-                    code, htlm = handler.get.root.Handler().do_get(rdata)
-                    html_bytes = bytes(htlm, "utf-8")
-
-                    self.send_response(code)
-                    self.send_header("Content-type", "text/html")
-                    self.send_header("Content-Length", len(html_bytes))
-                    self.end_headers()
-
-                    self.wfile.write(html_bytes)
+                
+            
+            self.send_response(404)
+            self.end_headers()
+            return
+                    
 
         # this needs to be DELETE as this is a direct mapping of the http method
         def do_DELETE(self):
@@ -225,10 +239,10 @@ def request_handler_factory(bb: BlackBoard):
                 code, response = api_handler.do_delete(rdata)
                 self.send_api_response(code, response)
                 return
-            else:
-                self.send_response(404)
-                self.end_headers()
-                return
+            
+            self.send_response(404)
+            self.end_headers()
+            return
 
         def get_doc_dict(self, api_dict: dict, path: str):
             while path.startswith("/"):

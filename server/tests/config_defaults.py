@@ -53,6 +53,12 @@ P1_JEMAC_ARGS = {
     TCPDevice.ip_key(): "192.168.1.110",
 }
 
+P1_HOMEWIZARD_ARGS = {
+    ICom.connection_key(): "P1HomeWizard",
+    "ip": "192.168.0.30",
+    "port": 80,
+}
+
 # Config snapshots after device creation
 TCP_CONFIG = {**TCP_ARGS, "sn": NetworkUtils.INVALID_MAC}
 SOLARMAN_CONFIG = {**SOLARMAN_ARGS, "sn": 1234567890}
@@ -67,4 +73,5 @@ class_config_map = {
     inverter.Enphase: ENPHASE_ARGS,
     p1meter.P1Telnet: P1_TELNET_ARGS,
     p1meter.P1Jemac: P1_JEMAC_ARGS,
+    p1meter.P1HomeWizard: P1_HOMEWIZARD_ARGS,
 }

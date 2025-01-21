@@ -79,7 +79,7 @@ def _get_scan_info() -> List[_ScanInfo]:
 
     telenet_domain_names = {"_currently._tcp.local.":{"name": "currently_one"}}
     telenet_ports = [23]
-    rest_domain_names = {"_jemacp1._tcp.local.":{"name": "jemac_p1_meter"}}
+    rest_domain_names = {"_jemacp1._tcp.local.":{"name": "jemac_p1_meter"}, "_hwenergy._tcp._tcp.local.":{"name": "homewizard_p1_meter"}}
     rest_ports = [80]
 
     return [

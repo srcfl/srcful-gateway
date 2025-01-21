@@ -4,6 +4,7 @@ from .inverters.ModbusSunspec import ModbusSunspec
 from .inverters.enphase import Enphase
 from .p1meters.P1Telnet import P1Telnet
 from .p1meters.P1Jemac import P1Jemac
+from .p1meters.P1HomeWizard import P1HomeWizard
 from .ICom import ICom
 import logging
 
@@ -76,6 +77,8 @@ class IComFactory:
                 return Enphase(**stripped_config)
             case P1Jemac.CONNECTION:
                 return P1Jemac(**stripped_config)
+            case P1HomeWizard.CONNECTION:
+                return P1HomeWizard(**stripped_config)
             case _:
                 log.error("Unknown connection type: %s", connection)
                 raise ValueError(f"Unknown connection type: {connection}")

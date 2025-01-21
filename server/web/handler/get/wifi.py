@@ -16,14 +16,14 @@ class Handler(GetHandler):
         return {
             "type": "get",
             "description": "Get the list of wifi SSIDs since the last scan. Scanning can be initiated with the GET /wifi/scan endpoint.",
-            "returns": {"ssids": "list of SSID strings ['ssid1', 'ssid2', ...]"},
+            "returns": {"ssids": "list of SSID strings ['ssid1', 'ssid2', ...]",
+                        "connected": "name of connected ssid if any"},
         }
 
     def do_get(self, data: RequestData):
         try:
-            s = WifiScanner()
-            ssids = s.get_ssids()
-            return 200, json.dumps({"ssids": ssids})
+            network_state = data.bb.network_state()    
+            return 200, json.dumps(network_state['wifi'])
         except Exception as e:
             logger.error(e)
             return 400, json.dumps({"error": str(e)})
