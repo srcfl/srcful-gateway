@@ -13,6 +13,7 @@ import logging
 from server.devices.profile_keys import ProtocolKey
 from server.devices.registerValue import RegisterValue
 import time
+from server.devices.inverters.common import INVERTER_CLIENT_NAME
 
 
 log = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ class ModbusTCP(Modbus, TCPDevice):
     """
 
     CONNECTION = "TCP"
+    SUPPORTED_PROTOCOLS = ["modbus"]
 
     @staticmethod
     def ip_key() -> str:
@@ -70,12 +72,12 @@ class ModbusTCP(Modbus, TCPDevice):
             for profile in modbus_devices:
                 obj = {
                     ModbusTCP.MAKER: profile.maker,
+                    "device_type": INVERTER_CLIENT_NAME + "." + ModbusTCP.CONNECTION,
+                    "protocols": ModbusTCP.SUPPORTED_PROTOCOLS
                 }
-
                 if obj not in supported_devices and profile.maker != "Unknown":
                     supported_devices.append(obj)
-
-        return {ModbusTCP.CONNECTION: supported_devices}
+        return supported_devices
 
     @staticmethod
     def get_config_schema():

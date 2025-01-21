@@ -13,7 +13,7 @@ log.setLevel(logging.INFO)
 
 class IComFactory:
 
-    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, Enphase, P1Jemac]
+    supported_devices = [ModbusTCP, ModbusSolarman, Enphase, P1Jemac]
 
     @staticmethod
     def get_connection_configs():
@@ -24,10 +24,11 @@ class IComFactory:
 
     @staticmethod
     def get_supported_devices(verbose: bool = True):
-        return [
-            cls.get_supported_devices(verbose)
+        from itertools import chain
+        return list(chain.from_iterable(
+            devices if isinstance(devices := cls.get_supported_devices(verbose), list) else [devices]
             for cls in IComFactory.supported_devices
-        ]
+        ))
 
     """
     IComFactory class

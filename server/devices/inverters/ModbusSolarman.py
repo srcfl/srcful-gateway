@@ -30,6 +30,7 @@ class ModbusSolarman(ModbusTCP):
     """
 
     CONNECTION = "SOLARMAN"
+    SUPPORTED_PROTOCOLS = ["solarman"]
 
     @property
     def VERBOSE(self) -> str:
@@ -58,11 +59,13 @@ class ModbusSolarman(ModbusTCP):
             for profile in solarman_devices:
                 obj = {
                     ModbusTCP.MAKER: profile.maker,
+                    "device_type": INVERTER_CLIENT_NAME + "." + ModbusSolarman.CONNECTION,
+                    "protocols": ModbusSolarman.SUPPORTED_PROTOCOLS
                 }
                 if obj not in supported_devices:
                     supported_devices.append(obj)
 
-        return {ModbusSolarman.CONNECTION: supported_devices}
+        return supported_devices
 
     @staticmethod
     def get_config_schema():

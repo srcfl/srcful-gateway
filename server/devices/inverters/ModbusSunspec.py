@@ -62,9 +62,10 @@ class ModbusSunspec(TCPDevice):
                 TCPDevice.PROTOCOL: 'modbus'
             }}
         else:
-            return {ModbusSunspec.CONNECTION: {
-                TCPDevice.MAKER: 'SunSpec Compatible'
-            }}
+            return {
+                TCPDevice.MAKER: 'SunSpec Compatible',
+                "device_type": INVERTER_CLIENT_NAME + "." + ModbusSunspec.CONNECTION
+            }
 
     @staticmethod
     def get_config_schema():

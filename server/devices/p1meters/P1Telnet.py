@@ -83,9 +83,10 @@ class P1Telnet(TCPDevice):
                 P1Telnet.PROTOCOL: 'telnet'
             }}
         else:
-            return {P1Telnet.CONNECTION: {
-                P1Telnet.MAKER: 'P1 Telnet'
-            }}
+            return {
+                TCPDevice.MAKER: 'P1 Telnet',
+                "device_type": P1_METER_CLIENT_NAME + "." + P1Telnet.CONNECTION
+            }
 
     @staticmethod
     def get_config_schema():

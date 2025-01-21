@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 class P1Jemac(TCPDevice):
 
     CONNECTION = "P1Jemac"
+    SUPPORTED_PROTOCOLS = ["rest"]
 
     @staticmethod
     def get_supported_devices(verbose: bool = True):
@@ -24,9 +25,11 @@ class P1Jemac(TCPDevice):
                 TCPDevice.DISPLAY_NAME: 'Jemac P1 Meter'
             }}
         else:
-            return {P1Jemac.CONNECTION: {
-                TCPDevice.MAKER: 'Jemac'
-            }}
+            return {
+                TCPDevice.MAKER: 'Jemac',
+                "device_type": P1_METER_CLIENT_NAME + "." + P1Jemac.CONNECTION,
+                "protocols": P1Jemac.SUPPORTED_PROTOCOLS
+            }
 
     @staticmethod
     def get_config_schema():

@@ -50,13 +50,15 @@ class SupportedDevicesHandler(GetHandler):
     def schema(self):
         return self.create_schema("returns the supported devices",
                                   returns={"devices": {
-                                      "protocol_type": [{
+                                      [{
                                           "maker": "string",
+                                          "device_type": "string"
                                       }]
                                   }})
 
     def get_supported_devices(self):
         supported_inverters = IComFactory.get_supported_devices(verbose=False)
+        log.info("Supported inverters: %s", supported_inverters)
         return {'devices': supported_inverters}
 
     def do_get(self, data: RequestData):

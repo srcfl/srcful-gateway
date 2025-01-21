@@ -26,6 +26,7 @@ class Enphase(TCPDevice):
     """
 
     CONNECTION = "ENPHASE"
+    SUPPORTED_PROTOCOLS = ["rest"]
 
     # Endpoint names
     PRODUCTION = "production"
@@ -63,7 +64,11 @@ class Enphase(TCPDevice):
                 Enphase.PROTOCOL: 'http'
             }}
         else:
-            return {Enphase.CONNECTION: {'maker': 'Enphase'}}
+            return {
+                TCPDevice.MAKER: 'Enphase',
+                "device_type": INVERTER_CLIENT_NAME + "." + Enphase.CONNECTION,
+                "protocols": Enphase.SUPPORTED_PROTOCOLS
+            }
 
     @staticmethod
     def get_config_schema():
