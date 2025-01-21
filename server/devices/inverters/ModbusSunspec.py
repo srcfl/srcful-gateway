@@ -152,11 +152,8 @@ class ModbusSunspec(TCPDevice):
 
             if force_verbose:
                 payload_verbose = self.client.get_dict()
-
-                # Check if payload_verbose contains a "Hz" key in any of its sub-dictionaries and ensure its not 0
-                # the reason we check all sub-dictionaries is because the payload_verbose is a nested
-                if not any("Hz" in sub_dict and sub_dict["Hz"] != 0 for sub_dict in payload_verbose.values()):
-                    raise SunSpecModbusClientError("Hz key not found in payload_verbose")
+                logger.debug("Payload verbose: %s", payload_verbose)
+                logger.debug("Values: %s", payload_verbose.values())
 
                 return payload_verbose
             else:
@@ -186,6 +183,12 @@ class ModbusSunspec(TCPDevice):
                     battery_payload_verbose = {**self.battery.get_dict()}
                     payload['SoC'] = battery_payload_verbose.get('SoC', 0)
                     payload['SoC_SF'] = battery_payload_verbose.get('SoC_SF', 1)
+
+                logger.debug("Payload: %s", payload)
+
+                # Raise an error if Hz is 0
+                if int(payload["Hz"]) == 0:
+                    raise SunSpecModbusClientError("Hz is 0")
 
                 return payload
         except Exception as e:
