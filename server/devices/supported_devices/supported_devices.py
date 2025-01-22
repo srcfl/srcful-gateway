@@ -393,18 +393,38 @@ supported_devices = {
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 3,
-                    RegistersKey.NUM_OF_REGISTERS: 86,
-                },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 514,
+                    RegistersKey.START_REGISTER: 0,
                     RegistersKey.NUM_OF_REGISTERS: 125,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 644,
-                    RegistersKey.NUM_OF_REGISTERS: 50,
+                    RegistersKey.START_REGISTER: 125,
+                    RegistersKey.NUM_OF_REGISTERS: 125,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 250,
+                    RegistersKey.NUM_OF_REGISTERS: 125,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 375,
+                    RegistersKey.NUM_OF_REGISTERS: 125,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 500,
+                    RegistersKey.NUM_OF_REGISTERS: 125,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 625,
+                    RegistersKey.NUM_OF_REGISTERS: 125,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 750,
+                    RegistersKey.NUM_OF_REGISTERS: 51,
                 },
             ],
             ProfileKey.REGISTERS: [
