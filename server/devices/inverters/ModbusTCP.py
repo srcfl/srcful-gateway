@@ -173,14 +173,20 @@ class ModbusTCP(Modbus, TCPDevice):
         """
         Write a range of holding registers from a start address
         """
-        resp = self.client.write_registers(
-            starting_register, values, slave=self.slave_id
-        )
-        log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
 
-        if isinstance(resp, ExceptionResponse):
-            raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
-        return resp
+        try:
+            resp = self.client.write_registers(
+                starting_register, values, slave=self.slave_id
+            )
+
+            if isinstance(resp, ExceptionResponse):
+                return False
+
+            log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
+            return True
+        except Exception as e:
+            log.error("Error writing registers: %s", e)
+            return False
 
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
 

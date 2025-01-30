@@ -174,8 +174,14 @@ class ModbusSolarman(ModbusTCP):
 
         return resp
 
-    def write_register(self, function_code: FunctionCodeKey, register: int, value: int) -> bool:
-        raise NotImplementedError("Not implemented yet")
+    def write_registers(self, starting_register: int, values: list) -> bool:
+        try:
+            self.client.write_multiple_holding_registers(starting_register, values)
+            log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
+            return True
+        except Exception as e:
+            log.error("Error writing registers: %s", e)
+            return False
 
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
 
