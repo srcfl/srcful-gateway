@@ -1035,19 +1035,46 @@ supported_devices = {
             ProfileKey.KEYWORDS: ["solis", "Espressif"],
         },
         {
-            ProfileKey.NAME: "pzem",
-            ProfileKey.MAKER: "PZEM",
+            ProfileKey.NAME: "Solax",
+            ProfileKey.MAKER: "Solax",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "PZEM-014/016",
+            ProfileKey.DISPLAY_NAME: "Solax",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
-            ProfileKey.DESCRIPTION: "PZEM-014/016 AC communication module",
+            ProfileKey.DESCRIPTION: "Solax inverter profile",
             ProfileKey.REGISTERS_VERBOSE: [
+                # The holding registers are not used in this case since they will be overwritten by the
+                # input registers due to overlapping register addresses.
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 0,
+                #     RegistersKey.NUM_OF_REGISTERS: 110,
+                # },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 110,
+                #     RegistersKey.NUM_OF_REGISTERS: 110,
+                # },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 220,
+                #     RegistersKey.NUM_OF_REGISTERS: 110,
+                # },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 0,
-                    RegistersKey.NUM_OF_REGISTERS: 10,
-                }
+                    RegistersKey.NUM_OF_REGISTERS: 110,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 110,
+                    RegistersKey.NUM_OF_REGISTERS: 110,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 220,
+                    RegistersKey.NUM_OF_REGISTERS: 110,
+                },
             ],
             ProfileKey.REGISTERS: [
                 {
@@ -1057,21 +1084,31 @@ supported_devices = {
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "Hz",
                     RegistersKey.DESCRIPTION: "Grid frequency",
-                    RegistersKey.SCALE_FACTOR: 0.1,
-                    RegistersKey.ENDIANNESS: EndiannessKey.LITTLE,
+                    RegistersKey.SCALE_FACTOR: 0.01,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3,
-                    RegistersKey.NUM_OF_REGISTERS: 2,
-                    RegistersKey.DATA_TYPE: DataTypeKey.U32,
+                    RegistersKey.START_REGISTER: 10,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESCRIPTION: "AC Power",
-                    RegistersKey.SCALE_FACTOR: 0.1,
-                    RegistersKey.ENDIANNESS: EndiannessKey.LITTLE,
+                    RegistersKey.DESCRIPTION: "DC Power 1",
+                    RegistersKey.SCALE_FACTOR: 1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 11,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
+                    RegistersKey.UNIT: "W",
+                    RegistersKey.DESCRIPTION: "DC Power 2",
+                    RegistersKey.SCALE_FACTOR: 1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
                 },
             ],
-            ProfileKey.KEYWORDS: ["pzem", "High-Flying"],
+            ProfileKey.KEYWORDS: ["Solax", "Espressif"],
         },
         {
             ProfileKey.NAME: "unknown",
