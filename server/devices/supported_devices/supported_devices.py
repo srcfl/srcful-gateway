@@ -1066,24 +1066,49 @@ supported_devices = {
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 35000,
-                    RegistersKey.NUM_OF_REGISTERS: 1,    # Single U16 register for product definition
-                },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 33000,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 33000-33124
+                    RegistersKey.NUM_OF_REGISTERS: 50,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 33125,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 33125-33249
+                    RegistersKey.START_REGISTER: 33050,
+                    RegistersKey.NUM_OF_REGISTERS: 9,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33071,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33121,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33171,
+                    RegistersKey.NUM_OF_REGISTERS: 11,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33200,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 33250,
-                    RegistersKey.NUM_OF_REGISTERS: 89,   # 33250-33338
-                }
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33300,
+                    RegistersKey.NUM_OF_REGISTERS: 38,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 35000,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                },
             ],
             ProfileKey.REGISTERS: [
                 {
