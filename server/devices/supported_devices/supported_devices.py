@@ -928,58 +928,133 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 35000,
-                    RegistersKey.NUM_OF_REGISTERS: 1,    # Single U16 register for product definition
+                    RegistersKey.NUM_OF_REGISTERS: 1,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 3000,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3000-3124
+                    RegistersKey.NUM_OF_REGISTERS: 50,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3125,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3125-3249
+                    RegistersKey.START_REGISTER: 3050,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3220,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3220-3344
+                    RegistersKey.START_REGISTER: 3100,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3281,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3281-3405
+                    RegistersKey.START_REGISTER: 3150,
+                    RegistersKey.NUM_OF_REGISTERS: 12,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3406,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3406-3530
+                    RegistersKey.START_REGISTER: 3162,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3531,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3531-3655
+                    RegistersKey.START_REGISTER: 3212,
+                    RegistersKey.NUM_OF_REGISTERS: 49,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3656,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3656-3780
+                    RegistersKey.START_REGISTER: 3261,
+                    RegistersKey.NUM_OF_REGISTERS: 27,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3781,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 3781-3905
+                    RegistersKey.START_REGISTER: 3289,
+                    RegistersKey.NUM_OF_REGISTERS: 28,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3321,
+                    RegistersKey.NUM_OF_REGISTERS: 18,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3339,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3389,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3439,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3489,
+                    RegistersKey.NUM_OF_REGISTERS: 11,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3500,
+                    RegistersKey.NUM_OF_REGISTERS: 20,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3530,
+                    RegistersKey.NUM_OF_REGISTERS: 37,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3570,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3620,
+                    RegistersKey.NUM_OF_REGISTERS: 18,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3650,
+                    RegistersKey.NUM_OF_REGISTERS: 40,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3700,
+                    RegistersKey.NUM_OF_REGISTERS: 23,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3733,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 3783,
+                    RegistersKey.NUM_OF_REGISTERS: 17,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 33601,
-                    RegistersKey.NUM_OF_REGISTERS: 105,  # 33601-33705
-                }
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33651,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33701,
+                    RegistersKey.NUM_OF_REGISTERS: 5,
+                },
             ],
             ProfileKey.REGISTERS: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3043,
+                    RegistersKey.START_REGISTER: 3042,
                     RegistersKey.NUM_OF_REGISTERS: 1,
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "Hz",
@@ -989,7 +1064,7 @@ supported_devices = {
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3007,
+                    RegistersKey.START_REGISTER: 3006,
                     RegistersKey.NUM_OF_REGISTERS: 2,
                     RegistersKey.DATA_TYPE: DataTypeKey.U32,
                     RegistersKey.UNIT: "W",
@@ -1011,24 +1086,49 @@ supported_devices = {
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 35000,
-                    RegistersKey.NUM_OF_REGISTERS: 1,    # Single U16 register for product definition
-                },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 33000,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 33000-33124
+                    RegistersKey.NUM_OF_REGISTERS: 50,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 33125,
-                    RegistersKey.NUM_OF_REGISTERS: 125,  # 33125-33249
+                    RegistersKey.START_REGISTER: 33050,
+                    RegistersKey.NUM_OF_REGISTERS: 9,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33071,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33121,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33171,
+                    RegistersKey.NUM_OF_REGISTERS: 11,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33200,
+                    RegistersKey.NUM_OF_REGISTERS: 50,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 33250,
-                    RegistersKey.NUM_OF_REGISTERS: 89,   # 33250-33338
-                }
+                    RegistersKey.NUM_OF_REGISTERS: 50,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 33300,
+                    RegistersKey.NUM_OF_REGISTERS: 38,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 35000,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                },
             ],
             ProfileKey.REGISTERS: [
                 {
@@ -1055,19 +1155,46 @@ supported_devices = {
             ProfileKey.KEYWORDS: ["solis", "Espressif"],
         },
         {
-            ProfileKey.NAME: "pzem",
-            ProfileKey.MAKER: "PZEM",
+            ProfileKey.NAME: "Solax",
+            ProfileKey.MAKER: "Solax",
             ProfileKey.VERSION: "V1.1b3",
             ProfileKey.VERBOSE_ALWAYS: False,
-            ProfileKey.DISPLAY_NAME: "PZEM-014/016",
+            ProfileKey.DISPLAY_NAME: "Solax",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
-            ProfileKey.DESCRIPTION: "PZEM-014/016 AC communication module",
+            ProfileKey.DESCRIPTION: "Solax inverter profile",
             ProfileKey.REGISTERS_VERBOSE: [
+                # The holding registers are not used in this case since they will be overwritten by the
+                # input registers due to overlapping register addresses.
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 0,
+                #     RegistersKey.NUM_OF_REGISTERS: 110,
+                # },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 110,
+                #     RegistersKey.NUM_OF_REGISTERS: 110,
+                # },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 220,
+                #     RegistersKey.NUM_OF_REGISTERS: 110,
+                # },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
                     RegistersKey.START_REGISTER: 0,
-                    RegistersKey.NUM_OF_REGISTERS: 10,
-                }
+                    RegistersKey.NUM_OF_REGISTERS: 110,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 110,
+                    RegistersKey.NUM_OF_REGISTERS: 110,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 220,
+                    RegistersKey.NUM_OF_REGISTERS: 110,
+                },
             ],
             ProfileKey.REGISTERS: [
                 {
@@ -1077,21 +1204,31 @@ supported_devices = {
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "Hz",
                     RegistersKey.DESCRIPTION: "Grid frequency",
-                    RegistersKey.SCALE_FACTOR: 0.1,
-                    RegistersKey.ENDIANNESS: EndiannessKey.LITTLE,
+                    RegistersKey.SCALE_FACTOR: 0.01,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 3,
-                    RegistersKey.NUM_OF_REGISTERS: 2,
-                    RegistersKey.DATA_TYPE: DataTypeKey.U32,
+                    RegistersKey.START_REGISTER: 10,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "W",
-                    RegistersKey.DESCRIPTION: "AC Power",
-                    RegistersKey.SCALE_FACTOR: 0.1,
-                    RegistersKey.ENDIANNESS: EndiannessKey.LITTLE,
+                    RegistersKey.DESCRIPTION: "DC Power 1",
+                    RegistersKey.SCALE_FACTOR: 1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 11,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
+                    RegistersKey.UNIT: "W",
+                    RegistersKey.DESCRIPTION: "DC Power 2",
+                    RegistersKey.SCALE_FACTOR: 1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
                 },
             ],
-            ProfileKey.KEYWORDS: ["pzem", "High-Flying"],
+            ProfileKey.KEYWORDS: ["Solax", "Espressif"],
         },
         {
             ProfileKey.NAME: "unknown",
