@@ -197,29 +197,19 @@ class ModbusTCP(Modbus, TCPDevice):
         config[self.IP] = host.ip
         return ModbusTCP(**config)
 
-    def _get_frequency_register(self) -> Optional[RegisterInterval]:
-        profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
-        if not profile or not profile.registers:
-            return None
-        return profile.registers[0]
+    def _read_value(self, register: RegisterInterval) -> Optional[float]:
+        """Read a value from a register using the device profile's register"""
 
-    def _read_frequency(self) -> Optional[float]:
-        """Read grid frequency using the device profile's first register"""
         try:
-
-            freq_reg: RegisterInterval = self._get_frequency_register()
-
             # Create RegisterValue for frequency reading
             reg_value = RegisterValue(
-                address=freq_reg.start_register,
-                size=freq_reg.offset,
-                function_code=freq_reg.function_code,
-                data_type=freq_reg.data_type,
-                scale_factor=freq_reg.scale_factor,
-                endianness=freq_reg.endianness
+                address=register.start_register,
+                size=register.offset,
+                function_code=register.function_code,
+                data_type=register.data_type,
+                scale_factor=register.scale_factor,
+                endianness=register.endianness
             )
-
-            log.debug(f"RegisterValue: {reg_value}")
 
             # Read and interpret value
             a, b, value = reg_value.read_value(self)
@@ -233,7 +223,34 @@ class ModbusTCP(Modbus, TCPDevice):
             self.disconnect()
             return None
 
+    def _get_frequency_register(self) -> Optional[RegisterInterval]:
+        profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
+        if not profile or not profile.registers:
+            return None
+        return profile.registers[0]
+
+    def _get_SN_register(self) -> Optional[RegisterInterval]:
+        profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
+        if not profile or not profile.sn:
+            return None
+        return profile.sn
+
     def _has_valid_frequency(self) -> bool:
         """Check if the float frequency value is within a reasonable range (48-62 Hz)"""
-        frequency = self._read_frequency()
+        frequency = self._read_value(self._get_frequency_register())
         return frequency and 48.0 <= frequency <= 62.0
+
+    def _init_SN(self) -> Optional[str]:
+        """Read serial number using the device profile's serial number register"""
+        reg: RegisterInterval = self._get_SN_register()
+        if not reg:
+            return None
+        value = self._read_value(reg)
+        if value and isinstance(value, str):
+            # Remove null bytes and any non-printable characters
+
+            cleaned_sn = ''.join(char for char in value if char.isprintable())
+            # Remove any trailing whitespace
+            cleaned_sn = cleaned_sn.strip()
+            return cleaned_sn
+        return value

@@ -111,9 +111,6 @@ class ModbusSolarman(ModbusTCP):
             log.error(e)
             return False
 
-    def _is_valid(self) -> bool:
-        return self.get_SN() is not None
-
     def _close(self) -> None:
         try:
             self.client.disconnect()

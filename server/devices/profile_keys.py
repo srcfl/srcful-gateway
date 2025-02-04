@@ -3,6 +3,7 @@ from enum import Enum
 
 class ProfileKey(str, Enum):
     NAME = 'name'
+    SN = 'sn'
     MAKER = 'maker'
     VERSION = 'version'
     VERBOSE_ALWAYS = 'verbose_always'

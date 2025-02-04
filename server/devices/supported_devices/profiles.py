@@ -47,8 +47,23 @@ class ModbusProfile(DeviceProfile):
 
     def __init__(self, profile_data: dict):
         super().__init__(profile_data)
+        self.sn: RegisterInterval = None
         self.registers_verbose: List[RegisterInterval] = []
         self.registers: List[RegisterInterval] = []
+
+        if ProfileKey.SN in profile_data:
+            sn_reg = profile_data[ProfileKey.SN]
+
+            self.sn = RegisterInterval(
+                sn_reg[RegistersKey.FUNCTION_CODE],
+                sn_reg[RegistersKey.START_REGISTER],
+                sn_reg[RegistersKey.NUM_OF_REGISTERS],
+                sn_reg[RegistersKey.DATA_TYPE],
+                sn_reg[RegistersKey.UNIT],
+                sn_reg[RegistersKey.DESCRIPTION],
+                sn_reg[RegistersKey.SCALE_FACTOR],
+                sn_reg[RegistersKey.ENDIANNESS]
+            )
 
         if ProfileKey.REGISTERS_VERBOSE in profile_data:
             for register_interval in profile_data[ProfileKey.REGISTERS_VERBOSE]:
