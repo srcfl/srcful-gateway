@@ -57,11 +57,11 @@ class Endpoints:
             "device": handler.post.device.Handler(),
             "wifi": handler.post.wifi.Handler(),
             "initialize": handler.post.initialize.Handler(),
-            # "inverter/modbus": handler.post.modbus_read_write.Handler(), # Keep this
             "logger": handler.post.logger.Handler(),
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),
             "crypto/sign": handler.post.crypto_sign.Handler(),
+            "reboot": handler.post.reboot.Handler()
         }
 
         self.api_delete_dict = {
