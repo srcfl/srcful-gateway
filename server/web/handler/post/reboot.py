@@ -7,7 +7,9 @@ from ..requestData import RequestData
 logger = logging.getLogger(__name__)
 
 
-def get_system_info() -> dict:
+import dbus
+
+def get_system_info():
     try:
         system_bus = dbus.SystemBus()
         
@@ -17,10 +19,7 @@ def get_system_info() -> dict:
         manager = dbus.Interface(systemd, 'org.freedesktop.systemd1.Manager')
         
         # Get system state
-        state = manager.Get('org.freedesktop.systemd1.Manager', 'SystemState')
-        
-        # Get system uptime
-        uptime = manager.Get('org.freedesktop.systemd1.Manager', 'UserspaceTimestamp')
+        state = manager.GetState()  # This is the correct method
         
         # Get temperature (requires thermal_zone0)
         with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
@@ -32,7 +31,6 @@ def get_system_info() -> dict:
         
         return {
             'system_state': str(state),
-            'uptime': str(uptime),
             'temperature': f"{temp}°C",
             'load_average': load
         }
@@ -40,7 +38,7 @@ def get_system_info() -> dict:
     except Exception as e:
         print(f"Error getting system info: {e}")
         return {}
-
+    
 
 class SystemHandler(GetHandler):
     def schema(self):
