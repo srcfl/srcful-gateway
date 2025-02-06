@@ -51,6 +51,7 @@ class Endpoints:
 
             "state": handler.get.state.Handler(),
             "state/update": handler.get.state.UpdateStateHandler(),
+            "system": handler.post.reboot.SystemHandler(),
         }
 
         self.api_post_dict = {
