@@ -1,6 +1,9 @@
 import json
 import logging
 import dbus
+
+from server.app.blackboard import BlackBoard
+from server.app.isystem_time import ISystemTime
 from ..handler import GetHandler
 from ..requestData import RequestData
 
@@ -18,7 +21,7 @@ class SystemHandler(GetHandler):
             }
         }
 
-    def _get_basic_metrics(self):
+    def _get_basic_metrics(self, t: ISystemTime):
         try:
             # Get system metrics
             with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
@@ -34,11 +37,28 @@ class SystemHandler(GetHandler):
             
             with open('/proc/uptime', 'r') as f:
                 uptime = float(f.read().split()[0])
+
+            with open('/proc/meminfo', 'r') as f:
+                mem_info = {}
+                for line in f:
+                    if 'MemTotal' in line or 'MemAvailable' in line or 'MemFree' in line:
+                        key, value = line.split(':')
+                        # Convert kB to MB and remove 'kB' string
+                        value_mb = int(value.strip().split()[0]) / 1024
+                        mem_info[key.strip()] = round(value_mb, 2)
             
             return {
-                'temperature': temp,
+                'time_utc_sec': int(t.time_ms() / 1000),
+                'temperature_celsius': temp,
                 'processes_average': load_avg,
-                'uptime_seconds': uptime
+                'uptime_seconds': uptime,
+                'memory_MB': {
+                    'total': mem_info['MemTotal'],
+                    'available': mem_info['MemAvailable'],
+                    'free': mem_info['MemFree'],
+                    'used': round(mem_info['MemTotal'] - mem_info['MemAvailable'], 2),
+                    'percent_used': round((1 - (mem_info['MemAvailable'] / mem_info['MemTotal'])) * 100, 1)
+                }
             }
         except Exception as e:
             logger.error(f"Failed to get basic metrics: {e}")
@@ -48,7 +68,7 @@ class SystemHandler(GetHandler):
             }
 
     def do_get(self, data: RequestData) -> tuple[int, str]:
-        metrics = self._get_basic_metrics()
+        metrics = self._get_basic_metrics(data.bb)
         return 200, json.dumps(metrics)
 
 

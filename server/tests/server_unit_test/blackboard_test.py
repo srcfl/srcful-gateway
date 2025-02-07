@@ -124,7 +124,7 @@ def test_elapsed_time():
     time.sleep(0.2)
     end_time = time.monotonic_ns() // 1_000_000
 
-    diff = bb.elapsed_time - (end_time - start_time)  
+    diff = bb.elapsed_time() - (end_time - start_time)  
     
     assert abs(diff) < 10
 
