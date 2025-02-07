@@ -53,6 +53,8 @@ class Endpoints:
             "state/update": handler.get.state.UpdateStateHandler(),
             "system": handler.get.system.SystemHandler(),
             "system/details": handler.get.system.SystemDetailsHandler(),
+
+
         }
 
         self.api_post_dict = {
@@ -219,7 +221,7 @@ def request_handler_factory(bb: BlackBoard):
                     path, "/api/", self.endpoints.api_post
                 )
                 if api_handler is not None:
-                    self.send_api_response(200, api_handler.jsonSchema())
+                    self.send_api_response(200, api_handler.schema())
                     return
                 
             
