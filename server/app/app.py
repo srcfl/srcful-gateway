@@ -42,8 +42,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     graphql_client = GraphQLSubscriptionClient(bb, bb.settings.api.ws_endpoint)
     graphql_client.start()
 
-    control_client = ControlSubscription(bb, "ws://localhost:8765")
-    control_client.start()
+    # control_client = ControlSubscription(bb, "ws://localhost:8765")
+    # control_client.start()
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
