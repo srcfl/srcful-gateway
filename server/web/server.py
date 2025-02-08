@@ -51,17 +51,21 @@ class Endpoints:
 
             "state": handler.get.state.Handler(),
             "state/update": handler.get.state.UpdateStateHandler(),
+            "system": handler.get.system.SystemHandler(),
+            "system/details": handler.get.system.SystemDetailsHandler(),
+
+
         }
 
         self.api_post_dict = {
             "device": handler.post.device.Handler(),
             "wifi": handler.post.wifi.Handler(),
             "initialize": handler.post.initialize.Handler(),
-            # "inverter/modbus": handler.post.modbus_read_write.Handler(), # Keep this
             "logger": handler.post.logger.Handler(),
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),
             "crypto/sign": handler.post.crypto_sign.Handler(),
+            "system/reboot": handler.post.reboot.Handler()
         }
 
         self.api_delete_dict = {
@@ -217,7 +221,7 @@ def request_handler_factory(bb: BlackBoard):
                     path, "/api/", self.endpoints.api_post
                 )
                 if api_handler is not None:
-                    self.send_api_response(200, api_handler.jsonSchema())
+                    self.send_api_response(200, api_handler.schema())
                     return
                 
             

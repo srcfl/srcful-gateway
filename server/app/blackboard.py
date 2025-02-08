@@ -129,7 +129,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     @property
     def state(self) -> dict:
         state = dict()
-        state['status'] = {'version': self.get_version(), 'uptime': self.elapsed_time, 'messages': self.message_state()}
+        state['status'] = {'version': self.get_version(), 'uptime': self.elapsed_time(), 'messages': self.message_state()}
         state['timestamp'] = self.time_ms()
         state['crypto'] = self.crypto_state().to_dict(self.chip_death_count)
         state['network'] = self.network_state()
@@ -228,8 +228,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     def devices(self):
         return self._devices
 
-    @property
-    def elapsed_time(self):
+    def elapsed_time(self) -> int:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_chip_info(self):
@@ -239,7 +238,7 @@ class BlackBoard(ISystemTime, ITaskSource):
 
         return "device: " + device_name + " serial: " + serial_number
 
-    def time_ms(self):
+    def time_ms(self) -> int:
         return time.time_ns() // 1_000_000
 
     class Devices:
