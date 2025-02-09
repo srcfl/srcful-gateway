@@ -111,7 +111,11 @@ class ModbusSunspec(TCPDevice):
             logger.error("No models found for device %s. Models object was: %s", self.ip, self.client.models)
             return False
 
-        self.sn = NetworkUtils.get_mac_from_ip(self.ip)
+        try:
+            self.sn = self.client.common[0].SN.value
+        except KeyError:
+            logger.warning("Could not get serial number")
+            return False
 
         if 'inverter' in self.client.models:
             self.inverter = self.client.inverter[0]
@@ -228,4 +232,4 @@ class ModbusSunspec(TCPDevice):
         return ModbusSunspec(**config)
 
     def get_SN(self) -> str:
-        return self.mac
+        return self.sn
