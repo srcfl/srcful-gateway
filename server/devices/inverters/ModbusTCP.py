@@ -112,6 +112,8 @@ class ModbusTCP(Modbus, TCPDevice):
 
         time.sleep(1)
 
+        self.sn = self._read_SN()
+
         return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self._has_valid_frequency()
 
     def _get_type(self) -> str:
@@ -213,8 +215,7 @@ class ModbusTCP(Modbus, TCPDevice):
 
             # Read and interpret value
             a, b, value = reg_value.read_value(self)
-
-            log.info(f"Values read during frequency reading: {a}, {b}, {value}")
+            log.debug("Values read in the format of [raw, raw, value]: %s, %s, %s", a, b, value)
 
             return value
 
@@ -240,17 +241,22 @@ class ModbusTCP(Modbus, TCPDevice):
         frequency = self._read_value(self._get_frequency_register())
         return frequency and 48.0 <= frequency <= 62.0
 
-    def _init_SN(self) -> Optional[str]:
+    def _read_SN(self) -> Optional[str]:
         """Read serial number using the device profile's serial number register"""
+
         reg: RegisterInterval = self._get_SN_register()
+
         if not reg:
             return None
+
         value = self._read_value(reg)
+
         if value and isinstance(value, str):
             # Remove null bytes and any non-printable characters
-
             cleaned_sn = ''.join(char for char in value if char.isprintable())
-            # Remove any trailing whitespace
             cleaned_sn = cleaned_sn.strip()
-            return cleaned_sn
+            value = cleaned_sn
+
+        log.info("SN: %s", value)
+
         return value
