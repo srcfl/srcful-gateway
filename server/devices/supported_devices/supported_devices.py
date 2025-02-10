@@ -200,6 +200,16 @@ supported_devices = {
             ProfileKey.DISPLAY_NAME: "Sungrow",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "Another inverter profile...",
+            ProfileKey.SN: {
+                RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                RegistersKey.START_REGISTER: 4989,
+                RegistersKey.NUM_OF_REGISTERS: 10,
+                RegistersKey.DATA_TYPE: DataTypeKey.STR,
+                RegistersKey.UNIT: "",
+                RegistersKey.DESCRIPTION: "Serial number",
+                RegistersKey.SCALE_FACTOR: 1,
+                RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+            },
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
