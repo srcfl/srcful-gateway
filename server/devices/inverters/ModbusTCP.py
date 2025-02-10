@@ -112,9 +112,11 @@ class ModbusTCP(Modbus, TCPDevice):
 
         time.sleep(1)
 
-        self.sn = self._read_SN()
+        # If the serial number is not set, or if its set to the MAC address (for version < 0.18.16), read the serial number from the device
+        if self.sn is None or self.sn == self.mac:
+            self.sn = self._read_SN()
 
-        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self._has_valid_frequency()
+        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self.sn is not None
 
     def _get_type(self) -> str:
         return self.device_type
@@ -148,8 +150,7 @@ class ModbusTCP(Modbus, TCPDevice):
         return ModbusTCP.CONNECTION
 
     def get_SN(self) -> str:
-        # TODO: get the serial number from the device use mac for now
-        return self.mac
+        return self.sn
 
     def _create_client(self, **kwargs) -> None:
         self.client = ModbusClient(host=self.ip, port=self.port, unit_id=self.slave_id, **kwargs)

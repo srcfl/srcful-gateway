@@ -137,7 +137,7 @@ class ModbusSolarman(ModbusTCP):
         return ModbusSolarman(**config)
 
     def get_SN(self) -> str:
-        return str(self.sn)
+        return self.sn
 
     def get_logger_SN(self) -> str:
         return str(self.logger_sn)

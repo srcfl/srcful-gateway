@@ -1,6 +1,10 @@
 import json
 import logging
-import dbus
+
+try:
+    import dbus
+except Exception:
+    pass
 
 from server.app.blackboard import BlackBoard
 from server.app.isystem_time import ISystemTime
@@ -8,6 +12,7 @@ from ..handler import GetHandler
 from ..requestData import RequestData
 
 logger = logging.getLogger(__name__)
+
 
 class SystemHandler(GetHandler):
     def schema(self):
@@ -26,7 +31,7 @@ class SystemHandler(GetHandler):
             # Get system metrics
             with open('/sys/class/thermal/thermal_zone0/temp', 'r') as f:
                 temp = float(f.read().strip()) / 1000
-            
+
             with open('/proc/loadavg', 'r') as f:
                 load_values = f.read().strip().split()[:3]
                 load_avg = {
@@ -34,7 +39,7 @@ class SystemHandler(GetHandler):
                     'last_5min': float(load_values[1]),
                     'last_15min': float(load_values[2]),
                 }
-            
+
             with open('/proc/uptime', 'r') as f:
                 uptime = float(f.read().split()[0])
 
@@ -46,7 +51,7 @@ class SystemHandler(GetHandler):
                         # Convert kB to MB and remove 'kB' string
                         value_mb = int(value.strip().split()[0]) / 1024
                         mem_info[key.strip()] = round(value_mb, 2)
-            
+
             return {
                 'time_utc_sec': int(t.time_ms() / 1000),
                 'temperature_celsius': temp,
@@ -86,15 +91,15 @@ class SystemDetailsHandler(GetHandler):
         try:
             system_bus = dbus.SystemBus()
             systemd = system_bus.get_object('org.freedesktop.systemd1',
-                                          '/org/freedesktop/systemd1')
-            
+                                            '/org/freedesktop/systemd1')
+
             # Get properties interface
             props = dbus.Interface(systemd, 'org.freedesktop.DBus.Properties')
             manager_props = props.GetAll('org.freedesktop.systemd1.Manager')
-            
+
             # Convert DBus values to strings
             clean_props = {str(k): str(v) for k, v in manager_props.items()}
-            
+
             return {
                 'systemd_properties': clean_props
             }
@@ -107,4 +112,4 @@ class SystemDetailsHandler(GetHandler):
 
     def do_get(self, data: RequestData) -> tuple[int, str]:
         details = self._get_dbus_details()
-        return 200, json.dumps(details) 
+        return 200, json.dumps(details)
