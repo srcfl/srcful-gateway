@@ -252,6 +252,9 @@ class ModbusTCP(Modbus, TCPDevice):
 
         value = self._read_value(reg)
 
+        if not value:
+            return None
+
         if value and isinstance(value, str):
             # Remove null bytes and any non-printable characters
             cleaned_sn = ''.join(char for char in value if char.isprintable())
@@ -260,4 +263,4 @@ class ModbusTCP(Modbus, TCPDevice):
 
         log.info("SN: %s", value)
 
-        return value
+        return str(value)
