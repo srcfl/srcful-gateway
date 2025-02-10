@@ -1282,6 +1282,16 @@ supported_devices = {
             ProfileKey.DISPLAY_NAME: "Solax",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "Solax inverter profile",
+            ProfileKey.SN: {
+                RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                RegistersKey.START_REGISTER: 0,
+                RegistersKey.NUM_OF_REGISTERS: 7,
+                RegistersKey.DATA_TYPE: DataTypeKey.STR,
+                RegistersKey.UNIT: "",
+                RegistersKey.DESCRIPTION: "Serial number",
+                RegistersKey.SCALE_FACTOR: 1,
+                RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+            },
             ProfileKey.REGISTERS_VERBOSE: [
                 # The holding registers are not used in this case since they will be overwritten by the
                 # input registers due to overlapping register addresses.
