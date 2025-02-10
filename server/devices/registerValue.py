@@ -146,6 +146,14 @@ class RegisterValue:
                 value = struct.unpack(">f", value_bytes[0:4])[0]
                 return value_bytes, value * self.scale_factor
 
+            elif self.data_type == DataTypeKey.U64:
+                value = int.from_bytes(value_bytes[0:8], "big", signed=False)
+                return value_bytes, value * self.scale_factor
+
+            elif self.data_type == DataTypeKey.I64:
+                value = int.from_bytes(value_bytes[0:8], "big", signed=True)
+                return value_bytes, value * self.scale_factor
+
             elif self.data_type == DataTypeKey.STR:
                 # For strings, we just decode the bytes as they are
                 # Register order swapping (if any) is already handled above

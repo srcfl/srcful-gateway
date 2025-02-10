@@ -42,6 +42,8 @@ class DataTypeKey(str, Enum):
     U32 = 'U32'    # Unsigned 32-bit integer
     I32 = 'I32'    # Signed 32-bit integer
     F32 = 'F32'    # 32-bit floating point
+    U64 = 'U64'    # Unsigned 64-bit integer
+    I64 = 'I64'    # Signed 64-bit integer
     STR = 'STR'    # String
 
 
