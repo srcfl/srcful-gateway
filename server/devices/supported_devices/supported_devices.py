@@ -72,6 +72,16 @@ supported_devices = {
             ProfileKey.DISPLAY_NAME: "SolarEdge",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "SolarEdge inverter profile",
+            ProfileKey.SN: {
+                RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                RegistersKey.START_REGISTER: 40052,
+                RegistersKey.NUM_OF_REGISTERS: 16,
+                RegistersKey.DATA_TYPE: DataTypeKey.STR,
+                RegistersKey.UNIT: "",
+                RegistersKey.DESCRIPTION: "Serial number",
+                RegistersKey.SCALE_FACTOR: 1,
+                RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+            },
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -126,6 +136,16 @@ supported_devices = {
             ProfileKey.DISPLAY_NAME: "SolarEdge US",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "SolarEdge US inverter profile",
+            ProfileKey.SN: {
+                RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                RegistersKey.START_REGISTER: 40052,
+                RegistersKey.NUM_OF_REGISTERS: 16,
+                RegistersKey.DATA_TYPE: DataTypeKey.STR,
+                RegistersKey.UNIT: "",
+                RegistersKey.DESCRIPTION: "Serial number",
+                RegistersKey.SCALE_FACTOR: 1,
+                RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+            },
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
