@@ -20,6 +20,8 @@ class Harvest(Task):
         
         self.backoff_time = 1000 # start with a 1-second backoff
         self.transport_factory = transport_factory
+        self.last_transport_time = bb.time_ms()
+        self.harvest_count = 0
 
     def execute(self, event_time) -> Union[List[ITask], ITask, None]:
 
@@ -32,7 +34,7 @@ class Harvest(Task):
             # self.bb.add_warning("Device unexpectedly closed, removing from blackboard and starting a new open device perpetual task")
 
             
-            transports = self._create_transport(1, event_time, self.bb.settings.harvest.endpoints)
+            transports = self._create_transport(event_time, self.bb.settings.harvest.endpoints, force_transport=True)
 
             #  if the devices is not terminated, we need to start a new open device perpetual to try to reconnect
             if not self.device.is_disconnected():
@@ -46,7 +48,8 @@ class Harvest(Task):
             return transports
     
         try:
-            harvest = self.device.read_harvest_data(force_verbose=len(self.barn) == 0)
+            harvest = self.device.read_harvest_data(force_verbose=self.harvest_count % 10 == 0)
+            self.harvest_count += 1
             end_time = self.bb.time_ms()
 
             elapsed_time_ms = end_time - start_time
@@ -65,14 +68,14 @@ class Harvest(Task):
             self.device.disconnect()
             
             open_inverter = DevicePerpetualTask(self.bb.time_ms() + 30000, self.bb, self.device.clone())
-            transports = self._create_transport(1, self.bb.time_ms(), self.bb.settings.harvest.endpoints)
+            transports = self._create_transport(self.bb.time_ms(), self.bb.settings.harvest.endpoints, force_transport=True)
     
             return [open_inverter] + transports
             
         self.time = self.bb.time_ms() + self.backoff_time
 
         # check if it is time to transport the harvest
-        transport = self._create_transport(10, self.bb.time_ms() + elapsed_time_ms * 2, self.bb.settings.harvest.endpoints)
+        transport = self._create_transport(self.bb.time_ms() + elapsed_time_ms * 2, self.bb.settings.harvest.endpoints)
         if len(transport) > 0:
             return [self] + transport
         return self
@@ -84,9 +87,14 @@ class Harvest(Task):
         headers["model"] = device.get_name().lower()
         return headers
 
-    def _create_transport(self, limit: int, event_time: int, endpoints: list[str]) -> List[ITask]:
+    def _create_transport(self, event_time: int, endpoints: list[str], force_transport: bool = False) -> List[ITask]:
         ret: List[ITask] = []
-        if (len(self.barn) > 0 and len(self.barn) % limit == 0):
+
+        if not force_transport:
+            # check if the lowest time in the barn is more than 10 seconds old
+            force_transport =  self.bb.time_ms() - self.last_transport_time >= 10000
+
+        if (len(self.barn) > 0 and force_transport):
             for endpoint in endpoints:
                 logger.info("Creating transport for %s", endpoint)
                 
@@ -96,5 +104,6 @@ class Harvest(Task):
                 transport.post_url = endpoint
                 ret.append(transport)
 
+            self.last_transport_time = self.bb.time_ms()
             self.barn = {}
         return ret
