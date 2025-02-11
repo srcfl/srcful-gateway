@@ -12,6 +12,7 @@ from server.devices.IComFactory import IComFactory
 
 logger = logging.getLogger(__name__)
 
+
 class ChangeSource(Enum):
     LOCAL = 1
     BACKEND = 2
@@ -46,7 +47,6 @@ class DebouncedMonitorBase(ABC):
         self.debounce_action(source)
 
 
-
 class Observable:
     def __init__(self, parent: Optional[Observable] = None):
         self._listeners: List[Callable[[ChangeSource], None]] = []
@@ -67,21 +67,21 @@ class Observable:
             self._parent.notify_listeners(source)
 
 
-
 class Settings(Observable):
     def __init__(self):
         super().__init__()
         self._harvest = self.Harvest(self)
         self._devices = self.Devices(self)
         self._api = self.API(self)
+
     @property
     def API_SUBKEY(self):
         return "settings"
-    
+
     @property
     def SETTINGS_SUBKEY(self):
         return "settings"
-    
+
     @property
     def SETTINGS(self):
         return "settings"
@@ -93,7 +93,7 @@ class Settings(Observable):
     @property
     def devices(self) -> 'Settings.Devices':
         return self._devices
-    
+
     @property
     def api(self) -> 'Settings.API':
         return self._api
@@ -104,7 +104,7 @@ class Settings(Observable):
             self.harvest.update_from_dict(settings_data.get(self.harvest.HARVEST, {}), source)
             self.devices.update_from_dict(settings_data.get(self.devices.DEVICES, {}), source)
             self.api.update_from_dict(settings_data.get(self.api.API, {}), source)
-            
+
     def to_dict(self) -> dict:
         return {
             self.SETTINGS: {
@@ -117,11 +117,10 @@ class Settings(Observable):
     def from_json(self, json_str: str, source: ChangeSource):
         data = json.loads(json_str)
         self.update_from_dict(data, source)
-        
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
-    
+
     class API(Observable):
         def __init__(self, parent: Optional[Observable] = None):
             super().__init__(parent)
@@ -132,50 +131,50 @@ class Settings(Observable):
         @property
         def API(self):
             return "api"
-        
+
         @property
         def gql_endpoint(self):
             return self._gql_endpoint
-        
+
         def set_gql_endpoint(self, value: str, change_source: ChangeSource):
             self._gql_endpoint = value
             self.notify_listeners(change_source)
-        
+
         @property
         def ws_endpoint(self):
             return self._ws_endpoint
-        
+
         def set_ws_endpoint(self, value: str, change_source: ChangeSource):
             self._ws_endpoint = value
             self.notify_listeners(change_source)
-        
+
         @property
         def gql_timeout(self):
             return self._gql_timeout
-        
+
         def set_gql_timeout(self, value: int, change_source: ChangeSource):
             self._gql_timeout = value
             self.notify_listeners(change_source)
-        
+
         @property
         def GQL_ENDPOINT(self):
             return "gql_endpoint"
-        
+
         @property
         def WS_ENDPOINT(self):
             return "ws_endpoint"
-        
+
         @property
         def GQL_TIMEOUT(self):
             return "gql_timeout"
-              
+
         def to_dict(self) -> dict:
             return {
                 self.GQL_ENDPOINT: self._gql_endpoint,
                 self.GQL_TIMEOUT: self._gql_timeout,
                 self.WS_ENDPOINT: self._ws_endpoint
             }
-        
+
         def update_from_dict(self, data: dict, source: ChangeSource):
             notify = False
             if self.GQL_ENDPOINT in data:
@@ -189,12 +188,11 @@ class Settings(Observable):
                 notify = True
             if notify:
                 self.notify_listeners(source)
-        
+
     class Devices(Observable):
         def __init__(self, parent: Optional[Observable] = None):
             super().__init__(parent)
             self._connections: List[dict] = []
-
 
         def add_connection(self, connection: ICom, source: ChangeSource):
             config = connection.get_config()
@@ -205,6 +203,8 @@ class Settings(Observable):
 
             for old_config in old_configs:
                 self._connections.remove(old_config)
+
+            logger.info(f"Adding connection: {config}")
 
             self._connections.append(config)
             self.notify_listeners(source)
@@ -219,6 +219,8 @@ class Settings(Observable):
             for equivalent_config in equivalent_configs:
                 self._connections.remove(equivalent_config)
 
+            logger.info(f"Removing connection: {config}")
+
             # notify if something was removed
             if len(equivalent_configs) > 0:
                 self.notify_listeners(source)
@@ -226,26 +228,24 @@ class Settings(Observable):
         @property
         def CONNECTIONS(self):
             return "connections"
-        
+
         @property
         def DEVICES(self):
             return "devices"
-    
+
         @property
         def connections(self):
             return self._connections
-        
+
         def to_dict(self) -> dict:
             return {
                 self.CONNECTIONS: self._connections
             }
-        
+
         def update_from_dict(self, data: dict, source: ChangeSource):
             if self.CONNECTIONS in data:
                 self._connections = data[self.CONNECTIONS]
                 self.notify_listeners(source)
-    
-    
 
     class Harvest(Observable):
         def __init__(self, parent: Optional[Observable] = None):
@@ -255,16 +255,16 @@ class Settings(Observable):
         @property
         def HARVEST(self):
             return "harvest"
-        
+
         @property
         def ENDPOINTS(self):
             return "endpoints"
 
-        def update_from_dict(self, data: dict, source: ChangeSource ):
+        def update_from_dict(self, data: dict, source: ChangeSource):
             if self.ENDPOINTS in data:
                 self._endpoints = data[self.ENDPOINTS]
                 self.notify_listeners(source)
-                
+
         def to_dict(self) -> dict:
             return {
                 self.ENDPOINTS: self._endpoints
@@ -287,7 +287,7 @@ class Settings(Observable):
         def clear_endpoints(self, source: ChangeSource):
             if len(self._endpoints) > 0:
                 self._endpoints.clear()
-                self.notify_listeners(source)   
+                self.notify_listeners(source)
 
     def subscribe_all(self, listener: Callable[[ChangeSource], None]):
         """
