@@ -5,7 +5,7 @@ from server.devices.Device import Device
 from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from ..ICom import HarvestDataType
 from ..supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
-from server.devices.profile_keys import FunctionCodeKey
+from server.devices.profile_keys import FunctionCodeKey, DeviceCategoryKey
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -53,6 +53,10 @@ class Modbus(Device, ABC):
         if self.device_type:
             self.device_type = self.device_type.lower()
             self.profile: ModbusProfile = ModbusDeviceProfiles().get(self.device_type)
+
+            if not self.profile:
+                self.profile: ModbusProfile = ModbusDeviceProfiles(
+                    device_category=DeviceCategoryKey.METERS).get(self.device_type)
 
     def _read_harvest_data(self, force_verbose: bool) -> dict:
         regs = []
