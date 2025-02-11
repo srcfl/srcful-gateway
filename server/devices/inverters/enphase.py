@@ -57,10 +57,6 @@ class Enphase(TCPDevice):
         return "iq_gw_serial"
 
     @staticmethod
-    def sn_key():
-        return "sn"
-
-    @staticmethod
     def get_supported_devices(verbose: bool = True):
         if verbose:
             return {Enphase.CONNECTION: {
@@ -90,7 +86,6 @@ class Enphase(TCPDevice):
         self.username: str = kwargs.get(self.username_key(), "")
         self.password: str = kwargs.get(self.password_key(), "")
         self.iq_gw_serial: str = kwargs.get(self.iq_gw_serial_key(), "")
-
         self.bearer_token: str = kwargs.get(self.bearer_token_key(), "")
 
         if self.bearer_token == "":
@@ -104,6 +99,26 @@ class Enphase(TCPDevice):
 
         self.session: requests.Session = None
         self.mac: str = kwargs.get(NetworkUtils.MAC_KEY, NetworkUtils.INVALID_MAC)
+
+    def _read_device_info(self) -> Optional[str]:
+        """Read device information from the info.xml endpoint.
+
+        Returns:
+            Optional[str]: The device serial number if successful, None otherwise
+        """
+        info_response = self.make_get_request(self.ENDPOINTS[Enphase.INFORMATION])
+        if info_response.status_code != 200:
+            logger.error(f"Failed to get device info from {self.ip}. Reason: {info_response.text}")
+            return None
+
+        try:
+            root = ET.fromstring(info_response.text)
+            sn = root.find(".//device/sn").text
+            logger.info(f"Found device serial number: {sn}")
+            return sn
+        except (ET.ParseError, AttributeError) as e:
+            logger.error(f"Failed to parse device info XML: {str(e)}")
+            return None
 
     def _connect(self, **kwargs) -> bool:
         """Connect to the device by url and return True if successful, False otherwise."""
@@ -124,17 +139,8 @@ class Enphase(TCPDevice):
         self.session.headers = {"Authorization": f"Bearer {self.bearer_token}"}
 
         # Get device info to read serial number
-        info_response = self.make_get_request(self.ENDPOINTS[Enphase.INFORMATION])
-        if info_response.status_code != 200:
-            logger.error(f"Failed to get device info from {self.ip}. Reason: {info_response.text}")
-            return False
-
-        try:
-            root = ET.fromstring(info_response.text)
-            self.iq_gw_serial = root.find(".//device/sn").text
-            logger.info(f"Device serial number: {self.get_SN()}")
-        except (ET.ParseError, AttributeError) as e:
-            logger.error(f"Failed to parse device info XML: {str(e)}")
+        self.iq_gw_serial = self._read_device_info()
+        if not self.iq_gw_serial:
             return False
 
         # make a request to the production endpoint to check if the device is reachable
@@ -209,7 +215,7 @@ class Enphase(TCPDevice):
     def get_config(self) -> dict:
         return {
             **super().get_config(),
-            self.sn_key(): self.get_SN(),
+            self.iq_gw_serial_key(): self.get_SN(),
             self.mac_key(): self.mac,
             self.bearer_token_key(): self.bearer_token
         }
