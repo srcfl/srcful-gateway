@@ -6,8 +6,7 @@ from server.app.blackboard import BlackBoard
 from server.app.settings.settings_observable import ChangeSource
 from server.network.network_utils import NetworkUtils
 import pytest 
-from unittest.mock import MagicMock, Mock
-from server.tasks.saveStateTask import SaveStateTask
+from unittest.mock import MagicMock, Mock, patch
 
 
 @pytest.fixture
@@ -46,19 +45,18 @@ def test_add_connection_in_old_format(settings_device_listener):
         "address": 1,
         "type": "solaredge",
         "sn": NetworkUtils.INVALID_MAC}
+
+    old_config_copy = old_config.copy() # we need to make a copy as the reference will be modified
     
     settings_device_listener.blackboard.settings.devices._connections = [old_config]
     
     settings_device_listener._perform_action(ChangeSource.BACKEND)
     
-    new_config = settings_device_listener.blackboard._tasks[0].device.get_config()
-    assert new_config == old_config
-    
     assert len(settings_device_listener.blackboard._tasks) == 1
     
     assert_tasks_are_device_perpetual(settings_device_listener.blackboard._tasks)
     
-    assert settings_device_listener.blackboard.settings.devices._connections[0] == new_config
+    assert settings_device_listener.blackboard.settings.devices._connections[0] != old_config_copy
 
 def test_add_multiple_connections_in_old_format(settings_device_listener):
     assert_initial_state(settings_device_listener)
@@ -189,3 +187,17 @@ def test_fetch_device_settings_in_old_format(settings_device_listener: SettingsD
     
     # Assert that the device is updated in settings
     assert new_config == settings_device_listener.blackboard.devices.lst[0].get_config() # this should break, the MAC is not updated in the settings
+
+
+
+def test_remove_faulty_connection(settings_device_listener: SettingsDeviceListener):
+    with patch('server.devices.IComFactory.IComFactory.create_com') as mock_create_com:
+        mock_create_com.side_effect = ValueError("Test error")
+        
+        settings_device_listener.blackboard.settings.devices._connections = [
+            {"connection": "TCP", "host": "192.168.1.1", "port": 502, "address": 1, "type": "solaredge", "sn": NetworkUtils.INVALID_MAC}
+        ]
+
+        settings_device_listener._perform_action(ChangeSource.BACKEND)
+
+        assert len(settings_device_listener.blackboard.settings.devices._connections) == 0

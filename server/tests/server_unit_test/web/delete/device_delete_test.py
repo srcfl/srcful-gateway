@@ -40,6 +40,21 @@ def test_delete_existing_device(handler, blackboard, mock_device):
     assert status_code == 200
     assert len(blackboard.devices.lst) == 0
 
+def test_delete_device_in_settings(handler, blackboard, mock_device):
+    # Add a device to the blackboard
+    blackboard.settings.devices.connections.append(mock_device.get_config())
+
+    # Create request data with the device's serial number
+    data_params = {'id': mock_device.get_config()['sn']}
+    request = RequestData(blackboard, {}, {}, data_params)
+    
+    # Execute delete
+    status_code, response = handler.do_delete(request)
+    
+    # Verify response
+    assert status_code == 200
+    assert len(blackboard.devices.lst) == 0
+
 def test_delete_nonexistent_device(handler, blackboard):
     # Create request data with a non-existent serial number
     data_params = {'id': 'nonexistent_sn'}

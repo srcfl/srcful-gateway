@@ -1,6 +1,5 @@
 import logging
 import requests
-from server.devices.ICom import ICom
 from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
 import server.crypto.revive_run as revive_run
@@ -32,7 +31,7 @@ class HarvestTransport(IHarvestTransport):
             try:
                 jwt = chip.build_jwt(self.barn, self.headers, 5)
                 HarvestTransport.do_increase_chip_death_count = True
-            except crypto.Chip.Error as e:
+            except crypto.ChipError as e:
                 logger.error("Error creating JWT: %s", e)
                 raise e
         

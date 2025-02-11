@@ -3,7 +3,6 @@ from server.crypto.crypto_state import CryptoState
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.app.blackboard import BlackBoard
-from server.tasks.harvestFactory import HarvestFactory
 import server.tests.config_defaults as cfg
 
 from unittest.mock import MagicMock, Mock
@@ -23,7 +22,7 @@ def test_execute_invertert_added(bb : BlackBoard):
     assert device in bb.devices.lst
     assert device.connect.called
     assert ret is None
-    assert bb.purge_tasks()[0] is not None
+    assert len(bb.purge_tasks()) == 0
 
 def test_execute_inverter_already_open(bb : BlackBoard):
     device = MagicMock()

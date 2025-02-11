@@ -1,5 +1,3 @@
-# tests for server.web.handler.get.logger
-
 from unittest.mock import Mock
 import pytest
 import json

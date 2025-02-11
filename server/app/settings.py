@@ -61,7 +61,11 @@ class Settings(Observable):
     @property
     def API_SUBKEY(self):
         return "settings"
-
+    
+    @property
+    def SETTINGS_SUBKEY(self):
+        return "settings"
+    
     @property
     def SETTINGS(self):
         return "settings"
@@ -83,6 +87,8 @@ class Settings(Observable):
             settings_data = data[self.SETTINGS]
             self.harvest.update_from_dict(settings_data.get(self.harvest.HARVEST, {}), source)
             self.devices.update_from_dict(settings_data.get(self.devices.DEVICES, {}), source)
+            self.api.update_from_dict(settings_data.get(self.api.API, {}), source)
+            
 
             for key, module in self._modules.items():
                 if key in settings_data:
@@ -93,6 +99,7 @@ class Settings(Observable):
         ret = {
             self.SETTINGS: {
                 key: module.to_dict() for key, module in self._modules.items()
+                self.api.API: self.api.to_dict()
             }
         }
 
@@ -114,26 +121,53 @@ class Settings(Observable):
             super().__init__(parent)
             self._gql_endpoint = "https://api.srcful.dev"
             self._gql_timeout = 5
+            self._ws_endpoint = "wss://api.srcful.dev"
+
+        @property
+        def API(self):
+            return "api"
+        
         @property
         def gql_endpoint(self):
             return self._gql_endpoint
         
+        def set_gql_endpoint(self, value: str, change_source: ChangeSource):
+            self._gql_endpoint = value
+            self.notify_listeners(change_source)
+        
+        @property
+        def ws_endpoint(self):
+            return self._ws_endpoint
+        
+        def set_ws_endpoint(self, value: str, change_source: ChangeSource):
+            self._ws_endpoint = value
+            self.notify_listeners(change_source)
+        
         @property
         def gql_timeout(self):
             return self._gql_timeout
+        
+        def set_gql_timeout(self, value: int, change_source: ChangeSource):
+            self._gql_timeout = value
+            self.notify_listeners(change_source)
         
         @property
         def GQL_ENDPOINT(self):
             return "gql_endpoint"
         
         @property
+        def WS_ENDPOINT(self):
+            return "ws_endpoint"
+        
+        @property
         def GQL_TIMEOUT(self):
             return "gql_timeout"
-        
+              
         def to_dict(self) -> dict:
             return {
                 self.GQL_ENDPOINT: self._gql_endpoint,
-                self.GQL_TIMEOUT: self._gql_timeout
+                self.GQL_TIMEOUT: self._gql_timeout,
+                self.WS_ENDPOINT: self._ws_endpoint
             }
         
         def update_from_dict(self, data: dict, source: ChangeSource):
@@ -143,6 +177,9 @@ class Settings(Observable):
                 notify = True
             if self.GQL_TIMEOUT in data:
                 self._gql_timeout = data[self.GQL_TIMEOUT]
+                notify = True
+            if self.WS_ENDPOINT in data:
+                self._ws_endpoint = data[self.WS_ENDPOINT]
                 notify = True
             if notify:
                 self.notify_listeners(source)
@@ -155,23 +192,23 @@ class Settings(Observable):
 
         def add_connection(self, connection: ICom, source: ChangeSource):
             config = connection.get_config()
-            if config not in self._connections:
+            # if config not in self._connections:
 
-                # Remove old configs that are the same either the same host or the same serial number
-                old_configs = [x for x in self._connections if connection.compare_host(IComFactory.create_com(x)) or connection.get_SN() == IComFactory.create_com(x).get_SN()]
+            # Remove old configs that are the same either the same host or the same serial number
+            old_configs = [x for x in self._connections if connection.compare_host(IComFactory.create_com(x)) or connection.get_SN() == IComFactory.create_com(x).get_SN()]
 
-                for old_config in old_configs:
-                    self._connections.remove(old_config)
+            for old_config in old_configs:
+                self._connections.remove(old_config)
 
-                self._connections.append(config)
-                self.notify_listeners(source)
+            self._connections.append(config)
+            self.notify_listeners(source)
 
         def remove_connection(self, connection: ICom, source: ChangeSource):
             config = connection.get_config()
             removed = False
 
             # configurations may change format between version, so we need to check for equivalent configs
-            equivalent_configs = [x for x in self._connections if x in self._connections or IComFactory.create_com(x).get_config() in self._connections]
+            equivalent_configs = [x for x in self._connections if config == x or IComFactory.create_com(x).get_config() == config]
 
             for equivalent_config in equivalent_configs:
                 self._connections.remove(equivalent_config)

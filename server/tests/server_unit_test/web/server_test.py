@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from io import BytesIO
 from unittest.mock import Mock, patch
 from server.crypto.crypto_state import CryptoState
@@ -45,18 +46,22 @@ def bb():
 @patch.object(BaseHTTPRequestHandler, "setup")
 def test_handler_api_get_enpoints_params(mock_setup, mock_handle, mock_finish):
     h = Endpoints()
-    path, query = h.pre_do("/api/inverter/modbus/holding/1234?test=hello")
+    path, query = h.pre_do("/api/inverter/modbus?address=1234&device_id=00.00.00.00.00.00&function_code=0x03&size=1&type=U16&endianess=big")
 
     # this could really be any handler
-    from server.web.handler.get.modbus_read import HoldingHandler
-    handlers = {"inverter/modbus/holding/{address}": HoldingHandler()}
+    from server.web.handler.get.modbus import ModbusHandler
+    handlers = {"inverter/modbus": ModbusHandler()}
 
     handler, params = h.get_api_handler(path, "/api/", h.convert_keys_to_regex(handlers))
     assert handler is not None
     assert params is not None
     assert hasattr(handler, "do_get")
-    assert params["address"] == "1234"
-    assert query["test"] == "hello"
+    assert query["address"] == "1234"
+    assert query["device_id"] == "00.00.00.00.00.00"
+    assert query["function_code"] == "0x03"
+    assert query["size"] == "1"
+    assert query["type"] == "U16"
+    assert query["endianess"] == "big"
 
 
 def test_open_close(bb: BlackBoard):
@@ -110,22 +115,57 @@ def test_handler_get_post_data():
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")
 @patch.object(BaseHTTPRequestHandler, "setup")
-def test_handler_get_root(mock_setup, mock_handle, mock_finish, bb: BlackBoard):
-    # test that the root handler is used when no other handler matches
+def test_handler_get_root_not_found(mock_setup, mock_handle, mock_finish, bb: BlackBoard):
     h = request_handler_factory(bb)(None, None, None)
-
-    # we need to mock the base class methods
-    h.path = ""
-    h.send_response = lambda x: None
-    h.send_header = lambda x, y: None
-    h.end_headers = lambda: None
+    
+    # Mock send_response to capture the status code
+    h.send_response = Mock()
+    h.send_header = Mock()
+    h.end_headers = Mock()
     h.wfile = BytesIO()
 
     with patch("server.crypto.crypto.HardwareCrypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
         with patch("server.crypto.crypto.HardwareCrypto.atcab_read_serial_number", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
+            h.path = "some_path_that_does_not_exist"
             h.do_GET()
+    
+    # Check that send_response was called with 404
+    h.send_response.assert_called_once_with(404)
     v = h.wfile.getvalue().decode("utf-8")
-    assert "<html>" in v
+    assert "<html>" not in v
+
+
+@patch.object(BaseHTTPRequestHandler, "finish")
+@patch.object(BaseHTTPRequestHandler, "handle")
+@patch.object(BaseHTTPRequestHandler, "setup")
+def test_handler_get_no_path_returns_root(mock_setup, mock_handle, mock_finish, bb: BlackBoard):
+    h = request_handler_factory(bb)(None, None, None)
+    
+    # Mock send_response to capture the status code
+    h.send_response = Mock()
+    h.send_header = Mock()
+    h.end_headers = Mock()
+    h.wfile = BytesIO()
+
+    with patch("server.crypto.crypto.HardwareCrypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
+        with patch("server.crypto.crypto.HardwareCrypto.atcab_read_serial_number", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
+            h.path = ""
+            h.do_GET()
+    
+    # Check that send_response was called with 200 OK
+    h.send_response.assert_called_once_with(HTTPStatus.OK)
+    
+    # Check the content type header was set correctly
+    h.send_header.assert_any_call('Content-Type', 'text/html')
+    
+    # Get the response content
+    v = h.wfile.getvalue().decode("utf-8")
+    
+    # Check for basic HTML structure
+    assert "<html>" in v.lower()
+    assert "<head>" in v.lower()
+    assert "<body>" in v.lower()
+    assert "</html>" in v.lower()
 
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")

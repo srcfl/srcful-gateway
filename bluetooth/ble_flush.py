@@ -5,7 +5,6 @@
 # in this situation the device must be removed before it can be re-paired
 
 from __future__ import absolute_import, print_function, unicode_literals
-from gi.repository import GLib
 import os
 import dbus
 import dbus.service

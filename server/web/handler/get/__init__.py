@@ -4,7 +4,7 @@ from . import name
 from . import logger
 from . import root
 from . import modbus_scan
-from . import modbus_read
+from . import modbus
 from . import network
 from . import inverter
 from . import uptime
@@ -16,3 +16,6 @@ from . import settings
 from . import state
 from . import device
 from . import supported_devices
+from . import device_scan
+from . import network_scan
+from . import system

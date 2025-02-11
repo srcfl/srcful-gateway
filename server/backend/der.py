@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List
-
+from typing import List
 from server.backend.connection import Connection
 from server.backend.histogram import Histogram, SolarHistogram
 
@@ -9,7 +8,10 @@ from server.backend.histogram import Histogram, SolarHistogram
 class DER:
 
     class Type(Enum):
-        SOLAR = "solar" 
+        SOLAR = "Solar",
+        ENERGY_METER = "EnergyMeter",
+        BATTERY = "Battery",
+        VEHICLE = "Vehicle"
 
     def __init__(self, serial:str, type:Type):
         self.serial = serial

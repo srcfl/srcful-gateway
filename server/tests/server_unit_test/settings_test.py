@@ -1,5 +1,9 @@
+from unittest.mock import MagicMock, patch
 import pytest
 import json
+
+from server.devices.ICom import ICom
+from server.devices.p1meters import P1Jemac, P1Telnet
 from server.network.network_utils import HostInfo
 from server.app.settings.settings import Settings
 from server.app.settings.settings_observable import ChangeSource
@@ -95,6 +99,9 @@ def test_harvest_endpoints_property(settings):
 def test_to_json(settings):
     settings.harvest.add_endpoint("https://example.com", ChangeSource.LOCAL)
     settings.harvest.add_endpoint("https://test.com", ChangeSource.LOCAL)
+    settings.api.set_gql_endpoint("https://example.com", ChangeSource.LOCAL)
+    settings.api.set_ws_endpoint("ws://example.com", ChangeSource.LOCAL)
+    settings.api.set_gql_timeout(10000, ChangeSource.LOCAL)
     json_str = settings.to_json()
     expected = {
         settings.SETTINGS: {
@@ -106,6 +113,11 @@ def test_to_json(settings):
             },
             settings.devices.DEVICES: {
                 settings.devices.CONNECTIONS: []
+            },
+            settings.api.API: {
+                settings.api.GQL_ENDPOINT: "https://example.com",
+                settings.api.WS_ENDPOINT: "ws://example.com",
+                settings.api.GQL_TIMEOUT: 10000
             }
         }
     }
@@ -335,3 +347,70 @@ def test_remove_connection_old_format(settings:Settings):
     com = ModbusTCP(**old_format_settings)
     settings.devices.remove_connection(com, ChangeSource.LOCAL)
     assert len(settings.devices.connections) == 0
+
+def test_remove_connection(settings:Settings):
+    def mock_create_com(settings: dict):
+        device = MagicMock(spec=ICom)
+        device.get_SN.return_value = settings["serial_number"]
+        device.get_config.return_value = settings
+        return device
+    
+    settings.devices._connections.append({"serial_number": "17"})
+    settings.devices._connections.append({"serial_number": "18"})
+
+    with patch('server.devices.IComFactory.IComFactory.create_com', mock_create_com):
+        device = MagicMock(spec=ICom)
+        device.get_SN.return_value = "17"
+        device.get_config.return_value = {"serial_number": device.get_SN()}
+        settings.devices.remove_connection(device, ChangeSource.LOCAL)
+
+        assert len(settings.devices.connections) == 1
+        assert settings.devices.connections[0]["serial_number"] == "18"
+
+def test_remove_connection_equivalent_configs(settings:Settings):
+    
+    def mock_create_com(settings: dict):
+        device = MagicMock(spec=ICom)
+        device.get_SN.return_value = settings.get("serial_number", settings.get("sn"))
+        device.get_config.return_value = {"sn": device.get_SN()}
+        return device
+
+    settings.devices._connections.append({"serial_number": "17"})
+    settings.devices._connections.append({"sn": "18"})
+
+    with patch('server.devices.IComFactory.IComFactory.create_com', mock_create_com):
+        device = MagicMock(spec=ICom)
+        device.get_SN.return_value = "17"
+        device.get_config.return_value = {"sn": "17"}
+        settings.devices.remove_connection(device, ChangeSource.LOCAL)
+        assert len(settings.devices.connections) == 1
+
+    
+
+def test_add_two_devices_to_settings(settings:Settings):
+    com = ModbusTCP(**cfg.TCP_ARGS)
+    settings.devices.add_connection(com, ChangeSource.LOCAL)
+    assert len(settings.devices.connections) == 1
+    assert settings.devices.connections[0]["ip"] == "localhost"
+
+    com2 = P1Telnet(cfg.P1_TELNET_CONFIG["ip"], cfg.P1_TELNET_CONFIG["port"], cfg.P1_TELNET_CONFIG["meter_serial_number"])
+    settings.devices.add_connection(com2, ChangeSource.LOCAL)
+    assert len(settings.devices.connections) == 2
+
+
+
+def test_add_three_devices_to_settings_same_serial(settings:Settings):
+    com = ModbusTCP(**cfg.TCP_ARGS)
+    settings.devices.add_connection(com, ChangeSource.LOCAL)
+    assert len(settings.devices.connections) == 1
+    assert settings.devices.connections[0]["ip"] == "localhost"
+
+    com2 = P1Telnet(cfg.P1_TELNET_CONFIG["ip"], cfg.P1_TELNET_CONFIG["port"], cfg.P1_TELNET_CONFIG["meter_serial_number"])
+    settings.devices.add_connection(com2, ChangeSource.LOCAL)
+    assert len(settings.devices.connections) == 2
+
+    com3 = P1Jemac("localhost", 80, cfg.P1_TELNET_CONFIG["meter_serial_number"])
+    settings.devices.add_connection(com3, ChangeSource.LOCAL)
+    
+    # the old device is removed
+    assert len(settings.devices.connections) == 2

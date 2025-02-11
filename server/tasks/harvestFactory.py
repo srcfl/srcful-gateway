@@ -19,10 +19,11 @@ class HarvestFactory:
     def add_device(self, com:ICom):
         """Add the device to the blackboard and create a harvest task and save it to the settings"""
         # now we have an open device, lets create a harvest task and save it to the settings
-        if com.is_open():
-            self.bb.add_task(Harvest(self.bb.time_ms() + 1000, self.bb, com,  DefaultHarvestTransportFactory()))
-            self.bb.settings.devices.add_connection(com, ChangeSource.LOCAL)
-    
+        # if com.is_open():
+        self.bb.add_task(Harvest(self.bb.time_ms() + 1000, self.bb, com,  DefaultHarvestTransportFactory()))
+        self.bb.settings.devices.add_connection(com, ChangeSource.LOCAL)
+        self.bb.add_info(f"Added device {com.get_name()} : {com.get_SN()}")
+
     def remove_device(self, device:ICom):
         """Disconnect the device and remove it from the blackboard settings"""
         try:
@@ -30,3 +31,4 @@ class HarvestFactory:
         except ValueError:
             logger.warning("Device %s already disconnected", device)
         self.bb.settings.devices.remove_connection(device, ChangeSource.LOCAL)
+        self.bb.add_info(f"Removed device {device.get_name()} : {device.get_SN()}")

@@ -6,7 +6,6 @@ from server.crypto.crypto_state import CryptoState
 from server.web.handler.post.crypto_sign import Handler
 from server.web.handler.requestData import RequestData
 from server.app.blackboard import BlackBoard
-from server.crypto import crypto
 
 @pytest.fixture
 def handler():

@@ -2,7 +2,6 @@ from server.app.blackboard import BlackBoard
 from unittest.mock import MagicMock, Mock
 from server.app.message import Message
 from server.crypto.crypto_state import CryptoState
-from server.devices.ICom import ICom
 import pytest
 import time
 
@@ -125,7 +124,7 @@ def test_elapsed_time():
     time.sleep(0.2)
     end_time = time.monotonic_ns() // 1_000_000
 
-    diff = bb.elapsed_time - (end_time - start_time)  
+    diff = bb.elapsed_time() - (end_time - start_time)  
     
     assert abs(diff) < 10
 

@@ -1,8 +1,5 @@
 import json
 from typing import Dict, List
-
-import requests
-
 from server.backend.connection import Connection
 from server.backend.der import DER
 
@@ -20,6 +17,12 @@ class Gateway:
         match str_type:
             case "solar" | "Solar":
                 return DER.Type.SOLAR
+            case "energyMeter" | "EnergyMeter" | "energymeter":
+                return DER.Type.ENERGY_METER
+            case "battery" | "Battery" | "battery":
+                return DER.Type.BATTERY
+            case "vehicle" | "Vehicle" | "vehicle":
+                return DER.Type.VEHICLE
             case _:
                 raise ValueError(f"Invalid DER type: {str_type}")
             

@@ -25,7 +25,7 @@ def test_connect_new_device(mock_response):
     # Note the corrected patch path
     with patch('server.devices.p1meters.P1Jemac.requests.get', return_value=mock_response) as mock_get:
         assert p1_meter.connect()
-        assert p1_meter.meter_serial_number == "/LGF5E360"
+        assert p1_meter.meter_serial_number == "LGF5E360"
         mock_get.assert_called_once_with("http://192.168.0.30:80/telegram.json", timeout=5)
 
 def test_get_harvest_data(mock_response):
@@ -33,7 +33,7 @@ def test_get_harvest_data(mock_response):
     with patch('server.devices.p1meters.P1Jemac.requests.get', return_value=mock_response) as mock_get:
         assert p1_meter.connect()
         harvest = p1_meter.read_harvest_data(False)
-        assert harvest['serial_number'] == "/LGF5E360"
+        assert harvest['serial_number'] == "LGF5E360"
         assert len(harvest['rows']) == 28
 
 def test_is_open(mock_response):
@@ -60,7 +60,7 @@ def test_parse_p1_message():
     p1_data = get_p1_data()
     p1_meter = P1Jemac(p1_data)
     result = p1_meter._parse_p1_message(p1_data)
-    assert result['serial_number'] == '/LGF5E360'
+    assert result['serial_number'] == 'LGF5E360'
     assert len(result['rows']) == 28
 
 

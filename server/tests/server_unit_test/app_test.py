@@ -1,6 +1,5 @@
 import time
 import logging
-import queue
 from unittest.mock import MagicMock, Mock
 import pytest
 

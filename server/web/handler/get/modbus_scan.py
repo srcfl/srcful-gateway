@@ -1,12 +1,12 @@
 # A class to scan for modbus devices on the network
 import logging
 import json
-
-from server.devices.inverters.ModbusTCP import ModbusTCP
-from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
 from ..handler import GetHandler
 from ..requestData import RequestData
 from server.network.network_utils import NetworkUtils
+from server.devices.ICom import ICom
+from server.tasks.discoverModbusDevicesTask import DiscoverModbusDevicesTask
+from typing import List
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -22,7 +22,7 @@ class ModbusScanHandler(GetHandler):
             "description": "Scans the network for modbus devices",
             "optional": {
                 NetworkUtils.PORTS_KEY: "string, containing a comma separated list of ports to scan for modbus devices.",
-                NetworkUtils.TIMEOUT_KEY: "float, the timeout in seconds for each ip:port scan. Default is 0.01 (10ms)."
+                NetworkUtils.TIMEOUT_KEY: f"float, the timeout in seconds for each ip:port scan. Default is {NetworkUtils.DEFAULT_TIMEOUT} second(s)."
             },
             "returns": {
                 self.DEVICES: "a list of JSON Objects: {'host': host ip, 'port': host port}."
@@ -32,15 +32,11 @@ class ModbusScanHandler(GetHandler):
     def do_get(self, data: RequestData):
         """Scan the network for modbus devices."""
         
-        ports = data.query_params.get(NetworkUtils.PORTS_KEY, "502,1502,6607,8899")
-        ports = NetworkUtils.parse_ports(ports)
-        timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, 0.01) # 10ms may be too short for some networks?
-    
-        available_devices = NetworkUtils.get_hosts(ports=ports, timeout=timeout)
+        scan_task = DiscoverModbusDevicesTask(event_time=0, bb=data.bb)
         
-        # call discover modbus devices task
-        # task = DiscoverModbusDevicesTask(event_time=data.bb.time_ms() + 1000, bb=data.bb)
-
-        available_devices = json.dumps([dict(host) for host in available_devices])
+        ports_str = data.query_params.get(NetworkUtils.PORTS_KEY, NetworkUtils.DEFAULT_MODBUS_PORTS)
+        timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, NetworkUtils.DEFAULT_TIMEOUT) 
         
-        return 200, available_devices
+        devices: List[ICom] = scan_task.discover_modbus_devices(ports_str=ports_str, timeout=timeout)
+        
+        return 200, json.dumps([device.get_config() for device in devices])

@@ -1,7 +1,6 @@
 import pytest
-from unittest.mock import create_autospec, MagicMock
 from server.devices.Device import Device
-from server.devices.ICom import ICom, HarvestDataType, DER_TYPE
+from server.devices.ICom import ICom, HarvestDataType
 from typing import Optional
 
 from server.network.network_utils import HostInfo
@@ -28,7 +27,7 @@ def device():
         def is_valid(self) -> bool:
             return True
 
-        def is_open(self) -> bool:
+        def _is_open(self) -> bool:
             return self._is_connected
         
         
@@ -59,6 +58,9 @@ def device():
         
         def _get_connection_type(self) -> str:
             return "test"
+        
+        def get_client_name(self) -> str:
+            return "device.test"
         
     
     return TestDevice()
