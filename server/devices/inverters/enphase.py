@@ -1,6 +1,7 @@
 from server.devices.TCPDevice import TCPDevice
 import logging
 import requests
+import xml.etree.ElementTree as ET
 from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from server.network import mdns as mdns
 from ..ICom import HarvestDataType, ICom
@@ -29,10 +30,12 @@ class Enphase(TCPDevice):
 
     # Endpoint names
     PRODUCTION = "production"
+    INFORMATION = "information"
 
     # Endpoint paths
     ENDPOINTS = {
-        PRODUCTION: "/production.json"
+        PRODUCTION: "/production.json",
+        INFORMATION: "/info.xml"
     }
 
     model_name: str
@@ -52,6 +55,10 @@ class Enphase(TCPDevice):
     @staticmethod
     def iq_gw_serial_key():
         return "iq_gw_serial"
+
+    @staticmethod
+    def sn_key():
+        return "sn"
 
     @staticmethod
     def get_supported_devices(verbose: bool = True):
@@ -88,7 +95,7 @@ class Enphase(TCPDevice):
 
         if self.bearer_token == "":
             if not self.username or not self.password or not self.iq_gw_serial:
-                raise ValueError("Bearer token or username/password is required")
+                raise ValueError("Bearer token or username, password, and iq gateway serial number is required")
 
         ip: str = kwargs.get(self.IP, None)
         TCPDevice.__init__(self, ip, kwargs.get(self.PORT, 80))
@@ -116,7 +123,21 @@ class Enphase(TCPDevice):
         # Update headers with current bearer token
         self.session.headers = {"Authorization": f"Bearer {self.bearer_token}"}
 
-        # make a request to the first production endpoint to check if the device is reachable
+        # Get device info to read serial number
+        info_response = self.make_get_request(self.ENDPOINTS[Enphase.INFORMATION])
+        if info_response.status_code != 200:
+            logger.error(f"Failed to get device info from {self.ip}. Reason: {info_response.text}")
+            return False
+
+        try:
+            root = ET.fromstring(info_response.text)
+            self.iq_gw_serial = root.find(".//device/sn").text
+            logger.info(f"Device serial number: {self.get_SN()}")
+        except (ET.ParseError, AttributeError) as e:
+            logger.error(f"Failed to parse device info XML: {str(e)}")
+            return False
+
+        # make a request to the production endpoint to check if the device is reachable
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
 
         if response.status_code != 200:
@@ -163,14 +184,13 @@ class Enphase(TCPDevice):
 
     def _read_harvest_data(self, force_verbose: bool = False) -> dict:
         data: dict = {}
-        # Read data from all endpoints and return the result
-        for endpoint_name, endpoint_path in self.ENDPOINTS.items():
-            response = self.make_get_request(endpoint_path)
-            # logger.info(f"Response: {response.json()}")
-            if response.status_code != 200:
-                logger.error(f"Failed to read data from endpoint {endpoint_name}")
-                continue
-            data[endpoint_name] = response.json()
+        # Read data from the production endpoint
+        response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
+        if response.status_code != 200:
+            logger.error(f"Failed to read data from {self.ip}. Reason: {response.text}")
+            return {}
+
+        data[Enphase.PRODUCTION] = response.json()
         return data
 
     def _is_open(self) -> bool:
@@ -189,6 +209,7 @@ class Enphase(TCPDevice):
     def get_config(self) -> dict:
         return {
             **super().get_config(),
+            self.sn_key(): self.get_SN(),
             self.mac_key(): self.mac,
             self.bearer_token_key(): self.bearer_token
         }
@@ -238,4 +259,4 @@ class Enphase(TCPDevice):
         return None
 
     def get_SN(self) -> str:
-        return self.mac
+        return self.iq_gw_serial
