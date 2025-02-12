@@ -58,10 +58,10 @@ class IComFactory:
         # Strip the connection key and sn from the config
         stripped_config = {k: v for k, v in config.items() if k != ICom.connection_key()}
 
-        log.info("####################################################")
-        log.info("Creating ICom object for connection connection: %s", connection)
-        log.info("Connection config: %s", stripped_config)
-        log.info("####################################################")
+        log.debug("####################################################")
+        log.debug("Creating ICom object for connection connection: %s", connection)
+        log.debug("Connection config: %s", stripped_config)
+        log.debug("####################################################")
 
         match connection:
             case ModbusTCP.CONNECTION:

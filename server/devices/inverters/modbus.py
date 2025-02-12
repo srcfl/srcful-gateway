@@ -108,7 +108,7 @@ class Modbus(Device, ABC):
         resp = []
 
         try:
-            logger.info("Reading %s: %s - %s", self.device_type, str(scan_start), str(scan_range))
+            logger.debug("Reading %s: %s - %s", self.device_type, str(scan_start), str(scan_range))
             resp = self._read_registers(function_code, scan_start, scan_range)
             logger.debug("OK - Reading %s: %s - %s", self.device_type, str(scan_start), str(scan_range))
 
