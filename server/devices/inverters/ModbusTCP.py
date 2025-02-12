@@ -107,14 +107,25 @@ class ModbusTCP(Modbus, TCPDevice):
         self._create_client(**kwargs)
         if not self.client.connect():
             log.error("FAILED to open Modbus TCP device: %s", self._get_type())
+            return False
+
+        # If the socket is open, we can get the MAC address from the ARP table
         if self.client.socket:
             self.mac = NetworkUtils.get_mac_from_ip(self.ip)
 
+        # A short delay is necessary for some devices before a new connection can be established
         time.sleep(1)
 
         # If the serial number is not set, or if its set to the MAC address (for version < 0.18.16), read the serial number from the device
         if self.sn is None or self.sn == self.mac:
+            log.info("Reading SN from device")
             self.sn = self._read_SN()
+
+        # Special case for devices that does not have SN register defined in the profile
+        # We also check if the frequency is valid if no serial number can be retrieved
+        if self.sn is None and self._has_valid_frequency():
+            log.info("Setting SN to MAC because SN register is not defined but frequency is valid")
+            self.sn = self.mac
 
         return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self.sn is not None
 
