@@ -78,7 +78,6 @@ class Endpoints:
         self.api_get = Endpoints.convert_keys_to_regex(self.api_get_dict)
         self.api_post = Endpoints.convert_keys_to_regex(self.api_post_dict)
         self.api_delete = Endpoints.convert_keys_to_regex(self.api_delete_dict)
-        
 
     @staticmethod
     def query_2_dict(query_string: str):
@@ -143,7 +142,6 @@ def request_handler_factory(bb: BlackBoard):
 
             logger.info("initializing a request handler")
             self.endpoints = Endpoints()
-            
 
             super(Handler, self).__init__(*args, **kwargs)
 
@@ -201,7 +199,6 @@ def request_handler_factory(bb: BlackBoard):
             api_handler, params = Endpoints.get_api_handler(path, "/api/", self.endpoints.api_get)
             rdata = handler.RequestData(bb, params, query, {})
 
-
             if path == "" or path == "/":
                 code, response = handler.get.root.Handler().do_get(rdata)
                 self.send_html_response(code, response)
@@ -223,14 +220,13 @@ def request_handler_factory(bb: BlackBoard):
                 if api_handler is not None:
                     self.send_api_response(200, api_handler.schema())
                     return
-                
-            
+
             self.send_response(404)
             self.end_headers()
             return
-                    
 
         # this needs to be DELETE as this is a direct mapping of the http method
+
         def do_DELETE(self):
             path, query = self.endpoints.pre_do(self.path)
 
@@ -243,7 +239,7 @@ def request_handler_factory(bb: BlackBoard):
                 code, response = api_handler.do_delete(rdata)
                 self.send_api_response(code, response)
                 return
-            
+
             self.send_response(404)
             self.end_headers()
             return
