@@ -34,6 +34,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     _crypto_state: CryptoState
     _available_devices: list[ICom]
     _tasks: list[ITask]
+    # _control_objects: list
 
     def __init__(self, crypto_state: CryptoState):
         self._tasks = []
@@ -47,9 +48,10 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
         self._crypto_state = crypto_state
         self._available_devices = []
+        # self._control_objects = []
 
     def get_version(self) -> str:
-        return "0.19.0"
+        return "0.20.0"
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -240,6 +242,22 @@ class BlackBoard(ISystemTime, ITaskSource):
 
     def time_ms(self) -> int:
         return time.time_ns() // 1_000_000
+
+    # def add_control_object(self, control_obj):
+    #     """Add a control object to the blackboard for later execution"""
+    #     self._control_objects.append(control_obj)
+    #     logger.info(f"Added control object for device {control_obj.sn} to be executed at {control_obj.execute_at}")
+    #     self._save_state()
+
+    # def get_control_objects(self):
+    #     """Get all pending control objects"""
+    #     return self._control_objects
+
+    # def remove_control_object(self, control_obj):
+    #     """Remove a control object after it has been executed or is no longer needed"""
+    #     if control_obj in self._control_objects:
+    #         self._control_objects.remove(control_obj)
+    #         self._save_state()
 
     class Devices:
         """Observable list of communication objects"""

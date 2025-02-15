@@ -13,7 +13,7 @@ class SaveStateTask(ConfigurationMutationTask):
     def __init__(self, event_time: int, bb: BlackBoard):
         self.data = bb.state
         super().__init__(event_time, bb, self.SUBKEY, self.data)
-        logger.info("State: %s", self.data)
+        logger.debug("State: %s", self.data)
 
     def execute(self, event_time):
         self.data = self.bb.state
