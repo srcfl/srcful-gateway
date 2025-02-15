@@ -16,6 +16,7 @@ from server.web.socket.settings_subscription import GraphQLSubscriptionClient
 from server.web.socket.control_subscription import ControlSubscription
 from server.app.settings_device_listener import SettingsDeviceListener
 from server.app.blackboard import BlackBoard
+from server.network.mdns import MDNSAdvertiser
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,21 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     bb.rest_server_ip = server_host[0]
     web_server = server.web.server.Server(web_host, bb)
     logger.info("Server started http://%s:%s", web_host[0], web_host[1])
+
+    # Initialize and start mDNS advertisement
+    mdns_advertiser = MDNSAdvertiser()
+    try:
+        mdns_advertiser.register_gateway(
+            hostname="sourceful",
+            port=web_host[1],
+            properties={
+                "version": bb.get_version(),
+                **bb.crypto_state().to_dict(bb.chip_death_count)
+            }
+        )
+        logger.info("mDNS advertisement started for sourceful.local")
+    except Exception as e:
+        logger.error(f"Failed to start mDNS advertisement: {e}")
 
     graphql_client = GraphQLSubscriptionClient(bb, bb.settings.api.ws_endpoint)
     graphql_client.start()
@@ -74,6 +90,14 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         web_server.close()
         graphql_client.stop()
         graphql_client.join()
+
+        # Clean up mDNS advertisement
+        try:
+            mdns_advertiser.unregister()
+            logger.info("mDNS advertisement stopped")
+        except Exception as e:
+            logger.error(f"Failed to stop mDNS advertisement: {e}")
+
         logger.info("Server stopped.")
 
 
