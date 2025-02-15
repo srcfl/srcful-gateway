@@ -250,27 +250,27 @@ class Handler(GetHandler):
         # Get the full state
         state = data.bb.state
 
-        # Header with version
-        ret += f"<h1>Srcful Energy Gateway {state['status']['version']}</h1>"
-
         # Status Section
         ret += '<div class="section">'
         ret += '<h2>Status</h2>'
         ret += '<div class="grid">'
 
-        # Uptime
+        # Version and Uptime cards
         uptime = state['status']['uptime']
         days, remainder = divmod(uptime // 1000, 60 * 60 * 24)
         hours, remainder = divmod(remainder, 60 * 60)
         minutes, seconds = divmod(remainder, 60)
 
-        for label, value in [("Days", days), ("Hours", hours), ("Minutes", minutes), ("Seconds", seconds)]:
-            ret += f'''
-                <div class="card">
-                    <div class="card-header">{label}</div>
-                    <div class="card-value">{value}</div>
-                </div>
-            '''
+        ret += f'''
+            <div class="card">
+                <div class="card-header">Version</div>
+                <div class="card-value">{state['status']['version']}</div>
+            </div>
+            <div class="card">
+                <div class="card-header">Uptime</div>
+                <div class="card-value">{int(days):02d} days {int(hours):02d} hours {int(minutes):02d} minutes {int(seconds):02d} seconds</div>
+            </div>
+        '''
         ret += '</div></div>'
 
         # Devices Section
