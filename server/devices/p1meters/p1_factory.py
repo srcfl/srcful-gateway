@@ -18,12 +18,12 @@ def _connect_device(p1: ICom, error_message: str) -> Optional[ICom]:
 def create_rest_device_msn(meter_serial_number: Optional[str], host: HostInfo) -> Optional[ICom]:
     from server.devices.p1meters.P1Jemac import P1Jemac
     from server.devices.p1meters.P1HomeWizard import P1HomeWizard
-    from server.devices.p1meters.P1EventStream import P1EventStream
+    from server.devices.p1meters.P1CurrentlyEventStream import P1CurrentlyEventStream
 
     constructors = {
         "Jemac": P1Jemac,
         "HomeWizard": P1HomeWizard,
-        "EventStream": P1EventStream
+        "CurrentlyEventStream": P1CurrentlyEventStream
     }
 
     for key, constructor in constructors.items():

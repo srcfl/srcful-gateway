@@ -82,27 +82,27 @@ class SSEClient:
             self.response = None
 
 
-class P1EventStream(TCPDevice):
-    CONNECTION = "P1EventStream"
+class P1CurrentlyEventStream(TCPDevice):
+    CONNECTION = "P1CurrentlyEventStream"
 
     @staticmethod
     def get_supported_devices(verbose: bool = True):
         if verbose:
-            return {P1EventStream.CONNECTION: {
-                P1EventStream.DEVICE_TYPE: P1EventStream.CONNECTION,
-                P1EventStream.MAKER: 'P1 Event Stream',
-                P1EventStream.DISPLAY_NAME: 'P1 Event Stream',
-                P1EventStream.PROTOCOL: 'http'
+            return {P1CurrentlyEventStream.CONNECTION: {
+                P1CurrentlyEventStream.DEVICE_TYPE: P1CurrentlyEventStream.CONNECTION,
+                P1CurrentlyEventStream.MAKER: 'P1 Currently Event Stream',
+                P1CurrentlyEventStream.DISPLAY_NAME: 'P1 Currently Event Stream',
+                P1CurrentlyEventStream.PROTOCOL: 'http'
             }}
         else:
-            return {P1EventStream.CONNECTION: {
-                P1EventStream.MAKER: 'P1 Event Stream'
+            return {P1CurrentlyEventStream.CONNECTION: {
+                P1CurrentlyEventStream.MAKER: 'P1 Currently Event Stream'
             }}
 
     @staticmethod
     def get_config_schema():
         return {
-            **TCPDevice.get_config_schema(P1EventStream.CONNECTION),
+            **TCPDevice.get_config_schema(P1CurrentlyEventStream.CONNECTION),
             "meter_serial_number": "optional string, Serial number of the meter",
             "model_name": "optional string, Model name of the meter"
         }
@@ -113,7 +113,7 @@ class P1EventStream(TCPDevice):
         self.meter_serial_number = meter_serial_number
         self.model_name = model_name
         self.client = None
-        self._last_state = None
+        self._previous_state = None
 
     def _connect(self, **kwargs) -> bool:
         try:
@@ -145,26 +145,22 @@ class P1EventStream(TCPDevice):
         return self.client is not None
 
     def _read_harvest_data(self, force_verbose) -> dict:
-        try:
-            if not self.client:
-                raise ConnectionError("Not connected")
+        if not self.client:
+            raise ConnectionError("Not connected")
 
-            while True:
-                event = self.client.read_event()
-                if not event:
-                    raise ConnectionError("Stream closed")
+        event = self.client.read_event()
+        if not event:
+            raise ConnectionError("Stream closed")
 
-                logger.info(f"Event: {event.event} -> {event.data}")
+        logger.info(f"Event: {event.event} -> {event.data}")
 
-                if event.event == "state":
-                    return {
-                        'serial_number': self.meter_serial_number,
-                        'state': event.data
-                    }
+        if event.event == "state":
+            if self._previous_state != event.data:
+                self._previous_state = event.data
+                return event.data
+            return {}
 
-        except Exception as e:
-            logger.error(f"Error reading data: {str(e)}")
-            raise
+        return {}
 
     def get_harvest_data_type(self) -> HarvestDataType:
         return HarvestDataType.P1_EVENT_STREAM
@@ -176,18 +172,18 @@ class P1EventStream(TCPDevice):
         }
 
     def _get_connection_type(self) -> str:
-        return P1EventStream.CONNECTION
+        return P1CurrentlyEventStream.CONNECTION
 
     def get_name(self) -> str:
-        return "P1EventStream"
+        return "P1CurrentlyEventStream"
 
     def get_client_name(self) -> str:
-        return P1_METER_CLIENT_NAME + "." + "generic.eventstream"
+        return P1_METER_CLIENT_NAME + "." + "currently.eventstream"
 
     def clone(self, ip: Optional[str] = None) -> 'ICom':
         if ip is None:
             ip = self.ip
-        return P1EventStream(ip, self.port, self.meter_serial_number)
+        return P1CurrentlyEventStream(ip, self.port, self.meter_serial_number)
 
     def find_device(self) -> Optional[ICom]:
         if self.meter_serial_number:
@@ -197,7 +193,7 @@ class P1EventStream(TCPDevice):
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
         config = self.get_config()
         config[self.IP] = host.ip
-        return P1EventStream(**config)
+        return P1CurrentlyEventStream(**config)
 
     def get_SN(self) -> str:
         return self.meter_serial_number

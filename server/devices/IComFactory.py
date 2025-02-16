@@ -5,7 +5,7 @@ from .inverters.enphase import Enphase
 from .p1meters.P1Telnet import P1Telnet
 from .p1meters.P1Jemac import P1Jemac
 from .p1meters.P1HomeWizard import P1HomeWizard
-from .p1meters.P1EventStream import P1EventStream
+from .p1meters.P1CurrentlyEventStream import P1CurrentlyEventStream
 from .ICom import ICom
 import logging
 
@@ -15,7 +15,7 @@ log.setLevel(logging.INFO)
 
 class IComFactory:
 
-    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, Enphase, P1Jemac, P1HomeWizard, P1EventStream]
+    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, Enphase, P1Jemac, P1HomeWizard, P1CurrentlyEventStream]
 
     @staticmethod
     def get_connection_configs():
@@ -79,8 +79,8 @@ class IComFactory:
                 return P1Jemac(**stripped_config)
             case P1HomeWizard.CONNECTION:
                 return P1HomeWizard(**stripped_config)
-            case P1EventStream.CONNECTION:
-                return P1EventStream(**stripped_config)
+            case P1CurrentlyEventStream.CONNECTION:
+                return P1CurrentlyEventStream(**stripped_config)
             case _:
                 log.error("Unknown connection type: %s", connection)
                 raise ValueError(f"Unknown connection type: {connection}")
