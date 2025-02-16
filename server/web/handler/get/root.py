@@ -287,12 +287,8 @@ class Handler(GetHandler):
                         <div class="card-header">{device['name']}</div>
                         <div class="device-details">
                             <div class="device-property">
-                                <span class="device-property-label">ID:</span>
+                                <span class="device-property-label">SN:</span>
                                 <span class="device-property-value">{device['id']}</span>
-                            </div>
-                            <div class="device-property">
-                                <span class="device-property-label">Status:</span>
-                                <span class="device-property-value">{'Connected' if device['is_open'] else 'Disconnected'}</span>
                             </div>
                             <div class="device-property">
                                 <span class="device-property-label">Type:</span>
