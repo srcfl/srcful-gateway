@@ -19,12 +19,12 @@ class Handler(GetHandler):
                                       }]
                                   }})
 
-    def get_supported_inverters(self):
-        supported_inverters = IComFactory.get_supported_devices()
-        return {'devices': supported_inverters}
+    def get_supported_devices(self):
+        supported_devices = IComFactory.get_supported_devices()
+        return {'devices': supported_devices}
 
     def do_get(self, data: RequestData):
-        return 200, json.dumps(self.get_supported_inverters())
+        return 200, json.dumps(self.get_supported_devices())
 
 
 class SupportedConfigurations(GetHandler):

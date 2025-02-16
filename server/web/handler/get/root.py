@@ -296,7 +296,7 @@ class Handler(GetHandler):
                             </div>
                             <div class="device-property">
                                 <span class="device-property-label">Type:</span>
-                                <span class="device-property-value">{device['connection']['device_type']}</span>
+                                <span class="device-property-value">{device['connection'].get('device_type', 'Unknown')}</span>
                             </div>
                             <div class="device-property">
                                 <span class="device-property-label">IP:</span>
@@ -304,7 +304,7 @@ class Handler(GetHandler):
                             </div>
                             <div class="device-property">
                                 <span class="device-property-label">MAC:</span>
-                                <span class="device-property-value">{device['connection']['mac']}</span>
+                                <span class="device-property-value">{device['connection'].get('mac', 'N/A')}</span>
                             </div>
                         </div>
                     </div>
