@@ -54,22 +54,39 @@ def test_execute_harvest(blackboard : BlackBoard):
     assert len(t.barn) == 1
     assert t.time > 17
 
-def test_execute_harvest_x10(blackboard : BlackBoard):
+def test_execute_harvest_transport_on_long_interval(blackboard : BlackBoard):
+    mock_inverter = Mock(spec=ICom)
+    mock_inverter.connect.return_value = True
+    mock_inverter.get_backoff_time_ms.return_value = 10 # 10 mseconds
+
+    blackboard.time_ms = Mock(return_value=1000)
+    t = harvest.Harvest(0, blackboard, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
+    blackboard.time_ms.return_value += 10000 # that the time has passed 10 seconds after a long harvest.
+    ret = t.execute(17)
+    assert len(ret) == 2
+    assert t in ret
+    assert len(t.barn) == 0
+    assert t.time > 17
+
+
+def test_execute_harvest_10s(blackboard : BlackBoard):
     # in this test we check that we get the desired behavior when we execute a harvest task 10 times
     # the first 9 times we should get the same task back
     # the 10th time we should get a list of 2 tasks back
     mock_inverter = Mock(spec=ICom)
-    registers = [{"1": 1717 + x} for x in range(10)]
+    registers = [{"1": 1717 + x} for x in range(11)]
     bb = blackboard
     bb.settings.harvest.clear_endpoints(ChangeSource.LOCAL)
     bb.settings.harvest.add_endpoint("http://dret.com:8080", ChangeSource.LOCAL)
+    bb.time_ms = Mock(return_value=1000)
     t = harvest.Harvest(0, bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     mock_inverter.connect.return_value = True
     mock_inverter.get_backoff_time_ms.return_value = 1000
 
+
     index_time_map = {}
 
-    for i in range(9):
+    for i in range(10):
         mock_inverter.read_harvest_data.return_value = registers[i]
         ret = t.execute(i)
         assert ret is t
@@ -77,15 +94,16 @@ def test_execute_harvest_x10(blackboard : BlackBoard):
         assert t.barn[max(t.barn.keys())] == registers[i]
         assert len(t.barn) == i + 1
         index_time_map[i] = max(t.barn.keys())
-        time.sleep(0.01) # we need to sleep a bit to avoid writing on the same key on the barn
+        bb.time_ms.return_value += 1000
 
-    mock_inverter.read_harvest_data.return_value = registers[9]
+    mock_inverter.read_harvest_data.return_value = registers[10]
     ret = t.execute(17)
     assert len(t.barn) == 0
     assert ret is not t
     assert len(ret) == 2
     assert ret[0] is t
     assert ret[1] is not t
+    assert t.harvest_count == 11
     expected_barn = {
         index_time_map[0]: registers[0],
         index_time_map[1]: registers[1],
@@ -96,7 +114,8 @@ def test_execute_harvest_x10(blackboard : BlackBoard):
         index_time_map[6]: registers[6],
         index_time_map[7]: registers[7],
         index_time_map[8]: registers[8],
-        max(ret[1].barn.keys()): registers[9],
+        index_time_map[9]: registers[9],
+        max(ret[1].barn.keys()): registers[10],
     }
 
     assert ret[1].barn == expected_barn
@@ -117,7 +136,7 @@ def test_execute_harvest_no_transport():
     mock_inverter.is_disconnected.return_value = False
     mock_inverter.get_backoff_time_ms.return_value = 1000
 
-    registers = [{"1": 1717 + x} for x in range(10)]
+    registers = [{"1": 1717 + x} for x in range(11)]
 
 
     mock_bb = _create_mock_bb()
@@ -138,7 +157,7 @@ def test_execute_harvest_no_transport():
     assert type(transport) is harvestTransport.HarvestTransport
 
     assert len(t.barn) == 0
-    assert len(transport.barn) == 10
+    assert len(transport.barn) == 11
 
 def test_execute_harvest_device_terminated():
     mock_inverter = Mock(spec=ICom)

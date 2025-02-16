@@ -3,6 +3,7 @@ from enum import Enum
 
 class ProfileKey(str, Enum):
     NAME = 'name'
+    SN = 'sn'
     MAKER = 'maker'
     VERSION = 'version'
     VERBOSE_ALWAYS = 'verbose_always'
@@ -41,6 +42,8 @@ class DataTypeKey(str, Enum):
     U32 = 'U32'    # Unsigned 32-bit integer
     I32 = 'I32'    # Signed 32-bit integer
     F32 = 'F32'    # 32-bit floating point
+    U64 = 'U64'    # Unsigned 64-bit integer
+    I64 = 'I64'    # Signed 64-bit integer
     STR = 'STR'    # String
 
 
@@ -52,6 +55,7 @@ class EndiannessKey(str, Enum):
 class FunctionCodeKey(int, Enum):
     READ_HOLDING_REGISTERS = 0x03
     READ_INPUT_REGISTERS = 0x04
+    WRITE_MULTIPLE_REGISTERS = 0x10
 
 
 class DeviceCategoryKey(str, Enum):

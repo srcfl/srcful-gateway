@@ -13,17 +13,19 @@ from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
+from server.web.socket.control_subscription import ControlSubscription
 from server.app.settings_device_listener import SettingsDeviceListener
 from server.app.blackboard import BlackBoard
+from server.network.mdns import MDNSAdvertiser
 
 logger = logging.getLogger(__name__)
 
 
-def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None): 
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None):
 
     try:
         crypto_state = CryptoState()
-    except Exception as e:  
+    except Exception as e:
         logger.error(f"Failed to get crypto state: {e}")
         return
     bb = BlackBoard(crypto_state)
@@ -38,10 +40,26 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     web_server = server.web.server.Server(web_host, bb)
     logger.info("Server started http://%s:%s", web_host[0], web_host[1])
 
-    
+    # Initialize and start mDNS advertisement
+    mdns_advertiser = MDNSAdvertiser()
+    try:
+        mdns_advertiser.register_gateway(
+            hostname="sourceful",
+            port=web_host[1],
+            properties={
+                "version": bb.get_version(),
+                **bb.crypto_state().to_dict(bb.chip_death_count)
+            }
+        )
+        logger.info("mDNS advertisement started for sourceful.local")
+    except Exception as e:
+        logger.error(f"Failed to start mDNS advertisement: {e}")
+
     graphql_client = GraphQLSubscriptionClient(bb, bb.settings.api.ws_endpoint)
     graphql_client.start()
 
+    # control_client = ControlSubscription(bb, "ws://localhost:8765")
+    # control_client.start()
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
@@ -67,11 +85,19 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     finally:
         for i in bb.devices.lst:
             i.disconnect()
-        
+
         bb.devices.lst.clear()
         web_server.close()
         graphql_client.stop()
         graphql_client.join()
+
+        # Clean up mDNS advertisement
+        try:
+            mdns_advertiser.unregister()
+            logger.info("mDNS advertisement stopped")
+        except Exception as e:
+            logger.error(f"Failed to stop mDNS advertisement: {e}")
+
         logger.info("Server stopped.")
 
 
@@ -87,7 +113,7 @@ if __name__ == "__main__":
         NetworkUtils.IP_KEY: "192.168.1.100",
         NetworkUtils.MAC_KEY: NetworkUtils.INVALID_MAC,
         NetworkUtils.PORT_KEY: 502,
-        ModbusTCP.slave_id_key(): 1,  
+        ModbusTCP.slave_id_key(): 1,
         ModbusTCP.device_type_key(): "huawei"
     }
     modbus_tcp = ModbusTCP(**args)

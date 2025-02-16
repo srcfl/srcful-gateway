@@ -18,7 +18,7 @@ class DevicePerpetualTask(Task):
     def in_settings(self, device: ICom):
         for settings in self.bb.settings.devices.connections:
             settings_device = IComFactory.create_com(settings)
-            if settings_device.get_SN() == self.device.get_SN():
+            if settings_device.get_SN() == device.get_SN():
                 return True
         return False
 

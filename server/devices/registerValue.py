@@ -1,11 +1,12 @@
 import struct
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional, Union, List
 from .profile_keys import DataTypeKey, FunctionCodeKey, EndiannessKey
 from .common.types import ModbusProtocol
 import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
 
 class RegisterValue:
     def __init__(
@@ -23,7 +24,7 @@ class RegisterValue:
         self.function_code: FunctionCodeKey = function_code
         self.scale_factor: float = scale_factor
         self.endianness: EndiannessKey = endianness
-        
+
     def read_value(self, device: ModbusProtocol) -> Tuple[bytearray, bytearray, Optional[Union[int, float, str]]]:
         """Reads and interprets register value from device
         Returns:
@@ -34,9 +35,9 @@ class RegisterValue:
         """
         # Read using the specified function code
         registers = device.read_registers(self.function_code, self.address, self.size)
-        
+
         raw = bytearray()
-        
+
         if not registers:
             return raw, raw, None
 
@@ -48,6 +49,48 @@ class RegisterValue:
         swapped, value = self._interpret_value(raw)
         return raw, swapped, value
 
+    @staticmethod
+    def write_single(device: ModbusProtocol, address: int, value: int) -> bool:
+        """Write a single register value
+        Args:
+            device: The Modbus device to write to
+            address: Starting register address
+            value: Value to write (16-bit integer)
+        Returns:
+            bool: True if write was successful
+        """
+        try:
+            if hasattr(device, 'write_registers'):
+                return device.write_registers(address, [value & 0xFFFF])
+
+            logger.error("Device does not support writing registers")
+            return False
+        except Exception as e:
+            logger.error(f"Error writing single register: {str(e)}")
+            return False
+
+    @staticmethod
+    def write_multiple(device: ModbusProtocol, address: int, values: List[int]) -> bool:
+        """Write multiple register values
+        Args:
+            device: The Modbus device to write to
+            address: Starting register address
+            values: List of values to write (each should be 16-bit integer)
+        Returns:
+            bool: True if write was successful
+        """
+        try:
+            if hasattr(device, 'write_registers'):
+                # Ensure each value is 16-bit
+                registers = [val & 0xFFFF for val in values]
+                return device.write_registers(address, registers)
+
+            logger.error("Device does not support writing registers")
+            return False
+        except Exception as e:
+            logger.error(f"Error writing multiple registers: {str(e)}")
+            return False
+
     def _interpret_value(self, raw: bytearray) -> Tuple[bytearray, Optional[Union[int, float, str]]]:
         """Interprets raw bytes according to data type
         Returns:
@@ -56,7 +99,7 @@ class RegisterValue:
             - value: Interpreted value
         """
         logger.debug(f"Interpreting value - DataType: {self.data_type}, Raw: {raw.hex()}, ScaleFactor: {self.scale_factor}")
-        
+
         try:
             # Handle register pair endianness (if applicable)
             # Example for a 32-bit value (2 registers, 4 bytes total):
@@ -70,7 +113,7 @@ class RegisterValue:
             # Note: Bytes within each register stay in big-endian order
             # as per Modbus specification. We only swap the register order,
             # not the bytes within registers.
-            
+
             # For multi-register values, we need to:
             # 1. Keep the raw bytes as they are for big-endian
             # 2. For little-endian, interpret the value by swapping register order
@@ -82,38 +125,45 @@ class RegisterValue:
                 value_bytes = bytearray().join(registers[::-1])
             else:
                 value_bytes = raw
-            
 
             if self.data_type == DataTypeKey.U16:
                 value = int.from_bytes(value_bytes[0:2], "big", signed=False)
                 return value_bytes, value * self.scale_factor
-            
+
             elif self.data_type == DataTypeKey.I16:
                 value = int.from_bytes(value_bytes[0:2], "big", signed=True)
                 return value_bytes, value * self.scale_factor
-            
+
             elif self.data_type == DataTypeKey.U32:
                 value = int.from_bytes(value_bytes[0:4], "big", signed=False)
                 return value_bytes, value * self.scale_factor
-            
+
             elif self.data_type == DataTypeKey.I32:
                 value = int.from_bytes(value_bytes[0:4], "big", signed=True)
                 return value_bytes, value * self.scale_factor
-            
+
             elif self.data_type == DataTypeKey.F32:
                 value = struct.unpack(">f", value_bytes[0:4])[0]
                 return value_bytes, value * self.scale_factor
-            
+
+            elif self.data_type == DataTypeKey.U64:
+                value = int.from_bytes(value_bytes[0:8], "big", signed=False)
+                return value_bytes, value * self.scale_factor
+
+            elif self.data_type == DataTypeKey.I64:
+                value = int.from_bytes(value_bytes[0:8], "big", signed=True)
+                return value_bytes, value * self.scale_factor
+
             elif self.data_type == DataTypeKey.STR:
                 # For strings, we just decode the bytes as they are
                 # Register order swapping (if any) is already handled above
                 return value_bytes, value_bytes.decode("ascii").rstrip('\x00')
-            
+
             return raw, None
-            
+
         except Exception as e:
             logger.error(f"Error interpreting value: {str(e)}")
             return raw, None
-        
+
     def __str__(self):
         return f"RegisterValue(address={self.address}, size={self.size}, function_code={self.function_code}, data_type={self.data_type}, scale_factor={self.scale_factor})"

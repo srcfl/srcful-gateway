@@ -7,8 +7,9 @@ from server.devices.profile_keys import DataTypeKey, FunctionCodeKey, Endianness
 def mock_device():
     """Fixture providing a mock device with read_registers method"""
     device = Mock()
-    # Configure the mock to have a read_registers method
+    # Configure the mock to have read_registers and write_registers methods
     device.read_registers = Mock()
+    device.write_registers = Mock(return_value=True)
     return device
 
 def test_u16_value(mock_device):
@@ -364,3 +365,82 @@ def test_str_endianness(mock_device):
     assert value == "o\x00llHe"  # Value interpreted from swapped bytes
     assert raw.hex() == "48656c6c6f00"  # Raw bytes in original memory order
     assert swapped.hex() == "6f006c6c4865"  # Bytes after register swapping
+
+
+def test_write_single_register(mock_device):
+    """Test writing a single register value"""
+    # Write value 500 to register 1000
+    success = RegisterValue.write_single(mock_device, address=1000, value=500)
+    
+    assert success is True
+    mock_device.write_registers.assert_called_once_with(1000, [500])
+
+def test_write_single_register_truncation(mock_device):
+    """Test that values are properly truncated to 16 bits"""
+    # Write value 0x12345678, should be truncated to 0x5678
+    success = RegisterValue.write_single(mock_device, address=1000, value=0x12345678)
+    
+    assert success is True
+    mock_device.write_registers.assert_called_once_with(1000, [0x5678])
+
+def test_write_multiple_registers(mock_device):
+    """Test writing multiple register values"""
+    values = [10, 20, 30]
+    success = RegisterValue.write_multiple(mock_device, address=1000, values=values)
+    
+    assert success is True
+    mock_device.write_registers.assert_called_once_with(1000, [10, 20, 30])
+
+def test_write_multiple_registers_truncation(mock_device):
+    """Test that multiple values are properly truncated to 16 bits"""
+    values = [0x12345678, 0xFFFFFFFF, 0x0000FFFF]
+    success = RegisterValue.write_multiple(mock_device, address=1000, values=values)
+    
+    assert success is True
+    mock_device.write_registers.assert_called_once_with(1000, [0x5678, 0xFFFF, 0xFFFF])
+
+def test_write_single_register_device_error(mock_device):
+    """Test handling of device errors during single register write"""
+    mock_device.write_registers.return_value = False
+    success = RegisterValue.write_single(mock_device, address=1000, value=500)
+    
+    assert success is False
+    mock_device.write_registers.assert_called_once_with(1000, [500])
+
+def test_write_multiple_registers_device_error(mock_device):
+    """Test handling of device errors during multiple register write"""
+    mock_device.write_registers.return_value = False
+    success = RegisterValue.write_multiple(mock_device, address=1000, values=[10, 20, 30])
+    
+    assert success is False
+    mock_device.write_registers.assert_called_once_with(1000, [10, 20, 30])
+
+def test_write_single_register_no_write_support(mock_device):
+    """Test handling of devices that don't support writing"""
+    # Remove write_registers method
+    delattr(mock_device, 'write_registers')
+    
+    success = RegisterValue.write_single(mock_device, address=1000, value=500)
+    assert success is False
+
+def test_write_multiple_registers_no_write_support(mock_device):
+    """Test handling of devices that don't support writing"""
+    # Remove write_registers method
+    delattr(mock_device, 'write_registers')
+    
+    success = RegisterValue.write_multiple(mock_device, address=1000, values=[10, 20, 30])
+    assert success is False
+
+def test_write_single_register_exception(mock_device):
+    """Test handling of exceptions during single register write"""
+    mock_device.write_registers.side_effect = Exception("Test error")
+    
+    success = RegisterValue.write_single(mock_device, address=1000, value=500)
+    assert success is False
+
+def test_write_multiple_registers_exception(mock_device):
+    """Test handling of exceptions during multiple register write"""
+    mock_device.write_registers.side_effect = Exception("Test error")
+    
+    success = RegisterValue.write_multiple(mock_device, address=1000, values=[10, 20, 30])
+    assert success is False
