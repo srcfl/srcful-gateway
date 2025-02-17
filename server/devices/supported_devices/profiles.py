@@ -31,7 +31,8 @@ class RegisterInterval:
                  unit: str = "N/A",
                  description: str = "N/A",
                  scale_factor: float = 1.0,
-                 endianness: EndiannessKey = EndiannessKey.BIG):
+                 endianness: EndiannessKey = EndiannessKey.BIG,
+                 scale_factor_register: int = None):
         self.function_code: FunctionCodeKey = function_code
         self.start_register: int = start_register
         self.offset: int = offset
@@ -40,6 +41,7 @@ class RegisterInterval:
         self.description: str = description
         self.scale_factor: float = scale_factor
         self.endianness: EndiannessKey = endianness
+        self.scale_factor_register: int = scale_factor_register
 
 
 class ModbusProfile(DeviceProfile):
@@ -86,7 +88,8 @@ class ModbusProfile(DeviceProfile):
                         register_interval[RegistersKey.UNIT],
                         register_interval[RegistersKey.DESCRIPTION],
                         register_interval[RegistersKey.SCALE_FACTOR],
-                        register_interval[RegistersKey.ENDIANNESS]
+                        register_interval[RegistersKey.ENDIANNESS],
+                        register_interval.get(RegistersKey.SCALE_FACTOR_REGISTER, None)
                     )
                 )
 
