@@ -1,5 +1,4 @@
 import logging
-from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.app.blackboard import BlackBoard
 from .task import Task
 from server.devices.common.control_objects.control_object import ControlObject
