@@ -4,6 +4,8 @@ import logging
 from websocket import WebSocketApp
 import json
 from typing import Optional, Dict, Any
+from .control.types import ControlMessageType
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -86,7 +88,7 @@ class BaseWebSocketClient(threading.Thread):
                 )
 
                 logger.info(f"WebSocket connection opened")
-                self.ws.run_forever(ping_interval=self.PING_INTERVAL, ping_timeout=10)
+                self.ws.run_forever(ping_interval=self.PING_INTERVAL, ping_timeout=10, http_proxy_timeout=30)
             except Exception as e:
                 logger.error(f"WebSocket error: {e} url: {self.url}")
 
@@ -108,6 +110,9 @@ class BaseWebSocketClient(threading.Thread):
                     self.ws.send(json.dumps(message))
                 else:
                     self.ws.send(str(message))
+                logger.info("#" * 50)
+                logger.info(f"Sent message: {json.dumps(message)}")
+                logger.info("#" * 50)
             except Exception as e:
                 logger.error(f"Error sending message: {e}")
 
@@ -118,12 +123,7 @@ class BaseWebSocketClient(threading.Thread):
 
     def send_connection_init(self):
         """Send connection initialization message"""
-        init_message = {
-            "type": "connection_init",
-            "payload": {}
-        }
-        self.send_message(init_message)
-        logger.info("Sent connection_init message")
+        pass
 
     def on_ping(self, ws, message):
         logger.info(f"Received server ping: {message}")

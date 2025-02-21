@@ -1,6 +1,7 @@
 from server.crypto import crypto
 import base64
 import pytest
+from cryptography.hazmat.primitives import hashes
 
 from unittest.mock import patch
 
@@ -39,6 +40,7 @@ def test_init_throws_error():
                 pass
         assert excinfo.value.code == 1
 
+
 def test_sign_throws_error():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
         with patch('server.crypto.crypto.HardwareCrypto.atcab_sign', return_value=(1, b'')), patch('server.crypto.software.SoftwareCrypto.atcab_sign', return_value=(1, b'')):
@@ -47,8 +49,9 @@ def test_sign_throws_error():
                     chip.get_signature("Hello World!")
                 assert excinfo.value.code == 1
 
+
 def test_error_recovery():
-    with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):    
+    with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
         with crypto.Chip() as chip:
             with patch('server.crypto.crypto.HardwareCrypto.atcab_sign', return_value=(1, b'')), patch('server.crypto.software.SoftwareCrypto.atcab_sign', return_value=(1, b'')):
                 with pytest.raises(crypto.ChipError) as excinfo:
@@ -58,6 +61,7 @@ def test_error_recovery():
                 sign = chip.get_signature("Hello World!")
     assert len(sign) == 64
 
+
 def test_get_pubkey_throws_error():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
         with patch('server.crypto.crypto.HardwareCrypto.atcab_get_pubkey', return_value=(1, b'')), patch('server.crypto.software.SoftwareCrypto.atcab_get_pubkey', return_value=(1, b'')):
@@ -66,6 +70,7 @@ def test_get_pubkey_throws_error():
                     chip.get_public_key()
                 assert excinfo.value.code == 1
 
+
 def test_serial_number_throws_error():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
         with patch('server.crypto.crypto.HardwareCrypto.atcab_read_serial_number', return_value=(1, b'')), patch('server.crypto.software.SoftwareCrypto.atcab_read_serial_number', return_value=(1, b'')):
@@ -73,6 +78,7 @@ def test_serial_number_throws_error():
                 with pytest.raises(crypto.ChipError) as excinfo:
                     chip.get_serial_number()
                 assert excinfo.value.code == 1
+
 
 def test_build_header_contents():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
@@ -99,7 +105,8 @@ def test_get_serial_number():
         with patch('server.crypto.crypto.HardwareCrypto.atcab_read_serial_number', return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
             with crypto.Chip() as chip:
                 serial_number = chip.get_serial_number()
-    assert len(serial_number) == 12 or len(serial_number) == 9 # 9 for software crypto
+    assert len(serial_number) == 12 or len(serial_number) == 9  # 9 for software crypto
+
 
 def test_get_serial_number_retry():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
@@ -124,6 +131,7 @@ def test_get_public_key():
             with crypto.Chip() as chip:
                 public_key = chip.get_public_key()
     assert len(public_key) == 64
+
 
 def test_get_public_key_with_retry():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
@@ -150,12 +158,14 @@ def test_get_signature():
                 signature = chip.get_signature("Hello World!")
     assert len(signature) == 64
 
+
 def test_get_signature_retry():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
         with patch('server.crypto.crypto.HardwareCrypto.atcab_sign', return_value=(crypto.ATCA_SUCCESS, b'0000000000000000000000000000000000000000000000000000000000000000')):
             with crypto.Chip() as chip:
                 signature = chip.get_signature("Hello World!", 1)
     assert len(signature) == 64
+
 
 def test_get_jwt():
     with patch('server.crypto.crypto.HardwareCrypto.atcab_init', return_value=crypto.ATCA_SUCCESS):
@@ -168,22 +178,26 @@ def test_get_jwt():
     assert len(jwt) > 0
     assert jwt.count('.') == 2
 
+
 def test_base64_url_encode():
     data = 'Hello World'.encode('utf-8')
     encoded = crypto.base64_url_encode(data)
     assert encoded.decode('utf-8') == "SGVsbG8gV29ybGQ"
     assert len(encoded) > 0
 
+
 def test_jwtlify():
     data = {'message': 'Hello World'}
     encoded = crypto.jwtlify(data)
     assert encoded == "eyJtZXNzYWdlIjogIkhlbGxvIFdvcmxkIn0"
 
+
 def test_compact_key():
-    pubkey = "a3302c809a6a42d2e71f5fe6e73b70fefeb47b4e02acd9ff9de44931ad4a301f31144c6a37bdde31a333e998d7c59cd1269627b354817dbb93841bfccd1b2534" 
+    pubkey = "a3302c809a6a42d2e71f5fe6e73b70fefeb47b4e02acd9ff9de44931ad4a301f31144c6a37bdde31a333e998d7c59cd1269627b354817dbb93841bfccd1b2534"
     compact = crypto.public_key_to_compact(bytearray.fromhex(pubkey))
     expected = "112EsRY1kgy7RD3mu4UU1U3EzBJq364pALxazcEyvxTTGVJtvpFZ"
     assert compact.decode("utf-8") == expected
+
 
 def test_get_random():
     software_crypto = crypto.SoftwareCrypto()
@@ -196,3 +210,42 @@ def test_get_random():
             with crypto.Chip() as chip:
                 random_bytes = chip.get_random()
     assert len(random_bytes) == 32
+
+
+def test_verify_signature():
+    software_crypto = crypto.SoftwareCrypto()
+
+    original_message = "My name is Jeff"
+    different_message = "Hi Jeff"
+
+    # Hash the messages
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(original_message.encode('utf-8'))
+    original_hash = digest.finalize()
+
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(different_message.encode('utf-8'))
+    different_hash = digest.finalize()
+
+    # Sign the original message hash
+    status, signature = software_crypto.atcab_sign(0, original_hash)
+    assert status == 0
+
+    # Get the public key that should work for verification
+    status, pubkey = software_crypto.atcab_get_pubkey(0)
+    assert status == 0
+
+    # Verify with original message hash - should succeed
+    status, verified = software_crypto.atcab_verify(signature, original_hash)
+    assert status == 0, "Verification status should be 0"
+    assert verified is True, "Verification should succeed with original message"
+
+    # Also try verifying with explicit public key
+    status, verified = software_crypto.atcab_verify(signature, original_hash, pubkey)
+    assert status == 0, "Verification with explicit pubkey status should be 0"
+    assert verified is True, "Verification with explicit pubkey should succeed"
+
+    # Verify with different message hash - should fail
+    status, verified = software_crypto.atcab_verify(signature, different_hash)
+    assert status == 0, "Verification status should be 0 even for failed verify"
+    assert verified is False, "Verification should fail with different message"

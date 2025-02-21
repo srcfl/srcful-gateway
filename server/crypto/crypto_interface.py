@@ -29,3 +29,7 @@ class CryptoInterface(ABC):
     @abstractmethod
     def atcab_random(self):
         pass
+
+    @abstractmethod
+    def atcab_verify(self, signature, data, public_key=None) -> tuple[int, bool]:
+        pass

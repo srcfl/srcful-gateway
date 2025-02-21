@@ -22,8 +22,10 @@ r_genkey_pubkey.value = bytes(bytearray([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x0
                                          0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                                          0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]))
 
+
 def atcab_random(random_data):
     return Status.ATCA_SUCCESS
+
 
 def atcab_init(cfg):
     return Status.ATCA_SUCCESS
@@ -94,7 +96,7 @@ def get_device_name_with_device_id(revision):
                0x6A: 'TA010',
                0x35: 'SHA104',
                0x3B: 'SHA105'}
-    
+
     device_name = devices.get(revision[1], 'UNKNOWN')
     return device_name
 
@@ -165,4 +167,14 @@ def atcab_get_pubkey(key_id, public_key):
     )
     public_key[0:] = bytes(c_public_key.raw)
 
+    return Status.ATCA_SUCCESS
+
+
+# --------------------------------------------------------------------#
+# atcab_verify(public_key, signature, data):
+def atcab_verify(public_key, signature, data):
+    """Mock hardware verification - always returns success in mock implementation.
+
+    In real hardware this would perform actual signature verification.
+    """
     return Status.ATCA_SUCCESS

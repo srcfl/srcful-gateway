@@ -20,7 +20,8 @@ try:
         atcab_sign,
         atcab_read_serial_number,
         atcab_get_pubkey,
-        atcab_random
+        atcab_random,
+        atcab_verify
     )
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes
@@ -36,7 +37,8 @@ except Exception:
         atcab_sign,
         atcab_read_serial_number,
         atcab_get_pubkey,
-        atcab_random
+        atcab_random,
+        atcab_verify
     )
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes
@@ -49,7 +51,7 @@ ATCA_SUCCESS = 0x00
 
 class HardwareCrypto(CryptoInterface):
     def __init__(self):
-        from cryptoauthlib import atcab_init, atcab_release, atcab_info, atcab_read_serial_number, atcab_get_pubkey, atcab_sign
+        from cryptoauthlib import atcab_init, atcab_release, atcab_info, atcab_read_serial_number, atcab_get_pubkey, atcab_sign, atcab_verify
         self._atcab_init = atcab_init
         self._atcab_release = atcab_release
         self._atcab_info = atcab_info
@@ -57,6 +59,7 @@ class HardwareCrypto(CryptoInterface):
         self._atcab_get_pubkey = atcab_get_pubkey
         self._atcab_sign = atcab_sign
         self._atcab_random = atcab_random
+        self._atcab_verify = atcab_verify
 
     def atcab_init(self, cfg):
         return self._atcab_init(cfg)
@@ -88,6 +91,34 @@ class HardwareCrypto(CryptoInterface):
         random_bytes = bytearray(32)
         status = self._atcab_random(random_bytes)
         return status, bytes(random_bytes)
+
+    def atcab_verify(self, signature, data, public_key=None) -> tuple[int, bool]:
+        """Verify an ECDSA signature using either the provided public key or stored key.
+
+        Args:
+            signature: 64-byte signature (r|s format)
+            data: The message to verify (will be hashed with SHA256)
+            public_key: Optional external public key to use for verification
+
+        Returns:
+            tuple: (status, verified) where status is 0 for success and verified is True if signature is valid
+        """
+        try:
+            # Hash the data with SHA256
+            digest = hashes.Hash(hashes.SHA256())
+            digest.update(data)
+            data_hash = digest.finalize()
+
+            if public_key is not None:
+                # If external public key provided, use it
+                status = self._atcab_verify(public_key, signature, data_hash)
+            else:
+                # Otherwise use key slot 0 for verification
+                status = self._atcab_verify(0, signature, data_hash)
+
+            return 0, status == ATCA_SUCCESS
+        except Exception:
+            return 0, False
 
 
 def base64_url_encode(data):
@@ -219,6 +250,12 @@ class Chip:
         self._throw_on_error(code, "Failed to get public key")
 
         return public_key
+
+    def verify_signature(self, signature: bytes, data: bytes) -> bool:
+        self.ensure_chip_initialized()
+        code, verified = self.crypto_impl.atcab_verify(0, signature, data)
+        self._throw_on_error(code, "Failed to verify signature")
+        return verified
 
     # def get_chip_info(self):
     #     self.ensure_chip_initialized()
