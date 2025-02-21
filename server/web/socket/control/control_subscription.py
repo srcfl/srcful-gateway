@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 import json
 from server.app.blackboard import BlackBoard
 from server.crypto.crypto_state import CryptoState
@@ -80,9 +80,9 @@ class ControlSubscription(BaseWebSocketClient):
         """Handle device authenticate"""
         logger.info("Received EMS authentication challenge")
 
-        timestamp: str = datetime.now().isoformat()
-        serial_number: str = "01239d34ba0bb9a601"
-        combined_data: str = f"{serial_number}.{timestamp}"
+        timestamp: str = datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%S.%f')
+        serial_number: str = self.crypto_state.serial_number.hex()
+        combined_data: str = f"{serial_number}:{timestamp}"
 
         with crypto.Chip() as chip:
             signature = chip.get_signature(combined_data).hex()

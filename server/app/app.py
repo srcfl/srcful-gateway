@@ -21,6 +21,7 @@ from server.network.mdns import MDNSAdvertiser
 # Constants
 MAX_WORKERS = 4
 MDNS_HOSTNAME = "sourceful"
+# CONTROL_SUBSCRIPTION_URL = "ws://localhost:5000/bms-subscribe"
 CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
 INITIAL_SETTINGS_DELAY = 500  # milliseconds
 SAVE_STATE_DELAY = 10000  # milliseconds (10 seconds)

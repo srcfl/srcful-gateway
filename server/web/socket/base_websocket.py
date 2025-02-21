@@ -110,9 +110,6 @@ class BaseWebSocketClient(threading.Thread):
                     self.ws.send(json.dumps(message))
                 else:
                     self.ws.send(str(message))
-                logger.info("#" * 50)
-                logger.info(f"Sent message: {json.dumps(message)}")
-                logger.info("#" * 50)
             except Exception as e:
                 logger.error(f"Error sending message: {e}")
 
