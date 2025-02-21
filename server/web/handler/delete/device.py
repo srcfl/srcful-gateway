@@ -1,4 +1,4 @@
-from server.app.settings import ChangeSource
+from server.app.settings.settings_observable import ChangeSource
 from server.devices.IComFactory import IComFactory
 from ..handler import DeleteHandler
 from ..requestData import RequestData

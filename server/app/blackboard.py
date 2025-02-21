@@ -8,7 +8,8 @@ from server.app.message import Message
 from server.crypto.crypto_state import CryptoState
 from server.devices.IComFactory import IComFactory
 from server.tasks.itask import ITask
-from server.app.settings import Settings, ChangeSource
+from server.app.settings.settings import Settings
+from server.app.settings.settings_observable import ChangeSource
 from server.devices.ICom import ICom
 
 logger = logging.getLogger(__name__)

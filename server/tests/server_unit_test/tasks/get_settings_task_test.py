@@ -8,7 +8,8 @@ from unittest.mock import Mock, patch
 from server.tasks.saveSettingsTask import SaveSettingsTask
 
 from server.app.blackboard import BlackBoard
-from server.app.settings import Settings, ChangeSource
+from server.app.settings.settings import Settings
+from server.app.settings.settings_observable import ChangeSource
 
 import server.crypto.crypto as crypto
 

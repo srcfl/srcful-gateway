@@ -2,7 +2,8 @@ import logging
 from server.app.blackboard import BlackBoard, ChangeSource
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.devices.IComFactory import IComFactory
-from server.app.settings import DebouncedMonitorBase, ChangeSource
+from server.app.settings.settings import DebouncedMonitorBase
+from server.app.settings.settings_observable import ChangeSource
 
 logger = logging.getLogger(__name__)
 

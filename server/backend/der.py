@@ -8,7 +8,10 @@ from server.backend.histogram import Histogram, SolarHistogram
 class DER:
 
     class Type(Enum):
-        SOLAR = "solar" 
+        SOLAR = "Solar",
+        ENERGY_METER = "EnergyMeter",
+        BATTERY = "Battery",
+        VEHICLE = "Vehicle"
 
     def __init__(self, serial:str, type:Type):
         self.serial = serial

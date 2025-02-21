@@ -48,6 +48,7 @@ class Settings(Observable):
         super().__init__()
         self._harvest = self.Harvest(self)
         self._devices = self.Devices(self)
+        # self._entropy = self.Entropy(self)
         self._api = self.API(self)
 
         self._modules = SettingsRegistry.create_settings(self)
@@ -57,10 +58,6 @@ class Settings(Observable):
         if name in self._modules:
             return self._modules[name]
         raise AttributeError(f"'Settings' has no attribute '{name}'")
-
-    @property
-    def API_SUBKEY(self):
-        return "settings"
 
     @property
     def SETTINGS_SUBKEY(self):
@@ -77,6 +74,10 @@ class Settings(Observable):
     @property
     def devices(self) -> 'Settings.Devices':
         return self._devices
+    
+    # @property
+    # def entropy(self) -> 'Settings.Entropy':
+    #     return self._entropy
 
     @property
     def api(self) -> 'Settings.API':
@@ -88,7 +89,6 @@ class Settings(Observable):
             self.harvest.update_from_dict(settings_data.get(self.harvest.HARVEST, {}), source)
             self.devices.update_from_dict(settings_data.get(self.devices.DEVICES, {}), source)
             self.api.update_from_dict(settings_data.get(self.api.API, {}), source)
-            
 
             for key, module in self._modules.items():
                 if key in settings_data:
@@ -99,22 +99,22 @@ class Settings(Observable):
         ret = {
             self.SETTINGS: {
                 key: module.to_dict() for key, module in self._modules.items()
-                self.api.API: self.api.to_dict()
             }
         }
 
         ret[self.SETTINGS][self.harvest.HARVEST] = self._harvest.to_dict()
         ret[self.SETTINGS][self.devices.DEVICES] = self.devices.to_dict()
-
+        ret[self.SETTINGS][self.api.API] = self.api.to_dict()
         return ret
 
     def from_json(self, json_str: str, source: ChangeSource):
         data = json.loads(json_str)
         self.update_from_dict(data, source)
+        
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
-
+    
     class API(Observable):
         def __init__(self, parent: Optional[Observable] = None):
             super().__init__(parent)
@@ -125,50 +125,50 @@ class Settings(Observable):
         @property
         def API(self):
             return "api"
-
+        
         @property
         def gql_endpoint(self):
             return self._gql_endpoint
-
+        
         def set_gql_endpoint(self, value: str, change_source: ChangeSource):
             self._gql_endpoint = value
             self.notify_listeners(change_source)
-
+        
         @property
         def ws_endpoint(self):
             return self._ws_endpoint
-
+        
         def set_ws_endpoint(self, value: str, change_source: ChangeSource):
             self._ws_endpoint = value
             self.notify_listeners(change_source)
-
+        
         @property
         def gql_timeout(self):
             return self._gql_timeout
-
+        
         def set_gql_timeout(self, value: int, change_source: ChangeSource):
             self._gql_timeout = value
             self.notify_listeners(change_source)
-
+        
         @property
         def GQL_ENDPOINT(self):
             return "gql_endpoint"
-
+        
         @property
         def WS_ENDPOINT(self):
             return "ws_endpoint"
-
+        
         @property
         def GQL_TIMEOUT(self):
             return "gql_timeout"
-
+              
         def to_dict(self) -> dict:
             return {
                 self.GQL_ENDPOINT: self._gql_endpoint,
                 self.GQL_TIMEOUT: self._gql_timeout,
                 self.WS_ENDPOINT: self._ws_endpoint
             }
-
+        
         def update_from_dict(self, data: dict, source: ChangeSource):
             notify = False
             if self.GQL_ENDPOINT in data:
@@ -182,38 +182,35 @@ class Settings(Observable):
                 notify = True
             if notify:
                 self.notify_listeners(source)
-
+        
     class Devices(Observable):
         def __init__(self, parent: Optional[Observable] = None):
             super().__init__(parent)
             self._connections: List[dict] = []
 
+
         def add_connection(self, connection: ICom, source: ChangeSource):
             config = connection.get_config()
-            # if config not in self._connections:
+            if config not in self._connections:
 
-            # Remove old configs that are the same either the same host or the same serial number
-            old_configs = [x for x in self._connections if connection.compare_host(IComFactory.create_com(x)) or connection.get_SN() == IComFactory.create_com(x).get_SN()]
+                # Remove old configs that are the same either the same host or the same serial number
+                old_configs = [x for x in self._connections if connection.compare_host(IComFactory.create_com(x)) or connection.get_SN() == IComFactory.create_com(x).get_SN()]
 
-            for old_config in old_configs:
-                self._connections.remove(old_config)
+                for old_config in old_configs:
+                    self._connections.remove(old_config)
 
-            logger.info(f"Adding connection: {config}")
-
-            self._connections.append(config)
-            self.notify_listeners(source)
+                self._connections.append(config)
+                self.notify_listeners(source)
 
         def remove_connection(self, connection: ICom, source: ChangeSource):
             config = connection.get_config()
             removed = False
 
             # configurations may change format between version, so we need to check for equivalent configs
-            equivalent_configs = [x for x in self._connections if config == x or IComFactory.create_com(x).get_config() == config]
+            equivalent_configs = [x for x in self._connections if x in self._connections or IComFactory.create_com(x).get_config() in self._connections]
 
             for equivalent_config in equivalent_configs:
                 self._connections.remove(equivalent_config)
-
-            logger.info(f"Removing connection: {config}")
 
             # notify if something was removed
             if len(equivalent_configs) > 0:
@@ -222,24 +219,26 @@ class Settings(Observable):
         @property
         def CONNECTIONS(self):
             return "connections"
-
+        
         @property
         def DEVICES(self):
             return "devices"
-
+    
         @property
         def connections(self):
             return self._connections
-
+        
         def to_dict(self) -> dict:
             return {
                 self.CONNECTIONS: self._connections
             }
-
+        
         def update_from_dict(self, data: dict, source: ChangeSource):
             if self.CONNECTIONS in data:
                 self._connections = data[self.CONNECTIONS]
                 self.notify_listeners(source)
+    
+    
 
     class Harvest(Observable):
         def __init__(self, parent: Optional[Observable] = None):
@@ -249,16 +248,16 @@ class Settings(Observable):
         @property
         def HARVEST(self):
             return "harvest"
-
+        
         @property
         def ENDPOINTS(self):
             return "endpoints"
 
-        def update_from_dict(self, data: dict, source: ChangeSource):
+        def update_from_dict(self, data: dict, source: ChangeSource ):
             if self.ENDPOINTS in data:
                 self._endpoints = data[self.ENDPOINTS]
                 self.notify_listeners(source)
-
+                
         def to_dict(self) -> dict:
             return {
                 self.ENDPOINTS: self._endpoints
@@ -281,7 +280,7 @@ class Settings(Observable):
         def clear_endpoints(self, source: ChangeSource):
             if len(self._endpoints) > 0:
                 self._endpoints.clear()
-                self.notify_listeners(source)
+                self.notify_listeners(source)   
 
     # class Entropy(Observable):
     #     def __init__(self, parent: Optional[Observable] = None):

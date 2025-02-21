@@ -5,6 +5,7 @@ from server.app.task_scheduler import TaskScheduler
 from server.crypto.crypto_state import CryptoState
 from server.network.network_utils import NetworkUtils
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
+from server.tasks.entropy.task import register_entropy_settings_listener
 from server.tasks.saveStateTask import SaveStatePerpetualTask
 import server.web.server
 from server.tasks.openDeviceTask import OpenDeviceTask
@@ -21,7 +22,13 @@ from server.network.mdns import MDNSAdvertiser
 logger = logging.getLogger(__name__)
 
 
-def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None):
+def imports():
+    import server.tasks.entropy
+
+
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None): 
+
+    imports()
 
     try:
         crypto_state = CryptoState()
@@ -63,6 +70,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
+    register_entropy_settings_listener(bb)
 
     scheduler.add_task(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
 
@@ -70,7 +78,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     scheduler.add_task(GetSettingsTask(bb.time_ms() + 500, bb))
 
     if inverter is not None:
-        bb.task_scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
+        scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
 
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))

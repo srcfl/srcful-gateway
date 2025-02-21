@@ -55,7 +55,7 @@ class TaskScheduler:
             self.stop()
             new_tasks = None
         except Exception as e:
-            logging.error(f"Failed to execute task {task}: {e}")
+            logging.error(f"Failed to execute task {task}: {e}", exc_info=e)
             new_tasks = None
             
         if new_tasks is not None:

@@ -1,3 +1,4 @@
+import json
 from typing import Dict, List
 from server.backend.connection import Connection
 from server.backend.der import DER
@@ -16,6 +17,12 @@ class Gateway:
         match str_type:
             case "solar" | "Solar":
                 return DER.Type.SOLAR
+            case "energyMeter" | "EnergyMeter" | "energymeter":
+                return DER.Type.ENERGY_METER
+            case "battery" | "Battery" | "battery":
+                return DER.Type.BATTERY
+            case "vehicle" | "Vehicle" | "vehicle":
+                return DER.Type.VEHICLE
             case _:
                 raise ValueError(f"Invalid DER type: {str_type}")
             
@@ -44,3 +51,23 @@ class Gateway:
         response = connection.post(query)
 
         return Gateway.dict_2_ders(response["data"]["gateway"]["gateway"]["ders"])
+    
+    @classmethod
+    def _get_globals_query(cls, serial: str, timestamp: str, signed_id_and_timestamp: str, key: str) -> str:
+        return f"""
+            query {{
+                    globalConfiguration{{
+                        configuration(deviceAuth:{{
+                            id:"{serial}",
+                            timestamp:"{timestamp}",
+                            signedIdAndTimestamp:"{signed_id_and_timestamp}",
+                            key:"{key}"
+                        }})
+                    }}
+                }}
+        """
+
+    def get_globals(self, connection: Connection, timestamp: str, signed_id_and_timestamp: str, key: str) -> Dict:
+        query = Gateway._get_globals_query(self.serial, timestamp, signed_id_and_timestamp, key)
+        response = connection.post(query)
+        return json.loads(response["data"]["globalConfiguration"]["configuration"])

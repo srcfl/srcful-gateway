@@ -7,7 +7,7 @@ from .itask import ITask
 import server.crypto.crypto as crypto
 from server.app.blackboard import BlackBoard
 from .srcfulAPICallTask import SrcfulAPICallTask
-from server.app.settings import ChangeSource
+from server.app.settings.settings_observable import ChangeSource
 from server.tasks.saveSettingsTask import SaveSettingsTask
 import json
 
@@ -82,7 +82,7 @@ class GetSettingsTask(SrcfulAPICallTask):
 
     def _json(self):
         with crypto.Chip() as chip:
-            query = create_query_json(chip, self.bb.settings.SETTINGS_SUBKEY)
+            query = create_query_json(chip, self.bb.settings.SETTINGS)
         return query
         
 

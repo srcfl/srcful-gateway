@@ -3,7 +3,7 @@ import logging
 
 from ..handler import GetHandler
 from ..requestData import RequestData
-from server.app.settings import Settings
+from server.app.settings.settings import Settings
 
 log = logging.getLogger(__name__)
 

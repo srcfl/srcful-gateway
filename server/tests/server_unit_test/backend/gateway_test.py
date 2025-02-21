@@ -1,8 +1,11 @@
+from datetime import datetime, timezone
+import time
 import pytest
 from unittest.mock import Mock
 from server.backend.gateway import Gateway
 from server.backend.der import DER
 from server.backend.connection import Connection
+from server.crypto import crypto
 
 @pytest.fixture
 def gateway():
@@ -102,3 +105,32 @@ def test_get_ders_invalid_response(gateway):
     
     with pytest.raises(ValueError, match="Invalid DER type: invalid"):
         gateway.get_ders(connection)
+
+
+def test_get_globals_query():
+
+    ''' enable with software crypto'''
+    if crypto.DO_HARDWARE_CRYPTO:
+        pytest.skip("Skipping test for hardware crypto")
+    
+    with crypto.Chip() as chip:
+        unix_timestamp = int(time.time())
+
+        dt = datetime.fromtimestamp(unix_timestamp, tz=timezone.utc)
+
+        # Format datetime as ISO 8601 string
+        # should be something like 2024-08-26T13:02:00
+        iso_timestamp = dt.isoformat().replace('+00:00', '')
+
+        serial = chip.get_serial_number().hex()
+        timestamp = iso_timestamp
+        message = f"{serial}|{timestamp}"
+        signature = chip.get_signature(message).hex()
+
+        query = Gateway._get_globals_query(serial, timestamp, signature, "subkey")
+
+        gateway = Gateway(chip.get_serial_number().hex())
+        globals = gateway.get_globals(Connection("https://api-test.srcful.dev/", 5), timestamp, signature, "test")
+
+        # we got something
+        assert len(globals.keys()) > 0

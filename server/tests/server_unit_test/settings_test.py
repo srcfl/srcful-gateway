@@ -5,7 +5,8 @@ import json
 from server.devices.ICom import ICom
 from server.devices.p1meters import P1Jemac, P1Telnet
 from server.network.network_utils import HostInfo
-from server.app.settings import Settings, ChangeSource
+from server.app.settings.settings import Settings
+from server.app.settings.settings_observable import ChangeSource
 from server.devices.inverters.ModbusTCP import ModbusTCP
 import server.tests.config_defaults as cfg
 
@@ -120,7 +121,17 @@ def test_to_json(settings):
             }
         }
     }
-    assert json.loads(json_str) == expected
+    
+    # we check that everything in expected exists in actual recursively (there may be more things depending on when setting modules are added)
+    def check(expected, actual):
+        if isinstance(expected, dict):
+            assert isinstance(actual, dict)
+            for key, value in expected.items():
+                check(value, actual[key])
+        else:
+            assert expected == actual
+
+    check(expected, json.loads(json_str))
 
 def test_from_json(settings):
     json_str = json.dumps({
