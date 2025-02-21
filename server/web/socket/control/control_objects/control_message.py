@@ -1,8 +1,9 @@
-from datetime import datetime
 from typing import List, Dict, Any
 from server.devices.common.types import ModbusProtocol
 from server.devices.registerValue import RegisterValue
 import logging
+from server.web.socket.control.control_objects.types import PayloadType
+from server.web.socket.control.control_objects.base_message import BaseMessage
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -19,24 +20,22 @@ class Command:
         self.value: float = data['value']
 
 
-class ControlObject:
+class ControlMessage(BaseMessage):
     def __init__(self, data: dict):
-        payload = data.get('payload', data)  # Handle both full JSON and direct payload
-        self.id: str = payload['id']
-        self.sn: str = payload['sn']
-        self.signature: str = payload['signature']
-        self.created_at: datetime = datetime.strptime(
-            payload['created_at'], '%Y-%m-%d %H:%M:%S')
-        self.execute_at: datetime = datetime.strptime(
-            payload['execute_at'], '%Y-%m-%d %H:%M:%S')
-        self.protocol: str = payload['protocol']
-        self.commands: List[Command] = [Command(cmd) for cmd in payload['commands']]
+        super().__init__(data)
+        self.id: str = self.payload.get(PayloadType.ID)
+        self.sn: str = self.payload.get(PayloadType.SN)
+        self.execute_at = self.payload.get(PayloadType.EXECUTE_AT)
+        self.protocol: str = self.payload.get(PayloadType.PROTOCOL)
+        self.retries: int = self.payload.get(PayloadType.RETRIES)
+        self.commands: List[Command] = [Command(cmd) for cmd in self.payload.get(PayloadType.COMMANDS, [])]
 
-        logger.info(f"Control object initialized: {self}")
+        # Log as dictionary
+        logger.info(f"Initialized control message: {self.__dict__}")
 
     def execute(self, device: ModbusProtocol) -> List[bool]:
         try:
-            logger.info(f"Executing control object: {self}")
+            logger.info(f"Executing control message: {self}")
 
             for command in self.commands:
                 address = command.register
@@ -47,5 +46,5 @@ class ControlObject:
                 logger.info(f"Wrote value {value} to address {address}")
 
         except Exception as e:
-            logger.error(f"Error executing control object: {e}")
+            logger.error(f"Error executing control message: {e}")
             return [False]

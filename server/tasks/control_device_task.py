@@ -1,14 +1,14 @@
 import logging
 from server.app.blackboard import BlackBoard
 from .task import Task
-from server.devices.common.control_objects.control_object import ControlObject
+from server.devices.common.control_objects.control_message import ControlMessage
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
 class ControlDeviceTask(Task):
-    def __init__(self, event_time: int, bb: BlackBoard, control_object: ControlObject):
+    def __init__(self, event_time: int, bb: BlackBoard, control_object: ControlMessage):
         super().__init__(event_time, bb)
         self.control_object = control_object
         logger.info(f"Control device task initialized: {self.control_object}")

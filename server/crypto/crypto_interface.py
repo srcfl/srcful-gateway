@@ -31,5 +31,5 @@ class CryptoInterface(ABC):
         pass
 
     @abstractmethod
-    def atcab_verify(self, signature, data, public_key=None) -> tuple[int, bool]:
+    def atcab_verify(self, data_hash, signature, public_key=None) -> tuple[int, bool]:
         pass

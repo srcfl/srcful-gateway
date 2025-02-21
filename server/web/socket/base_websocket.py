@@ -4,7 +4,6 @@ import logging
 from websocket import WebSocketApp
 import json
 from typing import Optional, Dict, Any
-from .control.types import ControlMessageType
 
 
 logger = logging.getLogger(__name__)

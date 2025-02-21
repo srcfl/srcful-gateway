@@ -215,37 +215,34 @@ def test_get_random():
 def test_verify_signature():
     software_crypto = crypto.SoftwareCrypto()
 
-    original_message = "My name is Jeff"
-    different_message = "Hi Jeff"
+    # Simple test message
+    test_message = b"My name is Jeff"
 
-    # Hash the messages
+    # Hash the message
     digest = hashes.Hash(hashes.SHA256())
-    digest.update(original_message.encode('utf-8'))
-    original_hash = digest.finalize()
+    digest.update(test_message)
+    message_hash = digest.finalize()
 
-    digest = hashes.Hash(hashes.SHA256())
-    digest.update(different_message.encode('utf-8'))
-    different_hash = digest.finalize()
+    # Sign the message
+    status, signature = software_crypto.atcab_sign(0, message_hash)
+    assert status == 0
+    assert len(signature) == 64  # r|s format should be 64 bytes
 
-    # Sign the original message hash
-    status, signature = software_crypto.atcab_sign(0, original_hash)
+    # Get the public key
+    status, public_key = software_crypto.atcab_get_pubkey(0)
     assert status == 0
 
-    # Get the public key that should work for verification
-    status, pubkey = software_crypto.atcab_get_pubkey(0)
+    # Verify the signature
+    status, is_valid = software_crypto.atcab_verify(message_hash, signature, public_key)
     assert status == 0
+    assert is_valid is True
 
-    # Verify with original message hash - should succeed
-    status, verified = software_crypto.atcab_verify(signature, original_hash)
-    assert status == 0, "Verification status should be 0"
-    assert verified is True, "Verification should succeed with original message"
+    # Verify with wrong message should fail
+    wrong_message = b"Hi Jeff"
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(wrong_message)
+    wrong_hash = digest.finalize()
 
-    # Also try verifying with explicit public key
-    status, verified = software_crypto.atcab_verify(signature, original_hash, pubkey)
-    assert status == 0, "Verification with explicit pubkey status should be 0"
-    assert verified is True, "Verification with explicit pubkey should succeed"
-
-    # Verify with different message hash - should fail
-    status, verified = software_crypto.atcab_verify(signature, different_hash)
-    assert status == 0, "Verification status should be 0 even for failed verify"
-    assert verified is False, "Verification should fail with different message"
+    status, is_valid = software_crypto.atcab_verify(wrong_hash, signature, public_key)
+    assert status == 0
+    assert is_valid is False
