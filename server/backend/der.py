@@ -3,16 +3,19 @@ from enum import Enum
 from typing import List
 from server.backend.connection import Connection
 from server.backend.histogram import Histogram, SolarHistogram
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DER:
 
     class Type(Enum):
-        SOLAR = "Solar",
-        ENERGY_METER = "EnergyMeter",
-        BATTERY = "Battery",
-        VEHICLE = "Vehicle"
-
+        SOLAR = "solar"
+        ENERGY_METER = "energyMeter"
+        BATTERY = "battery"
+        VEHICLE = "vehicle"
+        
     def __init__(self, serial:str, type:Type):
         self.serial = serial
         self.type = type
@@ -35,6 +38,10 @@ class DER:
         return self.histogram(connection, start_time, end_time, resolution)
 
     def histogram(self, connection: Connection, start_time:datetime, stop_time:datetime, resolution:Histogram.Resolution) -> List[SolarHistogram.Data]:
+        if self.type != DER.Type.SOLAR:
+            logger.warning(f"DER type {self.type} not supported for histogram queries")
+            return []
+        
         query = self._construct_query(start_time, stop_time, resolution)
 
         response = connection.post(query)

@@ -109,11 +109,11 @@ def test_get_ders_invalid_response(gateway):
 
 def test_get_globals_query():
 
-    ''' enable with software crypto'''
-    if crypto.DO_HARDWARE_CRYPTO:
-        pytest.skip("Skipping test for hardware crypto")
-    
     with crypto.Chip() as chip:
+        if chip.is_hardware_crypto():
+            pytest.skip("Skipping test for hardware crypto")
+            return
+
         unix_timestamp = int(time.time())
 
         dt = datetime.fromtimestamp(unix_timestamp, tz=timezone.utc)

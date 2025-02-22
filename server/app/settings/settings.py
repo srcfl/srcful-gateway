@@ -207,7 +207,7 @@ class Settings(Observable):
             removed = False
 
             # configurations may change format between version, so we need to check for equivalent configs
-            equivalent_configs = [x for x in self._connections if x in self._connections or IComFactory.create_com(x).get_config() in self._connections]
+            equivalent_configs = [x for x in self._connections if x == config or IComFactory.create_com(x).get_config() == config]
 
             for equivalent_config in equivalent_configs:
                 self._connections.remove(equivalent_config)
