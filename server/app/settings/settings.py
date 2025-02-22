@@ -191,16 +191,18 @@ class Settings(Observable):
 
         def add_connection(self, connection: ICom, source: ChangeSource):
             config = connection.get_config()
-            if config not in self._connections:
+            # if config not in self._connections:
 
-                # Remove old configs that are the same either the same host or the same serial number
-                old_configs = [x for x in self._connections if connection.compare_host(IComFactory.create_com(x)) or connection.get_SN() == IComFactory.create_com(x).get_SN()]
+            # Remove old configs that are the same either the same host or the same serial number
+            old_configs = [x for x in self._connections if connection.compare_host(IComFactory.create_com(x)) or connection.get_SN() == IComFactory.create_com(x).get_SN()]
 
-                for old_config in old_configs:
-                    self._connections.remove(old_config)
+            for old_config in old_configs:
+                self._connections.remove(old_config)
 
-                self._connections.append(config)
-                self.notify_listeners(source)
+            logger.info(f"Adding connection: {config}")
+
+            self._connections.append(config)
+            self.notify_listeners(source)
 
         def remove_connection(self, connection: ICom, source: ChangeSource):
             config = connection.get_config()
