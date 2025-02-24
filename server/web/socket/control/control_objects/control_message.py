@@ -23,7 +23,6 @@ class Command:
 class ControlMessage(BaseMessage):
     def __init__(self, data: dict):
         super().__init__(data)
-        self.id: str = self.payload.get(PayloadType.ID)
         self.sn: str = self.payload.get(PayloadType.SN)
         self.execute_at = self.payload.get(PayloadType.EXECUTE_AT)
         self.protocol: str = self.payload.get(PayloadType.PROTOCOL)

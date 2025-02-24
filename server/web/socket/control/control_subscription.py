@@ -10,6 +10,8 @@ from server.web.socket.base_websocket import BaseWebSocketClient
 from server.web.socket.control.control_objects.types import ControlMessageType, PayloadType
 from server.crypto import crypto
 from cryptography.hazmat.primitives import hashes
+from server.tasks.control_device_task import ControlDeviceTask
+
 
 DATE_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 TRUSTED_PUBLIC_KEY = "245bbc0a266ebfecc24983561f9cb37d5ff9844cb95669bdd8019ad5a00177f361878a047e0d8c4c5cccd7c7529873ebfabd0a76f9cda60c0e4bd7e1b924a8ff"  # Temporary public key for testing
@@ -55,15 +57,48 @@ class ControlSubscription(BaseWebSocketClient):
 
     def _create_signature(self) -> tuple[str, str, str]:
         timestamp: str = datetime.now(UTC).strftime(DATE_TIME_FORMAT)
-        serial_number: str = self.crypto_state.serial_number.hex()
-        data_to_sign: str = f"{serial_number}:{timestamp}"
+        crypto_sn: str = self.crypto_state.serial_number.hex()
+        data_to_sign: str = f"{crypto_sn}:{timestamp}"
 
         with crypto.Chip() as chip:
             signature = chip.get_signature(data_to_sign).hex()
             logger.info(f"Signature: {signature}")
-            return timestamp, serial_number, signature
+            return timestamp, crypto_sn, signature
 
         return None
+
+    # TODO: Write tests for this!
+    def _send_ack(self, message: BaseMessage):
+        timestamp, serial_number, signature = self._create_signature()
+
+        ack_data = {
+            PayloadType.TYPE: ControlMessageType.DEVICE_CONTROL_SCHEDULE_ACK,
+            PayloadType.PAYLOAD: {
+                PayloadType.ID: message.id,
+                PayloadType.SERIAL_NUMBER: serial_number,
+                PayloadType.SIGNATURE: signature,
+                PayloadType.CREATED_AT: timestamp
+            }
+        }
+
+        self.send_message(ack_data)
+
+    # TODO: Write tests for this!
+    def _send_nack(self, message: BaseMessage, reason: str):
+        timestamp, serial_number, signature = self._create_signature()
+
+        nack_data = {
+            PayloadType.TYPE: ControlMessageType.DEVICE_CONTROL_SCHEDULE_NACK,
+            PayloadType.PAYLOAD: {
+                PayloadType.ID: message.id,
+                PayloadType.REASON: reason,
+                PayloadType.SERIAL_NUMBER: serial_number,
+                PayloadType.SIGNATURE: signature,
+                PayloadType.CREATED_AT: timestamp
+            }
+        }
+
+        self.send_message(nack_data)
 
     def on_open(self, ws):
         """Called when the WebSocket connection is opened"""
@@ -128,14 +163,13 @@ class ControlSubscription(BaseWebSocketClient):
     def handle_device_authenticate(self, data: dict):
 
         auth_challenge_message: AuthChallengeMessage = AuthChallengeMessage(data)
-
-        timestamp, serial_number, signature = self._create_signature()
+        timestamp, crypto_sn, signature = self._create_signature()
 
         ret_data = {
             PayloadType.TYPE: ControlMessageType.DEVICE_AUTHENTICATE,
             PayloadType.PAYLOAD: {
-                PayloadType.DEVICE_NAME: "Deye",
-                PayloadType.SERIAL_NUMBER: serial_number,
+                PayloadType.DEVICE_NAME: self.crypto_state.device_name,
+                PayloadType.SERIAL_NUMBER: crypto_sn,
                 PayloadType.SIGNATURE: signature,
                 PayloadType.CREATED_AT: timestamp
             }
@@ -149,32 +183,30 @@ class ControlSubscription(BaseWebSocketClient):
         flag = True
 
         if flag:
-            # TODO: Send ACK
-            timestamp, serial_number, signature = self._create_signature()
-
-            ack_data = {
-                PayloadType.TYPE: ControlMessageType.DEVICE_CONTROL_SCHEDULE_ACK,
-                PayloadType.PAYLOAD: {
-                    PayloadType.ID: control_object.id,
-                    PayloadType.SERIAL_NUMBER: serial_number,
-                    PayloadType.SIGNATURE: signature,
-                    PayloadType.CREATED_AT: timestamp
-                }
-            }
-            self.send_message(ack_data)
-
+            self._send_ack(control_object)
         else:
-            # TODO: Send NACK
-            timestamp, serial_number, signature = self._create_signature()
+            self._send_nack(control_object, "Just a very long reason to write here")
 
-            nack_data = {
-                PayloadType.TYPE: ControlMessageType.DEVICE_CONTROL_SCHEDULE_NACK,
-                PayloadType.PAYLOAD: {
-                    PayloadType.ID: control_object.id,
-                    PayloadType.REASON: "Just a very long reason to write here",
-                    PayloadType.SERIAL_NUMBER: serial_number,
-                    PayloadType.SIGNATURE: signature,
-                    PayloadType.CREATED_AT: timestamp
-                }
-            }
-            self.send_message(nack_data)
+        der = self.bb.devices.find_sn(control_object.sn)
+
+        if not der:
+            self._send_nack(control_object, "Device not found")
+            logger.error(f"Device not found: {control_object.sn}")
+            return
+
+        logger.info(f"Device found: {der.get_name()}")
+
+        # Convert execute_at to milliseconds since epoch
+        time_now_ms: int = int(datetime.now().timestamp() * 1000)
+        # convert time string to datetime object
+        execute_at_ms: int = int(datetime.strptime(control_object.execute_at, DATE_TIME_FORMAT).timestamp() * 1000)
+
+        # print the ETA in a human readable format, e.g. "ETA: 1:30:10"
+        eta: datetime = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
+
+        execute_in_ms: int = execute_at_ms - time_now_ms
+
+        logger.info(f"ETA: {eta}, or {execute_in_ms} milliseconds")
+
+        task = ControlDeviceTask(execute_in_ms, self.bb, control_object)
+        self.bb.add_task(task)
