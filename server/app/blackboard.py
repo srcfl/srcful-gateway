@@ -1,6 +1,7 @@
 import random
 import time
 import logging
+import os
 from server.app.isystem_time import ISystemTime
 from server.app.itask_source import ITaskSource
 import server.crypto.crypto as crypto
@@ -10,6 +11,7 @@ from server.devices.IComFactory import IComFactory
 from server.tasks.itask import ITask
 from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
+import socket
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -51,7 +53,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         # self._control_objects = []
 
     def get_version(self) -> str:
-        return "0.20.4"
+        return "0.20.5"
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -131,6 +133,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     @property
     def state(self) -> dict:
         state = dict()
+        state['balena_uuid'] = os.environ.get('RESIN_DEVICE_UUID', socket.gethostname())
         state['status'] = {'version': self.get_version(), 'uptime': self.elapsed_time(), 'messages': self.message_state()}
         state['timestamp'] = self.time_ms()
         state['crypto'] = self.crypto_state().to_dict(self.chip_death_count)
