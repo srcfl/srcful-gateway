@@ -29,7 +29,7 @@ def control_message():
             ],
             PayloadType.SERIAL_NUMBER: "Sourceful-EMS",
             PayloadType.SIGNATURE: "657909c419915146dc2736ffe406184ccce02bd1f70f933b80ce8d4bcb4ffd0409b4c4f929a4434b0f1a9bc95953e36ce979df9b306eed9c4e4e9c238403c802",
-            PayloadType.CREATED_AT: "2025-02-21T18:53:48.3529925Z"
+            PayloadType.CREATED_AT: "2025-02-21T18:53:48.352992"
         }
     }
     return ControlMessage(obj)
