@@ -80,7 +80,7 @@ class ControlSubscription(BaseWebSocketClient):
                 PayloadType.CREATED_AT: timestamp
             }
         }
-
+        logger.info(f"Sending ACK: {ack_data}")
         self.send_message(ack_data)
 
     # TODO: Write tests for this!
@@ -97,22 +97,8 @@ class ControlSubscription(BaseWebSocketClient):
                 PayloadType.CREATED_AT: timestamp
             }
         }
-
+        logger.info(f"Sending NACK: {nack_data}")
         self.send_message(nack_data)
-
-    def on_open(self, ws):
-        """Called when the WebSocket connection is opened"""
-        super().on_open(ws)
-
-    def on_pong(self, ws, message):
-        current_time = datetime.now().strftime(DATE_TIME_FORMAT)
-        if hasattr(ws, 'last_ping_tm') and hasattr(ws, 'last_pong_tm'):
-            ping_time = datetime.fromtimestamp(ws.last_ping_tm).strftime(DATE_TIME_FORMAT)
-            pong_time = datetime.fromtimestamp(ws.last_pong_tm).strftime(DATE_TIME_FORMAT)
-            diff = ws.last_pong_tm - ws.last_ping_tm
-            logger.info("#" * 50)
-            logger.info(f"Ping/Pong Details - Current: {current_time}, Ping: {ping_time}, Pong: {pong_time}, RTT: {diff:.3f}s")
-            logger.info("#" * 50)
 
     def on_message(self, ws, message):
         """Called when a message is received"""

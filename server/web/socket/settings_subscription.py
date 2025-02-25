@@ -1,7 +1,6 @@
 import threading
 import time
 import logging
-from websocket import WebSocketApp
 import json
 from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
@@ -9,51 +8,10 @@ from typing import Callable
 from datetime import datetime, timezone
 from server.tasks.getSettingsTask import handle_settings
 from server.tasks.requestResponseTask import handle_request_task, RequestTask
-
+from server.web.socket.base_websocket import BaseWebSocketApp
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-
-class CustomWebSocketApp(WebSocketApp):
-    """
-    Custom WebSocketApp that handles pings and pongs with the case where the server sends unsolicited pongs and we need to reset the pong timer
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.expected_pongs = 0
-        self.last_valid_pong_tm = 0
-
-    def _send_ping(self) -> None:
-        if self.stop_ping.wait(self.ping_interval) or self.keep_running is False:
-            return
-
-        while not self.stop_ping.wait(self.ping_interval) and self.keep_running is True:
-            if self.sock:
-
-                try:
-                    logger.debug("Sending ping")
-                    self.sock.ping(self.ping_payload)
-                    self.last_ping_tm = time.time()
-                    self.expected_pongs += 1
-                except Exception as e:
-                    logger.debug(f"Failed to send ping: {e}")
-
-    def _callback(self, callback, *args):
-        if callback == self.on_pong:
-            if self.expected_pongs > 0:
-                # This is a response to our ping
-                self.expected_pongs -= 1
-                self.last_valid_pong_tm = time.time()
-                super()._callback(callback, *args)
-            else:
-                # This is an unsolicited pong, reset the pong timer so we dont time out
-                logger.debug("Received unsolicited pong, resetting pong timer")
-                self.last_pong_tm = self.last_valid_pong_tm
-                return
-        else:
-            super()._callback(callback, *args)
 
 
 class GraphQLSubscriptionClient(threading.Thread):
@@ -93,7 +51,7 @@ class GraphQLSubscriptionClient(threading.Thread):
         while not self.stop_event.is_set():
             try:
                 logger.info(f"Attempting to connect to WebSocket at {self.url}")
-                self.ws = CustomWebSocketApp(
+                self.ws = BaseWebSocketApp(
                     self.url,
                     on_open=self.on_open,
                     on_message=self.on_message,
@@ -114,6 +72,7 @@ class GraphQLSubscriptionClient(threading.Thread):
                 time.sleep(5)
 
     def stop(self):
+        """Stop the WebSocket client"""
         self.stop_event.set()
         if self.ws:
             self.ws.close()

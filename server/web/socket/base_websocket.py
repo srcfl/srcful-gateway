@@ -4,10 +4,11 @@ import logging
 from websocket import WebSocketApp
 import json
 from typing import Optional, Dict, Any
+from datetime import datetime
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class BaseWebSocketApp(WebSocketApp):
@@ -19,8 +20,6 @@ class BaseWebSocketApp(WebSocketApp):
         super().__init__(*args, **kwargs)
         self.expected_pongs = 0
         self.last_valid_pong_tm = 0
-        self.ping_count = 0
-        self.pong_count = 0
 
     def _send_ping(self) -> None:
         if self.stop_ping.wait(self.ping_interval) or self.keep_running is False:
@@ -28,27 +27,27 @@ class BaseWebSocketApp(WebSocketApp):
 
         while not self.stop_ping.wait(self.ping_interval) and self.keep_running is True:
             if self.sock:
+
                 try:
-                    self.ping_count += 1
-                    logger.info(f"Sending ping #{self.ping_count}")
+                    logger.debug("Sending ping")
                     self.sock.ping(self.ping_payload)
                     self.last_ping_tm = time.time()
                     self.expected_pongs += 1
-                    logger.info(f"Expected pongs: {self.expected_pongs}")
+                    logger.debug(f"Expected pongs: {self.expected_pongs}")
                 except Exception as e:
                     logger.error(f"Failed to send ping: {e}")
 
     def _callback(self, callback, *args):
         if callback == self.on_pong:
             if self.expected_pongs > 0:
+                # This is a response to our ping
                 self.expected_pongs -= 1
                 self.last_valid_pong_tm = time.time()
-                self.pong_count += 1
-                logger.info(f"Received pong #{self.pong_count} (response to our ping)")
                 logger.info(f"Remaining expected pongs: {self.expected_pongs}")
                 super()._callback(callback, *args)
             else:
-                logger.info("Received unsolicited pong, resetting pong timer")
+                # This is an unsolicited pong, reset the pong timer so we dont time out
+                logger.debug("Received unsolicited pong, resetting pong timer")
                 self.last_pong_tm = self.last_valid_pong_tm
                 return
         else:
@@ -65,7 +64,7 @@ class BaseWebSocketClient(threading.Thread):
         self.url = url
         self.ws: Optional[BaseWebSocketApp] = None
         self.stop_event = threading.Event()
-        self.PING_INTERVAL = 60  # seconds
+        self.PING_INTERVAL = 45  # seconds
         self.headers = {
             "User-Agent": "Python/WebSocket-Client",
             "Sec-WebSocket-Protocol": protocol
@@ -85,9 +84,7 @@ class BaseWebSocketClient(threading.Thread):
                     on_ping=self.on_ping,
                     on_pong=self.on_pong,
                 )
-
-                logger.info(f"WebSocket connection opened")
-                self.ws.run_forever(ping_interval=self.PING_INTERVAL, ping_timeout=10, http_proxy_timeout=30)
+                self.ws.run_forever(ping_interval=self.PING_INTERVAL, ping_timeout=10)
             except Exception as e:
                 logger.error(f"WebSocket error: {e} url: {self.url}")
 
@@ -119,16 +116,23 @@ class BaseWebSocketClient(threading.Thread):
 
     def send_connection_init(self):
         """Send connection initialization message"""
+        # TODO: Implement connection initialization message if needed, here or in a subclass
         pass
 
     def on_ping(self, ws, message):
         logger.info(f"Received server ping: {message}")
 
     def on_pong(self, ws, message):
-        pass
+        formatted_time = datetime.fromtimestamp(ws.last_ping_tm).strftime('%H:%M:%S.%f')
+        logger.debug(f"Received ping at {formatted_time}: {repr(message)}")
+        formatted_time = datetime.fromtimestamp(ws.last_pong_tm).strftime('%H:%M:%S.%f')
+        logger.debug(f"Received pong at {formatted_time}: {repr(message)}")
+        diff = ws.last_pong_tm - ws.last_ping_tm
+        logger.debug(f"Ping/pong difference: {diff} seconds")
 
     def on_message(self, ws, message):
-        """Called when a message is received - should be implemented by subclasses"""
+        """Called when a message is received"""
+        # TODO: Implement message handling if needed, here or in a subclass
         pass
 
     def on_error(self, ws, error):
