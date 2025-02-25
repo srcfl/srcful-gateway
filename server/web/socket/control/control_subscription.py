@@ -62,7 +62,7 @@ class ControlSubscription(BaseWebSocketClient):
 
         with crypto.Chip() as chip:
             signature = chip.get_signature(data_to_sign).hex()
-            logger.info(f"Signature: {signature}")
+            # logger.info(f"Signature: {signature}")
             return timestamp, crypto_sn, signature
 
         return None
@@ -80,7 +80,7 @@ class ControlSubscription(BaseWebSocketClient):
                 PayloadType.CREATED_AT: timestamp
             }
         }
-        logger.info(f"Sending ACK: {ack_data}")
+        logger.info(f"Sending ACK for message: {message.id}, Type: {message.type}, signature: {message.signature}")
         self.send_message(ack_data)
 
     # TODO: Write tests for this!
@@ -97,7 +97,7 @@ class ControlSubscription(BaseWebSocketClient):
                 PayloadType.CREATED_AT: timestamp
             }
         }
-        logger.info(f"Sending NACK: {nack_data}")
+        logger.info(f"Sending NACK for message: {message.id}, Type: {message.type}, signature: {message.signature}")
         self.send_message(nack_data)
 
     def on_message(self, ws, message):
@@ -110,8 +110,10 @@ class ControlSubscription(BaseWebSocketClient):
             logger.info("#" * 50)
 
             message_object: BaseMessage = BaseMessage(data)
+
             if not self._verify_message_signature(message_object):
                 logger.error("Invalid signature")
+                self._send_nack(message_object, "Invalid signature")
                 return
 
             type: str = data.get(PayloadType.TYPE, None)
@@ -141,6 +143,8 @@ class ControlSubscription(BaseWebSocketClient):
             logger.error(f"Error processing message: {message} error: {e}")
 
     def handle_ems_authentication_success(self, data: dict):
+        base_message: BaseMessage = BaseMessage(data)
+        self._send_ack(base_message)
         pass
 
     def handle_ems_authentication_error(self, data: dict):
@@ -149,6 +153,8 @@ class ControlSubscription(BaseWebSocketClient):
     def handle_device_authenticate(self, data: dict):
 
         auth_challenge_message: AuthChallengeMessage = AuthChallengeMessage(data)
+        # self._send_ack(auth_challenge_message)
+
         timestamp, crypto_sn, signature = self._create_signature()
 
         ret_data = {
@@ -166,12 +172,7 @@ class ControlSubscription(BaseWebSocketClient):
 
         control_object: ControlMessage = ControlMessage(data)
 
-        flag = True
-
-        if flag:
-            self._send_ack(control_object)
-        else:
-            self._send_nack(control_object, "Just a very long reason to write here")
+        self._send_ack(control_object)
 
         der = self.bb.devices.find_sn(control_object.sn)
 
@@ -184,6 +185,7 @@ class ControlSubscription(BaseWebSocketClient):
 
         # Convert execute_at to milliseconds since epoch
         time_now_ms: int = int(datetime.now().timestamp() * 1000)
+
         # convert time string to datetime object
         execute_at_ms: int = int(datetime.strptime(control_object.execute_at, DATE_TIME_FORMAT).timestamp() * 1000)
 

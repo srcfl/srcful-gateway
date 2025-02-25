@@ -43,7 +43,7 @@ class BaseWebSocketApp(WebSocketApp):
                 # This is a response to our ping
                 self.expected_pongs -= 1
                 self.last_valid_pong_tm = time.time()
-                logger.info(f"Remaining expected pongs: {self.expected_pongs}")
+                logger.debug(f"Remaining expected pongs: {self.expected_pongs}")
                 super()._callback(callback, *args)
             else:
                 # This is an unsolicited pong, reset the pong timer so we dont time out
@@ -64,16 +64,21 @@ class BaseWebSocketClient(threading.Thread):
         self.url = url
         self.ws: Optional[BaseWebSocketApp] = None
         self.stop_event = threading.Event()
-        self.PING_INTERVAL = 45  # seconds
+        self.PING_INTERVAL = 60  # seconds
+        self.PING_TIMEOUT = 30  # seconds
         self.headers = {
-            "User-Agent": "Python/WebSocket-Client",
+            # "User-Agent": "Python/WebSocket-Client",
             "Sec-WebSocket-Protocol": protocol
         }
+
+        self.connection_start_time = None
+        self.reconnect_count = 0
+        self.last_error_time = None
 
     def run(self):
         while not self.stop_event.is_set():
             try:
-                logger.info(f"Attempting to connect to WebSocket at {self.url}")
+                logger.info(f"Connecting to WebSocket at {self.url}")
                 self.ws = BaseWebSocketApp(
                     self.url,
                     header=self.headers,
@@ -82,9 +87,10 @@ class BaseWebSocketClient(threading.Thread):
                     on_error=self.on_error,
                     on_close=self.on_close,
                     on_ping=self.on_ping,
-                    on_pong=self.on_pong,
+                    on_pong=self.on_pong
                 )
-                self.ws.run_forever(ping_interval=self.PING_INTERVAL, ping_timeout=10)
+                self.ws.run_forever(ping_interval=self.PING_INTERVAL, ping_timeout=self.PING_TIMEOUT)
+                self.connected = False
             except Exception as e:
                 logger.error(f"WebSocket error: {e} url: {self.url}")
 
@@ -111,7 +117,13 @@ class BaseWebSocketClient(threading.Thread):
 
     def on_open(self, ws):
         """Called when the WebSocket connection is opened"""
+        self.connection_start_time = time.time()
         logger.info("WebSocket connection opened")
+        if self.reconnect_count > 0:
+            connection_gap = "unknown"
+            if self.last_error_time:
+                connection_gap = f"{time.time() - self.last_error_time:.2f} seconds"
+            logger.info(f"Reconnected after {connection_gap} (attempt #{self.reconnect_count})")
         self.send_connection_init()
 
     def send_connection_init(self):
@@ -120,15 +132,10 @@ class BaseWebSocketClient(threading.Thread):
         pass
 
     def on_ping(self, ws, message):
-        logger.info(f"Received server ping: {message}")
+        pass
 
     def on_pong(self, ws, message):
-        formatted_time = datetime.fromtimestamp(ws.last_ping_tm).strftime('%H:%M:%S.%f')
-        logger.debug(f"Received ping at {formatted_time}: {repr(message)}")
-        formatted_time = datetime.fromtimestamp(ws.last_pong_tm).strftime('%H:%M:%S.%f')
-        logger.debug(f"Received pong at {formatted_time}: {repr(message)}")
-        diff = ws.last_pong_tm - ws.last_ping_tm
-        logger.debug(f"Ping/pong difference: {diff} seconds")
+        pass
 
     def on_message(self, ws, message):
         """Called when a message is received"""
@@ -137,8 +144,20 @@ class BaseWebSocketClient(threading.Thread):
 
     def on_error(self, ws, error):
         """Called when a WebSocket error occurs"""
-        logger.error(f"WebSocket error: {error}, url: {self.url}")
+        self.last_error_time = time.time()
+
+        error_type = type(error).__name__
+        connection_duration = "unknown"
+        if self.connection_start_time:
+            connection_duration = f"{time.time() - self.connection_start_time:.2f} seconds"
+
+        logger.error(f"WebSocket error: {error}, type: {error_type}, duration: {connection_duration}")
 
     def on_close(self, ws, close_status_code, close_msg):
         """Called when the WebSocket connection is closed"""
-        logger.info(f"WebSocket connection closed: {close_status_code} - {close_msg}")
+        connection_duration = "unknown"
+        if self.connection_start_time:
+            connection_duration = f"{time.time() - self.connection_start_time:.2f} seconds"
+
+        logger.info(f"WebSocket connection closed: {close_status_code} - {close_msg}, duration: {connection_duration}")
+        self.reconnect_count += 1

@@ -30,7 +30,7 @@ class ControlMessage(BaseMessage):
         self.commands: List[Command] = [Command(cmd) for cmd in self.payload.get(PayloadType.COMMANDS, [])]
 
         # Log as dictionary
-        logger.info(f"Initialized control message: {self.__dict__}")
+        logger.info(f"Initialized control message: {self.id}")
 
     def execute(self, device: ModbusProtocol) -> List[bool]:
         try:

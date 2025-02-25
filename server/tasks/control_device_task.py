@@ -12,7 +12,7 @@ class ControlDeviceTask(Task):
         super().__init__(event_time, bb)
         self.control_object = control_object
 
-        logger.info(f"Control device task initialized: {self.control_object} and will execute in {self.time} milliseconds...")
+        logger.info(f"Control device task with id {self.control_object.id} initialized and will execute in {self.time} milliseconds...")
 
     def execute(self, event_time) -> None | Task | list[Task]:
         der_sn = self.control_object.sn
@@ -22,7 +22,7 @@ class ControlDeviceTask(Task):
             logger.error(f"Device not found: {der_sn}")
             return None
 
-        logger.info(f"Executing control object: {self.control_object}")
+        logger.info(f"Executing control object with id: {self.control_object.id}")
 
         self.control_object.execute(device)
         return None
