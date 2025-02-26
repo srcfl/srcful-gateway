@@ -6,8 +6,6 @@ from server.crypto.crypto_state import CryptoState
 import server.crypto.crypto as crypto
 
 
-
-
 def test_doGet():
 
     with patch("server.crypto.crypto.atcab_init", return_value=crypto.ATCA_SUCCESS):

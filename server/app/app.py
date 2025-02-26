@@ -17,8 +17,12 @@ from server.web.socket.control_subscription import ControlSubscription
 from server.app.settings_device_listener import SettingsDeviceListener
 from server.app.blackboard import BlackBoard
 from server.network.mdns import MDNSAdvertiser
+from server.tasks.discoverHostsTask import DiscoverHostsTask
 
 logger = logging.getLogger(__name__)
+
+
+SOURCEFUL_HOSTNAME = "blixt"
 
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None):
@@ -44,14 +48,14 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     mdns_advertiser = MDNSAdvertiser()
     try:
         mdns_advertiser.register_gateway(
-            hostname="sourceful",
+            hostname=SOURCEFUL_HOSTNAME,
             port=web_host[1],
             properties={
                 "version": bb.get_version(),
                 **bb.crypto_state().to_dict(bb.chip_death_count)
             }
         )
-        logger.info("mDNS advertisement started for sourceful.local")
+        logger.info(f"mDNS advertisement started for {SOURCEFUL_HOSTNAME}.local")
     except Exception as e:
         logger.error(f"Failed to start mDNS advertisement: {e}")
 
@@ -74,6 +78,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))
+
+    scheduler.add_task(DiscoverHostsTask(bb.time_ms() + 1000, bb))
 
     try:
         scheduler.main_loop()

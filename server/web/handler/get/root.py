@@ -11,212 +11,511 @@ class Handler(GetHandler):
         <head>
             <title>Srcful Energy Gateway</title>
             <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIxIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMSAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNjAuMjcxIiBjeT0iNjAiIHI9IjYwIiBmaWxsPSIjMkIyQjJCIi8+PHBhdGggZD0iTTM2LjA5NzMgNTguNTIyNUw2NC4xMDU5IDI0LjUyNjlDNjYuMTA2OCAyMi4wOTg0IDcwLjAyMDkgMjMuOTkyMiA2OS4zNTg0IDI3LjA2ODNMNjMuODczOCA1Mi41MzQ3QzYzLjQ1MiA1NC40OTMxIDY1LjAzIDU2LjMwNzUgNjcuMDI4MSA1Ni4xNjEzTDgxLjE5NDUgNTUuMTI0N0M4My44ODkgNTQuOTI3NiA4NS40NTI2IDU4LjExMTQgODMuNjQ5NCA2MC4xMjMyTDUyLjIwODkgOTUuMjAwOUM1MC4wNjY0IDk3LjU5MTIgNDYuMTcyMyA5NS40MDQ0IDQ3LjA5ODIgOTIuMzMwOUw1NS4zNzU0IDY0Ljg1NDNDNTYuMDIyMiA2Mi43MDc1IDU0LjE3MyA2MC42MzQ5IDUxLjk2NjYgNjEuMDMzN0wzOC45NDg1IDYzLjM4NjNDMzYuMTk3IDYzLjg4MzYgMzQuMzE5MyA2MC42ODA1IDM2LjA5NzMgNTguNTIyNVoiIGZpbGw9IiMwMEZGODQiLz48L3N2Zz4=">
+            <!-- Import fonts -->
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
             <style>
+                /* Premium design variables */
+                :root {
+                    --primary: #00d672;
+                    --primary-gradient: linear-gradient(135deg, #00d672 0%, #00b561 100%);
+                    --primary-dark: #00a759;
+                    --primary-glow: rgba(0, 214, 114, 0.15);
+                    --background: #1a1a1a;
+                    --background-dark: #121212;
+                    --card-bg: rgba(255, 255, 255, 0.03);
+                    --card-hover: rgba(255, 255, 255, 0.05);
+                    --text: #f5f5f5;
+                    --text-secondary: rgba(255, 255, 255, 0.7);
+                    --border: rgba(255, 255, 255, 0.08);
+                    --border-hover: rgba(0, 214, 114, 0.3);
+                    --shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+                    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.15);
+                }
+                
+                html {
+                    font-size: 110%;
+                    box-sizing: border-box;
+                }
+                
+                *, *:before, *:after {
+                    box-sizing: inherit;
+                    margin: 0;
+                    padding: 0;
+                }
+                
                 body {
-                    font-family: system-ui, -apple-system, sans-serif;
-                    background: linear-gradient(135deg, #2B2B2B 0%, #1a1a1a 100%);
-                    color: #fff;
+                    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                    background: linear-gradient(135deg, var(--background) 0%, var(--background-dark) 100%);
+                    color: var(--text);
                     margin: 0;
                     min-height: 100vh;
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    padding: 15px;
+                    padding: 1rem;
+                    line-height: 1.6;
+                    background-attachment: fixed;
                 }
+                
                 .container {
-                    background: rgba(255, 255, 255, 0.03);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(0, 255, 133, 0.1);
-                    border-radius: 12px;
-                    padding: 25px;
-                    width: 90%;
+                    background: rgba(26, 26, 26, 0.85);
+                    backdrop-filter: blur(15px);
+                    -webkit-backdrop-filter: blur(15px);
+                    border: 1px solid var(--border);
+                    border-radius: 1.25rem;
+                    padding: 2.5rem;
+                    width: 92%;
                     max-width: 1200px;
+                    box-shadow: var(--shadow);
+                    position: relative;
+                    overflow: hidden;
                 }
+                
+                /* Subtle background glow effect */
+                .container::before {
+                    content: "";
+                    position: absolute;
+                    top: -50%;
+                    left: -50%;
+                    width: 200%;
+                    height: 200%;
+                    background: radial-gradient(
+                        circle at center,
+                        var(--primary-glow) 0%,
+                        transparent 70%
+                    );
+                    opacity: 0.05;
+                    z-index: -1;
+                }
+                
                 .header {
                     display: flex;
                     align-items: center;
-                    gap: 15px;
-                    margin-bottom: 25px;
-                    padding-bottom: 15px;
-                    border-bottom: 1px solid rgba(0, 255, 133, 0.2);
+                    gap: 1.5rem;
+                    margin-bottom: 2.5rem;
+                    padding-bottom: 1.5rem;
+                    border-bottom: 1px solid var(--border);
+                    position: relative;
                 }
+                
                 .logo {
-                    width: 40px;
-                    height: 40px;
+                    width: 4rem;
+                    height: 4rem;
+                    filter: drop-shadow(0 4px 10px rgba(0, 214, 114, 0.35));
                 }
+                
                 h1, h2, h3 {
-                    color: #00FF85;
+                    color: var(--text);
                     margin: 0;
-                    font-weight: 500;
+                    font-weight: 600;
+                    letter-spacing: -0.02em;
                 }
+                
                 h1 {
-                    font-size: 24px;
+                    font-size: 2.2rem;
+                    background: var(--primary-gradient);
+                    -webkit-background-clip: text;
+                    background-clip: text;
+                    -webkit-text-fill-color: transparent;
                 }
+                
                 h2 {
-                    font-size: 18px;
-                    margin-top: 25px;
-                    margin-bottom: 15px;
+                    font-size: 1.6rem;
+                    margin-top: 2rem;
+                    margin-bottom: 1.25rem;
+                    display: flex;
+                    align-items: center;
+                    color: var(--text);
                 }
+                
+                h2::before {
+                    content: "";
+                    display: inline-block;
+                    width: 1rem;
+                    height: 0.25rem;
+                    background: var(--primary-gradient);
+                    margin-right: 0.75rem;
+                    border-radius: 1rem;
+                }
+                
+                h2::after {
+                    content: "";
+                    height: 1px;
+                    flex-grow: 1;
+                    background: linear-gradient(90deg, var(--border) 0%, transparent 100%);
+                    margin-left: 0.75rem;
+                }
+                
                 h3 {
-                    font-size: 16px;
-                    margin-top: 15px;
-                    margin-bottom: 10px;
-                    opacity: 0.9;
+                    font-size: 1.3rem;
+                    margin-top: 1.5rem;
+                    margin-bottom: 1rem;
+                    color: var(--text-secondary);
                 }
+                
                 .section {
-                    margin: 15px 0;
+                    margin: 2rem 0;
+                    position: relative;
                 }
+                
                 .grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                    gap: 10px;
+                    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+                    gap: 1.25rem;
                 }
-                .card {
-                    background: rgba(0, 255, 133, 0.05);
-                    border-radius: 8px;
-                    padding: 12px;
+                
+                article {
+                    background: var(--card-bg);
+                    border-radius: 1rem;
+                    padding: 1.5rem;
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    border: 1px solid var(--border);
+                    box-shadow: var(--shadow-sm);
+                    position: relative;
+                    overflow: hidden;
                 }
+                
+                article:hover {
+                    transform: translateY(-3px);
+                    border-color: var(--border-hover);
+                    background: var(--card-hover);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+                }
+                
+                /* Glow effect on hover */
+                article::after {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 0;
+                    background: linear-gradient(to bottom, var(--primary-glow), transparent);
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                }
+                
+                article:hover::after {
+                    height: 4px;
+                    opacity: 1;
+                }
+                
                 .card-header {
-                    font-size: 12px;
+                    font-size: 0.95rem;
                     text-transform: uppercase;
-                    letter-spacing: 1px;
-                    opacity: 0.7;
-                    margin-bottom: 4px;
+                    letter-spacing: 0.08em;
+                    color: var(--text-secondary);
+                    margin-bottom: 0.75rem;
+                    font-weight: 500;
                 }
+                
                 .card-value {
-                    color: #00FF85;
-                    font-size: 14px;
-                    font-family: monospace;
+                    color: var(--primary);
+                    font-size: 1.15rem;
+                    font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
                     word-break: break-all;
+                    font-weight: 500;
                 }
+                
                 .messages {
-                    margin-top: 15px;
-                }
-                .message {
-                    padding: 8px 12px;
-                    margin: 5px 0;
-                    border-radius: 6px;
-                    font-size: 13px;
-                }
-                .message.error { background: rgba(255, 59, 48, 0.1); border-left: 2px solid #ff3b30; }
-                .message.warning { background: rgba(255, 204, 0, 0.1); border-left: 2px solid #ffcc00; }
-                .message.info { background: rgba(0, 255, 133, 0.1); border-left: 2px solid #00FF85; }
-                .device-card {
-                    background: rgba(0, 255, 133, 0.05);
-                    border-radius: 8px;
-                    padding: 12px;
-                    margin-bottom: 10px;
-                }
-                .device-details {
-                    margin-top: 8px;
-                    padding-left: 12px;
-                    border-left: 1px solid rgba(0, 255, 133, 0.2);
-                    font-size: 13px;
-                }
-                .device-property {
-                    margin: 4px 0;
-                    display: flex;
-                    align-items: baseline;
-                }
-                .device-property-label {
-                    color: rgba(255, 255, 255, 0.7);
-                    width: 60px;
-                }
-                .device-property-value {
-                    color: #00FF85;
-                    margin-left: 8px;
-                    font-family: monospace;
-                }
-                .device-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                    gap: 12px;
-                }
-                .device-card {
-                    background: rgba(0, 255, 133, 0.05);
-                    border-radius: 8px;
-                    padding: 12px;
-                    font-size: 13px;
-                }
-                .device-card .card-header {
-                    font-size: 13px;
-                    text-transform: none;
-                    letter-spacing: 0;
-                    opacity: 0.85;
-                    margin-bottom: 8px;
-                    color: #00FF85;
-                }
-                .device-details {
+                    margin-top: 1.25rem;
                     display: flex;
                     flex-direction: column;
-                    gap: 4px;
+                    gap: 1rem;
                 }
+                
+                .message {
+                    padding: 1.25rem;
+                    border-radius: 0.75rem;
+                    font-size: 1.1rem;
+                    transition: transform 0.3s ease;
+                    box-shadow: var(--shadow-sm);
+                }
+                
+                .message:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+                }
+                
+                .message.error { 
+                    background: rgba(255, 59, 48, 0.1); 
+                    border-left: 4px solid #ff3b30; 
+                }
+                
+                .message.warning { 
+                    background: rgba(255, 204, 0, 0.1); 
+                    border-left: 4px solid #ffcc00; 
+                }
+                
+                .message.info { 
+                    background: rgba(0, 214, 114, 0.08); 
+                    border-left: 4px solid var(--primary); 
+                }
+                
+                .device-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+                    gap: 1.25rem;
+                }
+                
+                .device-card {
+                    background: var(--card-bg);
+                    border-radius: 1rem;
+                    padding: 1.5rem;
+                    margin-bottom: 1rem;
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    border: 1px solid var(--border);
+                    box-shadow: var(--shadow-sm);
+                    position: relative;
+                    overflow: hidden;
+                }
+                
+                .device-card:hover {
+                    transform: translateY(-3px);
+                    border-color: var(--border-hover);
+                    background: var(--card-hover);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+                }
+                
+                /* Device card hover effect */
+                .device-card::after {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 0;
+                    background: linear-gradient(to bottom, var(--primary-glow), transparent);
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                }
+                
+                .device-card:hover::after {
+                    height: 4px;
+                    opacity: 1;
+                }
+                
+                .device-card .card-header {
+                    font-size: 1.3rem;
+                    text-transform: none;
+                    letter-spacing: -0.01em;
+                    margin-bottom: 0.9rem;
+                    color: var(--primary);
+                    font-weight: 600;
+                }
+                
+                .device-details {
+                    margin-top: 1rem;
+                    padding-left: 1.25rem;
+                    border-left: 2px solid var(--border);
+                    transition: all 0.3s ease;
+                }
+                
+                .device-card:hover .device-details {
+                    border-left-color: var(--primary); 
+                }
+                
                 .device-property {
-                    margin: 0;
+                    margin: 0.6rem 0;
                     display: flex;
                     align-items: baseline;
-                    font-family: monospace;
-                    font-size: 12px;
                 }
+                
                 .device-property-label {
-                    color: rgba(255, 255, 255, 0.7);
-                    min-width: 60px;
+                    color: var(--text-secondary);
+                    min-width: 4.5rem;
+                    font-size: 1rem;
+                    font-weight: 500;
                 }
+                
                 .device-property-value {
-                    color: #00FF85;
+                    color: var(--text);
+                    margin-left: 0.75rem;
+                    font-family: monospace;
+                    font-size: 1rem;
+                    font-weight: 500;
                 }
+                
                 .network-info {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 10px;
+                    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+                    gap: 1.25rem;
                 }
+                
                 .app-links {
-                    background: rgba(0, 255, 133, 0.05);
-                    border-radius: 8px;
-                    padding: 12px 15px;
-                    margin: 20px 0;
-                    font-size: 14px;
+                    background: linear-gradient(135deg, rgba(26, 26, 26, 0.8) 0%, rgba(22, 22, 22, 0.9) 100%);
+                    border-radius: 1rem;
+                    padding: 2rem;
+                    margin: 2.5rem 0;
+                    border: 1px solid var(--border);
+                    box-shadow: var(--shadow);
+                    position: relative;
+                    overflow: hidden;
                 }
+                
+                /* Subtle glow effect on app links card */
+                .app-links::before {
+                    content: "";
+                    position: absolute;
+                    top: -50%;
+                    left: -50%;
+                    width: 200%;
+                    height: 200%;
+                    background: radial-gradient(
+                        circle at center,
+                        var(--primary-glow) 0%,
+                        transparent 80%
+                    );
+                    opacity: 0.1;
+                    z-index: -1;
+                }
+                
                 .app-links-header {
-                    color: rgba(255, 255, 255, 0.7);
-                    margin-bottom: 8px;
+                    color: var(--text);
+                    margin-bottom: 1.5rem;
                     text-align: center;
+                    font-weight: 500;
+                    font-size: 1.2rem;
+                    letter-spacing: 0.02em;
                 }
+                
                 .app-links-grid {
                     display: grid;
                     grid-template-columns: repeat(3, 1fr);
-                    gap: 10px;
+                    gap: 1.25rem;
                     text-align: center;
                 }
+                
                 .app-link {
-                    padding: 8px;
-                    border-radius: 6px;
-                    background: rgba(0, 255, 133, 0.03);
-                    transition: background-color 0.2s;
+                    padding: 1.25rem;
+                    border-radius: 0.75rem;
+                    background: rgba(255, 255, 255, 0.03);
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    border: 1px solid var(--border);
+                    position: relative;
+                    overflow: hidden;
                 }
+                
                 .app-link:hover {
-                    background: rgba(0, 255, 133, 0.08);
+                    background: var(--card-hover);
+                    transform: translateY(-3px) scale(1.02);
+                    border-color: var(--border-hover);
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
                 }
+                
+                /* Hover effect for app links */
+                .app-link::after {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 0;
+                    background: linear-gradient(to bottom, var(--primary-glow), transparent);
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                }
+                
+                .app-link:hover::after {
+                    height: 4px;
+                    opacity: 1;
+                }
+                
                 .app-link a {
-                    color: #00FF85;
+                    color: var(--primary);
                     text-decoration: none;
-                    font-weight: 500;
+                    font-weight: 600;
+                    font-size: 1.15rem;
+                    display: block;
+                    position: relative;
+                    z-index: 1;
+                    transition: all 0.3s ease;
                 }
+                
                 .app-link a:hover {
-                    text-decoration: underline;
+                    color: var(--text);
                 }
+                
+                /* Status indicator dot */
+                .status-indicator {
+                    display: inline-block;
+                    width: 0.6rem;
+                    height: 0.6rem;
+                    border-radius: 50%;
+                    margin-right: 0.5rem;
+                    vertical-align: middle;
+                }
+                
+                .status-connected {
+                    background: var(--primary);
+                    box-shadow: 0 0 8px var(--primary-glow);
+                }
+                
+                .status-disconnected {
+                    background: #ff3b30;
+                    box-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
+                }
+                
+                /* Mobile optimizations */
                 @media (max-width: 768px) {
-                    .container {
-                        padding: 15px;
+                    html {
+                        font-size: 100%;
                     }
-                    .grid {
+                    
+                    .container {
+                        padding: 1.75rem;
+                        width: 95%;
+                    }
+                    
+                    .grid, .network-info, .device-grid {
                         grid-template-columns: 1fr;
                     }
+                    
                     .app-links-grid {
                         grid-template-columns: 1fr;
+                        gap: 0.9rem;
                     }
-                    .device-grid {
-                        grid-template-columns: 1fr;
+                    
+                    h1 {
+                        font-size: 1.9rem;
+                    }
+                    
+                    .header {
+                        flex-wrap: wrap;
+                        gap: 0.9rem;
+                        margin-bottom: 1.75rem;
+                        padding-bottom: 1.25rem;
+                    }
+                    
+                    .logo {
+                        width: 3.25rem;
+                        height: 3.25rem;
+                    }
+                }
+                
+                /* Small mobile devices */
+                @media (max-width: 480px) {
+                    body {
+                        padding: 0.65rem;
+                    }
+                    
+                    .container {
+                        padding: 1.5rem 1.25rem;
+                        width: 100%;
+                        border-radius: 1rem;
+                    }
+                    
+                    .device-property {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        margin: 0.85rem 0;
+                    }
+                    
+                    .device-property-value {
+                        margin-left: 0;
+                        margin-top: 0.3rem;
                     }
                 }
             </style>
@@ -226,7 +525,7 @@ class Handler(GetHandler):
                 <div class="header">
                     <svg width="40" height="40" viewBox="0 0 121 120" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo">
                         <circle cx="60.271" cy="60" r="60" fill="#2B2B2B"/>
-                        <path d="M36.0973 58.5225L64.1059 24.5269C66.1068 22.0984 70.0209 23.9922 69.3584 27.0683L63.8738 52.5347C63.452 54.4931 65.03 56.3075 67.0281 56.1613L81.1945 55.1247C83.889 54.9276 85.4526 58.1114 83.6494 60.1232L52.2089 95.2009C50.0664 97.5912 46.1723 95.4044 47.0982 92.3309L55.3754 64.8543C56.0222 62.7075 54.173 60.6349 51.9666 61.0337L38.9485 63.3863C36.197 63.8836 34.3193 60.6805 36.0973 58.5225Z" fill="#00FF84"/>
+                        <path d="M36.0973 58.5225L64.1059 24.5269C66.1068 22.0984 70.0209 23.9922 69.3584 27.0683L63.8738 52.5347C63.452 54.4931 65.03 56.3075 67.0281 56.1613L81.1945 55.1247C83.889 54.9276 85.4526 58.1114 83.6494 60.1232L52.2089 95.2009C50.0664 97.5912 46.1723 95.4044 47.0982 92.3309L55.3754 64.8543C56.0222 62.7075 54.173 60.6349 51.9666 61.0337L38.9485 63.3863C36.197 63.8836 34.3193 60.6805 36.0973 58.5225Z" fill="#00d672"/>
                     </svg>
                     <h1>Sourceful Energy Gateway</h1>
                 </div>
@@ -256,149 +555,326 @@ class Handler(GetHandler):
         ret += '<div class="grid">'
 
         # Version and Uptime cards
-        uptime = state['status']['uptime']
-        days, remainder = divmod(uptime // 1000, 60 * 60 * 24)
-        hours, remainder = divmod(remainder, 60 * 60)
-        minutes, seconds = divmod(remainder, 60)
+        try:
+            status = state.get('status', {})
+            uptime = status.get('uptime', 0)
+            days, remainder = divmod(uptime // 1000, 60 * 60 * 24)
+            hours, remainder = divmod(remainder, 60 * 60)
+            minutes, seconds = divmod(remainder, 60)
 
-        ret += f'''
-            <div class="card">
-                <div class="card-header">Version</div>
-                <div class="card-value">{state['status']['version']}</div>
-            </div>
-            <div class="card">
-                <div class="card-header">Uptime</div>
-                <div class="card-value">{int(days):02d} days {int(hours):02d} hours {int(minutes):02d} minutes {int(seconds):02d} seconds</div>
-            </div>
-        '''
+            ret += f'''
+                <article>
+                    <div class="card-header">Version</div>
+                    <div class="card-value">{status.get('version', 'N/A')}</div>
+                </article>
+                <article>
+                    <div class="card-header">Uptime</div>
+                    <div class="card-value">{int(days):02d} days {int(hours):02d} hours {int(minutes):02d} minutes {int(seconds):02d} seconds</div>
+                </article>
+            '''
+        except Exception:
+            ret += f'''
+                <article>
+                    <div class="card-header">Version</div>
+                    <div class="card-value">N/A</div>
+                </article>
+                <article>
+                    <div class="card-header">Uptime</div>
+                    <div class="card-value">N/A</div>
+                </article>
+            '''
         ret += '</div></div>'
 
         # Devices Section
         ret += '<div class="section">'
         ret += '<h2>Devices</h2>'
 
-        # Saved Devices
-        if state['devices']['saved']:
-            ret += '<h3>Saved Devices</h3>'
-            ret += '<div class="device-grid">'
-            for device in state['devices']['saved']:
-                ret += f'''
-                    <div class="device-card">
-                        <div class="card-header">{device['name']}</div>
-                        <div class="device-details">
-                            <div class="device-property">
-                                <span class="device-property-label">ID:</span>
-                                <span class="device-property-value">{device['id']}</span>
-                            </div>
-                            <div class="device-property">
-                                <span class="device-property-label">Status:</span>
-                                <span class="device-property-value">{'Connected' if device['is_open'] else 'Disconnected'}</span>
-                            </div>
-                            <div class="device-property">
-                                <span class="device-property-label">Type:</span>
-                                <span class="device-property-value">{device['connection']['device_type']}</span>
-                            </div>
-                            <div class="device-property">
-                                <span class="device-property-label">IP:</span>
-                                <span class="device-property-value">{device['connection']['ip']}:{device['connection']['port']}</span>
-                            </div>
-                            <div class="device-property">
-                                <span class="device-property-label">MAC:</span>
-                                <span class="device-property-value">{device['connection']['mac']}</span>
+        try:
+            # Get devices data
+            devices = state.get('devices', {})
+
+            # Configured Devices
+            configured_devices = devices.get('configured', [])
+            if isinstance(configured_devices, list) and configured_devices:
+                ret += '<h3>Configured Devices</h3>'
+                ret += '<div class="device-grid">'
+                for device in configured_devices:
+                    # Safely access device properties
+                    name = device.get('name', 'Unknown')
+                    device_id = device.get('id', 'Unknown')
+                    is_open = device.get('is_open', False)
+                    connection = device.get('connection', {})
+                    device_type = connection.get('device_type', 'Unknown')
+                    ip = connection.get('ip', 'Unknown')
+                    port = connection.get('port', 'Unknown')
+                    mac = connection.get('mac', 'Unknown')
+
+                    ret += f'''
+                        <div class="device-card">
+                            <div class="card-header">{name}</div>
+                            <div class="device-details">
+                                <div class="device-property">
+                                    <span class="device-property-label">ID:</span>
+                                    <span class="device-property-value">{device_id}</span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">Status:</span>
+                                    <span class="device-property-value">
+                                        <span class="status-indicator status-{'connected' if is_open else 'disconnected'}"></span>
+                                        {'Connected' if is_open else 'Disconnected'}
+                                    </span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">Type:</span>
+                                    <span class="device-property-value">{device_type}</span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">IP:</span>
+                                    <span class="device-property-value">{ip}:{port}</span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">MAC:</span>
+                                    <span class="device-property-value">{mac}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    '''
+                ret += '</div>'
+
+            # Saved Devices
+            saved_devices = devices.get('saved', [])
+            if isinstance(saved_devices, list) and saved_devices:
+                ret += '<h3>Saved Devices</h3>'
+                ret += '<div class="device-grid">'
+                for device in saved_devices:
+                    # Safely access device properties
+                    name = device.get('name', 'Unknown')
+                    device_id = device.get('id', 'Unknown')
+                    is_open = device.get('is_open', False)
+                    connection = device.get('connection', {})
+                    device_type = connection.get('device_type', 'Unknown')
+                    ip = connection.get('ip', 'Unknown')
+                    port = connection.get('port', 'Unknown')
+                    mac = connection.get('mac', 'Unknown')
+
+                    ret += f'''
+                        <div class="device-card">
+                            <div class="card-header">{name}</div>
+                            <div class="device-details">
+                                <div class="device-property">
+                                    <span class="device-property-label">ID:</span>
+                                    <span class="device-property-value">{device_id}</span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">Type:</span>
+                                    <span class="device-property-value">{device_type}</span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">IP:</span>
+                                    <span class="device-property-value">{ip}:{port}</span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">MAC:</span>
+                                    <span class="device-property-value">{mac}</span>
+                                </div>
+                            </div>
+                        </div>
+                    '''
+                ret += '</div>'
+
+            # Available Hosts Section
+            available_hosts = state.get('available_hosts', [])
+            if isinstance(available_hosts, list) and available_hosts:
+                ret += '<h3>Available Hosts</h3>'
+                ret += '<div class="device-grid">'
+                for host in available_hosts:
+                    # Safe dictionary access for host properties
+                    ip = host.get('ip', 'Unknown')
+                    port = host.get('port', 'Unknown')
+                    mac = host.get('mac', 'Unknown')
+
+                    ret += f'''
+                        <div class="device-card">
+                            <div class="card-header">Host {ip}</div>
+                            <div class="device-details">
+                                <div class="device-property">
+                                    <span class="device-property-label">IP:</span>
+                                    <span class="device-property-value">{ip}:{port}</span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">MAC:</span>
+                                    <span class="device-property-value">{mac}</span>
+                                </div>
+                            </div>
+                        </div>
+                    '''
+                ret += '</div>'
+
+            # If no devices were found
+            if not (configured_devices or saved_devices or available_hosts):
+                ret += '''
+                    <article>
+                        <div class="card-header">Devices</div>
+                        <div class="card-value">N/A</div>
+                    </article>
                 '''
-            ret += '</div>'
+
+        except Exception:
+            ret += '''
+                <article>
+                    <div class="card-header">Devices</div>
+                    <div class="card-value">N/A</div>
+                </article>
+            '''
+
         ret += '</div>'
 
         # Crypto Section
         ret += '<div class="section">'
         ret += '<h2>Crypto</h2>'
         ret += '<div class="grid">'
-        for key, value in state['crypto'].items():
-            formatted_key = ' '.join(word.capitalize() for word in key.split('_'))
+
+        try:
+            # Get crypto data
+            crypto_data = state.get('crypto', {})
+
+            # Only proceed if it's actually a dictionary
+            if isinstance(crypto_data, dict):
+                for key, value in crypto_data.items():
+                    formatted_key = ' '.join(word.capitalize() for word in key.split('_'))
+                    ret += f'''
+                        <article>
+                            <div class="card-header">{formatted_key}</div>
+                            <div class="card-value">{value}</div>
+                        </article>
+                    '''
+            else:
+                # Just display N/A for mock objects
+                ret += f'''
+                    <article>
+                        <div class="card-header">Crypto Info</div>
+                        <div class="card-value">N/A</div>
+                    </article>
+                '''
+        except Exception:
             ret += f'''
-                <div class="card">
-                    <div class="card-header">{formatted_key}</div>
-                    <div class="card-value">{value}</div>
-                </div>
+                <article>
+                    <div class="card-header">Crypto Info</div>
+                    <div class="card-value">N/A</div>
+                </article>
             '''
+
         ret += '</div></div>'
 
         # Network Section
         ret += '<div class="section">'
         ret += '<h2>Network</h2>'
 
-        network = state['network']
-        if 'error' in network:
-            ret += f'''
-                <div class="card">
-                    <div class="card-header">Error</div>
-                    <div class="card-value">{network['error']}</div>
-                </div>
-            '''
-        else:
-            if 'wifi' in network:
-                wifi = network['wifi']
-                ret += '<h3>WiFi</h3>'
-                ret += '<div class="network-info">'
-                ret += f'''
-                    <div class="card">
-                        <div class="card-header">Connected SSID</div>
-                        <div class="card-value">{wifi.get('connected', 'Not connected')}</div>
-                    </div>
-                '''
-                if wifi.get('ssids'):
-                    ret += '''
-                        <div class="card">
-                            <div class="card-header">Available Networks</div>
-                            <div class="card-value">
+        try:
+            network = state.get('network', {})
+            if isinstance(network, dict):
+                if 'error' in network:
+                    ret += f'''
+                        <article>
+                            <div class="card-header">Error</div>
+                            <div class="card-value">{network.get('error', 'Unknown error')}</div>
+                        </article>
                     '''
-                    ret += '<br>'.join(wifi['ssids'])
-                    ret += '</div></div>'
-                ret += '</div>'
+                else:
+                    if 'wifi' in network:
+                        wifi = network.get('wifi', {})
+                        if isinstance(wifi, dict):
+                            ret += '<h3>WiFi</h3>'
+                            ret += '<div class="network-info">'
+                            ret += f'''
+                                <article>
+                                    <div class="card-header">Connected SSID</div>
+                                    <div class="card-value">{wifi.get('connected', 'Not connected')}</div>
+                                </article>
+                            '''
+                            ssids = wifi.get('ssids', [])
+                            if isinstance(ssids, list) and ssids:
+                                ret += '''
+                                    <article>
+                                        <div class="card-header">Available Networks</div>
+                                        <div class="card-value">
+                                '''
+                                ret += '<br>'.join(ssids)
+                                ret += '</div></article>'
+                            ret += '</div>'
 
-            if 'address' in network:
-                addr = network['address']
-                ret += '<h3>Network Addresses</h3>'
-                ret += '<div class="network-info">'
-                for key in ['ip', 'port', 'eth0_mac', 'wlan0_mac']:
-                    if key in addr:
-                        ret += f'''
-                            <div class="card">
-                                <div class="card-header">{key.replace('_', ' ').upper()}</div>
-                                <div class="card-value">{addr[key]}</div>
-                            </div>
-                        '''
-                ret += '</div>'
+                    if 'address' in network:
+                        addr = network.get('address', {})
+                        if isinstance(addr, dict):
+                            ret += '<h3>Network Addresses</h3>'
+                            ret += '<div class="network-info">'
+                            for key in ['ip', 'port', 'eth0_mac', 'wlan0_mac']:
+                                if key in addr:
+                                    ret += f'''
+                                        <article>
+                                            <div class="card-header">{key.replace('_', ' ').upper()}</div>
+                                            <div class="card-value">{addr.get(key, 'Unknown')}</div>
+                                        </article>
+                                    '''
+                            ret += '</div>'
 
-                if 'interfaces' in addr:
-                    ret += '<h3>Network Interfaces</h3>'
-                    ret += '<div class="network-info">'
-                    for interface, ip in addr['interfaces'].items():
-                        ret += f'''
-                            <div class="card">
-                                <div class="card-header">{interface}</div>
-                                <div class="card-value">{ip}</div>
-                            </div>
-                        '''
-                    ret += '</div>'
+                            interfaces = addr.get('interfaces', {})
+                            if isinstance(interfaces, dict) and interfaces:
+                                ret += '<h3>Network Interfaces</h3>'
+                                ret += '<div class="network-info">'
+                                for interface, ip in interfaces.items():
+                                    ret += f'''
+                                        <article>
+                                            <div class="card-header">{interface}</div>
+                                            <div class="card-value">{ip}</div>
+                                        </article>
+                                    '''
+                                ret += '</div>'
+            else:
+                ret += '''
+                    <article>
+                        <div class="card-header">Network</div>
+                        <div class="card-value">N/A</div>
+                    </article>
+                '''
+        except Exception:
+            ret += '''
+                <article>
+                    <div class="card-header">Network</div>
+                    <div class="card-value">N/A</div>
+                </article>
+            '''
+
         ret += '</div>'
 
         # Messages Section
-        if state['status']['messages']:
-            ret += '<div class="section">'
-            ret += '<h2>Messages</h2>'
-            ret += '<div class="messages">'
-            for msg in state['status']['messages']:
-                message_text = msg['message'][0] % tuple(msg['message'][1:]) if isinstance(msg['message'], list) else msg['message']
-                ret += f'''
-                    <div class="message {msg['type']}">
-                        {message_text}
-                    </div>
-                '''
-            ret += '</div></div>'
+        try:
+            status = state.get('status', {})
+            if isinstance(status, dict):
+                messages = status.get('messages', [])
+                if isinstance(messages, list) and messages:
+                    ret += '<div class="section">'
+                    ret += '<h2>Messages</h2>'
+                    ret += '<div class="messages">'
+                    for msg in messages:
+                        if isinstance(msg, dict):
+                            msg_type = msg.get('type', 'info')
+                            message = msg.get('message', 'No message')
+                            message_text = message
+                            if isinstance(message, list) and message:
+                                try:
+                                    message_text = message[0] % tuple(message[1:])
+                                except:
+                                    message_text = str(message)
+                            ret += f'''
+                                <div class="message {msg_type}">
+                                    {message_text}
+                                </div>
+                            '''
+                    ret += '</div></div>'
+        except Exception:
+            # Don't add messages section if there's an error
+            pass
 
         ret += "</div></body></html>"
         return 200, ret
