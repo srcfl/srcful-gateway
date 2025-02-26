@@ -66,7 +66,7 @@ def test_handler_api_get_enpoints_params(mock_setup, mock_handle, mock_finish):
 
 
 def test_open_close(bb: BlackBoard):
-    s = Server(("localhost", 8081), bb)
+    s = Server(("localhost", 8082), bb)
     assert isinstance(s._web_server, HTTPServer)
     s.close()
     assert s._web_server is None
@@ -167,9 +167,20 @@ def test_handler_get_no_path_returns_root(mock_setup, mock_handle, mock_finish, 
             h.path = ""
             h.do_GET()
 
-    # Verify the response was sent
-    h.send_response.assert_called_once_with(200)
-    assert h.wfile.getvalue() != b""
+    # Check that send_response was called with 200 OK
+    h.send_response.assert_called_once_with(HTTPStatus.OK)
+
+    # Check the content type header was set correctly
+    h.send_header.assert_any_call('Content-Type', 'text/html')
+
+    # Get the response content
+    v = h.wfile.getvalue().decode("utf-8")
+
+    # Check for basic HTML structure
+    assert "<html>" in v.lower()
+    assert "<head>" in v.lower()
+    assert "<body>" in v.lower()
+    assert "</html>" in v.lower()
 
 
 @patch.object(BaseHTTPRequestHandler, "finish")

@@ -71,11 +71,11 @@ class DevicePerpetualTask(Task):
 
                     # self.old_device = self.device
                     self.device = tmp_device
-                    logger.info("Found a device at %s, retry in 5 seconds...", self.device.get_config())
+                    logger.info("Found a device at %s, retrying in 5 seconds...", self.device.get_config())
                     self.time = event_time + 5000
-                    self.bb.add_info("Found a device at " + self.device.get_name() + ", retry in 5 seconds...")
+                    self.bb.add_info("Found a device at " + self.device.get_name() + ", retrying in 5 seconds...")
                 else:
-                    message = "Failed to find %s, rescan and retry in 5 minutes", self.device.get_SN()
+                    message = f"Failed to find {self.device.get_name()} ({self.device.get_SN()}), rescanning again in 5 minutes..."
                     logger.info(message)
                     self.bb.add_error(message)
                     self.time = event_time + 60000 * 5

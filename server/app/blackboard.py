@@ -1,5 +1,8 @@
+from server.network.network_utils import HostInfo
 import random
 import time
+import os
+import socket
 import logging
 import os
 from server.app.isystem_time import ISystemTime
@@ -11,7 +14,6 @@ from server.devices.IComFactory import IComFactory
 from server.tasks.itask import ITask
 from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
-import socket
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -35,6 +37,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     _settings: Settings
     _crypto_state: CryptoState
     _available_devices: list[ICom]
+    _available_hosts: list[HostInfo]
     _tasks: list[ITask]
     # _control_objects: list
 
@@ -50,6 +53,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
         self._crypto_state = crypto_state
         self._available_devices = []
+        self._available_hosts = []
         # self._control_objects = []
 
     def get_version(self) -> str:
@@ -140,6 +144,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         state['network'] = self.network_state()
         state['devices'] = self.devices_state()
         state['available_devices'] = [device.get_config() for device in self.get_available_devices()]
+        state['available_hosts'] = [host.to_dict() for host in self.get_available_hosts()]
         return state
 
     def message_state(self) -> dict:
@@ -201,6 +206,13 @@ class BlackBoard(ISystemTime, ITaskSource):
 
     def set_available_devices(self, devices: list[ICom]):
         self._available_devices = devices
+        self._save_state()
+
+    def get_available_hosts(self) -> list[HostInfo]:
+        return self._available_hosts
+
+    def set_available_hosts(self, hosts: list[HostInfo]):
+        self._available_hosts = hosts
         self._save_state()
 
     @property
