@@ -185,8 +185,12 @@ class ModbusSunspec(TCPDevice):
 
                 if self.battery is not None:
                     battery_payload_verbose = {**self.battery.get_dict()}
-                    payload['SoC'] = battery_payload_verbose.get('SoC', 0)
-                    payload['SoC_SF'] = battery_payload_verbose.get('SoC_SF', 1)
+                    payload['SoC'] = battery_payload_verbose.get('SoC', None)
+                    payload['SoC_SF'] = battery_payload_verbose.get('SoC_SF', None)
+                    payload['SoCMax'] = battery_payload_verbose.get('SoCMax', None)
+                    payload['SoCMin'] = battery_payload_verbose.get('SoCMin', None)
+                    payload['SocRsvMax'] = battery_payload_verbose.get('SocRsvMax', None)
+                    payload['SoCRsvMin'] = battery_payload_verbose.get('SoCRsvMin', None)
 
                 logger.debug("Payload: %s", payload)
 
