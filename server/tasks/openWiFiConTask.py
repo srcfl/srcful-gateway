@@ -1,8 +1,5 @@
 import logging
 import time
-import socket
-import os
-from urllib.request import urlopen
 from server.network.wifi import WiFiHandler, is_connected, get_ip_address
 from server.app.blackboard import BlackBoard
 from server.tasks.saveStateTask import SaveStateTask
@@ -20,65 +17,14 @@ class OpenWiFiConTask(Task):
         self.wificon = wificon
         self.retries = 3
         self.connectivity_timeout = 30  # seconds
-        self.fallback_dns = ['8.8.8.8', '1.1.1.1']  # Google DNS and Cloudflare DNS
         log.debug("Initialized OpenWiFiConTask for SSID: %s with %d retries", 
                  self.wificon.ssid, self.retries)
-
-    def _configure_dns(self):
-        """Configure DNS settings with fallback servers."""
-        try:
-            log.debug("Configuring DNS settings...")
-            
-            # Backup current DNS config
-            if os.path.exists('/etc/resolv.conf'):
-                with open('/etc/resolv.conf', 'r') as f:
-                    current_dns = f.read()
-                log.debug("Current DNS configuration: %s", current_dns)
-
-            # Write DNS configuration with fallback servers
-            with open('/etc/resolv.conf', 'w') as f:
-                f.write("search local\n")
-                for dns in self.fallback_dns:
-                    f.write(f"nameserver {dns}\n")
-            log.debug("Added fallback DNS servers")
-            return True
-
-        except Exception as e:
-            log.error("DNS configuration failed: %s", str(e))
-            return False
-
-    def _verify_network_connectivity(self) -> bool:
-        """Verify network connectivity by checking DNS and HTTP access."""
-        try:
-            # Try DNS resolution
-            try:
-                log.debug("Attempting DNS resolution...")
-                ip = socket.gethostbyname('google.com')
-                log.debug("DNS resolution successful: google.com -> %s", ip)
-                return True
-            except socket.gaierror as e:
-                log.warning("System DNS resolution failed: %s", str(e))
-                
-                # Try direct connection to DNS servers as fallback
-                for dns in self.fallback_dns:
-                    try:
-                        socket.socket(socket.AF_INET, socket.SOCK_DGRAM).connect((dns, 53))
-                        log.debug("Direct DNS connection to %s successful", dns)
-                        return True
-                    except Exception:
-                        continue
-                return False
-
-        except Exception as e:
-            log.warning("Network connectivity check failed: %s", str(e))
-            return False
 
     def _wait_for_network(self, timeout: int) -> bool:
         """Wait for network to be fully configured with timeout."""
         log.debug("Starting network wait sequence with %d seconds timeout", timeout)
         start_time = time.time()
         attempt = 1
-        dns_configured = False
         
         while time.time() - start_time < timeout:
             log.debug("Network check attempt %d", attempt)
@@ -96,16 +42,8 @@ class OpenWiFiConTask(Task):
                 attempt += 1
                 continue
 
-            # Configure DNS if not done yet
-            if not dns_configured:
-                dns_configured = self._configure_dns()
-                if not dns_configured:
-                    log.warning("DNS configuration failed")
-                time.sleep(2)  # Give DNS configuration time to take effect
-
-            if self._verify_network_connectivity():
-                log.debug("Network is fully configured and operational")
-                return True
+            log.debug("Network is fully configured and operational")
+            return True
 
             time.sleep(1)
             attempt += 1

@@ -2,6 +2,7 @@ import logging
 import time
 import uuid
 import sys
+from server.network.network_utils import NetworkUtils
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -33,7 +34,7 @@ except ImportError:
         return True
     
     def get_ip_address():
-        return '0.0.0.0'
+        return NetworkUtils.get_ip_address()
     
     def get_ip_addresses_with_interfaces():
         return [('No active connection', '0.0.0.0')]
@@ -47,28 +48,8 @@ else:
         return state == 70  # 70 corresponds to "connected globally"
     
     def get_ip_address():
-        bus = dbus.SystemBus()
-        nm_obj = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
-        nm = dbus.Interface(nm_obj, 'org.freedesktop.NetworkManager')
-        devices = nm.GetDevices()
-        for path in devices:
-            logger.debug("network device path: %s", path)
-            dev_obj = bus.get_object('org.freedesktop.NetworkManager', path)
-            dev = dbus.Interface(dev_obj, "org.freedesktop.NetworkManager.Device")
-            state = dev.Get('org.freedesktop.NetworkManager.Device', 'State', dbus_interface='org.freedesktop.DBus.Properties')
-            logger.debug("device state %i", state)
-            if state == 100:  # Active connection
-                ip_config_objpath = dev.Get('org.freedesktop.NetworkManager.Device', 'Ip4Config', dbus_interface='org.freedesktop.DBus.Properties')
-                if ip_config_objpath != '/':  # If there is an associated IP4Config object
-                    ip_config_obj = bus.get_object('org.freedesktop.NetworkManager', ip_config_objpath)
-                    ip_config_iface = dbus.Interface(ip_config_obj, 'org.freedesktop.NetworkManager.IP4Config')
-                    address_data = ip_config_iface.Get('org.freedesktop.NetworkManager.IP4Config', 'AddressData', dbus_interface='org.freedesktop.DBus.Properties')
-                    logger.debug("device ip address %s", address_data[0]['address'])
-                    if address_data[0]['address'] != '127.0.0.1':
-                        return address_data[0]['address']
-        logger.info("No active connection found")
-        return '0.0.0.0'
-    
+        return NetworkUtils.get_ip_address()
+
     def get_connected_ssid() -> str:
          # Connect to system bus
         bus = dbus.SystemBus()
@@ -277,6 +258,9 @@ else:
                 # NM_ACTIVE_CONNECTION_STATE_ACTIVATED = 2
                 if state == 2:
                     logger.info("Successfully connected to %s", self.ssid)
+                    # Update DNS configuration after successful connection
+                    if NetworkUtils.verify_network_connectivity():
+                        logger.info("Network connectivity verified")
                     return True
                     
                 # NM_ACTIVE_CONNECTION_STATE_DEACTIVATED = 4
