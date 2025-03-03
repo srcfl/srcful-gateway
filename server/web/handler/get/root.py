@@ -35,7 +35,7 @@ class Handler(GetHandler):
                 }
                 
                 html {
-                    font-size: 110%;
+                    font-size: 95%;
                     box-sizing: border-box;
                 }
                 
@@ -65,8 +65,8 @@ class Handler(GetHandler):
                     -webkit-backdrop-filter: blur(15px);
                     border: 1px solid var(--border);
                     border-radius: 1.25rem;
-                    padding: 2.5rem;
-                    width: 92%;
+                    padding: 2rem;
+                    width: 95%;
                     max-width: 1200px;
                     box-shadow: var(--shadow);
                     position: relative;
@@ -93,16 +93,16 @@ class Handler(GetHandler):
                 .header {
                     display: flex;
                     align-items: center;
-                    gap: 1.5rem;
-                    margin-bottom: 2.5rem;
-                    padding-bottom: 1.5rem;
+                    gap: 1.25rem;
+                    margin-bottom: 2rem;
+                    padding-bottom: 1.25rem;
                     border-bottom: 1px solid var(--border);
                     position: relative;
                 }
                 
                 .logo {
-                    width: 4rem;
-                    height: 4rem;
+                    width: 3.5rem;
+                    height: 3.5rem;
                     filter: drop-shadow(0 4px 10px rgba(0, 214, 114, 0.35));
                 }
                 
@@ -114,7 +114,7 @@ class Handler(GetHandler):
                 }
                 
                 h1 {
-                    font-size: 2.2rem;
+                    font-size: 1.9rem;
                     background: var(--primary-gradient);
                     -webkit-background-clip: text;
                     background-clip: text;
@@ -122,9 +122,9 @@ class Handler(GetHandler):
                 }
                 
                 h2 {
-                    font-size: 1.6rem;
-                    margin-top: 2rem;
-                    margin-bottom: 1.25rem;
+                    font-size: 1.4rem;
+                    margin-top: 1.75rem;
+                    margin-bottom: 1.1rem;
                     display: flex;
                     align-items: center;
                     color: var(--text);
@@ -133,8 +133,8 @@ class Handler(GetHandler):
                 h2::before {
                     content: "";
                     display: inline-block;
-                    width: 1rem;
-                    height: 0.25rem;
+                    width: 0.9rem;
+                    height: 0.2rem;
                     background: var(--primary-gradient);
                     margin-right: 0.75rem;
                     border-radius: 1rem;
@@ -149,27 +149,27 @@ class Handler(GetHandler):
                 }
                 
                 h3 {
-                    font-size: 1.3rem;
-                    margin-top: 1.5rem;
-                    margin-bottom: 1rem;
+                    font-size: 1.1rem;
+                    margin-top: 1.25rem;
+                    margin-bottom: 0.9rem;
                     color: var(--text-secondary);
                 }
                 
                 .section {
-                    margin: 2rem 0;
+                    margin: 1.75rem 0;
                     position: relative;
                 }
                 
                 .grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-                    gap: 1.25rem;
+                    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+                    gap: 1.1rem;
                 }
                 
                 article {
                     background: var(--card-bg);
                     border-radius: 1rem;
-                    padding: 1.5rem;
+                    padding: 1.25rem;
                     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                     border: 1px solid var(--border);
                     box-shadow: var(--shadow-sm);
@@ -203,33 +203,33 @@ class Handler(GetHandler):
                 }
                 
                 .card-header {
-                    font-size: 0.95rem;
+                    font-size: 0.9rem;
                     text-transform: uppercase;
                     letter-spacing: 0.08em;
                     color: var(--text-secondary);
-                    margin-bottom: 0.75rem;
+                    margin-bottom: 0.7rem;
                     font-weight: 500;
                 }
                 
                 .card-value {
                     color: var(--primary);
-                    font-size: 1.15rem;
+                    font-size: 1.05rem;
                     font-family: SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
                     word-break: break-all;
                     font-weight: 500;
                 }
                 
                 .messages {
-                    margin-top: 1.25rem;
+                    margin-top: 1.1rem;
                     display: flex;
                     flex-direction: column;
-                    gap: 1rem;
+                    gap: 0.9rem;
                 }
                 
                 .message {
-                    padding: 1.25rem;
+                    padding: 1.1rem;
                     border-radius: 0.75rem;
-                    font-size: 1.1rem;
+                    font-size: 1rem;
                     transition: transform 0.3s ease;
                     box-shadow: var(--shadow-sm);
                 }
@@ -256,15 +256,15 @@ class Handler(GetHandler):
                 
                 .device-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
-                    gap: 1.25rem;
+                    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+                    gap: 1.1rem;
                 }
                 
                 .device-card {
                     background: var(--card-bg);
                     border-radius: 1rem;
-                    padding: 1.5rem;
-                    margin-bottom: 1rem;
+                    padding: 1.25rem;
+                    margin-bottom: 0.6rem;
                     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                     border: 1px solid var(--border);
                     box-shadow: var(--shadow-sm);
@@ -298,17 +298,17 @@ class Handler(GetHandler):
                 }
                 
                 .device-card .card-header {
-                    font-size: 1.3rem;
+                    font-size: 1.15rem;
                     text-transform: none;
                     letter-spacing: -0.01em;
-                    margin-bottom: 0.9rem;
+                    margin-bottom: 0.8rem;
                     color: var(--primary);
                     font-weight: 600;
                 }
                 
                 .device-details {
-                    margin-top: 1rem;
-                    padding-left: 1.25rem;
+                    margin-top: 0.8rem;
+                    padding-left: 1rem;
                     border-left: 2px solid var(--border);
                     transition: all 0.3s ease;
                 }
@@ -318,37 +318,37 @@ class Handler(GetHandler):
                 }
                 
                 .device-property {
-                    margin: 0.6rem 0;
+                    margin: 0.5rem 0;
                     display: flex;
                     align-items: baseline;
                 }
                 
                 .device-property-label {
                     color: var(--text-secondary);
-                    min-width: 4.5rem;
-                    font-size: 1rem;
+                    min-width: 4rem;
+                    font-size: 0.9rem;
                     font-weight: 500;
                 }
                 
                 .device-property-value {
                     color: var(--text);
-                    margin-left: 0.75rem;
+                    margin-left: 0.6rem;
                     font-family: monospace;
-                    font-size: 1rem;
+                    font-size: 0.9rem;
                     font-weight: 500;
                 }
                 
                 .network-info {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-                    gap: 1.25rem;
+                    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+                    gap: 1.1rem;
                 }
                 
                 .app-links {
                     background: linear-gradient(135deg, rgba(26, 26, 26, 0.8) 0%, rgba(22, 22, 22, 0.9) 100%);
                     border-radius: 1rem;
-                    padding: 2rem;
-                    margin: 2.5rem 0;
+                    padding: 1.75rem;
+                    margin: 2.25rem 0;
                     border: 1px solid var(--border);
                     box-shadow: var(--shadow);
                     position: relative;
@@ -374,22 +374,22 @@ class Handler(GetHandler):
                 
                 .app-links-header {
                     color: var(--text);
-                    margin-bottom: 1.5rem;
+                    margin-bottom: 1.25rem;
                     text-align: center;
                     font-weight: 500;
-                    font-size: 1.2rem;
+                    font-size: 1.1rem;
                     letter-spacing: 0.02em;
                 }
                 
                 .app-links-grid {
                     display: grid;
                     grid-template-columns: repeat(3, 1fr);
-                    gap: 1.25rem;
+                    gap: 1.1rem;
                     text-align: center;
                 }
                 
                 .app-link {
-                    padding: 1.25rem;
+                    padding: 0;
                     border-radius: 0.75rem;
                     background: rgba(255, 255, 255, 0.03);
                     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -427,11 +427,14 @@ class Handler(GetHandler):
                     color: var(--primary);
                     text-decoration: none;
                     font-weight: 600;
-                    font-size: 1.15rem;
+                    font-size: 1.05rem;
                     display: block;
                     position: relative;
                     z-index: 1;
                     transition: all 0.3s ease;
+                    padding: 1.1rem;
+                    width: 100%;
+                    height: 100%;
                 }
                 
                 .app-link a:hover {
@@ -441,10 +444,10 @@ class Handler(GetHandler):
                 /* Status indicator dot */
                 .status-indicator {
                     display: inline-block;
-                    width: 0.6rem;
-                    height: 0.6rem;
+                    width: 0.55rem;
+                    height: 0.55rem;
                     border-radius: 50%;
-                    margin-right: 0.5rem;
+                    margin-right: 0.4rem;
                     vertical-align: middle;
                 }
                 
@@ -551,7 +554,6 @@ class Handler(GetHandler):
 
         # Status Section
         ret += '<div class="section">'
-        ret += '<h2>Status</h2>'
         ret += '<div class="grid">'
 
         # Version and Uptime cards
@@ -587,7 +589,6 @@ class Handler(GetHandler):
 
         # Devices Section
         ret += '<div class="section">'
-        ret += '<h2>Devices</h2>'
 
         try:
             # Get devices data
@@ -597,6 +598,7 @@ class Handler(GetHandler):
             configured_devices = devices.get('configured', [])
             if isinstance(configured_devices, list) and configured_devices:
                 ret += '<h3>Configured Devices</h3>'
+                ret += '<p style="color: var(--text-secondary); margin-bottom: 0.8rem; font-size: 0.9rem;">Those are devices that the gateway is currently connected to</p>'
                 ret += '<div class="device-grid">'
                 for device in configured_devices:
                     # Safely access device properties
@@ -630,7 +632,11 @@ class Handler(GetHandler):
                                 </div>
                                 <div class="device-property">
                                     <span class="device-property-label">IP:</span>
-                                    <span class="device-property-value">{ip}:{port}</span>
+                                    <span class="device-property-value">{ip}</span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">Port:</span>
+                                    <span class="device-property-value">{port}</span>
                                 </div>
                                 <div class="device-property">
                                     <span class="device-property-label">MAC:</span>
@@ -645,6 +651,7 @@ class Handler(GetHandler):
             saved_devices = devices.get('saved', [])
             if isinstance(saved_devices, list) and saved_devices:
                 ret += '<h3>Saved Devices</h3>'
+                ret += '<p style="color: var(--text-secondary); margin-bottom: 0.8rem; font-size: 0.9rem;">Those are saved device configurations and that the gateway has at some point been connected to</p>'
                 ret += '<div class="device-grid">'
                 for device in saved_devices:
                     # Safely access device properties
@@ -671,7 +678,11 @@ class Handler(GetHandler):
                                 </div>
                                 <div class="device-property">
                                     <span class="device-property-label">IP:</span>
-                                    <span class="device-property-value">{ip}:{port}</span>
+                                    <span class="device-property-value">{ip}</span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">Port:</span>
+                                    <span class="device-property-value">{port}</span>
                                 </div>
                                 <div class="device-property">
                                     <span class="device-property-label">MAC:</span>
@@ -685,7 +696,8 @@ class Handler(GetHandler):
             # Available Hosts Section
             available_hosts = state.get('available_hosts', [])
             if isinstance(available_hosts, list) and available_hosts:
-                ret += '<h3>Available Hosts</h3>'
+                ret += '<h3>Devices found</h3>'
+                ret += '<p style="color: var(--text-secondary); margin-bottom: 0.8rem; font-size: 0.9rem;">Those are devices (inverters specifically) found that could potentially be configured</p>'
                 ret += '<div class="device-grid">'
                 for host in available_hosts:
                     # Safe dictionary access for host properties
@@ -699,7 +711,11 @@ class Handler(GetHandler):
                             <div class="device-details">
                                 <div class="device-property">
                                     <span class="device-property-label">IP:</span>
-                                    <span class="device-property-value">{ip}:{port}</span>
+                                    <span class="device-property-value">{ip}</span>
+                                </div>
+                                <div class="device-property">
+                                    <span class="device-property-label">Port:</span>
+                                    <span class="device-property-value">{port}</span>
                                 </div>
                                 <div class="device-property">
                                     <span class="device-property-label">MAC:</span>
@@ -731,7 +747,6 @@ class Handler(GetHandler):
 
         # Crypto Section
         ret += '<div class="section">'
-        ret += '<h2>Crypto</h2>'
         ret += '<div class="grid">'
 
         try:
@@ -768,7 +783,6 @@ class Handler(GetHandler):
 
         # Network Section
         ret += '<div class="section">'
-        ret += '<h2>Network</h2>'
 
         try:
             network = state.get('network', {})

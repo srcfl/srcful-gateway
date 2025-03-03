@@ -32,6 +32,9 @@ SCAN_WIFI_DELAY = 10000  # milliseconds
 logger = logging.getLogger(__name__)
 
 
+SOURCEFUL_HOSTNAME = "blixt"
+
+
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None):
 
     try:
@@ -85,6 +88,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + CHECK_WEB_REQUEST_DELAY, bb, web_server))
     scheduler.add_task(ScanWiFiTask(bb.time_ms() + SCAN_WIFI_DELAY, bb))
+
+    scheduler.add_task(DiscoverHostsTask(bb.time_ms() + 1000, bb))
 
     scheduler.add_task(DiscoverHostsTask(bb.time_ms() + 1000, bb))
 

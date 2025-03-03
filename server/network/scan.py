@@ -63,9 +63,6 @@ else:
                         continue
 
                     # Get device's type; we only want wifi devices
-                    # iface = prop_iface.Get(
-                    #    "org.freedesktop.NetworkManager.Device", "Interface"
-                    # )
                     dtype = prop_iface.Get(
                         "org.freedesktop.NetworkManager.Device", "DeviceType"
                     )
@@ -74,9 +71,6 @@ else:
                         wifi_iface = dbus.Interface(
                             dev_proxy, "org.freedesktop.NetworkManager.Device.Wireless"
                         )
-                        # wifi_prop_iface = dbus.Interface(
-                        #    dev_proxy, "org.freedesktop.DBus.Properties"
-                        # )
 
                         aps = wifi_iface.GetAllAccessPoints()
 
@@ -129,9 +123,6 @@ else:
                     continue
 
                 # Get device's type; we only want wifi devices
-                # iface = prop_iface.Get(
-                #    "org.freedesktop.NetworkManager.Device", "Interface"
-                # )
                 dtype = prop_iface.Get(
                     "org.freedesktop.NetworkManager.Device", "DeviceType"
                 )
@@ -140,9 +131,6 @@ else:
                     wifi_iface = dbus.Interface(
                         dev_proxy, "org.freedesktop.NetworkManager.Device.Wireless"
                     )
-                    # wifi_prop_iface = dbus.Interface(
-                    #    dev_proxy, "org.freedesktop.DBus.Properties"
-                    # )
 
                     opt = dbus.Dictionary({})
                     # Get all APs the card can see

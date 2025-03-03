@@ -14,6 +14,7 @@ from server.devices.IComFactory import IComFactory
 from server.tasks.itask import ITask
 from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
+from server.network.network_utils import HostInfo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -57,7 +58,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         # self._control_objects = []
 
     def get_version(self) -> str:
-        return "0.20.5"
+        return "0.20.6"
 
     def add_task(self, task: ITask):
         self._tasks.append(task)

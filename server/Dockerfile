@@ -1,25 +1,39 @@
+FROM python:3.11-alpine@sha256:558d14432cef380aec99155f348ac1c5cb35072abf32209aecd5a8a422ff519a AS builder
+
+# Install only the build dependencies needed for zeroconf
+RUN apk update && apk add --no-cache make gcc musl-dev linux-headers cmake libffi-dev
+
+# Build zeroconf wheel
+RUN pip install --upgrade pip
+RUN pip install six
+RUN pip wheel --wheel-dir=/wheels zeroconf==0.135.0
+
+# Main stage
 FROM python:3.11-alpine@sha256:558d14432cef380aec99155f348ac1c5cb35072abf32209aecd5a8a422ff519a
+
+# Copy pre-built wheel
+COPY --from=builder /wheels /wheels
+
+# Copy application files
 COPY . /server
-# put the entrypoint script in the container in the parent directory
-# we do this so the script can run the server as a module
 COPY docker_entrypoint.sh .
 COPY balena_get_host_ip.sh .
+
+# Set environment variables
 ENV CRYPTOAUTHLIB_NOUSB=True
 ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 
-RUN apk update
-RUN apk add --no-cache make
-RUN apk add --no-cache gcc musl-dev linux-headers cmake libffi-dev
-RUN apk add curl jq
-    
-# Install necessary packages
-RUN apk add --no-cache dbus dbus-dev glib-dev dbus-glib
+# Install all system dependencies in one layer
+RUN apk update && \
+    apk add --no-cache make gcc musl-dev linux-headers cmake libffi-dev curl jq dbus dbus-dev glib-dev dbus-glib
 
-RUN pip install --upgrade pip
-# Install Python D-Bus library
-RUN pip install --no-cache-dir dbus-python==1.3.2
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir six && \
+    pip install --no-cache-dir --no-index --find-links=/wheels zeroconf==0.135.0 && \
+    pip install --no-cache-dir dbus-python==1.3.2 && \
+    pip install -r server/requirements.txt
 
-RUN pip install -r server/requirements.txt
 EXPOSE 5000
 
 # Make scripts executable
