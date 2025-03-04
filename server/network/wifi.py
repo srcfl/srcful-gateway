@@ -19,6 +19,8 @@ except ImportError:
 
     class WiFiHandler:
         def __init__(self, ssid, psk):
+            self.ssid = ssid
+            self.psk = psk
             pass
 
         def _add_connection(self):
