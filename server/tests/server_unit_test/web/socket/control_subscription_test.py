@@ -1,9 +1,9 @@
 from server.web.socket.control.control_subscription import ControlSubscription
-from server.web.socket.control.control_objects.control_message import ControlMessage
+from server.web.socket.control.control_messages.control_message import ControlMessage
 from server.app.blackboard import BlackBoard
 from unittest.mock import Mock
 import pytest
-from server.web.socket.control.control_objects.types import PayloadType, ControlMessageType
+from server.web.socket.control.control_messages.types import PayloadType, ControlMessageType
 
 
 @pytest.fixture
@@ -11,8 +11,8 @@ def control_message():
     obj = {
         PayloadType.TYPE: ControlMessageType.EMS_CONTROL_SCHEDULE,
         PayloadType.PAYLOAD: {
-            PayloadType.ID: "f42ea576ac87184445",
-            PayloadType.SN: "8383jsj238js",
+            PayloadType.ID: "8484",
+            PayloadType.SN: "f42ea576ac87184445",
             PayloadType.EXECUTE_AT: "2025-02-21T18:53:48.3529926Z",
             PayloadType.PROTOCOL: "modbus",
             PayloadType.RETRIES: 0,

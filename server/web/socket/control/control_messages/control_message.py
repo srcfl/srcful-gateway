@@ -2,8 +2,8 @@ from typing import List, Dict, Any
 from server.devices.common.types import ModbusProtocol
 from server.devices.registerValue import RegisterValue
 import logging
-from server.web.socket.control.control_objects.types import PayloadType
-from server.web.socket.control.control_objects.base_message import BaseMessage
+from server.web.socket.control.control_messages.types import PayloadType
+from server.web.socket.control.control_messages.base_message import BaseMessage
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

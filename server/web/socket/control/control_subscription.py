@@ -3,11 +3,11 @@ from datetime import datetime, UTC
 import json
 from server.app.blackboard import BlackBoard
 from server.crypto.crypto_state import CryptoState
-from server.web.socket.control.control_objects.base_message import BaseMessage
-from server.web.socket.control.control_objects.control_message import ControlMessage
-from server.web.socket.control.control_objects.auth_challenge_message import AuthChallengeMessage
+from server.web.socket.control.control_messages.base_message import BaseMessage
+from server.web.socket.control.control_messages.control_message import ControlMessage
+from server.web.socket.control.control_messages.auth_challenge_message import AuthChallengeMessage
 from server.web.socket.base_websocket import BaseWebSocketClient
-from server.web.socket.control.control_objects.types import ControlMessageType, PayloadType
+from server.web.socket.control.control_messages.types import ControlMessageType, PayloadType
 from server.crypto import crypto
 from cryptography.hazmat.primitives import hashes
 from server.tasks.control_device_task import ControlDeviceTask
@@ -170,15 +170,15 @@ class ControlSubscription(BaseWebSocketClient):
 
     def handle_ems_control_schedule(self, data: dict):
 
-        control_object: ControlMessage = ControlMessage(data)
+        control_message: ControlMessage = ControlMessage(data)
 
-        self._send_ack(control_object)
+        self._send_ack(control_message)
 
-        der = self.bb.devices.find_sn(control_object.sn)
+        der = self.bb.devices.find_sn(control_message.sn)
 
         if not der:
-            self._send_nack(control_object, "Device not found")
-            logger.error(f"Device not found: {control_object.sn}")
+            self._send_nack(control_message, "Device not found")
+            logger.error(f"Device not found: {control_message.sn}")
             return
 
         logger.info(f"Device found: {der.get_name()}")
@@ -187,7 +187,7 @@ class ControlSubscription(BaseWebSocketClient):
         time_now_ms: int = int(datetime.now().timestamp() * 1000)
 
         # convert time string to datetime object
-        execute_at_ms: int = int(datetime.strptime(control_object.execute_at, DATE_TIME_FORMAT).timestamp() * 1000)
+        execute_at_ms: int = int(datetime.strptime(control_message.execute_at, DATE_TIME_FORMAT).timestamp() * 1000)
 
         # print the ETA in a human readable format, e.g. "ETA: 1:30:10"
         eta: datetime = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
@@ -196,5 +196,5 @@ class ControlSubscription(BaseWebSocketClient):
 
         logger.info(f"ETA: {eta}, or {execute_in_ms} milliseconds")
 
-        task = ControlDeviceTask(execute_in_ms, self.bb, control_object)
+        task = ControlDeviceTask(execute_in_ms, self.bb, control_message)
         self.bb.add_task(task)

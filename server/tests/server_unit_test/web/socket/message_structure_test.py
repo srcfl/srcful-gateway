@@ -1,7 +1,7 @@
-from server.web.socket.control.control_objects.base_message import BaseMessage
-from server.web.socket.control.control_objects.auth_challenge_message import AuthChallengeMessage
-from server.web.socket.control.control_objects.control_message import ControlMessage
-from server.web.socket.control.control_objects.types import ControlMessageType
+from server.web.socket.control.control_messages.base_message import BaseMessage
+from server.web.socket.control.control_messages.auth_challenge_message import AuthChallengeMessage
+from server.web.socket.control.control_messages.control_message import ControlMessage
+from server.web.socket.control.control_messages.types import ControlMessageType
 
 
 ems_authentication_challenge_message = {
