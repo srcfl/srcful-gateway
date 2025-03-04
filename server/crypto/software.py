@@ -15,6 +15,7 @@ def load_env_file(file_path):
                 env_vars[key] = value.strip('"').strip("'")
     return env_vars
 
+
 def load_private_key_from_hex(private_key_hex):
     private_value = int(private_key_hex, 16)
     pk = ec.derive_private_key(private_value, ec.SECP256R1())
@@ -36,6 +37,7 @@ def get_test_private_key_serial():
     if not private_key_hex:
         raise ValueError("TEST_PRIVATE_KEY variable not set in test_config.env")
     return load_private_key_from_hex(private_key_hex), bytes.fromhex(env_vars.get('TEST_SERIAL'))
+
 
 class SoftwareCrypto(CryptoInterface):
     def __init__(self):
@@ -66,7 +68,7 @@ class SoftwareCrypto(CryptoInterface):
         (r, s) = utils.decode_dss_signature(signature)
         result = int_to_bytes(r, 32) + int_to_bytes(s, 32)
         return 0, bytes(result)
-    
+
     def atcab_random(self):
         # generate a list of 32 random bytes
         random_data = [random.randint(0, 255) for _ in range(32)]

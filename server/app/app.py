@@ -44,16 +44,18 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     web_server = server.web.server.Server(web_host, bb)
     logger.info("Server started http://%s:%s", web_host[0], web_host[1])
 
+    props = {
+        "version": bb.get_version(),
+        **bb.crypto_state().to_dict(bb.chip_death_count)
+    }
+
     # Initialize and start mDNS advertisement
     mdns_advertiser = MDNSAdvertiser()
     try:
         mdns_advertiser.register_gateway(
             hostname=SOURCEFUL_HOSTNAME,
             port=web_host[1],
-            properties={
-                "version": bb.get_version(),
-                **bb.crypto_state().to_dict(bb.chip_death_count)
-            }
+            properties=props
         )
         logger.info(f"mDNS advertisement started for {SOURCEFUL_HOSTNAME}.local")
     except Exception as e:
