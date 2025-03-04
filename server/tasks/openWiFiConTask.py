@@ -4,6 +4,7 @@ from server.network.wifi import WiFiHandler, is_connected, get_ip_address
 from server.app.blackboard import BlackBoard
 from server.tasks.saveStateTask import SaveStateTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
+from server.network.network_utils import NetworkUtils
 
 from .task import Task
 
@@ -17,18 +18,18 @@ class OpenWiFiConTask(Task):
         self.wificon = wificon
         self.retries = 3
         self.connectivity_timeout = 30  # seconds
-        log.debug("Initialized OpenWiFiConTask for SSID: %s with %d retries", 
-                 self.wificon.ssid, self.retries)
+        log.debug("Initialized OpenWiFiConTask for SSID: %s with %d retries",
+                  self.wificon.ssid, self.retries)
 
     def _wait_for_network(self, timeout: int) -> bool:
         """Wait for network to be fully configured with timeout."""
         log.debug("Starting network wait sequence with %d seconds timeout", timeout)
         start_time = time.time()
         attempt = 1
-        
+
         while time.time() - start_time < timeout:
             log.debug("Network check attempt %d", attempt)
-            
+
             if not is_connected():
                 log.debug("Network Manager reports no connection, waiting...")
                 time.sleep(1)
@@ -47,7 +48,7 @@ class OpenWiFiConTask(Task):
 
             time.sleep(1)
             attempt += 1
-            
+
         log.warning("Network wait sequence timed out after %d seconds", timeout)
         return False
 
@@ -58,13 +59,24 @@ class OpenWiFiConTask(Task):
                 log.debug("Initial WiFi connection successful, waiting for network configuration...")
                 if self._wait_for_network(self.connectivity_timeout):
                     self.bb.add_info(f"Connected to WiFi: {self.wificon.ssid}")
-                    
+
+                    # Start mDNS advertisement
+                    log.debug("Starting mDNS advertisement...")
+                    properties = {
+                        "version": self.bb.get_version(),
+                        **self.bb.crypto_state().to_dict(self.bb.chip_death_count)
+                    }
+                    NetworkUtils.start_mdns_advertisement(
+                        port=self.bb.rest_server_port,
+                        properties=properties
+                    )
+
                     # Restart websocket connection
                     log.debug("Restarting WebSocket connection...")
                     from server.web.socket.settings_subscription import GraphQLSubscriptionClient
                     subscription = GraphQLSubscriptionClient.getInstance(self.bb, self.bb.settings.api.ws_endpoint)
                     subscription.restart_async()
-                    
+
                     return None
                 else:
                     log.warning("Network configuration failed after successful WiFi connection")
@@ -81,7 +93,7 @@ class OpenWiFiConTask(Task):
         except Exception as e:
             log.exception("Unexpected error during WiFi connection process")
             self.retries -= 1
-            if self.retries > 0:    
+            if self.retries > 0:
                 log.debug("Scheduling retry (%d remaining) in 10 seconds", self.retries)
                 self.bb.add_error(f"Failed to connect to WiFi: {self.wificon.ssid}. Retry in 10 seconds")
                 self.time = event_time + 10000
@@ -90,4 +102,3 @@ class OpenWiFiConTask(Task):
                 log.error("All retries exhausted, giving up")
                 self.bb.add_error(f"Failed to connect to WiFi: {self.wificon.ssid}. Giving up")
                 return None
-

@@ -13,7 +13,7 @@ class SaveStateTask(ConfigurationMutationTask):
     def __init__(self, event_time: int, bb: BlackBoard):
         self.data = bb.state
         super().__init__(event_time, bb, self.SUBKEY, self.data)
-        logger.info("State: %s", self.data)
+        logger.debug("State: %s", self.data)
 
     def execute(self, event_time):
         self.data = self.bb.state
@@ -50,6 +50,6 @@ class SaveStatePerpetualTask(SaveStateTask):
     def _on_error(self, reply):
         super()._on_error(reply)
         logger.error("Failed to save state %s", reply)
-        logger.error("State: %s", self.data)
+        logger.debug("State: %s", self.data)
         self.data = self.bb.state
         return 1000 * 10  # Retry after 10 seconds

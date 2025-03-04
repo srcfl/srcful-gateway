@@ -1,11 +1,12 @@
 from dataclasses import dataclass, asdict
 import logging
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict, Any
 import socket
 import ipaddress
 import subprocess
 from furl import furl
 from concurrent.futures import ThreadPoolExecutor
+from server.network.mdns import MDNSAdvertiser
 
 
 try:
@@ -48,6 +49,9 @@ class NetworkUtils:
     DEFAULT_TIMEOUT = 5
 
     INVALID_MAC = "00:00:00:00:00:00"
+    SOURCEFUL_HOSTNAME = "blixt"
+
+    _mdns_advertiser = None
 
     def __init__(self):
         raise NotImplementedError("This class shouldn't be instantiated.")
@@ -366,3 +370,93 @@ class NetworkUtils:
         logger.info("Found %s hosts: %s", len(hosts), hosts)
 
         return hosts
+
+    @classmethod
+    def start_mdns_advertisement(cls, port: int = 80, properties: Dict[str, Any] = None) -> bool:
+        """Start mDNS advertisement after DNS is resolved.
+
+        Args:
+            port: The port to advertise the service on
+            properties: Additional properties to include in the advertisement
+
+        Returns:
+            bool: True if mDNS advertisement was started successfully, False otherwise
+        """
+        logger = logging.getLogger(__name__)
+
+        # Initialize properties if None
+        if properties is None:
+            properties = {}
+
+        try:
+            # Close existing advertiser if present
+            if cls._mdns_advertiser is not None:
+                cls._mdns_advertiser.unregister()
+
+            # Create new advertiser
+            cls._mdns_advertiser = MDNSAdvertiser()
+            cls._mdns_advertiser.register_gateway(
+                hostname=cls.SOURCEFUL_HOSTNAME,
+                port=port,
+                properties=properties
+            )
+            logger.info(f"mDNS advertisement started for {cls.SOURCEFUL_HOSTNAME}.local")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to start mDNS advertisement: {e}")
+            return False
+
+    @classmethod
+    def stop_mdns_advertisement(cls) -> bool:
+        """Stop mDNS advertisement.
+
+        Returns:
+            bool: True if mDNS advertisement was stopped successfully, False otherwise
+        """
+        logger = logging.getLogger(__name__)
+
+        if cls._mdns_advertiser is not None:
+            try:
+                cls._mdns_advertiser.unregister()
+                cls._mdns_advertiser = None
+                logger.info("mDNS advertisement stopped")
+                return True
+            except Exception as e:
+                logger.error(f"Failed to stop mDNS advertisement: {e}")
+
+        return False
+
+    @classmethod
+    def start_mdns_after_dns_resolution(cls, port: int = 80, properties: Dict[str, Any] = None,
+                                        max_attempts: int = 10, wait_seconds: int = 1) -> bool:
+        """Start mDNS advertisement after DNS servers are properly resolved.
+
+        This method checks for DNS resolution and starts mDNS advertisement
+        when DNS servers are available.
+
+        Args:
+            port: The port to advertise the service on
+            properties: Additional properties to include in the advertisement
+            max_attempts: Maximum number of attempts to check for DNS
+            wait_seconds: Time to wait between attempts
+
+        Returns:
+            bool: True if mDNS advertisement was started successfully, False otherwise
+        """
+        import time
+        logger = logging.getLogger(__name__)
+
+        attempt = 0
+        while attempt < max_attempts:
+            dns_servers = cls.get_dns_servers()
+            if dns_servers:
+                logger.info(f"DNS servers resolved: {dns_servers}, starting mDNS advertisement")
+                return cls.start_mdns_advertisement(port, properties)
+
+            logger.debug(f"DNS servers not yet resolved (attempt {attempt+1}/{max_attempts}), waiting...")
+            time.sleep(wait_seconds)
+            attempt += 1
+
+        logger.warning(f"Failed to resolve DNS servers after {max_attempts} attempts")
+        # Try to start mDNS anyway as a fallback
+        return cls.start_mdns_advertisement(port, properties)
