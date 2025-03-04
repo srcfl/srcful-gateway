@@ -4,6 +4,7 @@ from server.network.wifi import WiFiHandler, is_connected, get_ip_address
 from server.app.blackboard import BlackBoard
 from server.tasks.saveStateTask import SaveStateTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
+from server.network.network_utils import NetworkUtils
 
 from .task import Task
 
@@ -17,15 +18,8 @@ class OpenWiFiConTask(Task):
         self.wificon = wificon
         self.retries = 3
         self.connectivity_timeout = 30  # seconds
-        try:
-            self.ssid_test = self.wificon.ssid
-            self.psk_test = self.wificon.psk
-        except Exception as e:
-            log.error("Error initializing OpenWiFiConTask: %s", e)
-            self.ssid_test = "test"
-            self.psk_test = "test"
         log.debug("Initialized OpenWiFiConTask for SSID: %s with %d retries",
-                  self.ssid_test, self.retries)
+                  self.wificon.ssid, self.retries)
 
     def _wait_for_network(self, timeout: int) -> bool:
         """Wait for network to be fully configured with timeout."""
@@ -65,6 +59,17 @@ class OpenWiFiConTask(Task):
                 log.debug("Initial WiFi connection successful, waiting for network configuration...")
                 if self._wait_for_network(self.connectivity_timeout):
                     self.bb.add_info(f"Connected to WiFi: {self.wificon.ssid}")
+
+                    # Start mDNS advertisement
+                    log.debug("Starting mDNS advertisement...")
+                    properties = {
+                        "version": self.bb.get_version(),
+                        **self.bb.crypto_state().to_dict(self.bb.chip_death_count)
+                    }
+                    NetworkUtils.start_mdns_advertisement(
+                        port=self.bb.rest_server_port,
+                        properties=properties
+                    )
 
                     # Restart websocket connection
                     log.debug("Restarting WebSocket connection...")

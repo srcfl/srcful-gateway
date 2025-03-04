@@ -50,6 +50,6 @@ class SaveStatePerpetualTask(SaveStateTask):
     def _on_error(self, reply):
         super()._on_error(reply)
         logger.error("Failed to save state %s", reply)
-        logger.error("State: %s", self.data)
+        logger.debug("State: %s", self.data)
         self.data = self.bb.state
         return 1000 * 10  # Retry after 10 seconds
