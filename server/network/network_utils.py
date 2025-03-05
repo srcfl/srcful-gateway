@@ -55,7 +55,7 @@ class NetworkUtils:
     DEFAULT_TIMEOUT = 5
 
     INVALID_MAC = "00:00:00:00:00:00"
-    SOURCEFUL_HOSTNAME = "blixt"
+    MDNS_HOSTNAME = "blixt"
 
     _mdns_advertiser = None
 
@@ -402,11 +402,11 @@ class NetworkUtils:
             # Create new advertiser
             cls._mdns_advertiser = MDNSAdvertiser()
             cls._mdns_advertiser.register_gateway(
-                hostname=cls.SOURCEFUL_HOSTNAME,
+                hostname=cls.MDNS_HOSTNAME,
                 port=port,
                 properties=properties
             )
-            logger.info(f"mDNS advertisement started for {cls.SOURCEFUL_HOSTNAME}.local")
+            logger.info(f"mDNS advertisement started for {cls.MDNS_HOSTNAME}.local")
             return True
         except Exception as e:
             logger.error(f"Failed to start mDNS advertisement: {e}")
