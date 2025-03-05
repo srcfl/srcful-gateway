@@ -54,8 +54,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         **bb.crypto_state().to_dict(bb.chip_death_count)
     }
 
-    # Start mDNS advertisement after DNS resolution
-    NetworkUtils.start_mdns_advertisement(port=web_host[1], properties=props)
+    NetworkUtils.start_mdns_after_dns_resolution(port=web_host[1], properties=props)
 
     graphql_client = GraphQLSubscriptionClient(bb, bb.settings.api.ws_endpoint)
     graphql_client.start()

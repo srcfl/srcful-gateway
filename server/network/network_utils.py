@@ -7,7 +7,7 @@ import subprocess
 from furl import furl
 from concurrent.futures import ThreadPoolExecutor
 from server.network.mdns import MDNSAdvertiser
-
+from server.crypto.crypto_state import CryptoState
 
 try:
     import dbus
@@ -49,6 +49,7 @@ class NetworkUtils:
     DEFAULT_TIMEOUT = 5
 
     INVALID_MAC = "00:00:00:00:00:00"
+
     MDNS_HOSTNAME = "blixt"
 
     _mdns_advertiser = None
@@ -158,9 +159,9 @@ class NetworkUtils:
             )
 
             # Print the ping results to console for debugging
-            print("\n=== PING TEST RESULTS ===")
-            print(result.stdout)
-            print("=== END PING TEST ===\n")
+            logger.debug("\n=== PING TEST RESULTS ===")
+            logger.debug(result.stdout)
+            logger.debug("=== END PING TEST ===\n")
 
             if result.returncode == 0:
                 logger.debug("Network connectivity test successful")
@@ -246,11 +247,9 @@ class NetworkUtils:
         except ValueError:
             return None
 
-    # Method to get the arp table
     @staticmethod
     def arp_table() -> list[dict[str, str]]:
         """Refresh the ARP table from the system."""
-        logger.debug("Scanning ARP table")
         try:
             with open('/proc/net/arp', 'r', encoding='utf-8') as f:
                 lines = f.readlines()[1:]  # Skip the header line
@@ -373,37 +372,78 @@ class NetworkUtils:
 
     @classmethod
     def start_mdns_advertisement(cls, port: int = 80, properties: Dict[str, Any] = None) -> bool:
-        """Start mDNS advertisement after DNS is resolved.
+        """Start mDNS advertisement for the gateway.
 
         Args:
-            port: The port to advertise the service on
+            port: Port to advertise
             properties: Additional properties to include in the advertisement
 
         Returns:
             bool: True if mDNS advertisement was started successfully, False otherwise
         """
-        logger = logging.getLogger(__name__)
-
-        # Initialize properties if None
-        if properties is None:
-            properties = {}
+        properties = properties or {}
+        hostname = cls.MDNS_HOSTNAME
 
         try:
             # Close existing advertiser if present
             if cls._mdns_advertiser is not None:
+                logger.info("Stopping existing mDNS advertisement")
                 cls._mdns_advertiser.unregister()
 
-            # Create new advertiser
+            # Create new advertiser and register
             cls._mdns_advertiser = MDNSAdvertiser()
-            cls._mdns_advertiser.register_gateway(
-                hostname=cls.MDNS_HOSTNAME,
-                port=port,
-                properties=properties
-            )
-            logger.info(f"mDNS advertisement started for {cls.MDNS_HOSTNAME}.local")
-            return True
+
+            try:
+                cls._mdns_advertiser.register_gateway(
+                    hostname=hostname,
+                    port=port,
+                    properties=properties
+                )
+                logger.info(f"mDNS advertisement started for {hostname}.local")
+                return True
+            except Exception as e:
+
+                from zeroconf._exceptions import NonUniqueNameException
+
+                if isinstance(e, NonUniqueNameException):
+                    # Create fallback hostname with serial number or timestamp
+                    serial_number = properties.get(CryptoState.serial_no_key(), '')
+                    if not serial_number:
+                        # Fallback to timestamp if no serial number
+                        logger.info("No serial number found, falling back to timestamp")
+                        import time
+                        serial_number = str(int(time.time()))
+
+                    # Use last 6 chars for better readability and store the 6 in a variable
+                    serial_suffix_length = 6
+                    serial_suffix = serial_number[-serial_suffix_length:] if len(serial_number) >= serial_suffix_length else serial_number
+                    unique_hostname = f"{hostname}-{serial_suffix}"
+
+                    logger.warning(f"Name conflict for {hostname}.local, trying {unique_hostname}.local")
+
+                    # Try with unique hostname
+                    cls._mdns_advertiser.register_gateway(
+                        hostname=unique_hostname,
+                        port=port,
+                        properties=properties
+                    )
+                    logger.info(f"mDNS advertisement started as: {unique_hostname}.local")
+                    return True
+
+                # Re-raise for outer exception handler
+                raise
         except Exception as e:
-            logger.error(f"Failed to start mDNS advertisement: {e}")
+            # More detailed error logging
+            import traceback
+            from zeroconf._exceptions import NonUniqueNameException
+
+            if isinstance(e, NonUniqueNameException):
+                logger.error(f"Failed to start mDNS advertisement: Another device is already using the name '{hostname}.local' on your network")
+                logger.info("The service will be registered with a numeric suffix automatically")
+            else:
+                error_details = traceback.format_exc()
+                logger.error(f"Failed to start mDNS advertisement: {str(e)}")
+                logger.debug(f"Exception details: {error_details}")
             return False
 
     @classmethod
@@ -423,12 +463,11 @@ class NetworkUtils:
                 return True
             except Exception as e:
                 logger.error(f"Failed to stop mDNS advertisement: {e}")
-
         return False
 
     @classmethod
     def start_mdns_after_dns_resolution(cls, port: int = 80, properties: Dict[str, Any] = None,
-                                        max_attempts: int = 10, wait_seconds: int = 1) -> bool:
+                                        max_attempts: int = 5, wait_seconds: int = 1) -> bool:
         """Start mDNS advertisement after DNS servers are properly resolved.
 
         This method checks for DNS resolution and starts mDNS advertisement
@@ -446,16 +485,14 @@ class NetworkUtils:
         import time
         logger = logging.getLogger(__name__)
 
-        attempt = 0
-        while attempt < max_attempts:
+        for attempt in range(max_attempts):
             dns_servers = cls.get_dns_servers()
             if dns_servers:
-                logger.info(f"DNS servers resolved: {dns_servers}, starting mDNS advertisement")
+                logger.info(f"DNS servers resolved: {dns_servers}")
                 return cls.start_mdns_advertisement(port, properties)
 
-            logger.debug(f"DNS servers not yet resolved (attempt {attempt+1}/{max_attempts}), waiting...")
+            logger.debug(f"DNS servers not resolved (attempt {attempt+1}/{max_attempts})")
             time.sleep(wait_seconds)
-            attempt += 1
 
         logger.warning(f"Failed to resolve DNS servers after {max_attempts} attempts")
         # Try to start mDNS anyway as a fallback
