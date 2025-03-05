@@ -21,11 +21,8 @@ from server.tasks.discoverHostsTask import DiscoverHostsTask
 logger = logging.getLogger(__name__)
 
 
-SOURCEFUL_HOSTNAME = "blixt"
-
 # Constants
 MAX_WORKERS = 4
-MDNS_HOSTNAME = "blixt"
 CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
 INITIAL_SETTINGS_DELAY = 500  # milliseconds
 SAVE_STATE_DELAY = 10000  # milliseconds (10 seconds)
