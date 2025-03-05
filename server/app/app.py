@@ -23,6 +23,15 @@ logger = logging.getLogger(__name__)
 
 SOURCEFUL_HOSTNAME = "blixt"
 
+# Constants
+MAX_WORKERS = 4
+MDNS_HOSTNAME = "blixt"
+CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
+INITIAL_SETTINGS_DELAY = 500  # milliseconds
+SAVE_STATE_DELAY = 10000  # milliseconds (10 seconds)
+CHECK_WEB_REQUEST_DELAY = 1000  # milliseconds
+SCAN_WIFI_DELAY = 10000  # milliseconds
+
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None):
 
@@ -32,7 +41,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         logger.error(f"Failed to get crypto state: {e}")
         return
     bb = BlackBoard(crypto_state)
-    scheduler = TaskScheduler(max_workers=4, system_time=bb, task_source=bb)
+    scheduler = TaskScheduler(max_workers=MAX_WORKERS, system_time=bb, task_source=bb)
 
     HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
 
@@ -54,7 +63,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     graphql_client = GraphQLSubscriptionClient(bb, bb.settings.api.ws_endpoint)
     graphql_client.start()
 
-    # control_client = ControlSubscription(bb, "ws://localhost:8765")
+    # control_client = ControlSubscription(bb, CONTROL_SUBSCRIPTION_URL)
     # control_client.start()
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
