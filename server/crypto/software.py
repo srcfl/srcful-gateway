@@ -4,6 +4,7 @@ from cryptography.utils import int_to_bytes
 from cryptography.hazmat.primitives import hashes
 from .crypto_interface import CryptoInterface
 import random
+import os
 
 
 def load_env_file(file_path):
@@ -21,7 +22,11 @@ def load_private_key_from_hex(private_key_hex):
     pk = ec.derive_private_key(private_value, ec.SECP256R1())
 
     # check that the private key matches the public key
-    expected_public_key = "2f5d41eacf701c18eb1bdae549ee0232ed2b9f3dd2b983ff7b68240bbba84f7b4903d0a52a1ab3d47e7155c5f3455fdbe7997bf85b2258fee6644e16b7e8e9be"
+    # Fetch the expected public key from the environment variable
+    env_vars = load_env_file('test_config.env')
+    expected_public_key = env_vars.get('TEST_PUBLIC_KEY')
+    if not expected_public_key:
+        raise ValueError("TEST_PUBLIC_KEY variable not set in test_config.env")
     public_key = pk.public_key()
     public_numbers = public_key.public_numbers()
     public_key_hex = format(public_numbers.x, '064x') + format(public_numbers.y, '064x')
