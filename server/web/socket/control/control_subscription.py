@@ -186,15 +186,11 @@ class ControlSubscription(BaseWebSocketClient):
         # Convert execute_at to milliseconds since epoch
         time_now_ms: int = int(datetime.now().timestamp() * 1000)
 
-        # convert time string to datetime object
         execute_at_ms: int = int(datetime.strptime(control_message.execute_at, DATE_TIME_FORMAT).timestamp() * 1000)
 
         # print the ETA in a human readable format, e.g. "ETA: 1:30:10"
         eta: datetime = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
+        logger.info(f"ETA: {eta}, or {execute_at_ms - time_now_ms} milliseconds")
 
-        execute_in_ms: int = execute_at_ms - time_now_ms
-
-        logger.info(f"ETA: {eta}, or {execute_in_ms} milliseconds")
-
-        task = ControlDeviceTask(execute_in_ms, self.bb, control_message)
+        task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
         self.bb.add_task(task)

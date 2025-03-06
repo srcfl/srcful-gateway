@@ -29,21 +29,21 @@ class ControlMessage(BaseMessage):
         self.retries: int = self.payload.get(PayloadType.RETRIES)
         self.commands: List[Command] = [Command(cmd) for cmd in self.payload.get(PayloadType.COMMANDS, [])]
 
-        # Log as dictionary
-        logger.info(f"Initialized control message: {self.id}")
+        logger.debug(f"Initialized control message: {self.id}")
 
     def execute(self, device: ModbusProtocol) -> List[bool]:
+        result = []
         try:
-            logger.info(f"Executing control message: {self}")
-
             for command in self.commands:
                 address = command.register
                 value = command.value
-                logger.info(f"Writing value {value} to address {address}")
-                RegisterValue.write_single(device=device, address=address, value=value)
-
-                logger.info(f"Wrote value {value} to address {address}")
+                logger.debug(f"Writing value {value} to address {address}")
+                res = RegisterValue.write_single(device=device, address=address, value=value)
+                result.append(res)
+                logger.debug(f"Wrote value {value} to address {address}")
 
         except Exception as e:
             logger.error(f"Error executing control message: {e}")
             return [False]
+
+        return result

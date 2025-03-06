@@ -71,7 +71,7 @@ def test_ems_authentication_success_message():
 def test_ems_control_schedule_message():
     control_schedule_message: ControlMessage = ControlMessage(ems_control_schedule_message)
     assert control_schedule_message.type == ControlMessageType.EMS_CONTROL_SCHEDULE
-    assert control_schedule_message.id == None
+    assert control_schedule_message.id == "controlId"
     assert control_schedule_message.sn == "DEADBEEF"
     assert control_schedule_message.execute_at == "2025-02-24T18:29:59.172301"
     assert control_schedule_message.protocol == "modbus"
