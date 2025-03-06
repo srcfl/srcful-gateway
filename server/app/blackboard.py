@@ -58,7 +58,11 @@ class BlackBoard(ISystemTime, ITaskSource):
         # self._control_objects = []
 
     def get_version(self) -> str:
+<<<<<<< HEAD
         return "0.20.6"
+=======
+        return "0.19.6"
+>>>>>>> main
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
