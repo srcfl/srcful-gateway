@@ -497,3 +497,40 @@ class NetworkUtils:
         logger.warning(f"Failed to resolve DNS servers after {max_attempts} attempts")
         # Try to start mDNS anyway as a fallback
         return cls.start_mdns_advertisement(port, properties)
+
+    @classmethod
+    def discover_blixt_devices(cls, scan_duration: int = 5) -> List[Dict[str, str]]:
+        """Discover blixt devices on the local network using mDNS.
+
+        Scans the network for devices that advertise themselves with the blixt hostname
+        via mDNS and returns their hostnames and IP addresses.
+
+        Args:
+            scan_duration: Duration in seconds to scan for devices
+
+        Returns:
+            List of dictionaries containing 'hostname' and 'ip' for each discovered blixt device
+        """
+        from server.network.mdns import scan
+
+        logger = logging.getLogger(__name__)
+        logger.info(f"Scanning for blixt devices on the network for {scan_duration} seconds...")
+
+        # Get current device's IP to exclude it from results
+        current_ip = cls.get_ip_address()
+
+        # Scan for sourceful services
+        service_type = "_sourceful._tcp.local."
+        results = scan(duration=scan_duration, service_type=service_type)
+
+        devices = []
+        for result in results:
+            if result.address and result.address != current_ip:  # Skip the current device
+                hostname = result.name.split('.')[0]  # Extract hostname from the full service name
+                devices.append({
+                    'hostname': hostname,
+                    'ip': result.address
+                })
+                logger.info(f"Found blixt device: {hostname} at {result.address}")
+
+        return devices

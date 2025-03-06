@@ -6,10 +6,38 @@ from ..requestData import RequestData
 
 class Handler(GetHandler):
     def do_get(self, data: RequestData):
+        # Fetch the gateway name
+        from server.tasks.getNameTask import GetNameTask
+        from server.network.network_utils import NetworkUtils
+
+        # Get the gateway name
+        name_task = GetNameTask(0, data.bb)
+        name_task.execute(0)
+
+        # Default name if not available
+        gateway_name = "Sourceful Energy Gateway"
+
+        # Get hostname of the current gateway
+        hostname = ""
+        try:
+            # Try to get the hostname from the network interface
+            import socket
+            hostname = socket.gethostname()
+            # If the hostname is too long or complex, simplify it
+            if '.' in hostname:
+                hostname = hostname.split('.')[0]
+        except Exception:
+            # Fallback to a simple identifier if hostname can't be retrieved
+            hostname = "gateway"
+
+        # Update with actual name if available
+        if hasattr(name_task, 'name') and name_task.name is not None:
+            gateway_name = name_task.name
+
         ret = """
         <html>
         <head>
-            <title>Srcful Energy Gateway</title>
+            <title>Sourceful Energy Gateway</title>
             <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIxIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMSAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNjAuMjcxIiBjeT0iNjAiIHI9IjYwIiBmaWxsPSIjMkIyQjJCIi8+PHBhdGggZD0iTTM2LjA5NzMgNTguNTIyNUw2NC4xMDU5IDI0LjUyNjlDNjYuMTA2OCAyMi4wOTg0IDcwLjAyMDkgMjMuOTkyMiA2OS4zNTg0IDI3LjA2ODNMNjMuODczOCA1Mi41MzQ3QzYzLjQ1MiA1NC40OTMxIDY1LjAzIDU2LjMwNzUgNjcuMDI4MSA1Ni4xNjEzTDgxLjE5NDUgNTUuMTI0N0M4My44ODkgNTQuOTI3NiA4NS40NTI2IDU4LjExMTQgODMuNjQ5NCA2MC4xMjMyTDUyLjIwODkgOTUuMjAwOUM1MC4wNjY0IDk3LjU5MTIgNDYuMTcyMyA5NS40MDQ0IDQ3LjA5ODIgOTIuMzMwOUw1NS4zNzU0IDY0Ljg1NDNDNTYuMDIyMiA2Mi43MDc1IDU0LjE3MyA2MC42MzQ5IDUxLjk2NjYgNjEuMDMzN0wzOC45NDg1IDYzLjM4NjNDMzYuMTk3IDYzLjg4MzYgMzQuMzE5MyA2MC42ODA1IDM2LjA5NzMgNTguNTIyNVoiIGZpbGw9IiMwMEZGODQiLz48L3N2Zz4=">
             <!-- Import fonts -->
             <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -461,6 +489,101 @@ class Handler(GetHandler):
                     box-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
                 }
                 
+                /* Gateway discovery card styles */
+                .gateway-card {
+                    display: flex;
+                    align-items: center;
+                    padding: 1.1rem 1.5rem;
+                    position: relative;
+                    overflow: hidden;
+                    background: var(--card-bg);
+                    border-radius: 1rem;
+                    border: 1px solid var(--border);
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    box-shadow: var(--shadow-sm);
+                    margin-bottom: 0.6rem;
+                }
+                
+                .gateway-card:hover {
+                    transform: translateY(-3px);
+                    border-color: var(--border-hover);
+                    background: var(--card-hover);
+                    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+                }
+                
+                .gateway-card::after {
+                    content: "";
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 0;
+                    background: linear-gradient(to bottom, var(--primary-glow), transparent);
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                }
+                
+                .gateway-card:hover::after {
+                    height: 4px;
+                    opacity: 1;
+                }
+                
+                .gateway-accent {
+                    position: absolute;
+                    left: 0;
+                    top: 10%;
+                    height: 80%;
+                    width: 4px;
+                    background: var(--primary);
+                }
+                
+                .gateway-content {
+                    flex-grow: 1;
+                    margin-left: 1rem;
+                }
+                
+                .gateway-hostname {
+                    font-size: 1.15rem;
+                    font-weight: 600;
+                    color: var(--primary);
+                    margin-bottom: 0.4rem;
+                }
+                
+                .gateway-ip-container {
+                    display: flex;
+                    align-items: center;
+                }
+                
+                .gateway-ip-label {
+                    color: var(--text-secondary);
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                }
+                
+                .gateway-ip-value {
+                    color: var(--text);
+                    margin-left: 0.5rem;
+                    font-family: monospace;
+                    font-size: 0.95rem;
+                }
+                
+                .gateway-button {
+                    display: inline-block;
+                    padding: 0.5rem 1rem;
+                    background: var(--primary-gradient);
+                    color: var(--text);
+                    text-decoration: none;
+                    border-radius: 0.5rem;
+                    font-weight: 500;
+                    transition: all 0.3s ease;
+                    box-shadow: var(--shadow-sm);
+                }
+                
+                .gateway-button:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+                }
+                
                 /* Mobile optimizations */
                 @media (max-width: 768px) {
                     html {
@@ -530,7 +653,10 @@ class Handler(GetHandler):
                         <circle cx="60.271" cy="60" r="60" fill="#2B2B2B"/>
                         <path d="M36.0973 58.5225L64.1059 24.5269C66.1068 22.0984 70.0209 23.9922 69.3584 27.0683L63.8738 52.5347C63.452 54.4931 65.03 56.3075 67.0281 56.1613L81.1945 55.1247C83.889 54.9276 85.4526 58.1114 83.6494 60.1232L52.2089 95.2009C50.0664 97.5912 46.1723 95.4044 47.0982 92.3309L55.3754 64.8543C56.0222 62.7075 54.173 60.6349 51.9666 61.0337L38.9485 63.3863C36.197 63.8836 34.3193 60.6805 36.0973 58.5225Z" fill="#00d672"/>
                     </svg>
-                    <h1>Sourceful Energy Gateway</h1>
+                    <div>
+                        <h1>Sourceful Energy Gateway</h1>
+                        <div style="font-size: 1rem; color: var(--text-secondary); margin-top: 0.3rem; font-weight: 500;">""" + gateway_name + """</div>
+                    </div>
                 </div>
                 
                 <div class="app-links">
@@ -547,10 +673,56 @@ class Handler(GetHandler):
                         </div>
                     </div>
                 </div>
-        """
+                
+                """
 
         # Get the full state
         state = data.bb.state
+
+        # Add Other Energy Gateways Section right after the app links
+        try:
+            from server.network.network_utils import NetworkUtils
+
+            # Discover other blixt energy gateways on the network
+            other_gateways = NetworkUtils.discover_blixt_devices(scan_duration=3)
+
+            if other_gateways:
+                ret += '<div class="section">'
+                ret += '<h2>Other Energy Gateways on the Network</h2>'
+                ret += '<p style="color: var(--text-secondary); margin-bottom: 0.8rem; font-size: 0.9rem;">These are other Sourceful Energy Gateways discovered on your local network</p>'
+                ret += '<div class="device-grid">'
+
+                for gateway in other_gateways:
+                    hostname = gateway.get('hostname', 'Unknown')
+                    ip = gateway.get('ip', 'Unknown')
+
+                    ret += f'''
+                        <div class="gateway-card">
+                            <div class="gateway-accent"></div>
+                            
+                            <div class="gateway-content">
+                                <div class="gateway-hostname">{hostname}</div>
+                                
+                                <div class="gateway-ip-container">
+                                    <span class="gateway-ip-label">IP:</span>
+                                    <span class="gateway-ip-value">{ip}</span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <a href="http://{hostname}.local" class="gateway-button">
+                                    Open Gateway
+                                </a>
+                            </div>
+                        </div>
+                    '''
+                ret += '</div></div>'
+        except Exception as e:
+            # Log the error but don't show it to users
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error displaying other gateways: {e}")
+            pass
 
         # Status Section
         ret += '<div class="section">'
@@ -611,9 +783,22 @@ class Handler(GetHandler):
                     port = connection.get('port', 'Unknown')
                     mac = connection.get('mac', 'Unknown')
 
+                    # Try to get hostname from connection or create a hostname from the IP if not available
+                    hostname = connection.get('hostname', '')
+                    if not hostname and ip and ip != 'Unknown':
+                        # If no hostname is available, use the IP's last octet as a simple identifier
+                        ip_parts = ip.split('.')
+                        if len(ip_parts) == 4:
+                            hostname = f"device-{ip_parts[3]}"
+
+                    # Create the display name with hostname in parentheses if available
+                    display_name = name
+                    if hostname:
+                        display_name = f"{name} ({hostname})"
+
                     ret += f'''
                         <div class="device-card">
-                            <div class="card-header">{name}</div>
+                            <div class="card-header">{display_name}</div>
                             <div class="device-details">
                                 <div class="device-property">
                                     <span class="device-property-label">ID:</span>
