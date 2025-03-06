@@ -54,14 +54,13 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         **bb.crypto_state().to_dict(bb.chip_death_count)
     }
 
-    # Start mDNS advertisement after DNS resolution
-    NetworkUtils.start_mdns_advertisement(port=web_host[1], properties=props)
+    NetworkUtils.start_mdns_after_dns_resolution(port=web_host[1], properties=props)
 
     graphql_client = GraphQLSubscriptionClient(bb, bb.settings.api.ws_endpoint)
     graphql_client.start()
 
-    # control_client = ControlSubscription(bb, CONTROL_SUBSCRIPTION_URL)
-    # control_client.start()
+    control_client = ControlSubscription(bb, CONTROL_SUBSCRIPTION_URL)
+    control_client.start()
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
