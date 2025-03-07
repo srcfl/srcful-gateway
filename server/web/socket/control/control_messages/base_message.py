@@ -6,7 +6,7 @@ class BaseMessage:
         # Common header fields
         self.type: str = data.get(PayloadType.TYPE)
         self.payload: str = data.get(PayloadType.PAYLOAD)
-        self.id: str | None = self.payload.get(PayloadType.ID, None)
+        self.id: int | None = self.payload.get(PayloadType.ID, None)
 
         # Common payload fields
         self.serial_number: str = self.payload.get(PayloadType.SERIAL_NUMBER)

@@ -26,7 +26,7 @@ class PayloadType(str, Enum):
     CREATED_AT = "created_at"
     TYPE = "type"
     PAYLOAD = "payload"
-    RETRIES = "retrys"
+    RETRIES = "retries"
     REASON = "reason"
     MESSAGE = "message"
 

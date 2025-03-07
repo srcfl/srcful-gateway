@@ -157,10 +157,6 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             logger.info("*" * 50)
             logger.info("Task execution registry:")
             for task in self.task_registry.get_all_results():
-                # data = json.loads(task.control_message.__dict__)
-                # logger.info("#" * 50)
-                # logger.info(json.dumps(data, indent=2))
-                # logger.info("#" * 50)
                 logger.info(f"Task: {task.control_message.id}, Scheduled at: {task.control_message.execute_at}, Is executed: {task.is_executed}, Executed at: {datetime.fromtimestamp(task.executed_at_timestamp / 1000)}, Is acked: {task.is_acked}, Is nacked: {task.is_nacked}")
             logger.info("*" * 50)
 

@@ -27,25 +27,25 @@ ems_authentication_success_message = {
 ems_control_schedule_message = {
     "type": "ems_control_schedule",
     "payload": {
-        "id": "controlId",
-        "sn": "DEADBEEF",
-            "execute_at": "2025-02-24T18:29:59.172301",
-            "protocol": "modbus",
-            "retrys": 0,
-            "commands": [
-                {
-                    "register": 1,
-                    "type": "ControlMessagePayload",
-                    "datatype": "float32",
-                    "unit": "kW",
-                    "scaling_factor": 0.1,
-                    "description": "Fiddle stuff",
-                    "value": 5000
-                }
-            ],
+        "id": 246,
+        "sn": "2311286262",
+        "execute_at": "2025-03-07T21:00:00.000000",
+        "protocol": "modbus",
+        "retries": 0,
+        "commands": [
+            {
+                "register": 1,
+                "type": "ControlMessagePayload",
+                "datatype": "float32",
+                "unit": "kW",
+                "scaling_factor": 0.1,
+                "description": "DISCHARGE",
+                "value": 2270
+            }
+        ],
         "serialNumber": "Sourceful-EMS",
-        "signature": "fe697235a6d60dd53ed84ab2c6bec6ee5e843ecdddb2689204bc2359c25056cbfb5c41261179acc739d9bf687a76f49bf7c0db8fe8bd601ef3cb6663a3ea6c45",
-        "created_at": "2025-02-24T18:01:43.172301"
+        "signature": "e385f529b17b770f505f9a43bb04a934634f834bd755ec29f5deac6f8dbb8ecdf97648809c774c1e7642bc22be80ab4d2f174456aa291de1ead1c6ae7fc81441",
+        "created_at": "2025-03-07T20:58:00.364244"
     }
 }
 
@@ -71,14 +71,14 @@ def test_ems_authentication_success_message():
 def test_ems_control_schedule_message():
     control_schedule_message: ControlMessage = ControlMessage(ems_control_schedule_message)
     assert control_schedule_message.type == ControlMessageType.EMS_CONTROL_SCHEDULE
-    assert control_schedule_message.id == "controlId"
-    assert control_schedule_message.sn == "DEADBEEF"
-    assert control_schedule_message.execute_at == "2025-02-24T18:29:59.172301"
+    assert control_schedule_message.id == 246
+    assert control_schedule_message.sn == "2311286262"
+    assert control_schedule_message.execute_at == "2025-03-07T21:00:00.000000"
     assert control_schedule_message.protocol == "modbus"
     assert control_schedule_message.retries == 0
 
     assert len(control_schedule_message.commands) == 1
 
     assert control_schedule_message.serial_number == "Sourceful-EMS"
-    assert control_schedule_message.signature == "fe697235a6d60dd53ed84ab2c6bec6ee5e843ecdddb2689204bc2359c25056cbfb5c41261179acc739d9bf687a76f49bf7c0db8fe8bd601ef3cb6663a3ea6c45"
-    assert control_schedule_message.created_at == "2025-02-24T18:01:43.172301"
+    assert control_schedule_message.signature == "e385f529b17b770f505f9a43bb04a934634f834bd755ec29f5deac6f8dbb8ecdf97648809c774c1e7642bc22be80ab4d2f174456aa291de1ead1c6ae7fc81441"
+    assert control_schedule_message.created_at == "2025-03-07T20:58:00.364244"
