@@ -31,8 +31,6 @@ SCAN_WIFI_DELAY = 10000  # milliseconds
 
 
 def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None):
-    # Import here to avoid circular imports
-    from server.web.socket.control.control_task_monitor import ControlTaskMonitor
 
     try:
         crypto_state = CryptoState()
@@ -63,9 +61,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     control_client = ControlSubscription(bb, CONTROL_SUBSCRIPTION_URL)
     control_client.start()
-
-    # Initialize the task listeners
-    control_monitor = ControlTaskMonitor()
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)

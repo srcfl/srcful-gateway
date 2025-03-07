@@ -6,7 +6,7 @@ from server.web.socket.control.control_messages.types import PayloadType
 from server.web.socket.control.control_messages.base_message import BaseMessage
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class Command:
@@ -18,6 +18,7 @@ class Command:
         self.scaling_factor: float = data['scaling_factor']
         self.description: str = data['description']
         self.value: float = data['value']
+        self.success: bool = False  # Optional, only used if the command is executed
 
 
 class ControlMessage(BaseMessage):
@@ -31,19 +32,22 @@ class ControlMessage(BaseMessage):
 
         logger.debug(f"Initialized control message: {self.id}")
 
-    def execute(self, device: ModbusProtocol) -> List[bool]:
-        result = []
+    def process_commands(self, device: ModbusProtocol):
         try:
             for command in self.commands:
                 address = command.register
                 value = command.value
+
                 logger.debug(f"Writing value {value} to address {address}")
+
                 res = RegisterValue.write_single(device=device, address=address, value=value)
-                result.append(res)
+                command.success = res
+
                 logger.debug(f"Wrote value {value} to address {address}")
 
         except Exception as e:
             logger.error(f"Error executing control message: {e}")
-            return [False]
 
-        return result
+        finally:
+            # We return the control message object with the updated success status in each command
+            return self

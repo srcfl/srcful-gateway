@@ -10,7 +10,9 @@ from server.web.socket.base_websocket import BaseWebSocketClient
 from server.web.socket.control.control_messages.types import ControlMessageType, PayloadType
 from server.crypto import crypto
 from cryptography.hazmat.primitives import hashes
-from server.tasks.control_device_task import ControlDeviceTask
+from server.tasks.control_device_task import ControlDeviceTask, ControlDeviceTaskListener
+from typing import Any, List
+from server.web.socket.control.task_execution_registry import TaskExecutionRegistry
 
 
 DATE_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
@@ -20,7 +22,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class ControlSubscription(BaseWebSocketClient):
+class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
     """
     WebSocket client that handles control messages
     """
@@ -29,6 +31,7 @@ class ControlSubscription(BaseWebSocketClient):
         super().__init__(url, protocol="json")
         self.bb: BlackBoard = bb
         self.crypto_state: CryptoState = CryptoState()
+        self.task_registry = TaskExecutionRegistry()
 
     def _verify_message_signature(self, message: BaseMessage) -> bool:
         """Validate the signature of the message"""
@@ -100,6 +103,20 @@ class ControlSubscription(BaseWebSocketClient):
         logger.info(f"Sending NACK for message: {message.id}, Type: {message.type}, signature: {message.signature}")
         self.send_message(nack_data)
 
+    def on_control_device_task_started(self, task: ControlDeviceTask):
+        pass
+
+    def on_control_device_task_completed(self, task: ControlDeviceTask):
+        # If task is executed, send an ACK and update the task registry, else send a NACK
+        if task.is_executed:
+            self._send_ack(task.control_message)
+            task.is_acked = True
+        else:
+            self._send_nack(task.control_message, "Task not executed")
+            task.is_nacked = True
+
+        self.task_registry.register_task_result(task)
+
     def on_message(self, ws, message):
         """Called when a message is received"""
         try:
@@ -136,6 +153,16 @@ class ControlSubscription(BaseWebSocketClient):
 
             else:
                 logger.warning(f"Unknown message type: {type}")
+
+            logger.info("*" * 50)
+            logger.info("Task execution registry:")
+            for task in self.task_registry.get_all_results():
+                # data = json.loads(task.control_message.__dict__)
+                # logger.info("#" * 50)
+                # logger.info(json.dumps(data, indent=2))
+                # logger.info("#" * 50)
+                logger.info(f"Task: {task.control_message.id}, Scheduled at: {task.control_message.execute_at}, Is executed: {task.is_executed}, Executed at: {datetime.fromtimestamp(task.executed_at_timestamp / 1000)}, Is acked: {task.is_acked}, Is nacked: {task.is_nacked}")
+            logger.info("*" * 50)
 
         except json.JSONDecodeError:
             logger.error(f"Invalid JSON message received: {message}")
@@ -192,5 +219,11 @@ class ControlSubscription(BaseWebSocketClient):
         eta: datetime = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
         logger.info(f"ETA: {eta}, or {execute_at_ms - time_now_ms} milliseconds")
 
+        if self.task_registry.get_task_result(control_message.id):
+            logger.info(f"Task already exists in registry, skipping")
+            return
+
         task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
+        task.register_listener(self)
+
         self.bb.add_task(task)

@@ -6,8 +6,6 @@ from concurrent.futures import ThreadPoolExecutor
 from server.app.isystem_time import ISystemTime
 from server.app.itask_source import ITaskSource
 from server.tasks.itask import ITask
-from server.tasks.task import Task
-from server.tasks.task_executor import TaskExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +45,7 @@ class TaskScheduler:
 
     def worker(self, task: ITask):
         try:
-            # Use TaskExecutor to execute the task if it's a Task subclass
-            if isinstance(task, Task):
-                new_tasks = TaskExecutor.execute_task(task, self.system_time.time_ms())
-            else:
-                # Fall back to direct execution for non-Task instances
-                new_tasks = task.execute(self.system_time.time_ms())
+            new_tasks = task.execute(self.system_time.time_ms())
 
             if new_tasks is None:
                 new_tasks = []
