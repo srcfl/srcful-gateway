@@ -109,7 +109,7 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
     def on_control_device_task_completed(self, task: ControlDeviceTask):
         # If task is executed, send an ACK and update the task registry, else send a NACK
         if task.is_executed:
-            self._send_ack(task.control_message)
+            # self._send_ack(task.control_message)
             task.is_acked = True
         else:
             self._send_nack(task.control_message, "Task not executed")
@@ -167,7 +167,6 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
 
     def handle_ems_authentication_success(self, data: dict):
         base_message: BaseMessage = BaseMessage(data)
-        self._send_ack(base_message)
         pass
 
     def handle_ems_authentication_error(self, data: dict):

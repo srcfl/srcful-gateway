@@ -23,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 # Constants
 MAX_WORKERS = 4
-CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
+CONTROL_SUBSCRIPTION_URL = "ws://192.168.50.112:5000/bms-subscribe"
+# CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
 INITIAL_SETTINGS_DELAY = 500  # milliseconds
 SAVE_STATE_DELAY = 10000  # milliseconds (10 seconds)
 CHECK_WEB_REQUEST_DELAY = 1000  # milliseconds
@@ -71,7 +72,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     scheduler.add_task(GetSettingsTask(bb.time_ms() + 500, bb))
 
     if inverter is not None:
-        bb.task_scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
+        scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
 
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))
@@ -97,10 +98,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         # Stop mDNS advertisement
         NetworkUtils.stop_mdns_advertisement()
 
-        # Unregister the task listeners
-        if 'control_monitor' in locals():
-            control_monitor.unregister()
-
         logger.info("Server stopped.")
 
 
@@ -109,12 +106,12 @@ if __name__ == "__main__":
     import logging
 
     logging.basicConfig()
-    # handler = logging.StreamHandler(sys.stdout)
-    # logging.root.addHandler(handler)
+
     logging.root.setLevel(logging.INFO)
     args = {
-        NetworkUtils.IP_KEY: "192.168.1.100",
+        NetworkUtils.IP_KEY: "192.168.50.11",
         NetworkUtils.MAC_KEY: NetworkUtils.INVALID_MAC,
+        ModbusTCP.sn_key(): "2311286262",
         NetworkUtils.PORT_KEY: 502,
         ModbusTCP.slave_id_key(): 1,
         ModbusTCP.device_type_key(): "huawei"
