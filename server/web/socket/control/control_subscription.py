@@ -111,11 +111,10 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
         if task.is_executed:
             # self._send_ack(task.control_message)
             task.is_acked = True
+            self.task_registry.register_task_result(task)
         else:
             self._send_nack(task.control_message, "Task not executed")
             task.is_nacked = True
-
-        self.task_registry.register_task_result(task)
 
     def on_message(self, ws, message):
         """Called when a message is received"""
@@ -188,6 +187,11 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
                 PayloadType.CREATED_AT: timestamp
             }
         }
+
+        # logger.info("#*" * 50)
+        # logger.info(json.dumps(ret_data))
+        # logger.info("#*" * 50)
+
         self.send_message(ret_data)
 
     def handle_ems_control_schedule(self, data: dict):
