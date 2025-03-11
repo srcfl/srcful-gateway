@@ -18,7 +18,7 @@ class Handler(PostHandler):
     def schema(self):
         return  {
                 "type": "post",
-                "description": "Recover the private and public keys for walletless signing",
+                "description": "Create a signed message with nonce, timestamp and gateway serial number",
                 "optional": {"message": "string, a message to sign should not contain | characters.",
                              "timestamp": "string, a timestamp in UTC Y-m-dTH:M:SZ format. if not provided, the device current time will be used."},
                 "returns": {"message": "message|nonce|timestamp (UTC Y-m-dTH:M:SZ)|serial",

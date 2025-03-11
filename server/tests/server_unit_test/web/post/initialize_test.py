@@ -37,7 +37,7 @@ def test_intialize_no_internet(request_data):
 
     assert status_code == 200
     response = json.loads(response)
-    assert 'id_and_wallet' in response
+    assert 'idAndWallet' in response
     assert 'signature' in response
 
 def test_initialize_no_wallet():
