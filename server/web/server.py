@@ -53,8 +53,6 @@ class Endpoints:
             "state/update": handler.get.state.UpdateStateHandler(),
             "system": handler.get.system.SystemHandler(),
             "system/details": handler.get.system.SystemDetailsHandler(),
-
-
         }
 
         self.api_post_dict = {
@@ -65,7 +63,8 @@ class Endpoints:
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),
             "crypto/sign": handler.post.crypto_sign.Handler(),
-            "system/reboot": handler.post.reboot.Handler()
+            "system/reboot": handler.post.reboot.Handler(),
+            "system/ble/stop": handler.post.ble_stop.Handler(),
         }
 
         self.api_delete_dict = {
