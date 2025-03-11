@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Constants
 MAX_WORKERS = 4
-# CONTROL_SUBSCRIPTION_URL = "ws://192.168.50.112:5000/bms-subscribe"
+# CONTROL_SUBSCRIPTION_URL = "ws://localhost:5000/ems/subscribe"
 CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
 INITIAL_SETTINGS_DELAY = 500  # milliseconds
 SAVE_STATE_DELAY = 10000  # milliseconds (10 seconds)
