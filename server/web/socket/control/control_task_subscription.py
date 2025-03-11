@@ -177,7 +177,6 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
     def handle_device_authenticate(self, data: dict):
 
         auth_challenge_message: AuthChallengeMessage = AuthChallengeMessage(data)
-        # self._send_ack(auth_challenge_message)
 
         timestamp, crypto_sn, signature = self._create_signature()
 
@@ -191,17 +190,11 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             }
         }
 
-        # logger.info("#*" * 50)
-        # logger.info(json.dumps(ret_data))
-        # logger.info("#*" * 50)
-
         self.send_message(ret_data)
 
     def handle_ems_control_schedule(self, data: dict):
 
         control_message: ControlMessage = ControlMessage(data)
-
-        self._send_ack(control_message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_ACK)
 
         der = self.bb.devices.find_sn(control_message.sn)
 
@@ -209,6 +202,8 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             self._send_nack(control_message, "Device not found")
             logger.error(f"Device not found: {control_message.sn}")
             return
+
+        self._send_ack(control_message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_ACK)
 
         logger.info(f"Device found: {der.get_name()}")
 
