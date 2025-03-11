@@ -1,6 +1,7 @@
 import datetime
 import json
 import random
+import re
 from typing import Optional
 from server.crypto import crypto
 
@@ -18,15 +19,16 @@ class Handler(PostHandler):
         return  {
                 "type": "post",
                 "description": "Recover the private and public keys for walletless signing",
-                "optional": {"message": "string, a message to sign should not contain | characters."},
-                "returns": {"message": "message|nonce|timestamp ( UTC Y-m-dTH:M:SZ)|serial",
-                            "sign": "the signature of the message"},
+                "optional": {"message": "string, a message to sign should not contain | characters.",
+                             "timestamp": "string, a timestamp in UTC Y-m-dTH:M:SZ format. if not provided, the device current time will be used."},
+                "returns": {"message": "message|nonce|timestamp (UTC Y-m-dTH:M:SZ)|serial",
+                            "sign": "the signature of the message in hex format"},
                 }
 
     def json_schema(self):
         return json.dumps(self.schema())
 
-    def _construct_message(self, message: Optional[str]) -> str:
+    def _construct_message(self, message: Optional[str], timestamp: Optional[str]) -> str:
         if message is None:
             message = ""
         else:
@@ -38,7 +40,12 @@ class Handler(PostHandler):
         
         nonce = str(random.randint(0, 1000000)) 
         message += nonce + "|"
-        timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        if timestamp is None:
+            timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        else:
+            # check if timestamp is in UTC Y-m-dTH:M:SZ format
+            if not re.match(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$', timestamp):
+                raise ValueError("timestamp must be in UTC Y-m-dTH:M:SZ format")
         message += timestamp + "|"
 
         return message
@@ -52,7 +59,7 @@ class Handler(PostHandler):
 
     def do_post(self, data: RequestData):
         try:
-            message = self._construct_message(data.data.get("message"))
+            message = self._construct_message(data.data.get("message"), data.data.get("timestamp"))
         except ValueError as e:
             return 400, json.dumps({"status": str(e)})
 
