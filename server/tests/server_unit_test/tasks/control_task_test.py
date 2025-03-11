@@ -1,5 +1,4 @@
 from server.tasks.control_device_task import ControlDeviceTask
-from server.web.socket.control.control_task_registry import TaskExecutionRegistry
 from server.devices.ICom import ICom
 import server.tests.config_defaults as cfg
 from unittest.mock import Mock
@@ -30,12 +29,19 @@ def open_device():
 
 
 def test_task_executed(control_message, blackboard, open_device):
-    registry = TaskExecutionRegistry()
+
     task = ControlDeviceTask(blackboard.time_ms(), blackboard, control_message)
-    registry.add_task(task)
 
     blackboard.devices.add(open_device)
 
     assert not task.is_executed
     task.execute(blackboard.time_ms())
     assert task.is_executed
+
+
+def test_task_cancelled(control_message, blackboard):
+
+    task = ControlDeviceTask(blackboard.time_ms(), blackboard, control_message)
+    task.cancel()
+
+    assert task.is_cancelled

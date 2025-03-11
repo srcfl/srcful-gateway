@@ -27,7 +27,7 @@ class TaskExecutionRegistry:
         """Records the execution result of a task"""
         self._registry.append(task)
 
-    def get_task(self, message_id: str) -> ControlDeviceTask | None:
+    def get_task(self, message_id: int) -> ControlDeviceTask | None:
         """Retrieves a task by its message ID"""
         return next((t for t in self._registry if t.control_message.id == message_id), None)
 

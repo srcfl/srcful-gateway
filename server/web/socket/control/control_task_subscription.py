@@ -156,12 +156,6 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             else:
                 logger.warning(f"Unknown message type: {type}")
 
-            logger.info("*" * 50)
-            logger.info("Task execution registry:")
-            for task in self.task_registry.get_all_results():
-                logger.info(f"Task: {task.control_message.id}, Scheduled at: {task.control_message.execute_at}, Is executed: {task.is_executed}, Executed at: {datetime.fromtimestamp(task.executed_at_timestamp / 1000)}, Is acked: {task.is_acked}, Is nacked: {task.is_nacked}")
-            logger.info("*" * 50)
-
         except json.JSONDecodeError:
             logger.error(f"Invalid JSON message received: {message}")
         except Exception as e:
@@ -203,6 +197,8 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             logger.error(f"Device not found: {control_message.sn}")
             return
 
+        # Perhaps we should not just ACK here, but also make sure the device is open.
+        # Who is responsible for this?
         self._send_ack(control_message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_ACK)
 
         logger.info(f"Device found: {der.get_name()}")
@@ -214,15 +210,14 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
 
         # print the ETA in a human readable format, e.g. "ETA: 1:30:10"
         eta: datetime = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
+
         logger.info(f"ETA: {eta}, or {execute_at_ms - time_now_ms} milliseconds")
 
-        # if self.task_registry.get_task_result(control_message.id):
-        #     logger.info(f"Task already exists in registry, skipping")
-        #     return
-
         task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
+
         task.register_listener(self)
 
+        self.task_registry.add_task(task)
         self.bb.add_task(task)
 
     def handle_ems_control_schedule_cancel(self, data: dict):
