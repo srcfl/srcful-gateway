@@ -13,7 +13,7 @@ from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
-from server.web.socket.control.control_subscription import ControlSubscription
+from server.web.socket.control.control_task_subscription import ControlSubscription
 from server.app.settings_device_listener import SettingsDeviceListener
 from server.app.blackboard import BlackBoard
 from server.tasks.discoverHostsTask import DiscoverHostsTask

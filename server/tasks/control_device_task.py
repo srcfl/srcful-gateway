@@ -56,3 +56,6 @@ class ControlDeviceTask(Task):
                 listener.on_control_device_task_completed(self)
 
         return None
+
+    def cancel(self):
+        self.is_cancelled = True

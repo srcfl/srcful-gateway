@@ -1,4 +1,4 @@
-from server.web.socket.control.control_subscription import ControlSubscription
+from server.web.socket.control.control_task_subscription import ControlSubscription
 from server.web.socket.control.control_messages.control_message import ControlMessage
 from server.app.blackboard import BlackBoard
 from unittest.mock import Mock

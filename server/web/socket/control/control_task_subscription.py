@@ -11,8 +11,7 @@ from server.web.socket.control.control_messages.types import ControlMessageType,
 from server.crypto import crypto
 from cryptography.hazmat.primitives import hashes
 from server.tasks.control_device_task import ControlDeviceTask, ControlDeviceTaskListener
-from typing import Any, List
-from server.web.socket.control.task_execution_registry import TaskExecutionRegistry
+from server.web.socket.control.control_task_registry import TaskExecutionRegistry
 
 
 DATE_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
@@ -71,11 +70,11 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
         return None
 
     # TODO: Write tests for this!
-    def _send_ack(self, message: BaseMessage):
+    def _send_ack(self, message: BaseMessage, type: ControlMessageType):
         timestamp, serial_number, signature = self._create_signature()
 
         ack_data = {
-            PayloadType.TYPE: ControlMessageType.DEVICE_CONTROL_SCHEDULE_ACK,
+            PayloadType.TYPE: type,
             PayloadType.PAYLOAD: {
                 PayloadType.ID: message.id,
                 PayloadType.SERIAL_NUMBER: serial_number,
@@ -94,7 +93,7 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             PayloadType.TYPE: ControlMessageType.DEVICE_CONTROL_SCHEDULE_NACK,
             PayloadType.PAYLOAD: {
                 PayloadType.ID: message.id,
-                PayloadType.REASON: reason,
+                PayloadType.REASON: reason,  # Only difference from ack is the reason
                 PayloadType.SERIAL_NUMBER: serial_number,
                 PayloadType.SIGNATURE: signature,
                 PayloadType.CREATED_AT: timestamp
@@ -104,14 +103,14 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
         self.send_message(nack_data)
 
     def on_control_device_task_started(self, task: ControlDeviceTask):
-        pass
+        self.task_registry.add_task(task)
 
     def on_control_device_task_completed(self, task: ControlDeviceTask):
         # If task is executed, send an ACK and update the task registry, else send a NACK
         if task.is_executed:
-            # self._send_ack(task.control_message)
+            self._send_ack(task.control_message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_DONE)
             task.is_acked = True
-            self.task_registry.register_task_result(task)
+            self.task_registry.update_task(task)
         else:
             self._send_nack(task.control_message, "Task not executed")
             task.is_nacked = True
@@ -150,14 +149,12 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
                 logger.info("Received EMS control schedule")
                 self.handle_ems_control_schedule(data)
 
+            elif type == ControlMessageType.EMS_CONTROL_SCHEDULE_CANCEL:
+                logger.info("Received EMS control schedule cancel")
+                self.handle_ems_control_schedule_cancel(data)
+
             else:
                 logger.warning(f"Unknown message type: {type}")
-
-            logger.info("*" * 50)
-            logger.info("Task execution registry:")
-            for task in self.task_registry.get_all_results():
-                logger.info(f"Task: {task.control_message.id}, Scheduled at: {task.control_message.execute_at}, Is executed: {task.is_executed}, Executed at: {datetime.fromtimestamp(task.executed_at_timestamp / 1000)}, Is acked: {task.is_acked}, Is nacked: {task.is_nacked}")
-            logger.info("*" * 50)
 
         except json.JSONDecodeError:
             logger.error(f"Invalid JSON message received: {message}")
@@ -174,7 +171,6 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
     def handle_device_authenticate(self, data: dict):
 
         auth_challenge_message: AuthChallengeMessage = AuthChallengeMessage(data)
-        # self._send_ack(auth_challenge_message)
 
         timestamp, crypto_sn, signature = self._create_signature()
 
@@ -188,17 +184,11 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             }
         }
 
-        # logger.info("#*" * 50)
-        # logger.info(json.dumps(ret_data))
-        # logger.info("#*" * 50)
-
         self.send_message(ret_data)
 
     def handle_ems_control_schedule(self, data: dict):
 
         control_message: ControlMessage = ControlMessage(data)
-
-        self._send_ack(control_message)
 
         der = self.bb.devices.find_sn(control_message.sn)
 
@@ -206,6 +196,10 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             self._send_nack(control_message, "Device not found")
             logger.error(f"Device not found: {control_message.sn}")
             return
+
+        # Perhaps we should not just ACK here, but also make sure the device is open.
+        # Who is responsible for this?
+        self._send_ack(control_message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_ACK)
 
         logger.info(f"Device found: {der.get_name()}")
 
@@ -216,13 +210,25 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
 
         # print the ETA in a human readable format, e.g. "ETA: 1:30:10"
         eta: datetime = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
+
         logger.info(f"ETA: {eta}, or {execute_at_ms - time_now_ms} milliseconds")
 
-        if self.task_registry.get_task_result(control_message.id):
-            logger.info(f"Task already exists in registry, skipping")
-            return
-
         task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
+
         task.register_listener(self)
 
+        self.task_registry.add_task(task)
         self.bb.add_task(task)
+
+    def handle_ems_control_schedule_cancel(self, data: dict):
+        base_message: BaseMessage = BaseMessage(data)
+
+        task = self.task_registry.get_task(base_message.id)
+
+        if not task:
+            logger.error(f"Task not found: {base_message.id}")
+            return
+
+        task.cancel()
+
+        self._send_ack(base_message, ControlMessageType.DEVICE_CONTROL_CANCEL_SCHEDULE_ACK)
