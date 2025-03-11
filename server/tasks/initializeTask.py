@@ -17,12 +17,13 @@ class InitializeTask(SrcfulAPICallTask):
         self, event_time: int, bb: BlackBoard, wallet: str, dry_run: bool = False
     ):
         super().__init__(event_time, bb)
-        self.is_initialized = None
+        self.is_initialized: bool | None = None
         self.post_url = "https://api.srcful.dev/"
         self.wallet = wallet
         self.dry_run = dry_run
 
-    def _json(self):
+
+    def get_id_and_wallet(self):
         with crypto.Chip() as chip:
             serial = chip.get_serial_number().hex()
             # pub_key = chip.get_public_key().hex()
@@ -30,6 +31,10 @@ class InitializeTask(SrcfulAPICallTask):
             # id_and_wallet = serial + ":" + self.wallet + ":" + pub_key
             id_and_wallet = serial + ":" + self.wallet
             sign = chip.get_signature(id_and_wallet).hex()
+        return id_and_wallet, sign, serial
+
+    def _json(self):
+        id_and_wallet, sign, serial = self.get_id_and_wallet()
 
         m = """
     mutation {
@@ -65,6 +70,7 @@ class InitializeTask(SrcfulAPICallTask):
             self.is_initialized = reply.json()["data"]["gatewayInception"]["initialize"]["initialized"]
         else:
             self.is_initialized = False
+        return None
 
     def _on_error(self, reply: requests.Response) -> Union[int, Tuple[int, Union[List[ITask], ITask, None]]]:
         logger.warning("Failed to initialize wallet %s", self.wallet)

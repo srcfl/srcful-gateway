@@ -23,6 +23,7 @@ class SrcfulAPICallTask(Task, ABC):
         super().__init__(event_time, bb)
         self.reply = None
         self.post_url = "https://devnet.srcful.dev/gw/data"
+        self.got_error = False
 
     def _json(self) -> dict:
         """override to return the json to send to the server json argument in post"""
@@ -84,6 +85,7 @@ class SrcfulAPICallTask(Task, ABC):
                 return tasks
                 
         except Exception as e:
+            self.got_error = True
             logger.error("Error in SrcfulAPICallTask")
             # logger.exception("Error in SrcfulAPICallTask %s", e)
             self.reply = requests.Response()

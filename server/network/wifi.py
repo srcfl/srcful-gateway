@@ -43,6 +43,8 @@ except ImportError:
 
 else:
 
+    # this is irrespective of wifi or ethernet
+    # TODO: move to NetworkUtils?
     def is_connected():
         bus = dbus.SystemBus()
         nm_obj = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
