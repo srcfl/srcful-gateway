@@ -8,6 +8,7 @@ import server.crypto.crypto as crypto
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
 class ConfigurationMutationTask(SrcfulAPICallTask):
     def __init__(self, event_time: int, bb: BlackBoard, subkey: str, data: Dict[str, Any]):
         super().__init__(event_time, bb)
@@ -24,7 +25,7 @@ class ConfigurationMutationTask(SrcfulAPICallTask):
             signature = chip.get_signature(message)
             message = message + "." + crypto.base64_url_encode(signature).decode("utf-8")
             return message
-        
+
     def _build_header(self, serial_number):
         return crypto.jwtlify({
             "alg": "ES256",
@@ -35,7 +36,7 @@ class ConfigurationMutationTask(SrcfulAPICallTask):
 
     def _json(self):
         jwt = self._build_jwt()
-        
+
         mutation = """
             mutation SetGatewayConfigurationWithDeviceJWT {
                 setConfiguration(deviceConfigurationInputType: {
