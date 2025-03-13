@@ -13,11 +13,6 @@ services:
     image: traefik:v2.10
     container_name: eGW-traefik
     network_mode: host  # Use host networking to route to other host network containers
-    volumes:
-      #- /var/run/docker.sock:/var/run/docker.sock:ro
-      #- ./traefik/traefik.yml:/etc/traefik/traefik.yml
-      - ./traefik/traefik.yml:/etc/traefik/traefik.yml
-      - ./traefik/dynamic:/etc/traefik/dynamic
     restart: always
 
   web:
