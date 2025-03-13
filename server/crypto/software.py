@@ -21,8 +21,10 @@ def load_env_file(file_path):
 
 def load_env_vars():
     # load from file if exists, otherwise load from environment variables
-    env_vars = load_env_file('test_config.env')
-    if not env_vars:
+    try:
+        env_vars = load_env_file('test_config.env')
+    except FileNotFoundError:
+        logger.info("No test_config.env file found, using environment variables")
         env_vars = os.environ
     return env_vars
 
