@@ -116,7 +116,7 @@ class ChipError(Exception):
         return super().__str__() + f" cryptauthlib error code: {self.code}"
 
 # we need an external flag so that we can skip the hardware crypto tests without creating a new Chip object
-USE_HARDWARE_CRYPTO = True
+USE_HARDWARE_CRYPTO = False
 
 class Chip:
     _lock = threading.Lock()

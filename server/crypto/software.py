@@ -16,6 +16,13 @@ def load_env_file(file_path):
                 env_vars[key] = value.strip('"').strip("'")
     return env_vars
 
+def load_env_vars():
+    # load from file if exists, otherwise load from environment variables
+    env_vars = load_env_file('test_config.env')
+    if not env_vars:
+        env_vars = os.environ
+    return env_vars
+
 
 def load_private_key_from_hex(private_key_hex):
     private_value = int(private_key_hex, 16)
@@ -23,7 +30,7 @@ def load_private_key_from_hex(private_key_hex):
 
     # check that the private key matches the public key
     # Fetch the expected public key from the environment variable
-    env_vars = load_env_file('test_config.env')
+    env_vars = load_env_vars()
     expected_public_key = env_vars.get('TEST_PUBLIC_KEY')
     if not expected_public_key:
         raise ValueError("TEST_PUBLIC_KEY variable not set in test_config.env")

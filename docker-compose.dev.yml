@@ -40,6 +40,9 @@ services:
       <<: *shared_env
       REST_SERVICE_PORT: 5000
       REST_SERVICE_PORT_INTERNAL: 5000
+      - TEST_PRIVATE_KEY
+      - TEST_SERIAL
+      - TEST_PUBLIC_KEY
 
     labels:
       io.balena.features.dbus: 1 # needed for the wifi provisioning calls
