@@ -58,7 +58,6 @@ services:
     environment:
       <<: *shared_env
       # GPIO_BUTTON_PIN: 7
-    restart: always
     labels:
       io.balena.features.dbus: 1 # needed for ble communication over bluez
       io.balena.features.kernel-modules: 1 # why needed? test?
