@@ -1,12 +1,11 @@
 entryPoints:
   web:
     address: ":80"
-  dashboard:
-    address: ":8080"
 
 api:
   dashboard: true
   insecure: true
+  # Important: Specify the dashboard entrypoint
 
 providers:
   file:
