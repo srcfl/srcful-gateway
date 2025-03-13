@@ -26,7 +26,8 @@ services:
       <<: *shared_env
       REST_SERVICE_PORT: 5000
       REST_SERVICE_PORT_INTERNAL: 5000
-
+    devices:
+      - /dev/i2c-1
     labels:
       io.balena.features.dbus: 1 # needed for the wifi provisioning calls
       io.balena.features.supervisor-api: 1 # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
