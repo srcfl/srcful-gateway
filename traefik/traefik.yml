@@ -7,8 +7,6 @@ entryPoints:
 api:
   dashboard: true
   insecure: true
-  # Important: Specify the dashboard entrypoint
-  entryPoint: dashboard
 
 providers:
   file:

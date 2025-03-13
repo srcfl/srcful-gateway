@@ -1,6 +1,11 @@
-# traefik/dynamic/services.yml
 http:
   routers:
+    dashboard-router:
+      entryPoints:
+        - dashboard
+      rule: "PathPrefix(`/api`) || PathPrefix(`/dashboard`)"
+      service: api@internal
+    
     api-router:
       entryPoints:
         - web
