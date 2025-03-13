@@ -44,7 +44,7 @@ def load_private_key_from_hex(private_key_hex):
 
 
 def get_test_private_key_serial():
-    env_vars = load_env_file('test_config.env')
+    env_vars = load_env_vars()
     private_key_hex = env_vars.get('TEST_PRIVATE_KEY')
     if not private_key_hex:
         raise ValueError("TEST_PRIVATE_KEY variable not set in test_config.env")
