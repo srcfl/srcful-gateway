@@ -1,13 +1,15 @@
-# traefik/traefik.yml
 entryPoints:
   web:
     address: ":80"
+  dashboard:
+    address: ":8080"
 
 api:
   dashboard: true
   insecure: true
+  # Important: Specify the dashboard entrypoint
+  entryPoint: dashboard
 
-# Use static configuration instead of Docker provider
 providers:
   file:
     directory: "/etc/traefik/dynamic"
