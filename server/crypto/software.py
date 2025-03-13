@@ -5,7 +5,9 @@ from cryptography.hazmat.primitives import hashes
 from .crypto_interface import CryptoInterface
 import random
 import os
+import logging
 
+logger = logging.getLogger(__name__)
 
 def load_env_file(file_path):
     env_vars = {}
@@ -45,10 +47,11 @@ def load_private_key_from_hex(private_key_hex):
 
 def get_test_private_key_serial():
     env_vars = load_env_vars()
-    private_key_hex = env_vars.get('TEST_PRIVATE_KEY')
-    if not private_key_hex:
-        raise ValueError("TEST_PRIVATE_KEY variable not set in test_config.env")
-    return load_private_key_from_hex(private_key_hex), bytes.fromhex(env_vars.get('TEST_SERIAL'))
+    if "TEST_SERIAL" in env_vars and "TEST_PRIVATE_KEY" in env_vars:
+        return load_private_key_from_hex(env_vars.get('TEST_PRIVATE_KEY')), bytes.fromhex(env_vars.get('TEST_SERIAL'))
+    else:
+        logger.error("TEST_SERIAL or TEST_PRIVATE_KEY variable not set in test_config.env")
+        raise ValueError("TEST_SERIAL or TEST_PRIVATE_KEY variable not set in test_config.env")
 
 
 class SoftwareCrypto(CryptoInterface):
