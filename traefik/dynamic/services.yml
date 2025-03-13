@@ -1,0 +1,27 @@
+# traefik/dynamic/services.yml
+http:
+  routers:
+    api-router:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/api`)"
+      priority: 100
+      service: api-service
+    
+    web-router:
+      entryPoints:
+        - web
+      rule: "HostRegexp(`{host:.+}`)"
+      priority: 1
+      service: web-service
+
+  services:
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:5000"
+    
+    web-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:5000"

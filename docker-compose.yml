@@ -14,25 +14,11 @@ services:
     container_name: eGW-traefik
     network_mode: host  # Use host networking to route to other host network containers
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      #- /var/run/docker.sock:/var/run/docker.sock:ro
+      #- ./traefik/traefik.yml:/etc/traefik/traefik.yml
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml
+      - ./traefik/dynamic:/etc/traefik/dynamic
     restart: always
-    labels:
-      traefik.enable: true
-      # Define the web router that listens on port 80
-      traefik.http.routers.web-router.entrypoints: web
-      traefik.http.routers.web-router.rule: HostRegexp(`{host:.+}`)
-      traefik.http.routers.web-router.priority: 1  # Lower priority as fallback
-      traefik.http.services.web-service.loadbalancer.server.port: 5000
-      traefik.http.routers.web-router.service: web-service
-      
-      # Define the API router for your existing web service
-      traefik.http.routers.api-router.entrypoints: web
-      traefik.http.routers.api-router.rule: HostRegexp(`{host:.+}`) && PathPrefix(`/api`)
-      traefik.http.routers.api-router.priority: 100  # Higher priority for API routes
-      traefik.http.services.api-service.loadbalancer.server.port: 5000
-      traefik.http.routers.api-router.service: api-service
-
 
   web:
     build: ./server
@@ -49,7 +35,6 @@ services:
     labels:
       io.balena.features.dbus: 1 # needed for the wifi provisioning calls
       io.balena.features.supervisor-api: 1 # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
-      traefik.enable: true
     volumes:
       - srcful-data:/data/srcful
 

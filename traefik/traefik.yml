@@ -1,12 +1,14 @@
-providers:
-  docker:
-    endpoint: "unix:///var/run/docker.sock"
-    exposedByDefault: false
-
+# traefik/traefik.yml
 entryPoints:
   web:
     address: ":80"
 
 api:
-  insecure: true
   dashboard: true
+  insecure: true
+
+# Use static configuration instead of Docker provider
+providers:
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true
