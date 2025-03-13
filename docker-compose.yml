@@ -10,7 +10,7 @@ services:
 
   # Reverse proxy service
   traefik:
-    image: traefik:v2.10
+    build: ./traefik
     container_name: eGW-traefik
     network_mode: host  # Use host networking to route to other host network containers
     restart: always
