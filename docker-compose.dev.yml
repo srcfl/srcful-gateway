@@ -48,6 +48,7 @@ services:
       traefik.http.services.api-service.loadbalancer.server.port: 5000
     volumes:
       - srcful-data:/data/srcful
+      - /var/run/dbus:/host/run/dbus
 
   bluetooth:
     build: ./bluetooth
@@ -56,15 +57,19 @@ services:
     network_mode: host # could be needed for ble communication, test?
     environment:
       <<: *shared_env
-      GPIO_BUTTON_PIN: 7
+      # GPIO_BUTTON_PIN: 7
     restart: always
     labels:
       io.balena.features.dbus: 1 # needed for ble communication over bluez
       io.balena.features.kernel-modules: 1 # why needed? test?
       io.balena.features.sysfs: 1 # needed to set the bluetooth parameters in bluetooth/docker_entrypoint.sh
+    volumes:
+      - /var/run/dbus:/host/run/dbus
+      - /sys:/sys
+      - /lib/modules:/lib/modules
+    restart: always
     depends_on:
       - web
-
 
 volumes:
   srcful-data:
