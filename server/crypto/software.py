@@ -8,6 +8,7 @@ import os
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 def load_env_file(file_path):
     env_vars = {}
@@ -48,6 +49,7 @@ def load_private_key_from_hex(private_key_hex):
 def get_test_private_key_serial():
     env_vars = load_env_vars()
     if "TEST_SERIAL" in env_vars and "TEST_PRIVATE_KEY" in env_vars:
+        logger.info("Using test private key and serial number")
         return load_private_key_from_hex(env_vars.get('TEST_PRIVATE_KEY')), bytes.fromhex(env_vars.get('TEST_SERIAL'))
     else:
         logger.error("TEST_SERIAL or TEST_PRIVATE_KEY variable not set in test_config.env")
