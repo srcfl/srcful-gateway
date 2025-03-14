@@ -20,6 +20,7 @@ log.setLevel(logging.INFO)
 
 pymodbus_apply_logging_config("INFO")
 
+
 class ModbusTCP(Modbus, TCPDevice):
     """
     ModbusTCP device class.
@@ -33,8 +34,7 @@ class ModbusTCP(Modbus, TCPDevice):
     """
 
     CONNECTION = "TCP"
-    
-  
+
     @staticmethod
     def ip_key() -> str:
         return "ip"
@@ -42,29 +42,41 @@ class ModbusTCP(Modbus, TCPDevice):
     @property
     def MAC(self) -> str:
         return self.mac_key()
-    
+
     @staticmethod
     def mac_key() -> str:
         return "mac"
-    
+
     @staticmethod
     def port_key() -> str:
         return "port"
-    
+
     @staticmethod
-    def get_supported_devices():
+    def get_supported_devices(verbose: bool = True):
         supported_devices = []
-        for profile in ModbusDeviceProfiles().get_supported_devices():
-            if profile.protocol.value == ProtocolKey.MODBUS.value:    
+        modbus_devices = [profile for profile in ModbusDeviceProfiles().get_supported_devices() if profile.protocol.value == ProtocolKey.MODBUS.value]
+        log.info("Getting from ModbusTCP")
+
+        if verbose:
+            for profile in modbus_devices:
                 obj = {
                     ModbusTCP.device_type_key(): profile.name,
-                'display_name': profile.display_name,
-                'protocol': profile.protocol.value
-            }
+                    ModbusTCP.MAKER: profile.maker,
+                    ModbusTCP.DISPLAY_NAME: profile.display_name,
+                    ModbusTCP.PROTOCOL: profile.protocol.value
+                }
                 supported_devices.append(obj)
-            
+        else:
+            for profile in modbus_devices:
+                obj = {
+                    ModbusTCP.MAKER: profile.maker,
+                }
+
+                if obj not in supported_devices and profile.maker != "Unknown":
+                    supported_devices.append(obj)
+
         return {ModbusTCP.CONNECTION: supported_devices}
-    
+
     @staticmethod
     def get_config_schema():
         return {
@@ -77,11 +89,11 @@ class ModbusTCP(Modbus, TCPDevice):
     # init but with kwargs
     def __init__(self, **kwargs) -> None:
         Modbus.__init__(self, **kwargs)
-        
+
         # check if old keys are provided
         if "host" in kwargs:
             kwargs[self.ip_key()] = kwargs.pop("host")
-            
+
         # get the kwargs, and default if not provided
         ip = kwargs.get(self.ip_key(), None)
         port = kwargs.get(self.port_key(), None)
@@ -95,17 +107,32 @@ class ModbusTCP(Modbus, TCPDevice):
         self._create_client(**kwargs)
         if not self.client.connect():
             log.error("FAILED to open Modbus TCP device: %s", self._get_type())
+            return False
+
+        # If the socket is open, we can get the MAC address from the ARP table
         if self.client.socket:
             self.mac = NetworkUtils.get_mac_from_ip(self.ip)
-        
+
+        # A short delay is necessary for some devices before a new connection can be established
         time.sleep(1)
-        
-        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self._has_valid_frequency()
-        
+
+        # If the serial number is not set, or if its set to the MAC address (for version < 0.18.16), read the serial number from the device
+        if self.sn is None or self.sn == self.mac:
+            log.info("Reading SN from device")
+            self.sn = self._read_SN()
+
+        # Special case for devices that does not have SN register defined in the profile
+        # We also check if the frequency is valid if no serial number can be retrieved
+        if self.sn is None and self._has_valid_frequency():
+            log.info("Setting SN to MAC because SN register is not defined but frequency is valid")
+            self.sn = self.mac
+
+        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self.sn is not None
+
     def _get_type(self) -> str:
         return self.device_type
 
-    def is_open(self) -> bool:
+    def _is_open(self) -> bool:
         return bool(self.client) and bool(self.client.socket)
 
     def _close(self) -> None:
@@ -129,20 +156,19 @@ class ModbusTCP(Modbus, TCPDevice):
             **TCPDevice.get_config(self),
             self.MAC: self.mac,
         }
-    
+
     def _get_connection_type(self) -> str:
         return ModbusTCP.CONNECTION
-    
+
     def get_SN(self) -> str:
-        # TODO: get the serial number from the device use mac for now
-        return self.mac
+        return self.sn
 
     def _create_client(self, **kwargs) -> None:
         self.client = ModbusClient(host=self.ip, port=self.port, unit_id=self.slave_id, **kwargs)
 
     def _read_registers(self, function_code: FunctionCodeKey, scan_start: int, scan_range: int) -> list:
         resp = None
-                
+
         if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
             log.debug(f"Reading input registers - Start: {scan_start}, Range: {scan_range}, Slave ID: {self.slave_id}")
             resp = self.client.read_input_registers(scan_start, scan_range, slave=self.slave_id)
@@ -154,68 +180,98 @@ class ModbusTCP(Modbus, TCPDevice):
         # We solve this by raising the exception manually
         if isinstance(resp, ModbusIOException):
             raise ModbusIOException(f"ModbusIOException occurred while reading registers: {resp.message}")
-        
+
         return resp.registers
-    
+
     def write_registers(self, starting_register: int, values: list) -> bool:
         """
         Write a range of holding registers from a start address
         """
-        resp = self.client.write_registers(
-            starting_register, values, slave=self.slave_id
-        )
-        log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
-        
-        if isinstance(resp, ExceptionResponse):
-            raise Exception("writeRegisters() - ExceptionResponse: " + str(resp))
-        return resp
-    
+
+        try:
+            resp = self.client.write_registers(
+                starting_register, values, slave=self.slave_id
+            )
+
+            if isinstance(resp, ExceptionResponse):
+                return False
+
+            log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
+            return True
+        except Exception as e:
+            log.error("Error writing registers: %s", e)
+            return False
+
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
 
         if host.mac != self.mac:
             return None
-        
+
         config = self.get_config()
         config[self.IP] = host.ip
         return ModbusTCP(**config)
-    
-    def _get_frequency_register(self) -> Optional[RegisterInterval]:
-        profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
-        if not profile or not profile.registers:
-            return None
-        return profile.registers[0]
 
-    def _read_frequency(self) -> Optional[float]:
-        """Read grid frequency using the device profile's first register"""
+    def _read_value(self, register: RegisterInterval) -> Optional[float]:
+        """Read a value from a register using the device profile's register"""
+
         try:
-           
-            freq_reg: RegisterInterval = self._get_frequency_register()
-            
             # Create RegisterValue for frequency reading
             reg_value = RegisterValue(
-                address=freq_reg.start_register,
-                size=freq_reg.offset,
-                function_code=freq_reg.function_code,
-                data_type=freq_reg.data_type,
-                scale_factor=freq_reg.scale_factor,
-                endianness=freq_reg.endianness
+                address=register.start_register,
+                size=register.offset,
+                function_code=register.function_code,
+                data_type=register.data_type,
+                scale_factor=register.scale_factor,
+                endianness=register.endianness
             )
-
-            log.debug(f"RegisterValue: {reg_value}")
 
             # Read and interpret value
             a, b, value = reg_value.read_value(self)
-            
-            log.info(f"Values read during frequency reading: {a}, {b}, {value}")
-            
+            log.debug("Values read in the format of [raw, raw, value]: %s, %s, %s", a, b, value)
+
             return value
 
         except Exception as e:
             log.error(f"Error reading frequency: {str(e)}")
             self.disconnect()
             return None
-    
+
+    def _get_frequency_register(self) -> Optional[RegisterInterval]:
+        profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
+        if not profile or not profile.registers:
+            return None
+        return profile.registers[0]
+
+    def _get_SN_register(self) -> Optional[RegisterInterval]:
+        profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
+        if not profile or not profile.sn:
+            return None
+        return profile.sn
+
     def _has_valid_frequency(self) -> bool:
         """Check if the float frequency value is within a reasonable range (48-62 Hz)"""
-        frequency = self._read_frequency()
+        frequency = self._read_value(self._get_frequency_register())
         return frequency and 48.0 <= frequency <= 62.0
+
+    def _read_SN(self) -> Optional[str]:
+        """Read serial number using the device profile's serial number register"""
+
+        reg: RegisterInterval = self._get_SN_register()
+
+        if not reg:
+            return None
+
+        value = self._read_value(reg)
+
+        if not value:
+            return None
+
+        if value and isinstance(value, str):
+            # Remove null bytes and any non-printable characters
+            cleaned_sn = ''.join(char for char in value if char.isprintable())
+            cleaned_sn = cleaned_sn.strip()
+            value = cleaned_sn
+
+        log.info("SN: %s", value)
+
+        return str(value)

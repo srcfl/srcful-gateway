@@ -8,8 +8,10 @@ from typing import List
 
 class DeviceProfile(ABC):
     """Base class for device profiles. All device profiles must inherit from this class."""
+
     def __init__(self, profile_data: dict):
         self.name: str = profile_data[ProfileKey.NAME]
+        self.maker: str = profile_data[ProfileKey.MAKER]
         self.version: str = profile_data[ProfileKey.VERSION]
         self.verbose_always: bool = profile_data[ProfileKey.VERBOSE_ALWAYS]
         self.display_name: str = profile_data[ProfileKey.DISPLAY_NAME]
@@ -20,15 +22,17 @@ class DeviceProfile(ABC):
 
 class RegisterInterval:
     """Register interval class. Used to define register intervals and function codes for Modbus and Solarman V5 profiles."""
-    def __init__(self, 
+
+    def __init__(self,
                  function_code: FunctionCodeKey,
-                 start_register: int, 
-                 offset: int, 
-                 data_type: DataTypeKey = DataTypeKey.U16, 
-                 unit: str = "N/A", 
-                 description: str = "N/A", 
+                 start_register: int,
+                 offset: int,
+                 data_type: DataTypeKey = DataTypeKey.U16,
+                 unit: str = "N/A",
+                 description: str = "N/A",
                  scale_factor: float = 1.0,
-                 endianness: EndiannessKey = EndiannessKey.BIG):
+                 endianness: EndiannessKey = EndiannessKey.BIG,
+                 scale_factor_register: int = None):
         self.function_code: FunctionCodeKey = function_code
         self.start_register: int = start_register
         self.offset: int = offset
@@ -37,15 +41,32 @@ class RegisterInterval:
         self.description: str = description
         self.scale_factor: float = scale_factor
         self.endianness: EndiannessKey = endianness
+        self.scale_factor_register: int = scale_factor_register
 
 
 class ModbusProfile(DeviceProfile):
     """Modbus profile class. Used to define register intervals for Modbus profiles."""
+
     def __init__(self, profile_data: dict):
         super().__init__(profile_data)
+        self.sn: RegisterInterval = None
         self.registers_verbose: List[RegisterInterval] = []
         self.registers: List[RegisterInterval] = []
-        
+
+        if ProfileKey.SN in profile_data:
+            sn_reg = profile_data[ProfileKey.SN]
+
+            self.sn = RegisterInterval(
+                sn_reg[RegistersKey.FUNCTION_CODE],
+                sn_reg[RegistersKey.START_REGISTER],
+                sn_reg[RegistersKey.NUM_OF_REGISTERS],
+                sn_reg[RegistersKey.DATA_TYPE],
+                sn_reg[RegistersKey.UNIT],
+                sn_reg[RegistersKey.DESCRIPTION],
+                sn_reg[RegistersKey.SCALE_FACTOR],
+                sn_reg[RegistersKey.ENDIANNESS]
+            )
+
         if ProfileKey.REGISTERS_VERBOSE in profile_data:
             for register_interval in profile_data[ProfileKey.REGISTERS_VERBOSE]:
                 self.registers_verbose.append(
@@ -67,19 +88,21 @@ class ModbusProfile(DeviceProfile):
                         register_interval[RegistersKey.UNIT],
                         register_interval[RegistersKey.DESCRIPTION],
                         register_interval[RegistersKey.SCALE_FACTOR],
-                        register_interval[RegistersKey.ENDIANNESS]
+                        register_interval[RegistersKey.ENDIANNESS],
+                        register_interval.get(RegistersKey.SCALE_FACTOR_REGISTER, None)
                     )
                 )
-    
+
     def get_registers_verbose(self) -> typing.List[RegisterInterval]:
         return self.registers_verbose
-    
+
     def get_registers(self) -> typing.List[RegisterInterval]:
         return self.registers
-    
+
 
 class ModbusDeviceProfiles:
     """Device profiles class. Used to load and manage device profiles."""
+
     def __init__(self, device_category: DeviceCategoryKey = DeviceCategoryKey.INVERTERS):
         self.profiles: list[DeviceProfile] = []
         self._load_profiles(device_category)
@@ -92,7 +115,7 @@ class ModbusDeviceProfiles:
 
     def _create_profile(self, profile_data: dict) -> DeviceProfile:
         protocol = profile_data[ProfileKey.PROTOCOL]
-        
+
         if protocol == ProtocolKey.MODBUS or protocol == ProtocolKey.SOLARMAN:
             return ModbusProfile(profile_data)
         else:

@@ -16,12 +16,24 @@ def _connect_device(p1: ICom, error_message: str) -> Optional[ICom]:
 
 def create_rest_device_msn(meter_serial_number:Optional[str], host: HostInfo) -> Optional[ICom]:
     from server.devices.p1meters.P1Jemac import P1Jemac
+    from server.devices.p1meters.P1HomeWizard import P1HomeWizard
 
-    if meter_serial_number:
-        p1 = P1Jemac(host.ip, host.port, meter_serial_number)
-    else:
-        p1 = P1Jemac(host.ip, host.port)
-    return _connect_device(p1, f"Could not create P1 Jemac from {host.ip}:{host.port} with serial number {meter_serial_number}")
+    constructors = {
+        "Jemac": P1Jemac,
+        "HomeWizard": P1HomeWizard
+    }
+
+    for key, constructor in constructors.items():
+
+        if meter_serial_number:
+            p1 = constructor(host.ip, host.port, meter_serial_number)
+        else:
+            p1 = constructor(host.ip, host.port)
+        meter = _connect_device(p1, f"Could not create P1 {key} from {host.ip}:{host.port} with serial number {meter_serial_number}")
+        if meter:
+            return meter
+        
+    return None
 
 def create_telnet_device_msn(meter_serial_number:Optional[str], host: HostInfo) -> Optional[ICom]:
     from server.devices.p1meters.P1Telnet import P1Telnet

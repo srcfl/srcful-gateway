@@ -11,7 +11,7 @@ def blackboard():
     return BlackBoard(Mock(spec=CryptoState))
 
 def test_get_settings_with_chip(blackboard):
-    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client = GraphQLSubscriptionClient.getInstance(blackboard, "ws://example.com")
 
     # here we manually patch so we can use the normal chip class
     with patch("server.crypto.crypto.HardwareCrypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
@@ -20,10 +20,10 @@ def test_get_settings_with_chip(blackboard):
                     ret = client._get_subscription_query(crypto.Chip)
 
     assert len(ret) > 0
-
+    GraphQLSubscriptionClient.removeInstance("ws://example.com")
 def test_get_settings_with_mock_chip(blackboard):
     # patched chip is needed so the mock chip can be used as this is what actually patches the crypto functions
-    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client = GraphQLSubscriptionClient.getInstance(blackboard, "ws://example.com")
 
     def create_chip():
          return crypto.Chip(crypto_impl=crypto.SoftwareCrypto())
@@ -34,23 +34,28 @@ def test_get_settings_with_mock_chip(blackboard):
         assert chip.get_serial_number().hex() in ret
 
     assert True
+    GraphQLSubscriptionClient.removeInstance("ws://example.com")
 
 def test_on_message(blackboard):
-    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client = GraphQLSubscriptionClient.getInstance(blackboard, "ws://example.com")
     blackboard.settings.harvest.clear_endpoints(ChangeSource.BACKEND)
 
     client.on_message(None, '{"type":"data","id":"1","payload":{"data":{"configurationDataChanges":{"data":"{\\u0022settings\\u0022: {\\u0022harvest\\u0022: {\\u0022endpoints\\u0022: [\\u0022https://mainnet.srcful.dev/gw/data/\\u0022]}}}","subKey":"settings"}}}}')
     assert blackboard.settings.harvest.endpoints == ['https://mainnet.srcful.dev/gw/data/']
-
+    GraphQLSubscriptionClient.removeInstance("ws://example.com")
 def test_on_message_empty_message():
-    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client = GraphQLSubscriptionClient.getInstance(blackboard, "ws://example.com")
     client.on_message(None, '')
     assert True
+    GraphQLSubscriptionClient.removeInstance("ws://example.com")
+
 
 def test_on_message_none_message():
-    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client = GraphQLSubscriptionClient.getInstance(blackboard, "ws://example.com")
     client.on_message(None, None)
     assert True
+    GraphQLSubscriptionClient.removeInstance("ws://example.com")
+
 
 
 def test_on_message_subscription_error_reply():
@@ -77,12 +82,14 @@ def test_on_message_subscription_error_reply():
         }
     }'''
 
-    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client = GraphQLSubscriptionClient.getInstance(blackboard, "ws://example.com")
 
     client.send_connection_init = Mock()
     client.on_message(None, error_reply)
 
     assert client.send_connection_init.call_count == 1
+    
+    GraphQLSubscriptionClient.removeInstance("ws://example.com")
 
 def test_on_message_subscription_error_reply_no_errors():
 
@@ -94,9 +101,11 @@ def test_on_message_subscription_error_reply_no_errors():
         }
     }'''
 
-    client = GraphQLSubscriptionClient(blackboard, "ws://example.com")
+    client = GraphQLSubscriptionClient.getInstance(blackboard, "ws://example.com")
 
     client.send_connection_init = Mock()
     client.on_message(None, error_reply)
 
     assert client.send_connection_init.call_count == 0
+
+    GraphQLSubscriptionClient.removeInstance("ws://example.com")

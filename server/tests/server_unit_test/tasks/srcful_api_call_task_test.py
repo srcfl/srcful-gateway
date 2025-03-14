@@ -124,7 +124,7 @@ def test_execute_calls_post_and_handles_non_200_response_with_tasks():
 
 
 
-def test_execute_handles_request_exception():
+def test_execute_handles_request_exception_returns_time():
     # Arrange
     mock_data = {"foo": "bar"}
     mock_on_error = Mock(return_value=1000)
@@ -143,8 +143,94 @@ def test_execute_handles_request_exception():
 
         # Assert
         mock_on_error.assert_called_once()
+        assert result == task
         assert result.reply.status_code == None
         assert result.time == 1000
+
+def test_execute_handles_request_exception_returns_task():
+    # Arrange
+    mock_data = {"foo": "bar"}
+    return_task = ConcreteSUT(0, {})
+    mock_on_error = Mock(return_value=return_task)
+    task = ConcreteSUT(0, {})
+
+    # Mock the requests module so it raises a RequestException when post() is called
+    with patch("requests.post", side_effect=requests.exceptions.RequestException):
+        # Set the task's _data method to return our mock data
+        task._data = Mock(return_value=mock_data)
+
+        # Set the task's _onError method to our mock method
+        task._on_error = mock_on_error
+
+        # Act
+        result = task.execute(0)
+
+        # Assert
+        mock_on_error.assert_called_once()
+        assert task.reply.status_code == None
+        assert return_task in result
+
+def test_execute_handles_request_exception_returns_time_and_task():
+    # Arrange
+    mock_data = {"foo": "bar"}
+    return_task = ConcreteSUT(0, {})
+    mock_on_error = Mock(return_value=(1000, return_task))
+    task = ConcreteSUT(0, {})
+
+    # Mock the requests module so it raises a RequestException when post() is called
+    with patch("requests.post", side_effect=requests.exceptions.RequestException):
+        # Set the task's _data method to return our mock data
+        task._data = Mock(return_value=mock_data)
+
+        # Set the task's _onError method to our mock method
+        task._on_error = mock_on_error
+
+        # Act
+        result = task.execute(0)
+
+        # Assert
+        mock_on_error.assert_called_once()
+        assert task.reply.status_code == None
+        assert return_task in result
+        assert task in result
+
+def test_handle_error_returns_none_if_no_error():
+    task = ConcreteSUT(0, {})
+    task._on_error = Mock(return_value=None)
+    assert ConcreteSUT(0, {})._handle_error(None, 0) is None
+
+def test_handle_error_returns_task_time():
+    task = ConcreteSUT(0, {})
+    task._on_error = Mock(return_value=1000)
+    assert task._handle_error(None, 0) == task
+
+def test_handle_error_returns_time_and_task():
+    task = ConcreteSUT(0, {})
+    task2 = ConcreteSUT(0, {})
+    task.adjust_time(1)
+    task2.adjust_time(2)
+    task._on_error = Mock(return_value=(1000, task2))
+    ret = task._handle_error(None, 1)
+    assert task in ret
+    assert task2 in ret
+    assert task.time == 1001
+
+def test_handle_error_returns_tasks():
+    task = ConcreteSUT(0, {})
+    task2 = ConcreteSUT(0, {})
+    task3 = ConcreteSUT(0, {})
+
+    # we need to set times as this is used in equals tests
+    task.adjust_time(1)
+    task2.adjust_time(2)
+    task3.adjust_time(3)
+
+    task._on_error = Mock(return_value=[task2, task3])
+    ret = task._handle_error(None, 0)
+    assert task not in ret
+    assert task2 in ret
+    assert task3 in ret
+    assert task.time == 1
 
 def test_execute_handles_exception():
     # Arrange

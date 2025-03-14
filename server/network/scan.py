@@ -23,7 +23,7 @@ except ImportError:
 
         def get_ssids(self):
             return self.ssids
-        
+
         def get_connected_ssid(self):
             return "Unknown"
 
@@ -63,9 +63,6 @@ else:
                         continue
 
                     # Get device's type; we only want wifi devices
-                    # iface = prop_iface.Get(
-                    #    "org.freedesktop.NetworkManager.Device", "Interface"
-                    # )
                     dtype = prop_iface.Get(
                         "org.freedesktop.NetworkManager.Device", "DeviceType"
                     )
@@ -74,27 +71,31 @@ else:
                         wifi_iface = dbus.Interface(
                             dev_proxy, "org.freedesktop.NetworkManager.Device.Wireless"
                         )
-                        # wifi_prop_iface = dbus.Interface(
-                        #    dev_proxy, "org.freedesktop.DBus.Properties"
-                        # )
 
                         aps = wifi_iface.GetAllAccessPoints()
-                        for path in aps:
-                            ap_proxy = bus.get_object(
-                                "org.freedesktop.NetworkManager", path
-                            )
-                            ap_prop_iface = dbus.Interface(
-                                ap_proxy, "org.freedesktop.DBus.Properties"
-                            )
-                            ssid = bytearray(
-                                ap_prop_iface.Get(
-                                    "org.freedesktop.NetworkManager.AccessPoint", "Ssid"
-                                )
-                            ).decode()
 
-                            # Cache the BSSID
-                            if ssid not in self.ssids:
-                                self.ssids.append(ssid)
+                        for path in aps:
+                            try:
+                                ap_proxy = bus.get_object(
+                                    "org.freedesktop.NetworkManager", path
+                                )
+                                ap_prop_iface = dbus.Interface(
+                                    ap_proxy, "org.freedesktop.DBus.Properties"
+                                )
+
+                                ssid = bytearray(
+                                    ap_prop_iface.Get(
+                                        "org.freedesktop.NetworkManager.AccessPoint", "Ssid"
+                                    )
+                                ).decode()
+
+                                # Cache the BSSID
+                                if ssid not in self.ssids:
+                                    self.ssids.append(ssid)
+
+                            except Exception as e:
+                                logger.error("Failed to get SSID for access point %s", path)
+                                logger.exception(e)
 
             return self.ssids
 
@@ -122,9 +123,6 @@ else:
                     continue
 
                 # Get device's type; we only want wifi devices
-                # iface = prop_iface.Get(
-                #    "org.freedesktop.NetworkManager.Device", "Interface"
-                # )
                 dtype = prop_iface.Get(
                     "org.freedesktop.NetworkManager.Device", "DeviceType"
                 )
@@ -133,9 +131,6 @@ else:
                     wifi_iface = dbus.Interface(
                         dev_proxy, "org.freedesktop.NetworkManager.Device.Wireless"
                     )
-                    # wifi_prop_iface = dbus.Interface(
-                    #    dev_proxy, "org.freedesktop.DBus.Properties"
-                    # )
 
                     opt = dbus.Dictionary({})
                     # Get all APs the card can see

@@ -4,6 +4,7 @@ from .inverters.ModbusSunspec import ModbusSunspec
 from .inverters.enphase import Enphase
 from .p1meters.P1Telnet import P1Telnet
 from .p1meters.P1Jemac import P1Jemac
+from .p1meters.P1HomeWizard import P1HomeWizard
 from .ICom import ICom
 import logging
 
@@ -12,8 +13,8 @@ log.setLevel(logging.INFO)
 
 
 class IComFactory:
-    
-    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, Enphase, P1Jemac]
+
+    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, Enphase, P1Jemac, P1HomeWizard]
 
     @staticmethod
     def get_connection_configs():
@@ -23,16 +24,16 @@ class IComFactory:
         }
 
     @staticmethod
-    def get_supported_devices():
+    def get_supported_devices(verbose: bool = True):
         return [
-            cls.get_supported_devices()
+            cls.get_supported_devices(verbose)
             for cls in IComFactory.supported_devices
         ]
 
     """
     IComFactory class
     """
-        
+
     @staticmethod
     def create_com(config: dict) -> ICom:
         """
@@ -53,15 +54,15 @@ class IComFactory:
         """
 
         connection = config[ICom.connection_key()]
-        
+
         # Strip the connection key and sn from the config
         stripped_config = {k: v for k, v in config.items() if k != ICom.connection_key()}
-        
-        log.info("####################################################")
-        log.info("Creating ICom object for connection connection: %s", connection)
-        log.info("Connection config: %s", stripped_config)
-        log.info("####################################################")
-        
+
+        log.debug("####################################################")
+        log.debug("Creating ICom object for connection connection: %s", connection)
+        log.debug("Connection config: %s", stripped_config)
+        log.debug("####################################################")
+
         match connection:
             case ModbusTCP.CONNECTION:
                 return ModbusTCP(**stripped_config)
@@ -75,10 +76,8 @@ class IComFactory:
                 return Enphase(**stripped_config)
             case P1Jemac.CONNECTION:
                 return P1Jemac(**stripped_config)
+            case P1HomeWizard.CONNECTION:
+                return P1HomeWizard(**stripped_config)
             case _:
                 log.error("Unknown connection type: %s", connection)
                 raise ValueError(f"Unknown connection type: {connection}")
-            
-        
-        
-        

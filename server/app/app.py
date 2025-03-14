@@ -13,21 +13,32 @@ from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
+from server.web.socket.control.control_subscription import ControlSubscription
 from server.app.settings_device_listener import SettingsDeviceListener
 from server.app.blackboard import BlackBoard
+from server.tasks.discoverHostsTask import DiscoverHostsTask
 
 logger = logging.getLogger(__name__)
 
 
-def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None): 
+# Constants
+MAX_WORKERS = 4
+CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
+INITIAL_SETTINGS_DELAY = 500  # milliseconds
+SAVE_STATE_DELAY = 10000  # milliseconds (10 seconds)
+CHECK_WEB_REQUEST_DELAY = 1000  # milliseconds
+SCAN_WIFI_DELAY = 10000  # milliseconds
+
+
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None):
 
     try:
         crypto_state = CryptoState()
-    except Exception as e:  
+    except Exception as e:
         logger.error(f"Failed to get crypto state: {e}")
         return
     bb = BlackBoard(crypto_state)
-    scheduler = TaskScheduler(max_workers=4, system_time=bb, task_source=bb)
+    scheduler = TaskScheduler(max_workers=MAX_WORKERS, system_time=bb, task_source=bb)
 
     HarvestFactory(bb)  # this is what creates the harvest tasks when inverters are added
 
@@ -38,9 +49,18 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     web_server = server.web.server.Server(web_host, bb)
     logger.info("Server started http://%s:%s", web_host[0], web_host[1])
 
-    graphql_client = GraphQLSubscriptionClient(bb, "wss://api.srcful.dev/")
+    props = {
+        "version": bb.get_version(),
+        **bb.crypto_state().to_dict(bb.chip_death_count)
+    }
+
+    NetworkUtils.start_mdns_after_dns_resolution(port=web_host[1], properties=props)
+
+    graphql_client = GraphQLSubscriptionClient(bb, bb.settings.api.ws_endpoint)
     graphql_client.start()
 
+    # control_client = ControlSubscription(bb, CONTROL_SUBSCRIPTION_URL)
+    # control_client.start()
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
@@ -56,6 +76,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))
 
+    scheduler.add_task(DiscoverHostsTask(bb.time_ms() + 1000, bb))
+
     try:
         scheduler.main_loop()
     except KeyboardInterrupt:
@@ -66,11 +88,15 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     finally:
         for i in bb.devices.lst:
             i.disconnect()
-        
+
         bb.devices.lst.clear()
         web_server.close()
         graphql_client.stop()
         graphql_client.join()
+
+        # Stop mDNS advertisement
+        NetworkUtils.stop_mdns_advertisement()
+
         logger.info("Server stopped.")
 
 
@@ -86,7 +112,7 @@ if __name__ == "__main__":
         NetworkUtils.IP_KEY: "192.168.1.100",
         NetworkUtils.MAC_KEY: NetworkUtils.INVALID_MAC,
         NetworkUtils.PORT_KEY: 502,
-        ModbusTCP.slave_id_key(): 1,  
+        ModbusTCP.slave_id_key(): 1,
         ModbusTCP.device_type_key(): "huawei"
     }
     modbus_tcp = ModbusTCP(**args)

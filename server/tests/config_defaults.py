@@ -23,7 +23,7 @@ SOLARMAN_ARGS = {
     TCPDevice.mac_key(): NetworkUtils.INVALID_MAC,
     TCPDevice.port_key(): 502,
     ModbusSolarman.device_type_key(): "deye",
-    ModbusSolarman.sn_key(): 1234567890,
+    ModbusSolarman.logger_sn_key(): 1234567890,
     ModbusSolarman.slave_id_key(): 1,
     ModbusSolarman.verbose_key(): True
 }
@@ -43,7 +43,7 @@ P1_TELNET_ARGS = {
 }
 
 ENPHASE_ARGS = {
-    ICom.connection_key(): "ENPHASE", 
+    ICom.connection_key(): "ENPHASE",
     TCPDevice.ip_key(): "192.168.1.110",
     inverter.Enphase.bearer_token_key(): "eyJraWQiOiIasdasdadsI1NiJ9.eyJhdWQiOiIyMDIyMTUwMDMwMjgiLCJpc3Miasdn21wmVEUuQ"
 }
@@ -53,12 +53,18 @@ P1_JEMAC_ARGS = {
     TCPDevice.ip_key(): "192.168.1.110",
 }
 
+P1_HOMEWIZARD_ARGS = {
+    ICom.connection_key(): "P1HomeWizard",
+    "ip": "192.168.0.30",
+    "port": 80,
+}
+
 # Config snapshots after device creation
-TCP_CONFIG = {**TCP_ARGS, "sn": NetworkUtils.INVALID_MAC}
-SOLARMAN_CONFIG = {**SOLARMAN_ARGS, "sn": 1234567890}
-SUNSPEC_CONFIG = {**SUNSPEC_ARGS, "sn": "SUNSPEC135792468"}
+TCP_CONFIG = {**TCP_ARGS, "sn": None}
+SOLARMAN_CONFIG = {**SOLARMAN_ARGS, "sn": None}
+SUNSPEC_CONFIG = {**SUNSPEC_ARGS, "sn": None}
 P1_TELNET_CONFIG = {**P1_TELNET_ARGS, "meter_serial_number": "abc5qwerty"}
-ENPHASE_CONFIG = {**ENPHASE_ARGS, "sn": "00:00:00:00:00:00"}
+ENPHASE_CONFIG = {**ENPHASE_ARGS, "sn": None}
 
 class_config_map = {
     inverter.ModbusTCP: TCP_ARGS,
@@ -67,4 +73,5 @@ class_config_map = {
     inverter.Enphase: ENPHASE_ARGS,
     p1meter.P1Telnet: P1_TELNET_ARGS,
     p1meter.P1Jemac: P1_JEMAC_ARGS,
+    p1meter.P1HomeWizard: P1_HOMEWIZARD_ARGS,
 }

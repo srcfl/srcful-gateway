@@ -6,3 +6,5 @@ from . import echo
 from . import settings
 from . import device
 from . import crypto_sign
+from . import reboot
+from . import ble_stop

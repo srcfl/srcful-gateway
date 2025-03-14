@@ -1,5 +1,7 @@
 import random
 import time
+import os
+import socket
 import logging
 from server.app.isystem_time import ISystemTime
 from server.app.itask_source import ITaskSource
@@ -10,6 +12,7 @@ from server.devices.IComFactory import IComFactory
 from server.tasks.itask import ITask
 from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
+from server.network.network_utils import HostInfo
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -33,6 +36,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     _settings: Settings
     _crypto_state: CryptoState
     _available_devices: list[ICom]
+    _available_hosts: list[HostInfo]
     _tasks: list[ITask]
 
     def __init__(self, crypto_state: CryptoState):
@@ -47,10 +51,11 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
         self._crypto_state = crypto_state
         self._available_devices = []
-        
+        self._available_hosts = []
+
     def get_version(self) -> str:
-        return "0.17.8"
-        
+        return "0.20.0"
+
     def add_task(self, task: ITask):
         self._tasks.append(task)
 
@@ -58,7 +63,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         ret = self._tasks
         self._tasks = []
         return ret
-    
+
     def _save_state(self):
         from server.tasks.saveStateTask import SaveStateTask
         self.add_task(SaveStateTask(self.time_ms() + 100, self))
@@ -81,7 +86,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     def clear_messages(self):
         self._messages = []
         self._save_state()
-    
+
     def delete_message(self, message_id: int):
         for m in self._messages:
             if m.id == message_id:
@@ -89,7 +94,7 @@ class BlackBoard(ISystemTime, ITaskSource):
                 self._save_state()
                 return True
         return False
-    
+
     @property
     def settings(self) -> Settings:
         return self._settings
@@ -97,7 +102,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     @property
     def messages(self) -> tuple[Message, ...]:
         return tuple(self._messages)
-    
+
     def _add_message(self, message: Message) -> Message:
         # check if we already have a message then just update the timestamp and move to the last place in the list
         for m in self._messages:
@@ -129,14 +134,16 @@ class BlackBoard(ISystemTime, ITaskSource):
     @property
     def state(self) -> dict:
         state = dict()
-        state['status'] = {'version': self.get_version(), 'uptime': self.elapsed_time, 'messages': self.message_state()}
+        state['balena_uuid'] = os.environ.get('RESIN_DEVICE_UUID', socket.gethostname())
+        state['status'] = {'version': self.get_version(), 'uptime': self.elapsed_time(), 'messages': self.message_state()}
         state['timestamp'] = self.time_ms()
         state['crypto'] = self.crypto_state().to_dict(self.chip_death_count)
         state['network'] = self.network_state()
         state['devices'] = self.devices_state()
         state['available_devices'] = [device.get_config() for device in self.get_available_devices()]
+        state['available_hosts'] = [host.to_dict() for host in self.get_available_hosts()]
         return state
-    
+
     def message_state(self) -> dict:
         ret = []
         for m in self.messages:
@@ -151,7 +158,7 @@ class BlackBoard(ISystemTime, ITaskSource):
 
     def crypto_state(self) -> CryptoState:
         return self._crypto_state
-    
+
     def network_state(self) -> dict:
         try:
             from server.network.scan import WifiScanner
@@ -165,7 +172,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         except Exception as e:
             logger.error(e)
             return {"error": str(e)}
-        
+
     def get_device_state(self, device: ICom) -> dict:
         device_state = {}
         device_state['connection'] = device.get_config()
@@ -174,10 +181,10 @@ class BlackBoard(ISystemTime, ITaskSource):
         device_state['name'] = device.get_name()
         device_state['client_name'] = device.get_client_name()
         return device_state
-    
+
     def devices_state_to_dict(self, devices: list[ICom]) -> list[dict]:
         return [self.get_device_state(device) for device in devices]
-    
+
     def saved_devices_state(self) -> list[dict]:
         saved_devices = [IComFactory.create_com(config) for config in self.settings.devices.connections]
         return self.devices_state_to_dict(saved_devices)
@@ -190,14 +197,21 @@ class BlackBoard(ISystemTime, ITaskSource):
         ret['supported'] = supported.Handler().get_supported_inverters()
         ret['available'] = self.devices_state_to_dict(self.get_available_devices())
         return ret
-    
+
     def get_available_devices(self) -> list[ICom]:
         return self._available_devices
-    
+
     def set_available_devices(self, devices: list[ICom]):
         self._available_devices = devices
         self._save_state()
-    
+
+    def get_available_hosts(self) -> list[HostInfo]:
+        return self._available_hosts
+
+    def set_available_hosts(self, hosts: list[HostInfo]):
+        self._available_hosts = hosts
+        self._save_state()
+
     @property
     def chip_death_count(self):
         return self._chip_death_count
@@ -228,8 +242,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     def devices(self):
         return self._devices
 
-    @property
-    def elapsed_time(self):
+    def elapsed_time(self) -> int:
         return (time.monotonic_ns() - self._start_time) // 1_000_000
 
     def get_chip_info(self):
@@ -239,7 +252,7 @@ class BlackBoard(ISystemTime, ITaskSource):
 
         return "device: " + device_name + " serial: " + serial_number
 
-    def time_ms(self):
+    def time_ms(self) -> int:
         return time.time_ns() // 1_000_000
 
     class Devices:
@@ -254,7 +267,7 @@ class BlackBoard(ISystemTime, ITaskSource):
 
         def remove_listener(self, observer):
             self._observers.remove(observer)
-            
+
         def contains(self, device: ICom) -> bool:
             return self.find_sn(device.get_SN()) is not None
 
@@ -264,27 +277,23 @@ class BlackBoard(ISystemTime, ITaskSource):
                     return d
             return None
 
-        def add(self, device:ICom):
-            assert device.is_open(), "Only open devices can be added to the blackboard"
-            
+        def add(self, device: ICom):
+            # assert device.is_open(), "Only open devices can be added to the blackboard"
+
             existing_device = self.find_sn(device.get_SN())
             if existing_device == device:
                 return
-            
+
             if existing_device:
                 self.remove(existing_device)
-            
+
             self.lst.append(device)
-                
+
             for o in self._observers:
                 o.add_device(device)
 
-        def remove(self, device:ICom):
+        def remove(self, device: ICom):
             if device in self.lst:
                 self.lst.remove(device)
                 for o in self._observers:
                     o.remove_device(device)
-                    
-                    
-
-

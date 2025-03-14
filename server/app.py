@@ -38,7 +38,6 @@ class TaskScheduler:
         while initial_tasks.qsize() > 0:
             self.tasks.put(initial_tasks.get())
 
-    
     def add_task(self, task: ITask):
         with self.new_tasks_condition:
 
@@ -64,14 +63,14 @@ class TaskScheduler:
         except Exception as e:
             logging.error(f"Failed to execute task {task}: {e}")
             new_tasks = None
-            
+
         if new_tasks is not None:
             if not isinstance(new_tasks, list):
                 new_tasks = [new_tasks]
             new_tasks = new_tasks + self.bb.purge_tasks()
             for new_task in new_tasks:
                 self.add_task(new_task)
-        
+
         with self.new_tasks_condition:
             self.active_threads -= 1
             self.new_tasks_condition.notify()
@@ -92,7 +91,7 @@ class TaskScheduler:
 
                 if self.stop_event.is_set():
                     break
-                
+
                 if not self.tasks.empty() and self.tasks.queue[0].get_time() <= self.bb.time_ms():
                     task = self.tasks.get()
                     self.executor.submit(self.worker, task)
@@ -104,7 +103,7 @@ def main_loop(tasks: queue.PriorityQueue, bb: BlackBoard):
     scheduler.main_loop()
 
 
-def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None): 
+def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: ModbusTCP | None = None):
 
     from server.web.handler.get.crypto import Handler as CryptoHandler
     try:
@@ -129,17 +128,18 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     tasks = queue.PriorityQueue()
 
     class BackendSettingsSaver(DebouncedMonitorBase):
-            """ Monitors settings changes and schedules a save to the backend, ignores changes from the backend """
-            def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
-                super().__init__(debounce_delay)
-                self.blackboard = blackboard
+        """ Monitors settings changes and schedules a save to the backend, ignores changes from the backend """
 
-            def _perform_action(self, source: ChangeSource):
-                if source != ChangeSource.BACKEND:
-                    logger.info("Settings change detected, scheduling a save to backend")
-                    self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard))
-                else:
-                    logger.info("No need to save settings to backend as the source is the backend")
+        def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
+            super().__init__(debounce_delay)
+            self.blackboard = blackboard
+
+        def _perform_action(self, source: ChangeSource):
+            if source != ChangeSource.BACKEND:
+                logger.info("Settings change detected, scheduling a save to backend")
+                self.blackboard.add_task(SaveSettingsTask(self.blackboard.time_ms() + 500, self.blackboard))
+            else:
+                logger.info("No need to save settings to backend as the source is the backend")
 
     class SettingsEntropyListener(DebouncedMonitorBase):
         def __init__(self, blackboard: BlackBoard, debounce_delay: float = 0.5):
@@ -155,8 +155,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
     bb.settings.entropy.add_listener(SettingsEntropyListener(bb).on_change)
-    
-    
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
@@ -168,8 +166,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     if inverter is not None:
         tasks.put(OpenDeviceTask(bb.time_ms(), bb, inverter))
-
-    
 
     tasks.put(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     tasks.put(ScanWiFiTask(bb.time_ms() + 45000, bb))
@@ -186,7 +182,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     finally:
         for i in bb.devices.lst:
             i.disconnect()
-        
+
         bb.devices.lst.clear()
         web_server.close()
         graphql_client.stop()
@@ -206,7 +202,7 @@ if __name__ == "__main__":
         NetworkUtils.IP_KEY: "192.168.1.100",
         NetworkUtils.MAC_KEY: NetworkUtils.INVALID_MAC,
         NetworkUtils.PORT_KEY: 502,
-        ModbusTCP.slave_id_key(): 1,  
+        ModbusTCP.slave_id_key(): 1,
         ModbusTCP.device_type_key(): "huawei"
     }
     modbus_tcp = ModbusTCP(**args)
