@@ -18,9 +18,9 @@ http:
     api-service:
       loadBalancer:
         servers:
-          - url: "http://localhost:5000"
+          - url: "http://eGW-web:5000"  # Changed from localhost to container name
     
     web-service:
       loadBalancer:
         servers:
-          - url: "http://localhost:5000"
+          - url: "http://eGW-web:5000"  # Changed from localhost to container name

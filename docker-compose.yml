@@ -12,8 +12,11 @@ services:
   traefik:
     build: ./traefik
     container_name: eGW-traefik
-    network_mode: host  # Use host networking to route to other host network containers
+    ports:
+      - "80:80"
     restart: always
+    networks:
+      - web-network
 
   web:
     build: ./server
@@ -83,3 +86,7 @@ services:
 
 volumes:
   srcful-data:
+
+networks:
+  web-network:
+    driver: bridge
