@@ -12,10 +12,7 @@ logger.setLevel(logging.DEBUG)
 class Command:
     def __init__(self, data: Dict[str, Any]):
         self.register: int = data['register']
-        self.type: str = data['type']
-        self.datatype: str = data['datatype']
-        self.unit: str = data['unit']
-        self.scaling_factor: float = data['scaling_factor']
+        self.name: str = data['name']
         self.description: str = data['description']
         self.value: float = data['value']
         self.success: bool = False  # Optional, only used if the command is executed

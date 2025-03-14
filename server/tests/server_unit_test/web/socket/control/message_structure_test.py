@@ -27,25 +27,21 @@ ems_authentication_success_message = {
 ems_control_schedule_message = {
     "type": "ems_control_schedule",
     "payload": {
-        "id": 246,
+        "id": 1356,
         "sn": "2311286262",
-        "execute_at": "2025-03-07T21:00:00.000000",
+        "execute_at": "2025-03-14T15:00:00.000000",
         "protocol": "modbus",
-        "retries": 0,
         "commands": [
             {
-                "register": 1,
-                "type": "ControlMessagePayload",
-                "datatype": "float32",
-                "unit": "kW",
-                "scaling_factor": 0.1,
-                "description": "DISCHARGE",
-                "value": 2270
+                "register": 143,
+                "name": "Max Power",
+                "description": "Maximum power for discharging electricity (Low Vol: 1W, High Vol: 10W). 470 would be 4700W or 4.7kW",
+                "value": 72
             }
         ],
         "serialNumber": "Sourceful-EMS",
-        "signature": "e385f529b17b770f505f9a43bb04a934634f834bd755ec29f5deac6f8dbb8ecdf97648809c774c1e7642bc22be80ab4d2f174456aa291de1ead1c6ae7fc81441",
-        "created_at": "2025-03-07T20:58:00.364244"
+        "signature": "2a69d5eecf7c1f564e1be1e8b15711b009a66d5b8448e9b32ead40e5e741ec56294034d18212c260a5285beffcc0fef00708807e96cd296b3d0b301ddea1a45c",
+        "created_at": "2025-03-14T13:58:00.338870"
     }
 }
 
@@ -71,14 +67,13 @@ def test_ems_authentication_success_message():
 def test_ems_control_schedule_message():
     control_schedule_message: ControlMessage = ControlMessage(ems_control_schedule_message)
     assert control_schedule_message.type == ControlMessageType.EMS_CONTROL_SCHEDULE
-    assert control_schedule_message.id == 246
+    assert control_schedule_message.id == 1356
     assert control_schedule_message.sn == "2311286262"
-    assert control_schedule_message.execute_at == "2025-03-07T21:00:00.000000"
+    assert control_schedule_message.execute_at == "2025-03-14T15:00:00.000000"
     assert control_schedule_message.protocol == "modbus"
-    assert control_schedule_message.retries == 0
 
     assert len(control_schedule_message.commands) == 1
 
     assert control_schedule_message.serial_number == "Sourceful-EMS"
-    assert control_schedule_message.signature == "e385f529b17b770f505f9a43bb04a934634f834bd755ec29f5deac6f8dbb8ecdf97648809c774c1e7642bc22be80ab4d2f174456aa291de1ead1c6ae7fc81441"
-    assert control_schedule_message.created_at == "2025-03-07T20:58:00.364244"
+    assert control_schedule_message.signature == "2a69d5eecf7c1f564e1be1e8b15711b009a66d5b8448e9b32ead40e5e741ec56294034d18212c260a5285beffcc0fef00708807e96cd296b3d0b301ddea1a45c"
+    assert control_schedule_message.created_at == "2025-03-14T13:58:00.338870"

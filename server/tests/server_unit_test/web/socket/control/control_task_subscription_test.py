@@ -15,14 +15,10 @@ def control_message():
             PayloadType.SN: "f42ea576ac87184445",
             PayloadType.EXECUTE_AT: "2025-02-21T18:53:48.3529926Z",
             PayloadType.PROTOCOL: "modbus",
-            PayloadType.RETRIES: 0,
             PayloadType.COMMANDS: [
                 {
                     "register": 1,
-                    "type": "ControlMessagePayload",
-                    "datatype": "float32",
-                    "unit": "kW",
-                    "scaling_factor": 0.1,
+                    "name": "Fiddle stuff",
                     "description": "Fiddle stuff",
                     "value": 1337
                 }
