@@ -3,8 +3,8 @@ import logging
 import requests
 import xml.etree.ElementTree as ET
 from server.devices.inverters.common import INVERTER_CLIENT_NAME
-from server.network import mdns
-from server.network.mdns import ServiceResult
+from server.network.mdns import mdns
+from server.network.mdns.mdns import ServiceResult
 from ..ICom import HarvestDataType, ICom
 from typing import List, Optional
 from server.network.network_utils import HostInfo, NetworkUtils
@@ -245,7 +245,7 @@ class Enphase(TCPDevice):
 
     def find_device(self) -> 'ICom' | None:
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
-        res: ServiceResult = mdns.scan(5, ["_enphase-envoy._tcp.local."])
+        res: ServiceResult = mdns.scan(5, "_enphase-envoy._tcp.local.")
         if len(res) == 0:
             return None
         res: ServiceResult = res[0]
