@@ -34,18 +34,19 @@ class DiscoverDevicesTask(Task):
         # Discover mdns devices
         mdns_devices: List[ICom] = DiscoverMdnsDevicesTask(event_time=0, bb=self.bb).discover_mdns_devices()
         devices.extend(mdns_devices)
+        self.bb.set_available_devices(devices=devices)
 
         # Discover modbus devices
         modbus_devices: List[ICom] = DiscoverModbusDevicesTask(event_time=0, bb=self.bb).discover_modbus_devices(ports_str=ports_str, timeout=timeout)
         devices.extend(modbus_devices)
+        self.bb.set_available_devices(devices=devices)
 
         # Discover P1 devices
         p1_devices: List[ICom] = scan_for_p1_devices()
         devices.extend(p1_devices)
+        self.bb.set_available_devices(devices=devices)
 
         logger.info(f"Devices: Found {len(devices)} devices")
         logger.info([device.get_config() for device in devices])
-
-        self.bb.set_available_devices(devices=devices)
 
         return devices

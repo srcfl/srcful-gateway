@@ -2,10 +2,19 @@ import time
 from typing import List, Dict, Any, Optional, Union
 import logging
 from zeroconf import ServiceBrowser, Zeroconf, ServiceListener, ServiceInfo
+from threading import Lock
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+_scan_lock = Lock()
+_is_scanning = False
+
+
+def is_scanning() -> bool:
+    global _is_scanning
+    return _is_scanning
 
 
 class ServiceResult:
@@ -51,24 +60,34 @@ def scan(duration: int = 5, services: Union[str, List[str]] = ["_http._tcp.local
     Returns:
         A list of discovered services
     """
-    zeroconf = Zeroconf()
-    listener = _Listener()
+    global _is_scanning
 
-    # Convert string to list if a single service is provided as a string
-    if isinstance(services, str):
-        services_list = [services]
-    else:
-        services_list = services
+    if not _scan_lock.acquire(blocking=False):
+        logger.warning("An mDNS scan is already in progress. Skipping this request.")
+        return []
 
-    browser = ServiceBrowser(zeroconf, services_list, listener)
-    time.sleep(duration)
-    browser.cancel()
-    zeroconf.close()
-    return list(listener.services.values())
+    try:
+        _is_scanning = True
+        zeroconf = Zeroconf()
+        listener = _Listener()
+
+        # Convert string to list if a single service is provided as a string
+        if isinstance(services, str):
+            services_list = [services]
+        else:
+            services_list = services
+
+        browser = ServiceBrowser(zeroconf, services_list, listener)
+        time.sleep(duration)
+        browser.cancel()
+        zeroconf.close()
+        return list(listener.services.values())
+    finally:
+        _is_scanning = False
+        _scan_lock.release()
 
 
 def scan_for_compatible_devices() -> List[ServiceResult]:
-
     services = ["_enphase-envoy._tcp.local.",
                 "_jemacp1._tcp.local.",
                 "_hwenergy._tcp._tcp.local.",
