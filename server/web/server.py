@@ -29,6 +29,9 @@ class Endpoints:
 
             "device": handler.get.device.Handler(),
             "device/scan": handler.get.device_scan.DeviceScanHandler(),
+            "device/mdns/scan": handler.get.mdns_scan.MdnsScanHandler(),
+            "device/modbus/scan": handler.get.modbus_scan.ModbusScanHandler(),
+
             "device/supported": handler.get.supported_devices.Handler(),
             "device/supported/configurations": handler.get.supported_devices.SupportedConfigurations(),
 
@@ -53,8 +56,6 @@ class Endpoints:
             "state/update": handler.get.state.UpdateStateHandler(),
             "system": handler.get.system.SystemHandler(),
             "system/details": handler.get.system.SystemDetailsHandler(),
-
-
         }
 
         self.api_post_dict = {
@@ -65,7 +66,8 @@ class Endpoints:
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),
             "crypto/sign": handler.post.crypto_sign.Handler(),
-            "system/reboot": handler.post.reboot.Handler()
+            "system/reboot": handler.post.reboot.Handler(),
+            "system/ble/stop": handler.post.ble_stop.Handler(),
         }
 
         self.api_delete_dict = {

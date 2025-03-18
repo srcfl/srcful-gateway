@@ -11,12 +11,13 @@ from typing import List
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
 class ModbusScanHandler(GetHandler):
 
     @property
     def DEVICES(self) -> str:
         return "devices"
-    
+
     def schema(self) -> dict:
         return {
             "description": "Scans the network for modbus devices",
@@ -26,17 +27,17 @@ class ModbusScanHandler(GetHandler):
             },
             "returns": {
                 self.DEVICES: "a list of JSON Objects: {'host': host ip, 'port': host port}."
-                }
+            }
         }
 
     def do_get(self, data: RequestData):
         """Scan the network for modbus devices."""
-        
+
         scan_task = DiscoverModbusDevicesTask(event_time=0, bb=data.bb)
-        
+
         ports_str = data.query_params.get(NetworkUtils.PORTS_KEY, NetworkUtils.DEFAULT_MODBUS_PORTS)
-        timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, NetworkUtils.DEFAULT_TIMEOUT) 
-        
+        timeout = data.query_params.get(NetworkUtils.TIMEOUT_KEY, NetworkUtils.DEFAULT_TIMEOUT)
+
         devices: List[ICom] = scan_task.discover_modbus_devices(ports_str=ports_str, timeout=timeout)
-        
+
         return 200, json.dumps([device.get_config() for device in devices])

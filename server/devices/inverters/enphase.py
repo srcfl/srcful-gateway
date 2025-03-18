@@ -3,12 +3,12 @@ import logging
 import requests
 import xml.etree.ElementTree as ET
 from server.devices.inverters.common import INVERTER_CLIENT_NAME
-from server.network import mdns as mdns
+from server.network.mdns import mdns
+from server.network.mdns.mdns import ServiceResult
 from ..ICom import HarvestDataType, ICom
 from typing import List, Optional
 from server.network.network_utils import HostInfo, NetworkUtils
 import urllib3
-
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -72,9 +72,9 @@ class Enphase(TCPDevice):
     def get_config_schema():
         return {
             **TCPDevice.get_config_schema(Enphase.CONNECTION),
-            Enphase.bearer_token_key(): 'string, (optional) Bearer token for the device, either the token is provided or the username/password and iq gateway serial number.',
-            Enphase.username_key(): 'string, (optional) Username for the device',
-            Enphase.password_key(): 'string, (optional) Password for the device',
+            Enphase.bearer_token_key(): 'string, (optional, required if username and password are not provided) Bearer token for the device, either the token is provided or the username/password and iq gateway serial number.',
+            Enphase.username_key(): 'string, (optional, required if bearer token is not provided) Username for the device',
+            Enphase.password_key(): 'string, (optional, required if bearer token is not provided) Password for the device',
             Enphase.iq_gw_serial_key(): 'string, (optional) IQ Gateway serial number'
         }
 
@@ -83,14 +83,12 @@ class Enphase(TCPDevice):
 
     def __init__(self, **kwargs) -> None:
 
+        logger.info(f"Enphase __init__: kwargs: {kwargs}")
+
         self.username: str = kwargs.get(self.username_key(), "")
         self.password: str = kwargs.get(self.password_key(), "")
         self.iq_gw_serial: str = kwargs.get(self.iq_gw_serial_key(), "")
         self.bearer_token: str = kwargs.get(self.bearer_token_key(), "")
-
-        if self.bearer_token == "":
-            if not self.username or not self.password or not self.iq_gw_serial:
-                raise ValueError("Bearer token or username, password, and iq gateway serial number is required")
 
         ip: str = kwargs.get(self.IP, None)
         TCPDevice.__init__(self, ip, kwargs.get(self.PORT, 80))
@@ -122,6 +120,10 @@ class Enphase(TCPDevice):
 
     def _connect(self, **kwargs) -> bool:
         """Connect to the device by url and return True if successful, False otherwise."""
+
+        if self.bearer_token == "":
+            if not self.username or not self.password or not self.iq_gw_serial:
+                raise ValueError("Bearer token or username, password, and iq gateway serial number is required")
 
         if not self.bearer_token:
             self.bearer_token = self._get_bearer_token(self.iq_gw_serial, self.username, self.password)
@@ -242,27 +244,14 @@ class Enphase(TCPDevice):
         config[self.port_key()] = host.port
         return Enphase(**config)
 
-    def _scan_for_devices(self, domain: str) -> Optional['Enphase']:
-        mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
-        for service in mdns_services:
-            if service.address and service.port:
-                enphase = Enphase(ip=service.address, port=service.port, bearer_token=self.bearer_token)
-                if enphase.connect():
-                    return enphase
-        return None
-
     def find_device(self) -> 'ICom':
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
-        if self.mac != NetworkUtils.INVALID_MAC:
-            # TODO: This is unknown at this point
-            domain_names = {"_enphase-envoy._tcp.local.": {"name": "Enphase IQ Gateway"}}
-
-            for domain, info in domain_names.items():
-                enphase = self._scan_for_devices(domain)
-                if enphase:
-                    enphase.model_name = info["name"]
-                    return enphase
-        return None
+        res: ServiceResult = mdns.scan(5, "_enphase-envoy._tcp.local.")
+        if len(res) == 0:
+            return None
+        res: ServiceResult = res[0]
+        host: HostInfo = HostInfo(res.address, res.port, '')
+        return Enphase(ip=host.ip, port=host.port, bearer_token=self.bearer_token)
 
     def get_SN(self) -> str:
         return self.iq_gw_serial

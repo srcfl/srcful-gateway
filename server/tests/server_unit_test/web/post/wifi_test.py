@@ -17,7 +17,7 @@ def mock__init__(self, SSID, PSK):
 def bb():
     return BlackBoard(Mock(spec=CryptoState))
 
-#@patch.object(WifiHandler, '__init__', mock__init__)
+
 def test_doPost(bb: BlackBoard):
     data_params = {
         "ssid": "test",
@@ -36,6 +36,7 @@ def test_doPost(bb: BlackBoard):
 
     assert status_code == 200
     assert json.loads(response) == {"status": "ok"}
+
 
 def test_doPost_bad_data():
     data_params = {

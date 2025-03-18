@@ -44,7 +44,7 @@ P1_TELNET_ARGS = {
 
 ENPHASE_ARGS = {
     ICom.connection_key(): "ENPHASE",
-    TCPDevice.ip_key(): "192.168.1.110",
+    TCPDevice.ip_key(): "localhost",
     inverter.Enphase.bearer_token_key(): "eyJraWQiOiIasdasdadsI1NiJ9.eyJhdWQiOiIyMDIyMTUwMDMwMjgiLCJpc3Miasdn21wmVEUuQ"
 }
 
