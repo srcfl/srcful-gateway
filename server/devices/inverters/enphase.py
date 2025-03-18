@@ -72,9 +72,9 @@ class Enphase(TCPDevice):
     def get_config_schema():
         return {
             **TCPDevice.get_config_schema(Enphase.CONNECTION),
-            Enphase.bearer_token_key(): 'string, (optional) Bearer token for the device, either the token is provided or the username/password and iq gateway serial number.',
-            Enphase.username_key(): 'string, (optional) Username for the device',
-            Enphase.password_key(): 'string, (optional) Password for the device',
+            Enphase.bearer_token_key(): 'string, (optional, required if username and password are not provided) Bearer token for the device, either the token is provided or the username/password and iq gateway serial number.',
+            Enphase.username_key(): 'string, (optional, required if bearer token is not provided) Username for the device',
+            Enphase.password_key(): 'string, (optional, required if bearer token is not provided) Password for the device',
             Enphase.iq_gw_serial_key(): 'string, (optional) IQ Gateway serial number'
         }
 
