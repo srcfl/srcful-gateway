@@ -124,8 +124,6 @@ class Chip:
     _lock = threading.Lock()
     _lock_count = 0
 
-    # def __init__(self, crypto_impl: CryptoInterface = SoftwareCrypto()):
-
     def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto() if USE_HARDWARE_CRYPTO else SoftwareCrypto()):
         self.crypto_impl = crypto_impl
 

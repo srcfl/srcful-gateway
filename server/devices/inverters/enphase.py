@@ -9,7 +9,6 @@ from ..ICom import HarvestDataType, ICom
 from typing import List, Optional
 from server.network.network_utils import HostInfo, NetworkUtils
 import urllib3
-from server.devices.inverters.enphase_scanner import scan_for_enphase_device
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -84,14 +83,12 @@ class Enphase(TCPDevice):
 
     def __init__(self, **kwargs) -> None:
 
+        logger.info(f"Enphase __init__: kwargs: {kwargs}")
+
         self.username: str = kwargs.get(self.username_key(), "")
         self.password: str = kwargs.get(self.password_key(), "")
         self.iq_gw_serial: str = kwargs.get(self.iq_gw_serial_key(), "")
         self.bearer_token: str = kwargs.get(self.bearer_token_key(), "")
-
-        if self.bearer_token == "":
-            if not self.username or not self.password or not self.iq_gw_serial:
-                raise ValueError("Bearer token or username, password, and iq gateway serial number is required")
 
         ip: str = kwargs.get(self.IP, None)
         TCPDevice.__init__(self, ip, kwargs.get(self.PORT, 80))
@@ -123,6 +120,10 @@ class Enphase(TCPDevice):
 
     def _connect(self, **kwargs) -> bool:
         """Connect to the device by url and return True if successful, False otherwise."""
+
+        if self.bearer_token == "":
+            if not self.username or not self.password or not self.iq_gw_serial:
+                raise ValueError("Bearer token or username, password, and iq gateway serial number is required")
 
         if not self.bearer_token:
             self.bearer_token = self._get_bearer_token(self.iq_gw_serial, self.username, self.password)
@@ -243,7 +244,7 @@ class Enphase(TCPDevice):
         config[self.port_key()] = host.port
         return Enphase(**config)
 
-    def find_device(self) -> 'ICom' | None:
+    def find_device(self) -> 'ICom':
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
         res: ServiceResult = mdns.scan(5, "_enphase-envoy._tcp.local.")
         if len(res) == 0:

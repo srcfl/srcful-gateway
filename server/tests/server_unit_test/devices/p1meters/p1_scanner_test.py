@@ -75,7 +75,7 @@ def test_scan_for_p1_device_found(mock_get_scan_info, mock_scan_info, mock_devic
     mock_mdns_service = Mock(spec=ServiceResult)
     mock_mdns_service.address = "192.168.1.100"
     mock_mdns_service.port = 80
-    with patch('server.network.mdns.scan', return_value=[mock_mdns_service]):
+    with patch('server.network.mdns.mdns.scan', return_value=[mock_mdns_service]):
 
         # Test
         result = scan_for_p1_device("TEST123")
@@ -92,7 +92,7 @@ def test_scan_for_p1_device_not_found(mock_get_scan_info, mock_scan_info):
     mock_get_scan_info.return_value = [mock_scan_info]
 
     # neither mdns nor network scan found any devices
-    with patch('server.network.mdns.scan', return_value=[]), \
+    with patch('server.network.mdns.mdns.scan', return_value=[]), \
             patch('server.devices.p1meters.p1_scanner.NetworkUtils.get_hosts', return_value=[]):
 
         # Test
@@ -109,7 +109,7 @@ def test_scan_for_p1_devices(mock_get_scan_info, mock_scan_info, mock_device):
     mock_get_scan_info.return_value = [mock_scan_info]
 
     # mdns did not find any devices but network scan did
-    with patch('server.network.mdns.scan', return_value=[]), \
+    with patch('server.network.mdns.mdns.scan', return_value=[]), \
             patch('server.devices.p1meters.p1_scanner.NetworkUtils.get_hosts', return_value=[HostInfo("192.168.1.100", 80, NetworkUtils.INVALID_MAC)]):
 
         # Test
