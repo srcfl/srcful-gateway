@@ -73,9 +73,14 @@ class Modbus(Device, ABC):
             operation = entry.function_code
             scan_start = entry.start_register
             scan_range = entry.offset
+            scale_factor_register = entry.scale_factor_register
 
             r = self._populate_registers(scan_start, scan_range)
             v = self.read_registers(operation, scan_start, scan_range)
+
+            if scale_factor_register:
+                r += [scale_factor_register]
+                v += self.read_registers(operation, scale_factor_register, 1)
 
             regs += r
             vals += v

@@ -4,6 +4,7 @@ from cryptography.utils import int_to_bytes
 from cryptography.hazmat.primitives import hashes
 from .crypto_interface import CryptoInterface
 import random
+import os
 
 
 def load_env_file(file_path):
@@ -15,12 +16,17 @@ def load_env_file(file_path):
                 env_vars[key] = value.strip('"').strip("'")
     return env_vars
 
+
 def load_private_key_from_hex(private_key_hex):
     private_value = int(private_key_hex, 16)
     pk = ec.derive_private_key(private_value, ec.SECP256R1())
 
     # check that the private key matches the public key
-    expected_public_key = "2f5d41eacf701c18eb1bdae549ee0232ed2b9f3dd2b983ff7b68240bbba84f7b4903d0a52a1ab3d47e7155c5f3455fdbe7997bf85b2258fee6644e16b7e8e9be"
+    # Fetch the expected public key from the environment variable
+    env_vars = load_env_file('test_config.env')
+    expected_public_key = env_vars.get('TEST_PUBLIC_KEY')
+    if not expected_public_key:
+        raise ValueError("TEST_PUBLIC_KEY variable not set in test_config.env")
     public_key = pk.public_key()
     public_numbers = public_key.public_numbers()
     public_key_hex = format(public_numbers.x, '064x') + format(public_numbers.y, '064x')
@@ -36,6 +42,7 @@ def get_test_private_key_serial():
     if not private_key_hex:
         raise ValueError("TEST_PRIVATE_KEY variable not set in test_config.env")
     return load_private_key_from_hex(private_key_hex), bytes.fromhex(env_vars.get('TEST_SERIAL'))
+
 
 class SoftwareCrypto(CryptoInterface):
     def __init__(self):
@@ -66,7 +73,7 @@ class SoftwareCrypto(CryptoInterface):
         (r, s) = utils.decode_dss_signature(signature)
         result = int_to_bytes(r, 32) + int_to_bytes(s, 32)
         return 0, bytes(result)
-    
+
     def atcab_random(self):
         # generate a list of 32 random bytes
         random_data = [random.randint(0, 255) for _ in range(32)]

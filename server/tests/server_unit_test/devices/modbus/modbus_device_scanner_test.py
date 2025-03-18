@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
+from server.crypto import crypto
 from server.devices.inverters.modbus_device_scanner import scan_for_modbus_devices
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.devices.supported_devices.profiles import ModbusProfile, RegisterInterval
@@ -42,6 +43,11 @@ def mock_huawei_profile():
 
 @pytest.fixture
 def blackboard():
+
+    if crypto.USE_HARDWARE_CRYPTO:
+        pytest.skip("Hardware crypto not supported")
+        return
+
     from server.app.blackboard import BlackBoard
     from server.crypto.crypto_state import CryptoState
     crypto_state = CryptoState()
@@ -60,6 +66,9 @@ def test_scan_no_hosts_found(mock_get_hosts):
 def test_scan_finds_single_device(mock_get_hosts, mock_get_profile, mock_modbus_class, 
                                 mock_modbus_device, mock_huawei_profile, blackboard):
     """Test scanning finds a single device successfully and saves it to state"""
+
+
+    
     
     # Setup host info
     host_info = MagicMock(spec=HostInfo)

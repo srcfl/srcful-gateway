@@ -114,6 +114,7 @@ supported_devices = {
                     RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.01,
                     RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                    RegistersKey.SCALE_FACTOR_REGISTER: 40086,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -124,6 +125,7 @@ supported_devices = {
                     RegistersKey.DESCRIPTION: "DC Power",
                     RegistersKey.SCALE_FACTOR: 0.01,
                     RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                    RegistersKey.SCALE_FACTOR_REGISTER: 40101,
                 },
             ],
             ProfileKey.KEYWORDS: ["solaredge"],
@@ -178,6 +180,7 @@ supported_devices = {
                     RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.001,
                     RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                    RegistersKey.SCALE_FACTOR_REGISTER: 40086,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -188,6 +191,7 @@ supported_devices = {
                     RegistersKey.DESCRIPTION: "DC Power",
                     RegistersKey.SCALE_FACTOR: 0.001,
                     RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                    RegistersKey.SCALE_FACTOR_REGISTER: 40101,
                 },
             ],
             ProfileKey.KEYWORDS: ["solaredge"],
@@ -448,6 +452,7 @@ supported_devices = {
                     RegistersKey.DESCRIPTION: "Grid frequency",
                     RegistersKey.SCALE_FACTOR: 0.01,
                     RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                    RegistersKey.SCALE_FACTOR_REGISTER: 40086,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -458,6 +463,7 @@ supported_devices = {
                     RegistersKey.DESCRIPTION: "DC Power",
                     RegistersKey.SCALE_FACTOR: 0.01,
                     RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                    RegistersKey.SCALE_FACTOR_REGISTER: 40101,
                 },
             ],
             ProfileKey.KEYWORDS: ["fronius", "u-blox ag"],
