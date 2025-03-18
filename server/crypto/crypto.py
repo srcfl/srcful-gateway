@@ -151,13 +151,15 @@ class ChipError(Exception):
         return super().__str__() + f" cryptauthlib error code: {self.code}"
 
 
+# we need an external flag so that we can skip the hardware crypto tests without creating a new Chip object
+USE_HARDWARE_CRYPTO = True
+
+
 class Chip:
     _lock = threading.Lock()
     _lock_count = 0
 
-    def __init__(self, crypto_impl: CryptoInterface = SoftwareCrypto()):
-
-        # def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto()):
+    def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto() if USE_HARDWARE_CRYPTO else SoftwareCrypto()):
         self.crypto_impl = crypto_impl
 
     def is_hardware_crypto(self):

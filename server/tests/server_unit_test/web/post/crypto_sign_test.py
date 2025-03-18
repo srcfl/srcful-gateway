@@ -40,7 +40,7 @@ def test_json_schema(handler):
 
 def test_construct_message_with_no_input(handler):
     """Test message construction with no input message"""
-    message = handler._construct_message(None)
+    message = handler._construct_message(None, None)
     assert isinstance(message, str)
     assert message.count('|') == 2
     # Verify timestamp format
@@ -53,15 +53,28 @@ def test_construct_message_with_no_input(handler):
 def test_construct_message_with_input(handler):
     """Test message construction with input message"""
     test_message = "test_message"
-    message = handler._construct_message(test_message)
+    message = handler._construct_message(test_message, None)
     assert message.startswith(test_message + "|")
     assert message.count('|') == 3
 
-def test_construct_message_with_invalid_input(handler):
+def test_construct_message_with_invalid_message(handler):
     """Test message construction with invalid input (contains |)"""
     with pytest.raises(ValueError) as exc_info:
-        handler._construct_message("test|message")
+        handler._construct_message("test|message","abc")
     assert "message cannot contain | characters" in str(exc_info.value)
+
+def test_construct_message_with_invalid_timestamp(handler):
+    """Test message construction with invalid input (contains |)"""
+    with pytest.raises(ValueError) as exc_info:
+        handler._construct_message("testmessage","abc")
+    assert "timestamp must be in UTC Y-m-dTH:M:SZ format" in str(exc_info.value)
+
+def test_construct_message_with_valid_timestamp(handler):
+    """Test message construction with valid timestamp"""
+    timestamp = "2024-01-01T00:00:00Z"
+    message = handler._construct_message("testmessage", timestamp)
+    assert message.count('|') == 3
+    assert message.endswith(timestamp+'|')
 
 def test_add_serial_and_sign_message(handler, mock_chip):
     """Test adding serial number and signing message"""
@@ -72,6 +85,7 @@ def test_add_serial_and_sign_message(handler, mock_chip):
     assert isinstance(signature, str)
     assert len(signature) == 128  # hex-encoded 64-byte signature
     mock_chip.get_signature.assert_called_once_with(message)
+
 
 @patch('server.crypto.crypto.Chip')
 def test_do_post_success(mock_chip_class, handler, mock_request_data, mock_chip):
