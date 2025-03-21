@@ -4,6 +4,7 @@ from server.devices.registerValue import RegisterValue
 import logging
 from server.web.socket.control.control_messages.types import PayloadType
 from server.web.socket.control.control_messages.base_message import BaseMessage
+import time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -41,6 +42,7 @@ class ControlMessage(BaseMessage):
                 command.success = res
 
                 logger.debug(f"Wrote value {value} to address {address}")
+                time.sleep(0.1)
 
         except Exception as e:
             logger.error(f"Error executing control message: {e}")

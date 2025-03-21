@@ -173,21 +173,23 @@ class ModbusSolarman(ModbusTCP):
     def _read_registers(self, function_code: FunctionCodeKey, scan_start: int, scan_range: int) -> list:
         resp = None
 
-        if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
-            resp = self.client.read_input_registers(register_addr=scan_start, quantity=scan_range)
-        elif function_code == FunctionCodeKey.READ_HOLDING_REGISTERS:
-            resp = self.client.read_holding_registers(register_addr=scan_start, quantity=scan_range)
+        with self._lock:
+            if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
+                resp = self.client.read_input_registers(register_addr=scan_start, quantity=scan_range)
+            elif function_code == FunctionCodeKey.READ_HOLDING_REGISTERS:
+                resp = self.client.read_holding_registers(register_addr=scan_start, quantity=scan_range)
 
-        return resp
+            return resp
 
     def write_registers(self, starting_register: int, values: list) -> bool:
-        try:
-            self.client.write_multiple_holding_registers(starting_register, values)
-            log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
-            return True
-        except Exception as e:
-            log.error("Error writing registers: %s", e)
-            return False
+        with self._lock:
+            try:
+                self.client.write_multiple_holding_registers(starting_register, values)
+                log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
+                return True
+            except Exception as e:
+                log.error("Error writing registers: %s", e)
+                return False
 
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
 
