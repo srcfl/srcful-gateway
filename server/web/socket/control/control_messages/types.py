@@ -12,6 +12,8 @@ class ControlMessageType(str, Enum):
     DEVICE_CONTROL_SCHEDULE_NACK = "device_control_schedule_nack"
     DEVICE_CONTROL_CANCEL_SCHEDULE_ACK = "device_control_cancel_schedule_ack"
     DEVICE_CONTROL_SCHEDULE_DONE = "device_control_schedule_done"
+    EMS_DATA_REQUEST_ACK = "ems_data_request_ack"
+    EMS_DATA_RESPONSE = "ems_data_response"
 
     # Incoming message types
     EMS_AUTHENTICATION_ERROR = "ems_authentication_error"
@@ -20,6 +22,7 @@ class ControlMessageType(str, Enum):
     EMS_AUTHENTICATION_CHALLENGE = "ems_authentication_challenge"
     EMS_CONTROL_SCHEDULE = "ems_control_schedule"
     EMS_CONTROL_SCHEDULE_CANCEL = "ems_control_schedule_cancel"
+    EMS_DATA_REQUEST = "ems_data_request"
 
 
 class PayloadType(str, Enum):
@@ -32,6 +35,7 @@ class PayloadType(str, Enum):
     RETRIES = "retries"
     REASON = "reason"
     MESSAGE = "message"
+    DATA = "data"
 
     ID = "id"
     SN = "sn"

@@ -5,6 +5,7 @@ from server.app.blackboard import BlackBoard
 from server.crypto.crypto_state import CryptoState
 from server.web.socket.control.control_messages.base_message import BaseMessage
 from server.web.socket.control.control_messages.control_message import ControlMessage
+from server.web.socket.control.control_messages.read_message import ReadMessage
 from server.web.socket.control.control_messages.auth_challenge_message import AuthChallengeMessage
 from server.web.socket.base_websocket import BaseWebSocketClient
 from server.web.socket.control.control_messages.types import ControlMessageType, PayloadType
@@ -153,6 +154,10 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
                 logger.info("Received EMS control schedule cancel")
                 self.handle_ems_control_schedule_cancel(data)
 
+            elif type == ControlMessageType.EMS_DATA_REQUEST:
+                logger.info("Received EMS data request")
+                self.handle_ems_data_request(data)
+
             else:
                 logger.warning(f"Unknown message type: {type}")
 
@@ -232,3 +237,37 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
         task.cancel()
 
         self._send_ack(base_message, ControlMessageType.DEVICE_CONTROL_CANCEL_SCHEDULE_ACK)
+
+    def handle_ems_data_request(self, data: dict):
+        read_message: ReadMessage = ReadMessage(data)
+
+        der = self.bb.devices.find_sn(read_message.sn)
+
+        if not der:
+            self._send_nack(read_message, "Device not found")
+            logger.error(f"Device not found: {read_message.sn}")
+            return
+
+        # self._send_ack(read_message, ControlMessageType.EMS_DATA_REQUEST_ACK)
+
+        logger.info(f"Device found: {der.get_name()}")
+
+        task = ControlDeviceTask(0, self.bb, read_message)
+        task.execute(0)
+
+        timestamp, crypto_sn, signature = self._create_signature()
+
+        data = {command.register: command.value for command in read_message.commands}
+
+        response_data = {
+            PayloadType.TYPE: ControlMessageType.EMS_DATA_RESPONSE,
+            PayloadType.PAYLOAD: {
+                PayloadType.DEVICE_NAME: self.crypto_state.device_name,
+                PayloadType.SERIAL_NUMBER: crypto_sn,
+                PayloadType.SIGNATURE: signature,
+                PayloadType.CREATED_AT: timestamp,
+                PayloadType.DATA: data
+            }
+        }
+
+        self.send_message(response_data)

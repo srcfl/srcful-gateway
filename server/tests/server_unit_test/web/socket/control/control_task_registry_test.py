@@ -1,5 +1,6 @@
 from server.web.socket.control.control_task_registry import TaskExecutionRegistry
-from server.web.socket.control.control_messages.control_message import ControlMessage, BaseMessage
+from server.web.socket.control.control_messages.base_message import BaseMessage
+from server.web.socket.control.control_messages.control_message import ControlMessage
 from server.tasks.control_device_task import ControlDeviceTask
 from server.tests.server_unit_test.web.socket.control.message_structure_test import ems_control_schedule_message
 from server.app.blackboard import BlackBoard

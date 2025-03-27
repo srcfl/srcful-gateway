@@ -1,9 +1,9 @@
 from typing import List, Dict, Any
 from server.devices.common.types import ModbusProtocol
 from server.devices.registerValue import RegisterValue
-import logging
+from server.web.socket.control.control_messages.modbus_message import ModbusMessage
 from server.web.socket.control.control_messages.types import PayloadType
-from server.web.socket.control.control_messages.base_message import BaseMessage
+import logging
 import time
 
 logger = logging.getLogger(__name__)
@@ -19,13 +19,9 @@ class Command:
         self.success: bool = False  # Optional, only used if the command is executed
 
 
-class ControlMessage(BaseMessage):
+class ControlMessage(ModbusMessage):
     def __init__(self, data: dict):
         super().__init__(data)
-        self.sn: str = self.payload.get(PayloadType.SN)
-        self.execute_at = self.payload.get(PayloadType.EXECUTE_AT)
-        self.protocol: str = self.payload.get(PayloadType.PROTOCOL)
-        self.retries: int = self.payload.get(PayloadType.RETRIES)
         self.commands: List[Command] = [Command(cmd) for cmd in self.payload.get(PayloadType.COMMANDS, [])]
 
         logger.debug(f"Initialized control message: {self.id}")
@@ -46,7 +42,3 @@ class ControlMessage(BaseMessage):
 
         except Exception as e:
             logger.error(f"Error executing control message: {e}")
-
-        finally:
-            # We return the control message object with the updated success status in each command
-            return self

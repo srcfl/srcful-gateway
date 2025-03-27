@@ -1,7 +1,7 @@
 import logging
 from server.app.blackboard import BlackBoard
 from .task import Task
-from server.web.socket.control.control_messages.control_message import ControlMessage
+from server.web.socket.control.control_messages.modbus_message import ModbusMessage
 from typing import List
 import time
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ class ControlDeviceTaskListener:
 
 
 class ControlDeviceTask(Task):
-    def __init__(self, event_time: int, bb: BlackBoard, control_message: ControlMessage):
+    def __init__(self, event_time: int, bb: BlackBoard, control_message: ModbusMessage):
         super().__init__(event_time, bb)
         self.control_message = control_message
         self.is_cancelled = False
@@ -48,8 +48,8 @@ class ControlDeviceTask(Task):
 
             logger.info(f"Executing control object with id: {self.control_message.id}, message: {self.control_message}")
 
-            self.control_message = self.control_message.process_commands(device)  # returns an updated control message
-            self.is_executed = True  # we have executed the task
+            self.control_message.process_commands(device)  # The message object is updated in place
+            self.is_executed = True
             self.executed_at_timestamp = self.bb.time_ms()
 
             for listener in self.listeners:
