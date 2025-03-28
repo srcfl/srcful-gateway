@@ -1,6 +1,7 @@
 from server.web.socket.control.control_messages.base_message import BaseMessage
 from server.web.socket.control.control_messages.auth_challenge_message import AuthChallengeMessage
 from server.web.socket.control.control_messages.control_message import ControlMessage
+from server.web.socket.control.control_messages.read_message import ReadMessage
 from server.web.socket.control.control_messages.types import ControlMessageType
 
 
@@ -45,6 +46,31 @@ ems_control_schedule_message = {
     }
 }
 
+ems_data_request_message = {
+    "type": "ems_data_request",
+    "payload": {
+        "id": 1356,
+        "sn": "2311286262",
+        "execute_at": "2025-03-14T15:00:00.000000",
+        "protocol": "modbus",
+        "commands": [
+            {
+                "register": 587,
+                "name": "Volts",
+                "description": "Battery voltage",
+                "num_of_registers": 1,
+                "function_code": 4,
+                "data_type": "U16",
+                "scale_factor": 0.1,
+                "endianness": "big"
+            }
+        ],
+        "serialNumber": "Sourceful-EMS",
+        "signature": "2a69d5eecf7c1f564e1be1e8b15711b009a66d5b8448e9b32ead40e5e741ec56294034d18212c260a5285beffcc0fef00708807e96cd296b3d0b301ddea1a45c",
+        "created_at": "2025-03-14T13:58:00.338870"
+    }
+}
+
 
 def test_ems_authentication_challenge_message():
     auth_challenge_message: AuthChallengeMessage = AuthChallengeMessage(ems_authentication_challenge_message)
@@ -77,3 +103,18 @@ def test_ems_control_schedule_message():
     assert control_schedule_message.serial_number == "Sourceful-EMS"
     assert control_schedule_message.signature == "2a69d5eecf7c1f564e1be1e8b15711b009a66d5b8448e9b32ead40e5e741ec56294034d18212c260a5285beffcc0fef00708807e96cd296b3d0b301ddea1a45c"
     assert control_schedule_message.created_at == "2025-03-14T13:58:00.338870"
+
+
+def test_ems_data_request_message():
+    data_request_message: ReadMessage = ReadMessage(ems_data_request_message)
+    assert data_request_message.type == ControlMessageType.EMS_DATA_REQUEST
+    assert data_request_message.id == 1356
+    assert data_request_message.sn == "2311286262"
+    assert data_request_message.execute_at == "2025-03-14T15:00:00.000000"
+    assert data_request_message.protocol == "modbus"
+
+    assert len(data_request_message.commands) == 1
+
+    assert data_request_message.serial_number == "Sourceful-EMS"
+    assert data_request_message.signature == "2a69d5eecf7c1f564e1be1e8b15711b009a66d5b8448e9b32ead40e5e741ec56294034d18212c260a5285beffcc0fef00708807e96cd296b3d0b301ddea1a45c"
+    assert data_request_message.created_at == "2025-03-14T13:58:00.338870"

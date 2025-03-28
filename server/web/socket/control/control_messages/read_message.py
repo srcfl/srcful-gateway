@@ -11,16 +11,27 @@ logger.setLevel(logging.INFO)
 
 
 class Command:
+    # Required fields
+    REQUIRED_FIELDS = {'register', 'function_code', 'num_of_registers', 'data_type'}
+
     def __init__(self, data: Dict[str, Any]):
+
+        missing_fields = self.REQUIRED_FIELDS - data.keys()
+        if missing_fields:
+            raise ValueError(f"Missing required fields: {missing_fields}")
+
+        # Required fields
         self.register: int = data['register']
-        self.name: str = data['name']
-        self.description: str = data['description']
         self.function_code: str = data['function_code']
         self.num_of_registers: int = data['num_of_registers']
         self.data_type: str = data['data_type']
-        self.scale_factor: float = data['scale_factor']
-        self.endianness: str = data['endianness']
-        self.value: float = data['value']  # Optional, only used if the command is executed
+
+        # Optional fields with defaults
+        self.name: str = data.get('name', '')
+        self.description: str = data.get('description', '')
+        self.scale_factor: float = data.get('scale_factor', 1.0)
+        self.endianness: str = data.get('endianness', 'big')
+        self.value: float = data.get('value', 0)  # Optional, only updated if the command is executed
 
 
 class ReadMessage(ModbusMessage):
