@@ -3,6 +3,7 @@ from server.web.socket.control.control_messages.modbus_message import ModbusMess
 from server.web.socket.control.control_messages.types import PayloadType
 from server.devices.common.types import ModbusProtocol
 from server.devices.registerValue import RegisterValue
+from server.devices.profile_keys import RegistersKey
 import logging
 import time
 
@@ -12,7 +13,7 @@ logger.setLevel(logging.INFO)
 
 class Command:
     # Required fields
-    REQUIRED_FIELDS = {'register', 'function_code', 'num_of_registers', 'data_type'}
+    REQUIRED_FIELDS = {RegistersKey.START_REGISTER, RegistersKey.NUM_OF_REGISTERS}
 
     def __init__(self, data: Dict[str, Any]):
 
@@ -21,16 +22,14 @@ class Command:
             raise ValueError(f"Missing required fields: {missing_fields}")
 
         # Required fields
-        self.register: int = data['register']
-        self.function_code: str = data['function_code']
-        self.num_of_registers: int = data['num_of_registers']
-        self.data_type: str = data['data_type']
+        self.register: int = data[RegistersKey.START_REGISTER]
+        self.function_code: str = data[RegistersKey.FUNCTION_CODE]
+        self.num_of_registers: int = data[RegistersKey.NUM_OF_REGISTERS]
 
         # Optional fields with defaults
-        self.name: str = data.get('name', '')
-        self.description: str = data.get('description', '')
-        self.scale_factor: float = data.get('scale_factor', 1.0)
-        self.endianness: str = data.get('endianness', 'big')
+        self.data_type: str = data[RegistersKey.DATA_TYPE]
+        self.scale_factor: float = data[RegistersKey.SCALE_FACTOR]
+        self.endianness: str = data[RegistersKey.ENDIANNESS]
         self.value: float = data.get('value', 0)  # Optional, only updated if the command is executed
 
 

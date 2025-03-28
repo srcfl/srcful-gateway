@@ -34,7 +34,7 @@ ems_control_schedule_message = {
         "protocol": "modbus",
         "commands": [
             {
-                "register": 143,
+                "start_register": 143,
                 "name": "Max Power",
                 "description": "Maximum power for discharging electricity (Low Vol: 1W, High Vol: 10W). 470 would be 4700W or 4.7kW",
                 "value": 72
@@ -55,9 +55,7 @@ ems_data_request_message = {
         "protocol": "modbus",
         "commands": [
             {
-                "register": 587,
-                "name": "Volts",
-                "description": "Battery voltage",
+                "start_register": 587,
                 "num_of_registers": 1,
                 "function_code": 4,
                 "data_type": "U16",

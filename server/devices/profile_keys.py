@@ -35,6 +35,7 @@ class RegistersKey(str, Enum):
     SCALE_FACTOR = 'scale_factor'
     ENDIANNESS = 'endianness'
     SCALE_FACTOR_REGISTER = 'scale_factor_register'
+    VALUE = 'value'
 
 
 class DataTypeKey(str, Enum):

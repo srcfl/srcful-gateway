@@ -3,6 +3,7 @@ from server.devices.common.types import ModbusProtocol
 from server.devices.registerValue import RegisterValue
 from server.web.socket.control.control_messages.modbus_message import ModbusMessage
 from server.web.socket.control.control_messages.types import PayloadType
+from server.devices.profile_keys import RegistersKey
 import logging
 import time
 
@@ -11,12 +12,21 @@ logger.setLevel(logging.DEBUG)
 
 
 class Command:
+
+    REQUIRED_FIELDS = {RegistersKey.START_REGISTER, RegistersKey.VALUE}
+
     def __init__(self, data: Dict[str, Any]):
-        self.register: int = data['register']
-        self.name: str = data['name']
-        self.description: str = data['description']
-        self.value: float = data['value']
-        self.success: bool = False  # Optional, only used if the command is executed
+
+        missing_fields = self.REQUIRED_FIELDS - data.keys()
+        if missing_fields:
+            raise ValueError(f"Missing required fields: {missing_fields}")
+
+        # Required fields
+        self.register: int = data[RegistersKey.START_REGISTER]
+        self.value: float = data[RegistersKey.VALUE]
+
+        # Optional fields with defaults
+        self.success: bool = False  # only updated if the command is executed
 
 
 class ControlMessage(ModbusMessage):

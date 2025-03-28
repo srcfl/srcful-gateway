@@ -17,7 +17,7 @@ def control_message():
             PayloadType.PROTOCOL: "modbus",
             PayloadType.COMMANDS: [
                 {
-                    "register": 1,
+                    "start_register": 1,
                     "name": "Fiddle stuff",
                     "description": "Fiddle stuff",
                     "value": 1337
