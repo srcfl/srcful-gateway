@@ -46,7 +46,7 @@ class ControlDeviceTask(Task):
                 logger.error(f"Device not found: {der_sn}")
                 return None
 
-            logger.info(f"Executing control object with id: {self.control_message.id}, message: {self.control_message}")
+            logger.info(f"Executing control object with id: {self.control_message.id}, message: {self.control_message.payload}")
 
             self.control_message.process_commands(device)  # The message object is updated in place
             self.is_executed = True

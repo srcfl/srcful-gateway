@@ -158,6 +158,10 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
                 logger.info("Received EMS data request")
                 self.handle_ems_data_request(data)
 
+            elif type == ControlMessageType.EMS_PRE_SETUP:
+                logger.info("Received EMS pre setup")
+                self.handle_ems_pre_setup(data)
+
             else:
                 logger.warning(f"Unknown message type: {type}")
 
@@ -257,12 +261,18 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
 
         timestamp, crypto_sn, signature = self._create_signature()
 
+        logger.info(f"Creating data response for message: {read_message.id}")
+        logger.info(f"Commands: {read_message.commands}, length: {len(read_message.commands)}")
+        for command in read_message.commands:
+            logger.info(f"Command: {command}, register: {command.register}, value: {command.value}")
+
         data = {command.register: command.value for command in read_message.commands}
 
         response_data = {
-            PayloadType.TYPE: ControlMessageType.EMS_DATA_RESPONSE,
+            PayloadType.TYPE: ControlMessageType.DEVICE_DATA_RESPONSE,
             PayloadType.PAYLOAD: {
                 PayloadType.DEVICE_NAME: self.crypto_state.device_name,
+                PayloadType.ID: read_message.id,
                 PayloadType.SERIAL_NUMBER: crypto_sn,
                 PayloadType.SIGNATURE: signature,
                 PayloadType.CREATED_AT: timestamp,
@@ -270,4 +280,9 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             }
         }
 
+        logger.info(f"Sending data response: {response_data}")
+
         self.send_message(response_data)
+
+    def handle_ems_pre_setup(self, data: dict):
+        self.handle_ems_control_schedule(data)

@@ -41,6 +41,9 @@ class ReadMessage(ModbusMessage):
         logger.debug(f"Initialized read message: {self.id}")
 
     def process_commands(self, device: ModbusProtocol):
+
+        logger.info(f"Processing commands: {self.commands}")
+
         try:
             for command in self.commands:
                 address = command.register
