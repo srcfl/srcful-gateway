@@ -26,6 +26,7 @@ class ProtocolKey(str, Enum):
 
 
 class RegistersKey(str, Enum):
+    NAME = 'name'
     FUNCTION_CODE = 'function_code'
     START_REGISTER = 'start_register'
     NUM_OF_REGISTERS = 'num_of_registers'

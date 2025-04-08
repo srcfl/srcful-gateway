@@ -9,8 +9,6 @@ logger.setLevel(logging.INFO)
 
 
 class ControlDeviceTaskListener:
-    def on_control_device_task_started(self, task: 'ControlDeviceTask'):
-        pass
 
     def on_control_device_task_completed(self, task: 'ControlDeviceTask'):
         pass

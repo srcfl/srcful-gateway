@@ -4,7 +4,7 @@ from server.app.blackboard import BlackBoard
 from unittest.mock import Mock
 import pytest
 from server.web.socket.control.control_messages.types import PayloadType, ControlMessageType
-from server.web.socket.control.control_messages.read_message import ReadMessage
+from server.devices.profile_keys import RegistersKey, DataTypeKey, EndiannessKey
 
 
 @pytest.fixture
@@ -18,10 +18,10 @@ def control_message():
             PayloadType.PROTOCOL: "modbus",
             PayloadType.COMMANDS: [
                 {
-                    "start_register": 1,
-                    "name": "Fiddle stuff",
-                    "description": "Fiddle stuff",
-                    "value": 1337
+                    RegistersKey.START_REGISTER: 1,
+                    RegistersKey.NAME: "Fiddle stuff",
+                    RegistersKey.DESCRIPTION: "Fiddle stuff",
+                    RegistersKey.VALUE: 1337
                 }
             ],
             PayloadType.SERIAL_NUMBER: "Sourceful-EMS",
@@ -41,14 +41,14 @@ def read_message():
             PayloadType.SN: "2311286262",
             PayloadType.COMMANDS: [
                 {
-                    "start_register": 587,
-                    "name": "Voltage",
-                    "description": "The current voltage of the battery",
-                    "num_of_registers": 1,
-                    "data_type": "U16",
-                    "scale_factor": 0.1,
-                    "endianness": "big",
-                    "function_code": 3
+                    RegistersKey.START_REGISTER: 587,
+                    RegistersKey.NAME: "Voltage",
+                    RegistersKey.DESCRIPTION: "The current voltage of the battery",
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.DATA_TYPE: DataTypeKey.U16,
+                    RegistersKey.SCALE_FACTOR: 0.1,
+                    RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+                    RegistersKey.FUNCTION_CODE: 3
                 }
             ],
             PayloadType.SERIAL_NUMBER: "Sourceful-EMS",

@@ -9,6 +9,8 @@ from server.crypto.crypto_state import CryptoState
 import pytest
 import server.tests.config_defaults as cfg
 from server.devices.ICom import ICom
+from server.web.socket.control.control_messages.types import PayloadType, ControlMessageType
+
 
 message_id = 563
 
@@ -29,13 +31,13 @@ def blackboard():
 def cancel_message():
     return BaseMessage(
         {
-            "type": "ems_control_schedule_cancel",
-            "payload": {
-                "id": message_id,
-                "sn": "2311286262",
-                "serialNumber": "Sourceful-EMS",
-                "signature": "88c0efa7577919952746bf38366f250bb9b336cf9e2961a5e21b60bd44267282976009a6b3400ed9825a725a090021a725866fc979aa935adde280b66e79be71",
-                "created_at": "2025-03-11T13:58:00.434799"
+            PayloadType.TYPE: ControlMessageType.EMS_CONTROL_SCHEDULE_CANCEL,
+            PayloadType.PAYLOAD: {
+                PayloadType.ID: message_id,
+                PayloadType.SN: "2311286262",
+                PayloadType.SERIAL_NUMBER: "Sourceful-EMS",
+                PayloadType.SIGNATURE: "88c0efa7577919952746bf38366f250bb9b336cf9e2961a5e21b60bd44267282976009a6b3400ed9825a725a090021a725866fc979aa935adde280b66e79be71",
+                PayloadType.CREATED_AT: "2025-03-11T13:58:00.434799"
             }
         }
     )
@@ -50,12 +52,13 @@ def open_device():
     return device
 
 
-def test_update_task(control_message, blackboard):
+def test_add_task(control_message, blackboard):
     registry = TaskExecutionRegistry()
     task = ControlDeviceTask(blackboard.time_ms(), blackboard, control_message)
     registry.add_task(task)
 
-    assert len(registry.get_tasks()) == 1
+    assert registry.size == 1
+
     assert registry.get_task(control_message.id) == task
 
 
@@ -64,8 +67,6 @@ def test_task_cacelled_from_registry(control_message, blackboard, cancel_message
     task = ControlDeviceTask(blackboard.time_ms(), blackboard, control_message)
     registry.add_task(task)
 
-    task = registry.get_task(cancel_message.id)
-
-    task.cancel()
+    registry.get_task(cancel_message.id).cancel()
 
     assert registry.get_task(cancel_message.id).is_cancelled

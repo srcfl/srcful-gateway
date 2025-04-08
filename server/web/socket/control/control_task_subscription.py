@@ -103,15 +103,12 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
         logger.info(f"Sending NACK for message: {message.id}, Type: {message.type}, signature: {message.signature}")
         self.send_message(nack_data)
 
-    def on_control_device_task_started(self, task: ControlDeviceTask):
-        self.task_registry.add_task(task)
-
     def on_control_device_task_completed(self, task: ControlDeviceTask):
         # If task is executed, send an ACK and update the task registry, else send a NACK
         if task.is_executed:
             self._send_ack(task.control_message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_DONE)
             task.is_acked = True
-            self.task_registry.update_task(task)
+            # self.task_registry.update_task(task)
         else:
             self._send_nack(task.control_message, "Task not executed")
             task.is_nacked = True
@@ -206,6 +203,7 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             logger.error(f"Device not found: {control_message.sn}")
             return
 
+        # TODO:
         # Perhaps we should not just ACK here, but also make sure the device is open.
         # Who is responsible for this?
         self._send_ack(control_message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_ACK)
@@ -251,8 +249,6 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
             self._send_nack(read_message, "Device not found")
             logger.error(f"Device not found: {read_message.sn}")
             return
-
-        # self._send_ack(read_message, ControlMessageType.EMS_DATA_REQUEST_ACK)
 
         logger.info(f"Device found: {der.get_name()}")
 
