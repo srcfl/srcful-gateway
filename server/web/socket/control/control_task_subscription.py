@@ -104,13 +104,16 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
         self.send_message(nack_data)
 
     def on_control_device_task_completed(self, task: ControlDeviceTask):
-        # If task is executed, send an ACK and update the task registry, else send a NACK
+        # Send an ACK or NACK based on whether the task was executed successfully
         if task.is_executed:
-            self._send_ack(task.control_message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_DONE)
-            task.is_acked = True
-            # self.task_registry.update_task(task)
+            if task.executed_successfully:
+                self._send_ack(task.message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_DONE)
+                task.is_acked = True
+            else:
+                self._send_nack(task.message, "Task not executed successfully")
+                task.is_nacked = True
         else:
-            self._send_nack(task.control_message, "Task not executed")
+            self._send_nack(task.message, "Task not executed")
             task.is_nacked = True
 
     def on_message(self, ws, message):

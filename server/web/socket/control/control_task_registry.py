@@ -21,4 +21,4 @@ class TaskExecutionRegistry:
 
     def get_task(self, message_id: int) -> ControlDeviceTask | None:
         """Retrieves a task by its message ID"""
-        return next((t for t in self._registry if t.control_message.id == message_id), None)
+        return next((t for t in self._registry if t.message.id == message_id), None)

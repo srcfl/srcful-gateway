@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from server.web.socket.control.control_messages.modbus_message import ModbusMessage
+from server.web.socket.control.control_messages.modbus_message import ModbusMessage, ModbusCommand
 from server.web.socket.control.control_messages.types import PayloadType
 from server.devices.common.types import ModbusProtocol
 from server.devices.registerValue import RegisterValue
@@ -11,11 +11,12 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class Command:
+class Command(ModbusCommand):
     # Required fields
     REQUIRED_FIELDS = {RegistersKey.START_REGISTER, RegistersKey.NUM_OF_REGISTERS}
 
     def __init__(self, data: Dict[str, Any]):
+        super().__init__(data)
 
         missing_fields = self.REQUIRED_FIELDS - data.keys()
         if missing_fields:
@@ -61,7 +62,10 @@ class ReadMessage(ModbusMessage):
                                     endianness=endianness)
 
                 raw, swapped, value = reg.read_value(device=device)
+
                 command.value = value
+
+                command.success = len(raw) > 0  # 0 bytes means the read was not successful
 
                 logger.info(f"Read value {value} from address {address}")
                 time.sleep(0.1)

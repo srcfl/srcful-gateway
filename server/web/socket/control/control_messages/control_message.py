@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from server.devices.common.types import ModbusProtocol
 from server.devices.registerValue import RegisterValue
-from server.web.socket.control.control_messages.modbus_message import ModbusMessage
+from server.web.socket.control.control_messages.modbus_message import ModbusMessage, ModbusCommand
 from server.web.socket.control.control_messages.types import PayloadType
 from server.devices.profile_keys import RegistersKey
 import logging
@@ -11,11 +11,12 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class Command:
+class Command(ModbusCommand):
 
     REQUIRED_FIELDS = {RegistersKey.START_REGISTER, RegistersKey.VALUE}
 
     def __init__(self, data: Dict[str, Any]):
+        super().__init__(data)
 
         missing_fields = self.REQUIRED_FIELDS - data.keys()
         if missing_fields:
@@ -24,9 +25,6 @@ class Command:
         # Required fields
         self.register: int = data[RegistersKey.START_REGISTER]
         self.value: float = data[RegistersKey.VALUE]
-
-        # Optional fields with defaults
-        self.success: bool = False  # only updated if the command is executed
 
 
 class ControlMessage(ModbusMessage):
@@ -44,10 +42,10 @@ class ControlMessage(ModbusMessage):
 
                 logger.debug(f"Writing value {value} to address {address}")
 
-                res = RegisterValue.write_single(device=device, address=address, value=value)
-                command.success = res
+                command.success = RegisterValue.write_single(device=device, address=address, value=value)
 
                 logger.debug(f"Wrote value {value} to address {address}")
+
                 time.sleep(0.1)
 
         except Exception as e:
