@@ -217,13 +217,83 @@ supported_devices = {
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 4989,
-                    RegistersKey.NUM_OF_REGISTERS: 120,
+                    RegistersKey.START_REGISTER: 4949,
+                    RegistersKey.NUM_OF_REGISTERS: 87,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 5112,
-                    RegistersKey.NUM_OF_REGISTERS: 50,
+                    RegistersKey.START_REGISTER: 5621,
+                    RegistersKey.NUM_OF_REGISTERS: 15,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6099,
+                    RegistersKey.NUM_OF_REGISTERS: 96,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6195,
+                    RegistersKey.NUM_OF_REGISTERS: 94,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6289,
+                    RegistersKey.NUM_OF_REGISTERS: 96,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6385,
+                    RegistersKey.NUM_OF_REGISTERS: 83,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6468,
+                    RegistersKey.NUM_OF_REGISTERS: 96,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6564,
+                    RegistersKey.NUM_OF_REGISTERS: 83,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6647,
+                    RegistersKey.NUM_OF_REGISTERS: 96,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6743,
+                    RegistersKey.NUM_OF_REGISTERS: 83,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 12999,
+                    RegistersKey.NUM_OF_REGISTERS: 119,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 13049,
+                    RegistersKey.NUM_OF_REGISTERS: 51,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 33041,
+                    RegistersKey.NUM_OF_REGISTERS: 7,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 33147,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 31221,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 33207,
+                    RegistersKey.NUM_OF_REGISTERS: 2,
                 },
             ],
             ProfileKey.REGISTERS: [
@@ -271,13 +341,58 @@ supported_devices = {
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 4989,
-                    RegistersKey.NUM_OF_REGISTERS: 120,
+                    RegistersKey.START_REGISTER: 4949,
+                    RegistersKey.NUM_OF_REGISTERS: 87,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 5112,
-                    RegistersKey.NUM_OF_REGISTERS: 50,
+                    RegistersKey.START_REGISTER: 5621,
+                    RegistersKey.NUM_OF_REGISTERS: 15,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6099,
+                    RegistersKey.NUM_OF_REGISTERS: 96,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6195,
+                    RegistersKey.NUM_OF_REGISTERS: 94,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6289,
+                    RegistersKey.NUM_OF_REGISTERS: 96,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6385,
+                    RegistersKey.NUM_OF_REGISTERS: 83,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6468,
+                    RegistersKey.NUM_OF_REGISTERS: 96,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6564,
+                    RegistersKey.NUM_OF_REGISTERS: 83,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6647,
+                    RegistersKey.NUM_OF_REGISTERS: 96,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 6743,
+                    RegistersKey.NUM_OF_REGISTERS: 83,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 12999,
+                    RegistersKey.NUM_OF_REGISTERS: 119,
                 },
             ],
             ProfileKey.REGISTERS: [
