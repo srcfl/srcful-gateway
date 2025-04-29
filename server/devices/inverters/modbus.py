@@ -8,7 +8,7 @@ from ..supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
 from server.devices.profile_keys import FunctionCodeKey, DeviceCategoryKey
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class Modbus(Device, ABC):
@@ -75,6 +75,8 @@ class Modbus(Device, ABC):
             scan_range = entry.offset
             scale_factor_register = entry.scale_factor_register
 
+            logger.debug("OK - Reading registers: %s-%s", scan_start, scan_start + scan_range)
+
             r = self._populate_registers(scan_start, scan_range)
             v = self.read_registers(operation, scan_start, scan_range)
 
@@ -82,13 +84,15 @@ class Modbus(Device, ABC):
                 r += [scale_factor_register]
                 v += self.read_registers(operation, scale_factor_register, 1)
 
+            logger.debug("OK - Reading Harvest Data: %s", str(v))
+
             regs += r
             vals += v
 
         # Zip the registers and values together convert them into a dictionary
         res = dict(zip(regs, vals))
 
-        logger.debug("OK - Reading Harvest Data: %s", str(res))
+        logger.debug("OK - Harvest Data: %s", str(res))
 
         if res:
             return res
