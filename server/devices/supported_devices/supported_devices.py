@@ -28,6 +28,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -82,6 +83,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -148,6 +150,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -214,6 +217,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
@@ -338,6 +342,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
@@ -437,6 +442,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
@@ -501,6 +507,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -550,6 +557,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -601,6 +609,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [0],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -680,6 +689,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -749,6 +759,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
@@ -813,6 +824,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -877,6 +889,7 @@ supported_devices = {
             ProfileKey.DISPLAY_NAME: "Ferroamp",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "Another inverter profile...",
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
@@ -1056,6 +1069,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
@@ -1185,6 +1199,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
@@ -1354,6 +1369,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
@@ -1443,6 +1459,7 @@ supported_devices = {
                 RegistersKey.SCALE_FACTOR: 1,
                 RegistersKey.ENDIANNESS: EndiannessKey.BIG,
             },
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 # The holding registers are not used in this case since they will be overwritten by the
                 # input registers due to overlapping register addresses.
@@ -1519,6 +1536,7 @@ supported_devices = {
             ProfileKey.DISPLAY_NAME: "Unknown",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "Unknown device profile...",
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [],
             ProfileKey.REGISTERS: [
                 {
@@ -1544,6 +1562,7 @@ supported_devices = {
             ProfileKey.DISPLAY_NAME: "LQT40S",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "Another meter profile...",
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
@@ -1583,6 +1602,7 @@ supported_devices = {
             ProfileKey.DISPLAY_NAME: "SDM630",
             ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
             ProfileKey.DESCRIPTION: "Another meter profile...",
+            ProfileKey.ALWAYS_INCLUDE: [],
             ProfileKey.REGISTERS_VERBOSE: [
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,

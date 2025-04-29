@@ -16,6 +16,7 @@ class ProfileKey(str, Enum):
     BASE_URL = 'base_url'
     ENDPOINTS = 'endpoints'
     KEYWORDS = 'keywords'
+    ALWAYS_INCLUDE = 'always_include'
 
 
 class ProtocolKey(str, Enum):

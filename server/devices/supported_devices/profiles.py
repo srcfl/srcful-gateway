@@ -18,6 +18,7 @@ class DeviceProfile(ABC):
         self.protocol: str = profile_data[ProfileKey.PROTOCOL]
         self.description: str = profile_data[ProfileKey.DESCRIPTION]
         self.keywords: List[str] = profile_data[ProfileKey.KEYWORDS]
+        self.always_include: List[int] = profile_data[ProfileKey.ALWAYS_INCLUDE]
 
 
 class RegisterInterval:
