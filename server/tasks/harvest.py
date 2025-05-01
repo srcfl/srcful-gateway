@@ -60,12 +60,11 @@ class Harvest(Task):
         except Exception as e:
 
             # To-Do: Solarmanv5 can raise ConnectionResetError, so handle it!
-            logger.debug("Handling exception reading harvest: %s", str(e))
-            logger.debug("Kill everything, transport what is left and reopen in 30 seconds")
 
             self.device.disconnect()
 
-            open_inverter = DevicePerpetualTask(self.bb.time_ms() + 30000, self.bb, self.device.clone())
+            clone = self.device.clone()
+            open_inverter = DevicePerpetualTask(self.bb.time_ms() + 30000, self.bb, clone)
             transports = self._create_transport(self.bb.time_ms(), self.bb.settings.harvest.endpoints, force_transport=True)
 
             return [open_inverter] + transports
