@@ -104,7 +104,8 @@ class ModbusSolarman(ModbusTCP):
             log.error("Error opening inverter: %s", self.get_config())
             return False
 
-        self.sn = self._read_SN()
+        if self.sn is None:
+            self.sn = self._read_SN()
 
         return bool(self.client.sock) and self.mac != NetworkUtils.INVALID_MAC and self.sn is not None
 
@@ -149,10 +150,10 @@ class ModbusSolarman(ModbusTCP):
         super_config = super().get_config()
 
         my_config = {
-            self.SN: self.sn,
             self.LOGGER_SN: self.logger_sn,
             self.VERBOSE: self.verbose
         }
+
         return {**super_config, **my_config}
 
     def _get_connection_type(self) -> str:

@@ -58,6 +58,8 @@ class Modbus(Device, ABC):
                 self.profile: ModbusProfile = ModbusDeviceProfiles(
                     device_category=DeviceCategoryKey.METERS).get(self.device_type)
 
+        self.always_included = {}  # This is populated every time we do a verbose read
+
     def _read_harvest_data(self, force_verbose: bool) -> dict:
         regs = []
         vals = []
@@ -92,7 +94,15 @@ class Modbus(Device, ABC):
         # Zip the registers and values together convert them into a dictionary
         res = dict(zip(regs, vals))
 
-        logger.debug("OK - Harvest Data: %s", str(res))
+        if force_verbose or self.profile.verbose_always:
+            for i in self.profile.always_include:
+                if i in res:
+                    self.always_included[i] = res[i]
+        else:
+            # Merge the always-included data with the non-verbose res dictionary
+            res = {**self.always_included, **res}
+
+        logger.debug("OK - Reading Harvest Data: %s", str(res))
 
         if res:
             return res

@@ -37,14 +37,13 @@ class Device(ICom, ABC):
         backoff_time = max(int(previous_backoff_time_ms * .9), min_backoff_time)
         backoff_time = min(backoff_time, 256000)
         return backoff_time
-    
+
     def is_open(self) -> bool:
         return self.is_disconnected() != True and self._is_open()
 
     @abstractmethod
     def _read_harvest_data(self, force_verbose) -> dict:
         pass
-
 
     @abstractmethod
     def _disconnect(self) -> None:

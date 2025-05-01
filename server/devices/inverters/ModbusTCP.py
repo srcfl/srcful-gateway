@@ -107,6 +107,7 @@ class ModbusTCP(Modbus, TCPDevice):
 
     def _connect(self, **kwargs) -> bool:
         self._create_client(**kwargs)
+
         if not self.client.connect():
             log.error("FAILED to open Modbus TCP device: %s", self._get_type())
             return False
@@ -235,7 +236,7 @@ class ModbusTCP(Modbus, TCPDevice):
             return value
 
         except Exception as e:
-            log.error(f"Error reading frequency: {str(e)}")
+            log.error(f"Error reading register: {register.start_register}")
             self.disconnect()
             return None
 

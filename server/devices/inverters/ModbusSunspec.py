@@ -112,7 +112,8 @@ class ModbusSunspec(TCPDevice):
             return False
 
         try:
-            self.sn = self.client.common[0].SN.value
+            if self.sn is None:
+                self.sn = self.client.common[0].SN.value
         except KeyError:
             logger.warning("Could not get serial number")
             return False

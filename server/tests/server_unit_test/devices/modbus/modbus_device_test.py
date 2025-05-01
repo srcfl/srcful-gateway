@@ -8,8 +8,6 @@ import server.tests.config_defaults as cfg
 from unittest.mock import patch
 import pytest
 
-# Patch the Sunspec connection
-
 
 @pytest.fixture
 def sunspec_device():
