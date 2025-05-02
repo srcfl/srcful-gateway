@@ -123,7 +123,7 @@ class P1HomeWizard(TCPDevice):
 
     def _read_harvest_data(self, force_verbose) -> dict:
         try:
-            p1_message = requests.get(f"{self.api_url}{self.endpoint}", timeout=2)
+            p1_message = requests.get(f"{self.api_url}{self.endpoint}", timeout=5)
             p1_message.raise_for_status()
 
             return self._parse_p1_message(p1_message.text)

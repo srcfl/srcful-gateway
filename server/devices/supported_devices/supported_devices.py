@@ -53,7 +53,12 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 47000,
-                    RegistersKey.NUM_OF_REGISTERS: 100,
+                    RegistersKey.NUM_OF_REGISTERS: 1,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                    RegistersKey.START_REGISTER: 47028,
+                    RegistersKey.NUM_OF_REGISTERS: 62,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,

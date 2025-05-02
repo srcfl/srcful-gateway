@@ -48,7 +48,7 @@ class Modbus(Device, ABC):
         self.slave_id = kwargs.get(self.SLAVE_ID, None)
         self.device_type = kwargs.get(self.DEVICE_TYPE, None)
 
-        logger.debug("Device Type: %s", str(self.device_type))
+        logger.info("Device Type: %s", str(self.device_type))
 
         if self.device_type:
             self.device_type = self.device_type.lower()
@@ -77,16 +77,12 @@ class Modbus(Device, ABC):
             scan_range = entry.offset
             scale_factor_register = entry.scale_factor_register
 
-            logger.debug("OK - Reading registers: %s-%s", scan_start, scan_start + scan_range)
-
             r = self._populate_registers(scan_start, scan_range)
             v = self.read_registers(operation, scan_start, scan_range)
 
             if scale_factor_register:
                 r += [scale_factor_register]
                 v += self.read_registers(operation, scale_factor_register, 1)
-
-            logger.debug("OK - Reading Harvest Data: %s", str(v))
 
             regs += r
             vals += v
@@ -102,7 +98,7 @@ class Modbus(Device, ABC):
             # Merge the always-included data with the non-verbose res dictionary
             res = {**self.always_included, **res}
 
-        logger.debug("OK - Reading Harvest Data: %s", str(res))
+        logger.info("Harvest payload: %s", str(res))
 
         if res:
             return res
@@ -129,7 +125,7 @@ class Modbus(Device, ABC):
         try:
             logger.debug("Reading %s: %s - %s", self.device_type, str(scan_start), str(scan_range))
             resp = self._read_registers(function_code, scan_start, scan_range)
-            logger.debug("OK - Reading %s: %s - %s", self.device_type, str(scan_start), str(scan_range))
+            logger.debug("OK - Reading %s: %s", self.device_type, str(resp))
 
         except ModbusException as me:
             # Decide whether to break or continue based on the type of ModbusException
