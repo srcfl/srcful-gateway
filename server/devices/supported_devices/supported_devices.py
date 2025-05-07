@@ -286,8 +286,13 @@ supported_devices = {
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-                    RegistersKey.START_REGISTER: 5621,
-                    RegistersKey.NUM_OF_REGISTERS: 15,
+                    RegistersKey.START_REGISTER: 5213,
+                    RegistersKey.NUM_OF_REGISTERS: 28,
+                },
+                {
+                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+                    RegistersKey.START_REGISTER: 5602,
+                    RegistersKey.NUM_OF_REGISTERS: 36,
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
