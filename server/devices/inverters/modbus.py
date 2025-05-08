@@ -8,7 +8,7 @@ from ..supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
 from server.devices.profile_keys import FunctionCodeKey, DeviceCategoryKey
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class Modbus(Device, ABC):
@@ -98,7 +98,7 @@ class Modbus(Device, ABC):
             # Merge the always-included data with the non-verbose res dictionary
             res = {**self.always_included, **res}
 
-        logger.info("Harvest payload: %s", str(res))
+        logger.debug("Harvest payload: %s", str(res))
 
         if res:
             return res

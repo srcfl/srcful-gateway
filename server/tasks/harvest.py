@@ -56,7 +56,7 @@ class Harvest(Task):
 
             elapsed_time_ms = end_time - start_time
             self.backoff_time = self.device.get_backoff_time_ms(elapsed_time_ms, self.backoff_time)
-            logger.debug("Harvest from [%s] took %s ms", self.device.get_SN(), elapsed_time_ms)
+            logger.debug("Harvest from [%s] took %s ms. Data points: %s", self.device.get_SN(), elapsed_time_ms, len(harvest))
 
             self.total_harvest_time_ms += elapsed_time_ms
 
@@ -97,8 +97,8 @@ class Harvest(Task):
             force_transport = self.bb.time_ms() - self.last_transport_time >= 10000
 
         if (len(self.barn) > 0 and force_transport):
+            logger.info("Filling the barn took %s ms for [%s] to endpoint %s", self.total_harvest_time_ms, self.device.get_SN(), endpoints)
             for endpoint in endpoints:
-                logger.info("Filling the barn took %s ms, creating transport for %s", self.total_harvest_time_ms, endpoint)
 
                 headers = self._create_headers(self.device)
 
@@ -110,7 +110,7 @@ class Harvest(Task):
                 self.data_points_count += len(self.barn)
 
             if self.bb.time_ms() >= self.packet_counter_timestamp + 60000:
-                logger.info("Sent %s packets in the last minute, %s data points from device %s", self.packet_count, self.data_points_count, self.device.get_SN())
+                logger.info("A total of [%s] data points were harvested from device [%s] in the last minute and [%s] packets were sent", self.data_points_count, self.device.get_SN(), self.packet_count)
                 self.packet_counter_timestamp = self.bb.time_ms()
                 self.packet_count = 0
                 self.data_points_count = 0
