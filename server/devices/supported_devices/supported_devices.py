@@ -686,16 +686,16 @@ supported_devices = {
                     RegistersKey.START_REGISTER: 125,
                     RegistersKey.NUM_OF_REGISTERS: 125,
                 },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 250,
-                    RegistersKey.NUM_OF_REGISTERS: 125,
-                },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 375,
-                    RegistersKey.NUM_OF_REGISTERS: 125,
-                },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 250,
+                #     RegistersKey.NUM_OF_REGISTERS: 125,
+                # },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 375,
+                #     RegistersKey.NUM_OF_REGISTERS: 125,
+                # },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 500,
@@ -706,11 +706,11 @@ supported_devices = {
                     RegistersKey.START_REGISTER: 625,
                     RegistersKey.NUM_OF_REGISTERS: 125,
                 },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 750,
-                    RegistersKey.NUM_OF_REGISTERS: 51,
-                },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 750,
+                #     RegistersKey.NUM_OF_REGISTERS: 51,
+                # },
             ],
             ProfileKey.REGISTERS: [
                 {
@@ -726,7 +726,7 @@ supported_devices = {
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 672,
-                    RegistersKey.NUM_OF_REGISTERS: 2,
+                    RegistersKey.NUM_OF_REGISTERS: 4,
                     RegistersKey.DATA_TYPE: DataTypeKey.U16,
                     RegistersKey.UNIT: "W",
                     RegistersKey.DESCRIPTION: "DC Power",

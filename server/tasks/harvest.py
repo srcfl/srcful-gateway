@@ -17,11 +17,14 @@ class Harvest(Task):
         super().__init__(event_time, bb)
         self.device = device
         self.barn: dict[int, dict] = {}
-
         self.backoff_time = 1000  # start with a 1-second backoff
         self.transport_factory = transport_factory
         self.last_transport_time = bb.time_ms()
         self.harvest_count = 0
+        self.total_harvest_time_ms = 0
+        self.packet_count = 0
+        self.data_points_count = 0
+        self.packet_counter_timestamp = event_time
 
     def execute(self, event_time) -> Union[List[ITask], ITask, None]:
 
@@ -54,6 +57,8 @@ class Harvest(Task):
             elapsed_time_ms = end_time - start_time
             self.backoff_time = self.device.get_backoff_time_ms(elapsed_time_ms, self.backoff_time)
             logger.debug("Harvest from [%s] took %s ms", self.device.get_SN(), elapsed_time_ms)
+
+            self.total_harvest_time_ms += elapsed_time_ms
 
             self.barn[end_time] = harvest
 
@@ -93,7 +98,7 @@ class Harvest(Task):
 
         if (len(self.barn) > 0 and force_transport):
             for endpoint in endpoints:
-                logger.info("Creating transport for %s", endpoint)
+                logger.info("Filling the barn took %s ms, creating transport for %s", self.total_harvest_time_ms, endpoint)
 
                 headers = self._create_headers(self.device)
 
@@ -101,6 +106,17 @@ class Harvest(Task):
                 transport.post_url = endpoint
                 ret.append(transport)
 
+                self.packet_count += 1
+                self.data_points_count += len(self.barn)
+
+            if self.bb.time_ms() >= self.packet_counter_timestamp + 60000:
+                logger.info("Sent %s packets in the last minute, %s data points from device %s", self.packet_count, self.data_points_count, self.device.get_SN())
+                self.packet_counter_timestamp = self.bb.time_ms()
+                self.packet_count = 0
+                self.data_points_count = 0
+
             self.last_transport_time = self.bb.time_ms()
             self.barn = {}
+            self.total_harvest_time_ms = 0
+
         return ret
