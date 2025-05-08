@@ -107,7 +107,7 @@ def test_is_open_disconnected():
     enphase.make_get_request = Mock(return_value=mock_response)
 
     enphase._get_bearer_token = Mock(return_value="1234567890")
-    enphase._read_device_info = Mock(return_value="1234567890")
+    enphase._read_SN = Mock(return_value="1234567890")
 
     NetworkUtils.get_mac_from_ip = Mock(return_value="1:1:1:1:1:1")
 

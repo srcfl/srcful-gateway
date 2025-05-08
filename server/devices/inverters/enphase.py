@@ -87,7 +87,7 @@ class Enphase(TCPDevice):
 
         self.username: str = kwargs.get(self.username_key(), "")
         self.password: str = kwargs.get(self.password_key(), "")
-        self.iq_gw_serial: str = kwargs.get(self.iq_gw_serial_key(), "")
+        self.iq_gw_serial: str = kwargs.get(self.iq_gw_serial_key(), None)
         self.bearer_token: str = kwargs.get(self.bearer_token_key(), "")
 
         ip: str = kwargs.get(self.IP, None)
@@ -98,7 +98,7 @@ class Enphase(TCPDevice):
         self.session: requests.Session = None
         self.mac: str = kwargs.get(NetworkUtils.MAC_KEY, NetworkUtils.INVALID_MAC)
 
-    def _read_device_info(self) -> Optional[str]:
+    def _read_SN(self) -> Optional[str]:
         """Read device information from the info.xml endpoint.
 
         Returns:
@@ -141,7 +141,9 @@ class Enphase(TCPDevice):
         self.session.headers = {"Authorization": f"Bearer {self.bearer_token}"}
 
         # Get device info to read serial number
-        self.iq_gw_serial = self._read_device_info()
+        if self.iq_gw_serial is None:
+            self.iq_gw_serial = self._read_SN()
+
         if not self.iq_gw_serial:
             return False
 
