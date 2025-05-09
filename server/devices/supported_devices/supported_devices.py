@@ -52,54 +52,54 @@ supported_devices = {
                 },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 47000,
-                    RegistersKey.NUM_OF_REGISTERS: 1,
+                    RegistersKey.START_REGISTER: 37100,
+                    RegistersKey.NUM_OF_REGISTERS: 39,
                 },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 47000,
+                #     RegistersKey.NUM_OF_REGISTERS: 1,
+                # },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 47028,
                     RegistersKey.NUM_OF_REGISTERS: 62,
                 },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 47100,
-                    RegistersKey.NUM_OF_REGISTERS: 10,
-                },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 47100,
+                #     RegistersKey.NUM_OF_REGISTERS: 10,
+                # },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 47242,
                     RegistersKey.NUM_OF_REGISTERS: 9,
                 },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 47299,
-                    RegistersKey.NUM_OF_REGISTERS: 1,
-                },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 47299,
+                #     RegistersKey.NUM_OF_REGISTERS: 1,
+                # },
                 {
                     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
                     RegistersKey.START_REGISTER: 47415,
                     RegistersKey.NUM_OF_REGISTERS: 20,
                 },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 47590,
-                    RegistersKey.NUM_OF_REGISTERS: 2,
-                },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 47604,
-                    RegistersKey.NUM_OF_REGISTERS: 2,
-                },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 47750,
-                    RegistersKey.NUM_OF_REGISTERS: 6,
-                },
-                {
-                    RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-                    RegistersKey.START_REGISTER: 37100,
-                    RegistersKey.NUM_OF_REGISTERS: 39,
-                }
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 47590,
+                #     RegistersKey.NUM_OF_REGISTERS: 2,
+                # },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 47604,
+                #     RegistersKey.NUM_OF_REGISTERS: 2,
+                # },
+                # {
+                #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+                #     RegistersKey.START_REGISTER: 47750,
+                #     RegistersKey.NUM_OF_REGISTERS: 6,
+                # }
             ],
             ProfileKey.REGISTERS: [
                 {
