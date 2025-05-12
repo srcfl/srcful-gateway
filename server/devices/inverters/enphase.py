@@ -219,7 +219,7 @@ class Enphase(TCPDevice):
     def get_config(self) -> dict:
         return {
             **super().get_config(),
-            self.iq_gw_serial_key(): self.get_SN(),
+            self.iq_gw_serial_key(): self.iq_gw_serial,
             self.mac_key(): self.mac,
             self.bearer_token_key(): self.bearer_token
         }
