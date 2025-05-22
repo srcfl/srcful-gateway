@@ -56,7 +56,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._available_hosts = []
 
     def get_version(self) -> str:
-        return "0.22.2"
+        return "0.22.4"
 
     def add_task(self, task: ITask):
         self._tasks.append(task)

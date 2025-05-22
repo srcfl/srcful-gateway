@@ -219,7 +219,7 @@ class Enphase(TCPDevice):
     def get_config(self) -> dict:
         return {
             **super().get_config(),
-            self.iq_gw_serial_key(): self.get_SN(),
+            self.iq_gw_serial_key(): self.iq_gw_serial,
             self.mac_key(): self.mac,
             self.bearer_token_key(): self.bearer_token
         }
@@ -252,8 +252,14 @@ class Enphase(TCPDevice):
         if len(res) == 0:
             return None
         res: ServiceResult = res[0]
-        host: HostInfo = HostInfo(res.address, res.port, '')
-        return Enphase(ip=host.ip, port=host.port, bearer_token=self.bearer_token)
+        mac = NetworkUtils.get_mac_from_ip(res.address)
+        host: HostInfo = HostInfo(res.address, res.port, mac)
+
+        clone = self._clone_with_host(host)
+        if clone is not None:
+            return clone
+
+        return None
 
     def get_SN(self) -> str:
         return self.iq_gw_serial

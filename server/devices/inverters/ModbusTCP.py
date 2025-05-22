@@ -119,8 +119,7 @@ class ModbusTCP(Modbus, TCPDevice):
         # A short delay is necessary for some devices before a new connection can be established
         time.sleep(1)
 
-        # If the serial number is not set, or if its set to the MAC address (for version < 0.18.16), read the serial number from the device
-        if self.sn is None or self.sn == self.mac:
+        if self.sn is None:
             log.info("Reading SN from device")
             self.sn = self._read_SN()
 

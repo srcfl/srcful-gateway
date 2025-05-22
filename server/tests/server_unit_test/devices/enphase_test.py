@@ -5,7 +5,8 @@ from server.network.network_utils import HostInfo
 from server.network.network_utils import NetworkUtils
 import server.tests.config_defaults as cfg
 import pytest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+from server.network.mdns.mdns import ServiceResult
 
 
 @pytest.fixture
@@ -128,3 +129,27 @@ def test_disconnect(enphase):
     mock_session.close.assert_called_once()
     assert enphase.is_disconnected()
     assert not enphase.is_open()
+
+
+def test_find_device_with_mdns():
+
+    enphase = Enphase(**cfg.ENPHASE_CONFIG)
+
+    mock_service_result = ServiceResult(
+        name="envoy._enphase-envoy._tcp.local.",
+        address="192.168.1.100",
+        port=80,
+        properties={"serialnum".encode(): "123456".encode()}
+    )
+
+    NetworkUtils.get_mac_from_ip = Mock(return_value="00:00:00:00:00:00")
+
+    assert enphase.ip == "localhost"
+
+    with patch('server.network.mdns.mdns.scan', return_value=[mock_service_result]):
+        found_device = enphase.find_device()  # a new instance of Enphase with the new ip
+        assert found_device is not None
+        assert found_device.ip == "192.168.1.100"
+        assert found_device.port == 80
+        assert found_device.mac == enphase.mac
+        assert found_device.bearer_token == enphase.bearer_token
