@@ -230,7 +230,7 @@ class ModbusTCP(Modbus, TCPDevice):
 
             # Read and interpret value
             a, b, value = reg_value.read_value(self)
-            log.debug("Values read in the format of [raw, raw, value]: %s, %s, %s", a, b, value)
+            log.debug("Values read from %s %s in the format of [raw, raw, value]: %s, %s, %s", self.device_type, self.sn, a, b, value)
 
             return value
 
