@@ -1,51 +1,51 @@
 from ..profile_keys import DeviceCategoryKey
-from .base_definition import BaseDefinition
+from .base_profile import BaseProfile
 
 # Inverter definitions
-from .inverter_definitions.huawei import HuaweiDefinition
-from .inverter_definitions.solaredge import SolarEdgeDefinition
-from .inverter_definitions.solaredge_us import SolarEdgeUsDefinition
-from .inverter_definitions.sungrow import SungrowDefinition
-from .inverter_definitions.sungrow_sf import SungrowSFDefinition
-from .inverter_definitions.sma import SmaDefinition
-from .inverter_definitions.fronius import FroniusDefinition
-from .inverter_definitions.fronius_sf import FroniusSFDefinition
-from .inverter_definitions.deye import DeyeDefinition
-from .inverter_definitions.deye_micro import DeyeMicroDefinition
-from .inverter_definitions.growatt import GrowattDefinition
-from .inverter_definitions.goodwe import GoodWeDefinition
-from .inverter_definitions.ferroamp import FerroampDefinition
-from .inverter_definitions.sofar import SofarDefinition
-from .inverter_definitions.solis import SolisDefinition
-from .inverter_definitions.solis_hybrid import SolisHybridDefinition
-from .inverter_definitions.solax import SolaxDefinition
-from .inverter_definitions.unknown import UnknownDefinition
+from .inverter_definitions.huawei import HuaweiProfile
+from .inverter_definitions.solaredge import SolarEdgeProfile
+from .inverter_definitions.solaredge_us import SolarEdgeUsProfile
+from .inverter_definitions.sungrow import SungrowProfile
+from .inverter_definitions.sungrow_sf import SungrowSFProfile
+from .inverter_definitions.sma import SmaProfile
+from .inverter_definitions.fronius import FroniusProfile
+from .inverter_definitions.fronius_sf import FroniusSFProfile
+from .inverter_definitions.deye import DeyeProfile
+from .inverter_definitions.deye_micro import DeyeMicroProfile
+from .inverter_definitions.growatt import GrowattProfile
+from .inverter_definitions.goodwe import GoodWeProfile
+from .inverter_definitions.ferroamp import FerroampProfile
+from .inverter_definitions.sofar import SofarProfile
+from .inverter_definitions.solis import SolisProfile
+from .inverter_definitions.solis_hybrid import SolisHybridProfile
+from .inverter_definitions.solax import SolaxProfile
+from .inverter_definitions.unknown import UnknownProfile
 
 # Meter definitions
-from .meter_definitions.lqt40s import Lqt40sDefinition
-from .meter_definitions.sdm630 import Sdm630Definition
+from .meter_definitions.lqt40s import Lqt40sProfile
+from .meter_definitions.sdm630 import Sdm630Profile
 
 
-supported_devices: list[BaseDefinition] = [
-    HuaweiDefinition(),
-    SolarEdgeDefinition(),
-    SolarEdgeUsDefinition(),
-    SungrowDefinition(),
-    SungrowSFDefinition(),
-    SmaDefinition(),
-    FroniusDefinition(),
-    FroniusSFDefinition(),
-    DeyeDefinition(),
-    DeyeMicroDefinition(),
-    GrowattDefinition(),
-    GoodWeDefinition(),
-    FerroampDefinition(),
-    SofarDefinition(),
-    SolisDefinition(),
-    SolisHybridDefinition(),
-    SolaxDefinition(),
-    UnknownDefinition(),
+supported_devices: list[BaseProfile] = [
+    HuaweiProfile(),
+    SolarEdgeProfile(),
+    SolarEdgeUsProfile(),
+    SungrowProfile(),
+    SungrowSFProfile(),
+    SmaProfile(),
+    FroniusProfile(),
+    FroniusSFProfile(),
+    DeyeProfile(),
+    DeyeMicroProfile(),
+    GrowattProfile(),
+    GoodWeProfile(),
+    FerroampProfile(),
+    SofarProfile(),
+    SolisProfile(),
+    SolisHybridProfile(),
+    SolaxProfile(),
+    UnknownProfile(),
 
-    Lqt40sDefinition(),
-    Sdm630Definition(),
+    Lqt40sProfile(),
+    Sdm630Profile(),
 ]

@@ -6,17 +6,17 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
-from ..base_definition import BaseDefinition
+from ..base_profile import BaseProfile
 
 
-class SungrowDefinition(BaseDefinition):
+class SungrowProfile(BaseProfile):
     def __init__(self):
         self.profile = sungrow_profile
 
     def get_profile(self) -> dict:
         return self.profile
 
-    def definition_is_valid(self, definition: dict) -> bool:
+    def profile_is_valid(self, profile: dict) -> bool:
         return True
 
 
