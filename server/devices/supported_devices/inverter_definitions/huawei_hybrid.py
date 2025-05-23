@@ -34,7 +34,7 @@ class HuaweiHybridProfile(ModbusProfile):
 
         logger.info(f"Battery voltage: {value}V")
 
-        return value > 0
+        return value != None and value > 0
 
 
 huawei_profile = {
