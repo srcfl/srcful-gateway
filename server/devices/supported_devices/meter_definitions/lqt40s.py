@@ -6,6 +6,19 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..base_definition import BaseDefinition
+
+
+class Lqt40sDefinition(BaseDefinition):
+    def __init__(self):
+        self.profile = lqt40s_profile
+
+    def get_profile(self) -> dict:
+        return self.profile
+
+    def definition_is_valid(self, definition: dict) -> bool:
+        return True
+
 
 lqt40s_profile = {
     ProfileKey.NAME: "lqt40s",

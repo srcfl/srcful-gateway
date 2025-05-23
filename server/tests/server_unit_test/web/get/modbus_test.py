@@ -198,8 +198,9 @@ def test_missing_address(mock_request_data):
 def test_device_not_found(mock_request_data):
     """Test with non-existent device"""
     mock_request_data.bb.devices.find_sn.return_value = None
+    device_id = "NONEXISTENT"
     mock_request_data.query_params = {
-        ModbusParameter.DEVICE_ID: "NONEXISTENT",
+        ModbusParameter.DEVICE_ID: device_id,
         ModbusParameter.ADDRESS: "1000",
         ModbusParameter.FUNCTION_CODE: str(FunctionCodeKey.READ_HOLDING_REGISTERS.value)
     }
@@ -210,7 +211,7 @@ def test_device_not_found(mock_request_data):
     assert status == 400
     data = json.loads(response)
     assert "error" in data
-    assert "device not found" in data["error"].lower()
+    assert f"device {device_id.lower()} not found" in data["error"].lower()
 
 
 def test_write_invalid_values_format(mock_request_data):

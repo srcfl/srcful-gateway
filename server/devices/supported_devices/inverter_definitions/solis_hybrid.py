@@ -6,6 +6,18 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..base_definition import BaseDefinition
+
+
+class SolisHybridDefinition(BaseDefinition):
+    def __init__(self):
+        self.profile = solis_hybrid_profile
+
+    def get_profile(self) -> dict:
+        return self.profile
+
+    def definition_is_valid(self, definition: dict) -> bool:
+        return True
 
 
 solis_hybrid_profile = {

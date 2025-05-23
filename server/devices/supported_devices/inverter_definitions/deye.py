@@ -7,6 +7,19 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..base_definition import BaseDefinition
+
+
+class DeyeDefinition(BaseDefinition):
+    def __init__(self):
+        self.profile = deye_profile
+
+    def get_profile(self) -> dict:
+        return self.profile
+
+    def definition_is_valid(self, definition: dict) -> bool:
+        return True
+
 
 deye_profile = {
     ProfileKey.NAME: "deye",

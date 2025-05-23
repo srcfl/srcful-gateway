@@ -106,11 +106,11 @@ class ModbusDeviceProfiles:
 
     def __init__(self, device_category: DeviceCategoryKey = DeviceCategoryKey.INVERTERS):
         self.profiles: list[DeviceProfile] = []
-        self._load_profiles(device_category)
+        self._load_profiles()
 
-    def _load_profiles(self, device_category: DeviceCategoryKey):
-        for device in supported_devices[device_category]:
-            profile = self._create_profile(device)
+    def _load_profiles(self):
+        for device in supported_devices:
+            profile = self._create_profile(device.get_profile())
             if profile:
                 self.profiles.append(profile)
 

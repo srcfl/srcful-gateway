@@ -6,6 +6,19 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..base_definition import BaseDefinition
+
+
+class SolarEdgeUsDefinition(BaseDefinition):
+    def __init__(self):
+        self.profile = solaredge_us_profile
+
+    def get_profile(self) -> dict:
+        return self.profile
+
+    def definition_is_valid(self, definition: dict) -> bool:
+        return True
+
 
 solaredge_us_profile = {
     ProfileKey.NAME: "solaredge_us",

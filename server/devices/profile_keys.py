@@ -17,6 +17,7 @@ class ProfileKey(str, Enum):
     ENDPOINTS = 'endpoints'
     KEYWORDS = 'keywords'
     ALWAYS_INCLUDE = 'always_include'
+    CONDITIONS = 'conditions'
 
 
 class ProtocolKey(str, Enum):
@@ -65,3 +66,21 @@ class FunctionCodeKey(int, Enum):
 class DeviceCategoryKey(str, Enum):
     INVERTERS = 'inverters'
     METERS = 'meters'
+
+
+class ConditionTypeKey(str, Enum):
+    REGISTER_VALUE_RANGE = 'register_value_range'
+    REGISTER_VALUE_EQUALS = 'register_value_equals'
+    REGISTER_VALUE_NOT_EQUALS = 'register_value_not_equals'
+    REGISTER_VALUE_GREATER_THAN = 'register_value_greater_than'
+    REGISTER_VALUE_LESS_THAN = 'register_value_less_than'
+    REGISTER_READABLE = 'register_readable'
+
+
+class ConditionKey(str, Enum):
+    TYPE = 'type'
+    REGISTER = 'register'
+    VALUE = 'value'
+    MIN_VALUE = 'min_value'
+    MAX_VALUE = 'max_value'
+    DESCRIPTION = 'description'

@@ -6,6 +6,19 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..base_definition import BaseDefinition
+
+
+class SolaxDefinition(BaseDefinition):
+    def __init__(self):
+        self.profile = solax_profile
+
+    def get_profile(self) -> dict:
+        return self.profile
+
+    def definition_is_valid(self, definition: dict) -> bool:
+        return True
+
 
 solax_profile = {
     ProfileKey.NAME: "Solax",

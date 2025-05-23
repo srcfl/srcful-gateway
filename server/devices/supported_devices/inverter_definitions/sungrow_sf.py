@@ -6,6 +6,19 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..base_definition import BaseDefinition
+
+
+class SungrowSFDefinition(BaseDefinition):
+    def __init__(self):
+        self.profile = sungrow_sf_profile
+
+    def get_profile(self) -> dict:
+        return self.profile
+
+    def definition_is_valid(self, definition: dict) -> bool:
+        return True
+
 
 sungrow_sf_profile = {
     ProfileKey.NAME: "sungrow_sf",
