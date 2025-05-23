@@ -125,6 +125,7 @@ class ModbusTCP(Modbus, TCPDevice):
             log.info(f"Trying primary profile: {profile.name}")
             if profile.profile_is_valid(self):
                 log.info(f"Primary profile {profile.name} is valid, using it")
+                self.device_type = profile.name
                 self.profile = profile
                 break  # Break and use the first valid profile and continue with the rest of the code
 
