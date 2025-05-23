@@ -6,17 +6,15 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
-from ..base_profile import BaseProfile
+from ..profile import ModbusProfile
+from ...common.types import ModbusDevice
 
 
-class UnknownProfile(BaseProfile):
+class UnknownProfile(ModbusProfile):
     def __init__(self):
-        self.profile = unknown_profile
+        super().__init__(unknown_profile)
 
-    def get_profile(self) -> dict:
-        return self.profile
-
-    def profile_is_valid(self, profile: dict) -> bool:
+    def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
 
 

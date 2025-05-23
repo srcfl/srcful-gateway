@@ -6,17 +6,15 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
-from ..base_profile import BaseProfile
+from ..profile import ModbusProfile
+from ...common.types import ModbusDevice
 
 
-class SungrowSFProfile(BaseProfile):
+class SungrowSFProfile(ModbusProfile):
     def __init__(self):
-        self.profile = sungrow_sf_profile
+        super().__init__(sungrow_sf_profile)
 
-    def get_profile(self) -> dict:
-        return self.profile
-
-    def profile_is_valid(self, profile: dict) -> bool:
+    def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
 
 

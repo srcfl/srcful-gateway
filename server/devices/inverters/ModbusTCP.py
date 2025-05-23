@@ -8,7 +8,8 @@ from pymodbus.exceptions import ModbusIOException
 from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
 from server.network.network_utils import HostInfo, NetworkUtils
-from server.devices.supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile, RegisterInterval
+from server.devices.supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
+from server.devices.supported_devices.profile import RegisterInterval
 import logging
 from server.devices.profile_keys import ProtocolKey
 from server.devices.registerValue import RegisterValue

@@ -9,9 +9,8 @@ def modbus_profiles() -> list[ModbusProfile]:
     profiles: list[ModbusProfile] = []
 
     # Load inverters
-    for device_profile_obj in supported_devices.supported_devices:
-        profile = ModbusProfile(device_profile_obj.get_profile())
-        profiles.append(profile)
+    for device_profile_obj in supported_devices.supported_devices_profiles:
+        profiles.append(device_profile_obj)
 
     return profiles
 

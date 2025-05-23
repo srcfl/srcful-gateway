@@ -1,8 +1,8 @@
-from ..profile_keys import DeviceCategoryKey
-from .base_profile import BaseProfile
+from .profile import ModbusProfile
 
 # Inverter definitions
 from .inverter_definitions.huawei import HuaweiProfile
+from .inverter_definitions.huawei_hybrid import HuaweiHybridProfile
 from .inverter_definitions.solaredge import SolarEdgeProfile
 from .inverter_definitions.solaredge_us import SolarEdgeUsProfile
 from .inverter_definitions.sungrow import SungrowProfile
@@ -26,8 +26,9 @@ from .meter_definitions.lqt40s import Lqt40sProfile
 from .meter_definitions.sdm630 import Sdm630Profile
 
 
-supported_devices: list[BaseProfile] = [
+supported_devices_profiles: list[ModbusProfile] = [
     HuaweiProfile(),
+    HuaweiHybridProfile(),
     SolarEdgeProfile(),
     SolarEdgeUsProfile(),
     SungrowProfile(),

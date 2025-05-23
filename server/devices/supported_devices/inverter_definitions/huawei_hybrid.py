@@ -6,28 +6,26 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
-from ..base_profile import BaseProfile
+from ..profile import ModbusProfile
+from ...common.types import ModbusDevice
 
 
-class HuaweiHybridProfile(BaseProfile):
+class HuaweiHybridProfile(ModbusProfile):
     def __init__(self):
-        self.profile = huawei_profile
+        super().__init__(huawei_profile)
 
-    def get_profile(self) -> dict:
-        return self.profile
-
-    def profile_is_valid(self, profile: dict) -> bool:
+    def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
 
 
 huawei_profile = {
-    ProfileKey.NAME: "huawei",
+    ProfileKey.NAME: "huawei_hybrid",
     ProfileKey.MAKER: "Huawei",
     ProfileKey.VERSION: "V1.1b3",
     ProfileKey.VERBOSE_ALWAYS: False,
-    ProfileKey.DISPLAY_NAME: "Huawei",
+    ProfileKey.DISPLAY_NAME: "Huawei Hybrid",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
-    ProfileKey.DESCRIPTION: "Another inverter profile...",
+    ProfileKey.DESCRIPTION: "Huawei Hybrid inverter profile...",
     ProfileKey.SN: {
         RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
         RegistersKey.START_REGISTER: 30015,

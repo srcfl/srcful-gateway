@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from server.devices.common.types import ModbusProtocol
+from server.devices.common.types import ModbusDevice
 from server.devices.registerValue import RegisterValue
 from server.web.socket.control.control_messages.modbus_message import ModbusMessage, ModbusCommand
 from server.web.socket.control.control_messages.types import PayloadType
@@ -34,7 +34,7 @@ class ControlMessage(ModbusMessage):
 
         logger.debug(f"Initialized control message: {self.id}")
 
-    def process_commands(self, device: ModbusProtocol):
+    def process_commands(self, device: ModbusDevice):
         try:
             for command in self.commands:
                 address = command.register
