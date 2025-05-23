@@ -59,6 +59,7 @@ class ModbusProfile(DeviceProfile):
 
     def __init__(self, profile_data: dict):
         super().__init__(profile_data)
+        self.primary_profiles: List[DeviceProfile] = []
         self.sn: RegisterInterval = None
         self.registers_verbose: List[RegisterInterval] = []
         self.registers: List[RegisterInterval] = []

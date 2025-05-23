@@ -54,10 +54,6 @@ class Modbus(Device, ABC):
             self.device_type = self.device_type.lower()
             self.profile: ModbusProfile = ModbusDeviceProfiles().get(self.device_type)
 
-            if not self.profile:
-                self.profile: ModbusProfile = ModbusDeviceProfiles(
-                    device_category=DeviceCategoryKey.METERS).get(self.device_type)
-
         self.always_included = {}  # This is populated every time we do a verbose read
 
     def _read_harvest_data(self, force_verbose: bool) -> dict:

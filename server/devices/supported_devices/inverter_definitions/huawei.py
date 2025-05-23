@@ -8,11 +8,13 @@ from ...profile_keys import (
 )
 from ..profile import ModbusProfile
 from ...common.types import ModbusDevice
+from .huawei_hybrid import HuaweiHybridProfile
 
 
 class HuaweiProfile(ModbusProfile):
     def __init__(self):
         super().__init__(huawei_profile)
+        self.primary_profiles = [HuaweiHybridProfile()]
 
     def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True

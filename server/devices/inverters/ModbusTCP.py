@@ -120,6 +120,14 @@ class ModbusTCP(Modbus, TCPDevice):
         # A short delay is necessary for some devices before a new connection can be established
         time.sleep(1)
 
+        # check if the profile has any primary profiles to try first
+        for profile in self.profile.primary_profiles:
+            log.info(f"Trying primary profile: {profile.name}")
+            if profile.profile_is_valid(self):
+                log.info(f"Primary profile {profile.name} is valid, using it")
+                self.profile = profile
+                break  # Break and use the first valid profile and continue with the rest of the code
+
         if self.sn is None:
             log.info("Reading SN from device")
             self.sn = self._read_SN()
