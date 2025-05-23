@@ -130,7 +130,7 @@ class ModbusTCP(Modbus, TCPDevice):
             log.info("Setting SN to MAC because SN register is not defined but frequency is valid")
             self.sn = self.mac
 
-        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self.sn is not None
+        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self.sn is not None and self.profile.profile_is_valid(self)
 
     def _get_type(self) -> str:
         return self.device_type

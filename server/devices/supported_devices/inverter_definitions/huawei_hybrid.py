@@ -8,6 +8,11 @@ from ...profile_keys import (
 )
 from ..profile import ModbusProfile
 from ...common.types import ModbusDevice
+from ...registerValue import RegisterValue
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class HuaweiHybridProfile(ModbusProfile):
@@ -15,7 +20,21 @@ class HuaweiHybridProfile(ModbusProfile):
         super().__init__(huawei_profile)
 
     def profile_is_valid(self, device: ModbusDevice) -> bool:
-        return True
+        return self._battery_has_voltage(device)
+
+    def _battery_has_voltage(self, device: ModbusDevice) -> bool:
+        battery_voltage = RegisterValue(address=37763,
+                                        size=2,
+                                        function_code=FunctionCodeKey.READ_HOLDING_REGISTERS,
+                                        data_type=DataTypeKey.U16,
+                                        scale_factor=0.1,
+                                        endianness=EndiannessKey.BIG)
+
+        _, _, value = battery_voltage.read_value(device)
+
+        logger.info(f"Battery voltage: {value}V")
+
+        return value > 0
 
 
 huawei_profile = {
