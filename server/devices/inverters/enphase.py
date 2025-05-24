@@ -79,7 +79,11 @@ class Enphase(TCPDevice):
         }
 
     def make_get_request(self, path: str) -> requests.Response:
-        return self.session.get(self.base_url + path, timeout=45)
+        try:
+            return self.session.get(self.base_url + path, timeout=45)
+        except Exception as e:
+            logger.error(f"Failed to make get request to {self.base_url + path}. Reason: {e}")
+            return None
 
     def __init__(self, **kwargs) -> None:
 
@@ -104,13 +108,13 @@ class Enphase(TCPDevice):
         Returns:
             Optional[str]: The device serial number if successful, None otherwise
         """
-        info_response = self.make_get_request(self.ENDPOINTS[Enphase.INFORMATION])
-        if info_response.status_code != 200:
-            logger.error(f"Failed to get device info from {self.ip}. Reason: {info_response.text}")
+        response = self.make_get_request(self.ENDPOINTS[Enphase.INFORMATION])
+        if response and response.status_code != 200:
+            logger.error(f"Failed to get device info from {self.ip}. Reason: {response.text}")
             return None
 
         try:
-            root = ET.fromstring(info_response.text)
+            root = ET.fromstring(response.text)
             sn = root.find(".//device/sn").text
             logger.info(f"Found device serial number: {sn}")
             return sn
@@ -150,7 +154,7 @@ class Enphase(TCPDevice):
         # make a request to the production endpoint to check if the device is reachable
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
 
-        if response.status_code != 200:
+        if response and response.status_code != 200:
             logger.error(f"Failed to connect to {self.ip}. Reason: {response.text}")
             return False
 
@@ -196,7 +200,7 @@ class Enphase(TCPDevice):
         data: dict = {}
         # Read data from the production endpoint
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
-        if response.status_code != 200:
+        if response and response.status_code != 200:
             logger.error(f"Failed to read data from {self.ip}. Reason: {response.text}")
             return {}
 
@@ -244,21 +248,30 @@ class Enphase(TCPDevice):
         config = self.get_config()
         config[self.ip_key()] = host.ip
         config[self.port_key()] = host.port
+        logger.info(f"Enphase _clone_with_host: Cloning with config: {config}")
         return Enphase(**config)
 
     def find_device(self) -> 'ICom':
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
-        res: ServiceResult = mdns.scan(5, "_enphase-envoy._tcp.local.")
-        if len(res) == 0:
+        logger.info("Finding Enphase device...")
+        service_results: List[ServiceResult] = mdns.scan(5, "_enphase-envoy._tcp.local.")
+        logger.info(f"Enphase find_device: Found {len(service_results)} Enphase devices: {service_results}")
+
+        if len(service_results) == 0:
             return None
-        res: ServiceResult = res[0]
-        mac = NetworkUtils.get_mac_from_ip(res.address)
-        host: HostInfo = HostInfo(res.address, res.port, mac)
 
-        clone = self._clone_with_host(host)
-        if clone is not None:
-            return clone
+        # We loop since multiple devices with the same mDNS name are possible and until we manage to clone a device
+        for service_result in service_results:
+            mac = NetworkUtils.get_mac_from_ip(service_result.address)
+            host: HostInfo = HostInfo(service_result.address, service_result.port, mac)
 
+            logger.info(f"Enphase find_device: Found device {host.ip}:{host.port} with mac {host.mac}. Attempting to clone...")
+
+            clone = self._clone_with_host(host)
+            if clone is not None:
+                return clone
+
+        logger.info("This Enphase device was not found in the mDNS scan")
         return None
 
     def get_SN(self) -> str:

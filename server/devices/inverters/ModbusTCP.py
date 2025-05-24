@@ -121,6 +121,7 @@ class ModbusTCP(Modbus, TCPDevice):
         time.sleep(1)
 
         # check if the profile has any primary profiles to try first
+        log.info(f"{self.device_type} has {len(self.profile.primary_profiles)} primary profiles")
         for profile in self.profile.primary_profiles:
             log.info(f"Trying primary profile: {profile.name}")
             if profile.profile_is_valid(self):
