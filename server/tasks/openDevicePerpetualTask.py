@@ -46,6 +46,7 @@ class DevicePerpetualTask(Task):
 
         try:
             if self.device.connect():
+                logger.info("Device connected: %s", self.device.get_config())
 
                 if self.bb.devices.contains(self.device) and not self.device.is_open():
                     message = "Device is already in the blackboard, no action needed"

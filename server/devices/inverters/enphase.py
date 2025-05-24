@@ -80,7 +80,10 @@ class Enphase(TCPDevice):
 
     def make_get_request(self, path: str) -> requests.Response:
         try:
-            return self.session.get(self.base_url + path, timeout=45)
+            logger.info(f"Enphase make_get_request: Requesting {self.base_url + path}")
+            response = self.session.get(self.base_url + path, timeout=45)
+            logger.info(f"Enphase make_get_request: Response: {response}")
+            return response
         except Exception as e:
             logger.error(f"Failed to make get request to {self.base_url + path}. Reason: {e}")
             return None
@@ -109,7 +112,7 @@ class Enphase(TCPDevice):
             Optional[str]: The device serial number if successful, None otherwise
         """
         response = self.make_get_request(self.ENDPOINTS[Enphase.INFORMATION])
-        if response and response.status_code != 200:
+        if not response or response.status_code != 200:
             logger.error(f"Failed to get device info from {self.ip}. Reason: {response.text}")
             return None
 
@@ -153,8 +156,7 @@ class Enphase(TCPDevice):
 
         # make a request to the production endpoint to check if the device is reachable
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
-
-        if response and response.status_code != 200:
+        if not response or response.status_code != 200:
             logger.error(f"Failed to connect to {self.ip}. Reason: {response.text}")
             return False
 
@@ -200,7 +202,7 @@ class Enphase(TCPDevice):
         data: dict = {}
         # Read data from the production endpoint
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
-        if response and response.status_code != 200:
+        if not response or response.status_code != 200:
             logger.error(f"Failed to read data from {self.ip}. Reason: {response.text}")
             return {}
 
