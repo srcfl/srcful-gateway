@@ -9,6 +9,7 @@ from ..ICom import HarvestDataType, ICom
 from typing import List, Optional
 from server.network.network_utils import HostInfo, NetworkUtils
 import urllib3
+import time
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -79,6 +80,7 @@ class Enphase(TCPDevice):
         }
 
     def make_get_request(self, path: str) -> requests.Response:
+        time.sleep(1)  # to prevent rate limiting
         try:
             logger.info(f"Enphase make_get_request: Requesting {self.base_url + path}")
             response = self.session.get(self.base_url + path, timeout=45)
