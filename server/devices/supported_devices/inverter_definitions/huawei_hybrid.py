@@ -20,7 +20,21 @@ class HuaweiHybridProfile(ModbusProfile):
         super().__init__(huawei_profile)
 
     def profile_is_valid(self, device: ModbusDevice) -> bool:
-        return self._battery_has_voltage(device)
+        return self._has_valid_SoC(device) and self._battery_has_voltage(device)
+
+    def _has_valid_SoC(self, device: ModbusDevice) -> float:
+        battery_SoC = RegisterValue(address=37004,
+                                    size=1,
+                                    function_code=FunctionCodeKey.READ_HOLDING_REGISTERS,
+                                    data_type=DataTypeKey.U16,
+                                    scale_factor=0.1,
+                                    endianness=EndiannessKey.BIG)
+
+        _, _, value = battery_SoC.read_value(device)
+
+        logger.info(f"Battery SoC: {value}%")
+
+        return value != None and 0 <= value <= 100
 
     def _battery_has_voltage(self, device: ModbusDevice) -> bool:
         battery_voltage = RegisterValue(address=37763,
