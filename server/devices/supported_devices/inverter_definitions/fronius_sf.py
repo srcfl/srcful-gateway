@@ -6,6 +6,17 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..profile import ModbusProfile
+from ...common.types import ModbusDevice
+
+
+class FroniusSFProfile(ModbusProfile):
+    def __init__(self):
+        super().__init__(fronius_sf_profile)
+
+    def profile_is_valid(self, device: ModbusDevice) -> bool:
+        return True
+
 
 fronius_sf_profile = {
     ProfileKey.NAME: "fronius_sf",

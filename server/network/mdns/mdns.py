@@ -27,8 +27,8 @@ class ServiceResult:
     def __str__(self):
         return f"{self.name} ({self.address}:{self.port})"
 
-    def __repr__(self):
-        return f"MDNSServiceResult(name='{self.name}', address='{self.address}', port={self.port}, properties={self.properties})"
+    # def __repr__(self):
+    #     return f"MDNSServiceResult(name='{self.name}', address='{self.address}', port={self.port}, properties={self.properties})"
 
 
 class _Listener(ServiceListener):
@@ -67,6 +67,7 @@ def scan(duration: int = 5, services: Union[str, List[str]] = ["_http._tcp.local
         return []
 
     try:
+        logger.info(f"mDNS scanning for {services} for {duration} seconds")
         _is_scanning = True
         zeroconf = Zeroconf()
         listener = _Listener()
@@ -81,7 +82,14 @@ def scan(duration: int = 5, services: Union[str, List[str]] = ["_http._tcp.local
         time.sleep(duration)
         browser.cancel()
         zeroconf.close()
-        return list(listener.services.values())
+        lst: List[ServiceResult] = list(listener.services.values())
+
+        # print each service result as string
+        logger.info(f"mDNS scan found {len(lst)} services:")
+        for service in lst:
+            logger.info(f"  {service}")
+
+        return lst
     finally:
         _is_scanning = False
         _scan_lock.release()

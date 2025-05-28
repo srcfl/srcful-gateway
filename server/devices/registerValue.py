@@ -1,7 +1,7 @@
 import struct
 from typing import Tuple, Optional, Union, List
 from .profile_keys import DataTypeKey, FunctionCodeKey, EndiannessKey
-from .common.types import ModbusProtocol
+from .common.types import ModbusDevice
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class RegisterValue:
         self.scale_factor: float = scale_factor
         self.endianness: EndiannessKey = endianness
 
-    def read_value(self, device: ModbusProtocol) -> Tuple[bytearray, bytearray, Optional[Union[int, float, str]]]:
+    def read_value(self, device: ModbusDevice) -> Tuple[bytearray, bytearray, Optional[Union[int, float, str]]]:
         """Reads and interprets register value from device
         Returns:
             Tuple containing:
@@ -50,7 +50,7 @@ class RegisterValue:
         return raw, swapped, value
 
     @staticmethod
-    def write_single(device: ModbusProtocol, address: int, value: int) -> bool:
+    def write_single(device: ModbusDevice, address: int, value: int) -> bool:
         """Write a single register value
         Args:
             device: The Modbus device to write to
@@ -70,7 +70,7 @@ class RegisterValue:
             return False
 
     @staticmethod
-    def write_multiple(device: ModbusProtocol, address: int, values: List[int]) -> bool:
+    def write_multiple(device: ModbusDevice, address: int, values: List[int]) -> bool:
         """Write multiple register values
         Args:
             device: The Modbus device to write to

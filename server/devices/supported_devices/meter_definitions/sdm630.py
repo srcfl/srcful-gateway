@@ -6,6 +6,16 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..profile import ModbusProfile
+from ...common.types import ModbusDevice
+
+
+class Sdm630Profile(ModbusProfile):
+    def __init__(self):
+        super().__init__(sdm630_profile)
+
+    def profile_is_valid(self, device: ModbusDevice) -> bool:
+        return True
 
 
 sdm630_profile = {

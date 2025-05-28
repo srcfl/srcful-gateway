@@ -77,7 +77,7 @@ class ModbusHandler(GetHandler):
 
             device = request_data.bb.devices.find_sn(device_id)
             if device is None:
-                return 400, json.dumps({"error": "device not found"})
+                return 400, json.dumps({"error": f"device {device_id} not found"})
 
             # Convert function code to enum if it's an integer
             raw_function_code = request_data.query_params.get(ModbusParameter.FUNCTION_CODE, FunctionCodeKey.READ_INPUT_REGISTERS)

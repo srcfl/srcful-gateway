@@ -6,6 +6,17 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..profile import ModbusProfile
+from ...common.types import ModbusDevice
+
+
+class Lqt40sProfile(ModbusProfile):
+    def __init__(self):
+        super().__init__(lqt40s_profile)
+
+    def profile_is_valid(self, device: ModbusDevice) -> bool:
+        return True
+
 
 lqt40s_profile = {
     ProfileKey.NAME: "lqt40s",

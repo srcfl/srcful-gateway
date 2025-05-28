@@ -6,6 +6,17 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..profile import ModbusProfile
+from ...common.types import ModbusDevice
+
+
+class SolarEdgeUsProfile(ModbusProfile):
+    def __init__(self):
+        super().__init__(solaredge_us_profile)
+
+    def profile_is_valid(self, device: ModbusDevice) -> bool:
+        return True
+
 
 solaredge_us_profile = {
     ProfileKey.NAME: "solaredge_us",

@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from server.web.socket.control.control_messages.modbus_message import ModbusMessage, ModbusCommand
 from server.web.socket.control.control_messages.types import PayloadType
-from server.devices.common.types import ModbusProtocol
+from server.devices.common.types import ModbusDevice
 from server.devices.registerValue import RegisterValue
 from server.devices.profile_keys import RegistersKey
 import logging
@@ -41,7 +41,7 @@ class ReadMessage(ModbusMessage):
 
         logger.debug(f"Initialized read message: {self.id}")
 
-    def process_commands(self, device: ModbusProtocol):
+    def process_commands(self, device: ModbusDevice):
 
         logger.info(f"Processing commands: {self.commands}")
 

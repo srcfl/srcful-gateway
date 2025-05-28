@@ -6,6 +6,17 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
+from ..profile import ModbusProfile
+from ...common.types import ModbusDevice
+
+
+class FerroampProfile(ModbusProfile):
+    def __init__(self):
+        super().__init__(ferroamp_profile)
+
+    def profile_is_valid(self, device: ModbusDevice) -> bool:
+        return True
+
 
 ferroamp_profile = {
     ProfileKey.NAME: "ferroamp",
