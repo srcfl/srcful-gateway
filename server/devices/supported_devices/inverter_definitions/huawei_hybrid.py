@@ -34,7 +34,7 @@ class HuaweiHybridProfile(ModbusProfile):
 
         logger.info(f"Battery SoC: {value}%")
 
-        return value != None and 0 <= value <= 100
+        return value != None and 1 <= value <= 100
 
     def _battery_has_voltage(self, device: ModbusDevice) -> bool:
         battery_voltage = RegisterValue(address=37763,
