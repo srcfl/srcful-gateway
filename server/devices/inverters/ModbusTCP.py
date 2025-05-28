@@ -149,7 +149,7 @@ class ModbusTCP(Modbus, TCPDevice):
         return bool(self.client) and bool(self.client.socket)
 
     def _close(self) -> None:
-        log.info("Closing client ModbusTCP %s", self.mac)
+        log.info("Closing client ModbusTCP %s with logger SN %s", self.mac, self.sn)
         self.client.close()
 
     def _disconnect(self) -> None:

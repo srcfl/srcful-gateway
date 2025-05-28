@@ -121,7 +121,7 @@ class ModbusSolarman(ModbusTCP):
         try:
             self.client.disconnect()
             self.client.sock = None
-            log.info("Close -> Inverter disconnected successfully: %s", self._get_type())
+            log.info("Closing client ModbusTCP %s with logger SN %s", self.mac, self.sn)
         except Exception as e:
             log.error("Close -> Error disconnecting inverter: %s", self._get_type())
             log.error(e)
