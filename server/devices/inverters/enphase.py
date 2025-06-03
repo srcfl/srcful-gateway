@@ -80,7 +80,7 @@ class Enphase(TCPDevice):
         }
 
     def make_get_request(self, path: str) -> requests.Response:
-        time.sleep(1)  # to prevent rate limiting
+        time.sleep(2)  # to prevent rate limiting
         try:
             logger.info(f"Enphase make_get_request: Requesting {self.base_url + path}")
             response = self.session.get(self.base_url + path, timeout=45)
@@ -202,8 +202,10 @@ class Enphase(TCPDevice):
 
     def _read_harvest_data(self, force_verbose: bool = False) -> dict:
         data: dict = {}
+
         # Read data from the production endpoint
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
+
         if not response or response.status_code != 200:
             logger.error(f"Failed to read data from {self.ip}. Reason: {response.text}")
             return {}
