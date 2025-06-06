@@ -79,7 +79,7 @@ class GetSettingsTask(SrcfulAPICallTask):
     def __init__(self, event_time: int, bb: BlackBoard):
         super().__init__(event_time, bb)
         self.settings = None
-        self.post_url = bb.settings.api.gql_endpoint  # "https://api.srcful.dev/"
+        self.post_url = bb.settings.api.gql_endpoint
 
     def _json(self):
         with crypto.Chip() as chip:

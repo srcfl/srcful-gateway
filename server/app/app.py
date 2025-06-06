@@ -68,7 +68,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     scheduler.add_task(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
 
     # put some initial tasks in the queue
-    scheduler.add_task(GetSettingsTask(bb.time_ms() + 500, bb))
+    scheduler.add_task(GetSettingsTask(bb.time_ms() + 30000, bb))
 
     if inverter is not None:
         scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
