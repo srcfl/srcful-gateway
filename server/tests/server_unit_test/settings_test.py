@@ -117,7 +117,8 @@ def test_to_json(settings):
     settings.api.set_gql_endpoint("https://example.com", ChangeSource.LOCAL)
     settings.api.set_ws_endpoint("ws://example.com", ChangeSource.LOCAL)
     settings.api.set_gql_timeout(10000, ChangeSource.LOCAL)
-    json_str = settings.to_json()
+    json_str = settings.to_json()  # settings.to_json will call settings.to_dict and settings.to_dict will randomize an id
+
     expected = {
         settings.SETTINGS: {
             settings.harvest.HARVEST: {
@@ -136,7 +137,11 @@ def test_to_json(settings):
             }
         }
     }
-    assert json.loads(json_str) == expected
+    # We don't mock the random number generator, so we need to remove the id key-value pair from the json_str before comparing
+    settings_obj = json.loads(json_str)
+    settings_obj[settings.SETTINGS].pop(settings.ID)
+
+    assert settings_obj == expected
 
 
 def test_from_json(settings):
