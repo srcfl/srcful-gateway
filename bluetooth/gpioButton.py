@@ -8,12 +8,12 @@ logger = logging.getLogger(name=__name__)
 
 # How often to check for button presses
 MONITOR_CHECK_INTERVAL_SECONDS = 0.05
-# Timeframe for double click in seconds
-DOUBLE_CLICK_TIMEFRAME_SECONDS = 0.75
+# Duration for long press in seconds
+LONG_PRESS_DURATION_SECONDS = 3.0
 
 
 class GpioButton:
-    def __init__(self, pin_number, when_double_clicked: Callable[[], None]):
+    def __init__(self, pin_number, when_long_pressed: Callable[[], None]):
         logger.info("Initializing GPIO button on pin %s", pin_number)
         try:
             self.gpio = SysfsGPIO(pin_number)
@@ -28,30 +28,32 @@ class GpioButton:
         except OSError as e:
             logger.error(f"Failed to initialize GPIO on pin {pin_number}: {e}")
             raise RuntimeError(f"GPIO initialization failed: {e}")
-        
-        self.when_double_clicked = when_double_clicked
-        self.last_clicked_at = None
-        self.click_count = 0
+
+        self.when_long_pressed = when_long_pressed
+        self.press_start_time = None
+        self.long_press_triggered = False
 
     async def run(self):
         while True:
-            if not self.is_pressed():
-                if self.click_count == 2 and self.when_double_clicked:
-                    logger.info("Double click detected")
-                    await self.when_double_clicked()
-                self.click_count = 0
+            if self.is_pressed():
+                if self.press_start_time is None:
+                    # Button just pressed, start timing
+                    self.press_start_time = time.time()
+                    self.long_press_triggered = False
+                elif not self.long_press_triggered:
+                    # Check if long press duration has been reached
+                    press_duration = time.time() - self.press_start_time
+                    if press_duration >= LONG_PRESS_DURATION_SECONDS:
+                        logger.info("Long press detected")
+                        self.long_press_triggered = True
+                        if self.when_long_pressed:
+                            await self.when_long_pressed()
             else:
-                await self.process_click()
+                # Button released, reset timing
+                self.press_start_time = None
+                self.long_press_triggered = False
 
             await asyncio.sleep(MONITOR_CHECK_INTERVAL_SECONDS)
-
-    async def process_click(self):
-        if self.last_clicked_at and time.time() - self.last_clicked_at <= DOUBLE_CLICK_TIMEFRAME_SECONDS:
-            self.click_count += 1
-            self.last_clicked_at = time.time()
-        else:
-            self.click_count = 1
-            self.last_clicked_at = time.time()
 
     def is_pressed(self):
         return self.gpio.value == 0
