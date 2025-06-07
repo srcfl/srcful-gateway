@@ -8,13 +8,12 @@ from pymodbus.exceptions import ModbusIOException
 from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
 from server.network.network_utils import HostInfo, NetworkUtils
-from server.devices.supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
+from server.devices.supported_devices.profiles import ModbusDeviceProfiles
 from server.devices.supported_devices.profile import RegisterInterval
 import logging
 from server.devices.profile_keys import ProtocolKey
 from server.devices.registerValue import RegisterValue
 import time
-import threading
 
 
 log = logging.getLogger(__name__)
@@ -36,7 +35,6 @@ class ModbusTCP(Modbus, TCPDevice):
     """
 
     CONNECTION = "TCP"
-    _lock = threading.Lock()
 
     @staticmethod
     def ip_key() -> str:
@@ -120,15 +118,7 @@ class ModbusTCP(Modbus, TCPDevice):
         # A short delay is necessary for some devices before a new connection can be established
         time.sleep(1)
 
-        # check if the profile has any primary profiles to try first
-        log.info(f"{self.device_type} has {len(self.profile.primary_profiles)} primary profiles")
-        for profile in self.profile.primary_profiles:
-            log.info(f"Trying primary profile: {profile.name}")
-            if profile.profile_is_valid(self):
-                log.info(f"Primary profile {profile.name} is valid, using it")
-                self.device_type = profile.name
-                self.profile = profile
-                break  # Break and use the first valid profile and continue with the rest of the code
+        self._validate_and_select_profile()
 
         if self.sn is None:
             log.info("Reading SN from device")
@@ -172,9 +162,6 @@ class ModbusTCP(Modbus, TCPDevice):
 
     def _get_connection_type(self) -> str:
         return ModbusTCP.CONNECTION
-
-    def get_SN(self) -> str:
-        return self.sn
 
     def _create_client(self, **kwargs) -> None:
         self.client = ModbusClient(host=self.ip, port=self.port, unit_id=self.slave_id, **kwargs)
@@ -249,43 +236,3 @@ class ModbusTCP(Modbus, TCPDevice):
             log.error(f"Error reading register: {register.start_register}")
             self.disconnect()
             return None
-
-    def _get_frequency_register(self) -> Optional[RegisterInterval]:
-        profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
-        if not profile or not profile.registers:
-            return None
-        return profile.registers[0]
-
-    def _get_SN_register(self) -> Optional[RegisterInterval]:
-        profile: ModbusProfile = ModbusDeviceProfiles().get(name=self.device_type)
-        if not profile or not profile.sn:
-            return None
-        return profile.sn
-
-    def _has_valid_frequency(self) -> bool:
-        """Check if the float frequency value is within a reasonable range (48-62 Hz)"""
-        frequency = self._read_value(self._get_frequency_register())
-        return frequency and 48.0 <= frequency <= 62.0
-
-    def _read_SN(self) -> Optional[str]:
-        """Read serial number using the device profile's serial number register"""
-
-        reg: RegisterInterval = self._get_SN_register()
-
-        if not reg:
-            return None
-
-        value = self._read_value(reg)
-
-        if not value:
-            return None
-
-        if value and isinstance(value, str):
-            # Remove null bytes and any non-printable characters
-            cleaned_sn = ''.join(char for char in value if char.isprintable())
-            cleaned_sn = cleaned_sn.strip()
-            value = cleaned_sn
-
-        log.info("SN: %s", value)
-
-        return str(value)

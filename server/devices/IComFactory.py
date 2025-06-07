@@ -1,4 +1,5 @@
 from .inverters.ModbusTCP import ModbusTCP
+from .inverters.ModbusRTU import ModbusRTU
 from .inverters.ModbusSolarman import ModbusSolarman
 from .inverters.ModbusSunspec import ModbusSunspec
 from .inverters.enphase import Enphase
@@ -14,7 +15,7 @@ log.setLevel(logging.INFO)
 
 class IComFactory:
 
-    supported_devices = [ModbusTCP, ModbusSolarman, ModbusSunspec, P1Telnet, Enphase, P1Jemac, P1HomeWizard]
+    supported_devices = [ModbusTCP, ModbusRTU, ModbusSolarman, ModbusSunspec, P1Telnet, Enphase, P1Jemac, P1HomeWizard]
 
     @staticmethod
     def get_connection_configs():
@@ -66,6 +67,8 @@ class IComFactory:
         match connection:
             case ModbusTCP.CONNECTION:
                 return ModbusTCP(**stripped_config)
+            case ModbusRTU.CONNECTION:
+                return ModbusRTU(**stripped_config)
             case ModbusSolarman.CONNECTION:
                 return ModbusSolarman(**stripped_config)
             case ModbusSunspec.CONNECTION:
