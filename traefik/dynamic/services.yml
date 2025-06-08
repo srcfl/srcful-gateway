@@ -12,13 +12,13 @@ http:
         - web
       rule: "HostRegexp(`{host:.+}`)"
       priority: 1
-      service: client-web-service
+      service: api-service
 
   services:
     api-service:
       loadBalancer:
         servers:
-          - url: "http://127.0.0.1:5000"  # Direct to host network service
+          - url: "http://host.docker.internal:5000"  # Access host network service from bridge
     
     client-web-service:
       loadBalancer:

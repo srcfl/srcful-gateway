@@ -18,6 +18,8 @@ services:
     restart: always
     networks:
       - web-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # React web client
   client-web:
