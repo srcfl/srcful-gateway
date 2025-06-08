@@ -32,7 +32,7 @@ class Device(ICom, ABC):
 
     def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
         ''' computes a backoff time based, this is always between 1 and 256 seconds,
-        it will increase if the harvest time is high and incrementatlly move towards 1 second if the harvest time is low'''
+        it will increase if the harvest time is high and incrementatlly move towards 1000ms if the harvest time is low'''
         min_backoff_time = max(harvest_time_ms * 2, 1000)
         backoff_time = max(int(previous_backoff_time_ms * .9), min_backoff_time)
         backoff_time = min(backoff_time, 256000)

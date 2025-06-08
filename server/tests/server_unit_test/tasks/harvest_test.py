@@ -235,6 +235,7 @@ def test_execute_harvests_from_two_devices(blackboard: BlackBoard):
     device.connect.return_value = True
     device.is_open.return_value = True
     device.compare_host.return_value = False
+    device.get_backoff_time_ms.return_value = 1000
     task = OpenDeviceTask(0, blackboard, device)
     task.execute(0)
 
@@ -247,6 +248,7 @@ def test_execute_harvests_from_two_devices(blackboard: BlackBoard):
     device2.connect.return_value = True
     device2.is_open.return_value = True
     device2.compare_host.return_value = False
+    device2.get_backoff_time_ms.return_value = 1000
     task2 = OpenDeviceTask(0, blackboard, device2)
     task2.execute(0)
 

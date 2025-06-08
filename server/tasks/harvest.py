@@ -17,7 +17,7 @@ class Harvest(Task):
         super().__init__(event_time, bb)
         self.device = device
         self.barn: dict[int, dict] = {}
-        self.backoff_time = 1000  # start with a 1-second backoff
+        self.backoff_time = 1000  # start with a 1000ms backoff
         self.transport_factory = transport_factory
         self.last_transport_time = bb.time_ms()
         self.harvest_count = 0
@@ -74,7 +74,12 @@ class Harvest(Task):
 
             return [open_inverter] + transports
 
-        self.time = self.bb.time_ms() + self.backoff_time
+        # If we're reading faster than every 1000ms, we subtract the elapsed time of
+        # the current harvest from the backoff time to keep polling at a constant rate of every 1000ms
+        if elapsed_time_ms < self.backoff_time:
+            self.time = self.bb.time_ms() + self.backoff_time - elapsed_time_ms
+        else:
+            self.time = self.bb.time_ms() + self.backoff_time
 
         # check if it is time to transport the harvest
         transport = self._create_transport(self.bb.time_ms() + elapsed_time_ms * 2, self.bb.settings.harvest.endpoints)
