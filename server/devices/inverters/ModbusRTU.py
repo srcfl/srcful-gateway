@@ -125,7 +125,14 @@ class ModbusRTU(Modbus):
 
         if self.sn is None:
             log.info("Reading SN from device")
+            # if self.profile.name == "sdm630":
+            #     self.sn = "SDM630"
+            # else:
             self.sn = self._read_SN()
+
+            if self.sn is None:
+                log.error("Failed to read SN from device")
+                return False
 
         self._validate_and_select_profile()
 
@@ -135,7 +142,7 @@ class ModbusRTU(Modbus):
         return self.device_type
 
     def _is_open(self) -> bool:
-        return bool(self.client.socket)
+        return bool(self.client) and bool(self.client.socket)
 
     def _close(self) -> None:
         self.client.close()
@@ -241,3 +248,8 @@ class ModbusRTU(Modbus):
             log.error(f"Error reading register: {register.start_register}")
             self.disconnect()
             return None
+
+    def compare_host(self, other: ICom) -> bool:
+        if isinstance(other, ModbusRTU):
+            return self.sn == other.sn
+        return False
