@@ -23,4 +23,4 @@ http:
     client-web-service:
       loadBalancer:
         servers:
-          - url: "http://eGW-client-web:80"  # React app container
+          - url: "http://client-web:80"  # Use service name instead of container name
