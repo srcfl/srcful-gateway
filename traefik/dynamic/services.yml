@@ -12,7 +12,7 @@ http:
         - web
       rule: "HostRegexp(`{host:.+}`)"
       priority: 1
-      service: api-service
+      service: client-web-service
 
   services:
     api-service:
