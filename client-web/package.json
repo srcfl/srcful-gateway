@@ -14,10 +14,10 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.10.1",
-    "@types/react": "^19.0.2",
-    "@types/react-dom": "^19.0.2",
-    "typescript": "^5.7.2"
+    "@types/node": "^20.16.17",
+    "@types/react": "^18.3.16",
+    "@types/react-dom": "^18.3.5",
+    "typescript": "^4.9.5"
   },
   "scripts": {
     "start": "react-scripts start",
