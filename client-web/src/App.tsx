@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-function App() {
-  const [networkInfo, setNetworkInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+interface NetworkInfo {
+  ip: string;
+  port: number;
+  eth0_mac: string;
+  wlan0_mac: string;
+  interfaces?: Record<string, string>;
+}
+
+const App: React.FC = () => {
+  const [networkInfo, setNetworkInfo] = useState<NetworkInfo | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Test API call to your backend
@@ -15,11 +23,11 @@ function App() {
         }
         return response.json();
       })
-      .then(data => {
+      .then((data: NetworkInfo) => {
         setNetworkInfo(data);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err: Error) => {
         setError(err.message);
         setLoading(false);
       });
@@ -67,6 +75,6 @@ function App() {
       </header>
     </div>
   );
-}
+};
 
-export default App;
+export default App; 
