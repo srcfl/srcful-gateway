@@ -1,6 +1,13 @@
 entryPoints:
   web:
     address: ":80"
+  traefik:
+    address: ":8080"
+
+log:
+  level: DEBUG
+
+accessLog: {}
 
 api:
   dashboard: true
