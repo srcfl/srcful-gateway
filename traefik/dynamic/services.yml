@@ -12,15 +12,15 @@ http:
         - web
       rule: "HostRegexp(`{host:.+}`)"
       priority: 1
-      service: web-service
+      service: client-web-service
 
   services:
     api-service:
       loadBalancer:
         servers:
-          - url: "http://eGW-web:5000"  # Changed from localhost to container name
+          - url: "http://127.0.0.1:5000"  # Direct to host network service
     
-    web-service:
+    client-web-service:
       loadBalancer:
         servers:
-          - url: "http://eGW-web:5000"  # Changed from localhost to container name
+          - url: "http://eGW-client-web:80"  # React app container
