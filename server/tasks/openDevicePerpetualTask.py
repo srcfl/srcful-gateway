@@ -27,9 +27,13 @@ class DevicePerpetualTask(Task):
         logger.info("******************** DevicePerpetualTask ********************")
         logger.info("*************************************************************")
 
-        # Check if the device is already in the blackboard and is open
-        # If it is, we don't need to do anything. This check is necessary to ensure
-        # that a device does not get opened multiple times.
+        logger.info("DevicePerpetualTask got device: %s", self.device.get_config())
+
+        """
+        Check if the device is already in the blackboard and is open. 
+        If it is, we don't need to do anything. This check is necessary to ensure
+        that a device does not get opened multiple times.
+        """
         existing_device = self.bb.devices.find_sn(self.device.get_SN())
         if existing_device and existing_device.is_open():
             logger.info("Device is already open, skipping")
@@ -42,6 +46,7 @@ class DevicePerpetualTask(Task):
 
         try:
             if self.device.connect():
+                logger.info("Device connected: %s", self.device.get_config())
 
                 if self.bb.devices.contains(self.device) and not self.device.is_open():
                     message = "Device is already in the blackboard, no action needed"
@@ -52,24 +57,15 @@ class DevicePerpetualTask(Task):
                 message = "Device opened: " + str(self.device.get_config())
                 logger.info(message)
 
-                # if self.old_device:
-                #     self.bb.settings.devices.remove_connection(self.old_device, ChangeSource.LOCAL)
-
                 self.bb.devices.add(self.device)
                 return None
 
             else:
 
-                # if self.old_device:
-                #     logger.info("Device not found in two steps, giving up the perpetual task: %s, %s", self.old_device.get_SN(), self.device.get_SN())
-                #     logger.info("Removing device from settings: %s", self.old_device.get_SN())
-                #     self.bb.settings.devices.remove_connection(self.old_device, ChangeSource.LOCAL)
-
                 tmp_device = self.device.find_device()  # find the device on the network this is the same device but the method of connection (e.g. ip can be different)
 
                 if tmp_device is not None:
 
-                    # self.old_device = self.device
                     self.device = tmp_device
                     logger.info("Found a device at %s, retrying in 5 seconds...", self.device.get_config())
                     self.time = event_time + 5000

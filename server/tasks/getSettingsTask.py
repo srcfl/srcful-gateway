@@ -20,7 +20,7 @@ def handle_settings(bb: BlackBoard, raw_json_data_from_api: dict):
     logger.info("Got settings: %s", raw_json_data_from_api)
 
     try:
-        
+
         if raw_json_data_from_api is not None and raw_json_data_from_api["data"] is not None:
             logger.info("Updating settings: %s", raw_json_data_from_api)
             bb.settings.update_from_dict(json.loads(raw_json_data_from_api["data"]), ChangeSource.BACKEND)
@@ -34,6 +34,7 @@ def handle_settings(bb: BlackBoard, raw_json_data_from_api: dict):
     except TypeError:
         logger.error("Wrong json format: %s", raw_json_data_from_api)
         return None
+
 
 def create_query_json(chip: crypto.Chip, subkey: str):
     unix_timestamp = int(time.time())
@@ -78,14 +79,12 @@ class GetSettingsTask(SrcfulAPICallTask):
     def __init__(self, event_time: int, bb: BlackBoard):
         super().__init__(event_time, bb)
         self.settings = None
-        self.post_url = bb.settings.api.gql_endpoint # "https://api.srcful.dev/"
+        self.post_url = bb.settings.api.gql_endpoint
 
     def _json(self):
         with crypto.Chip() as chip:
             query = create_query_json(chip, self.bb.settings.SETTINGS_SUBKEY)
         return query
-        
-
 
     def _on_error(self, reply: requests.Response) -> Union[int, Tuple[int, Union[List[ITask], ITask, None]]]:
         return 0
@@ -93,5 +92,3 @@ class GetSettingsTask(SrcfulAPICallTask):
     def _on_200(self, reply: requests.Response) -> Union[List[ITask], ITask, None]:
         json_data = reply.json()
         return handle_settings(self.bb, json_data["data"]["gatewayConfiguration"]["configuration"])
-        
-    

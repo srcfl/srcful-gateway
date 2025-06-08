@@ -66,23 +66,23 @@ class P1HomeWizard(TCPDevice):
         except Exception as e:
             self._has_connected = False
             logger.error(f"Failed to connect to {self.ip}:{self.port}: {str(e)}")
-            return False
+            return self._has_connected
 
     def _disconnect(self) -> None:
         pass
 
     def _is_open(self) -> bool:
         return self._has_connected and self._connect()
-    
+
     def calculate_checksum(self, telegram: str) -> str:
         # CRC16-IBM (also known as CRC16-ANSI) polynomial
         polynomial = 0xA001  # Reversed 0x8005
         crc = 0x0000  # Initial value
-        
+
         # Process each character from / up to and including !
         start_index = telegram.find('/')
         end_index = telegram.rfind('!') + 1
-        
+
         for char in telegram[start_index:end_index]:
             crc ^= ord(char)
             for _ in range(8):
@@ -90,7 +90,7 @@ class P1HomeWizard(TCPDevice):
                     crc = (crc >> 1) ^ polynomial
                 else:
                     crc >>= 1
-        
+
         # Return the hexadecimal representation (uppercase)
         return f"{crc:04X}"
 

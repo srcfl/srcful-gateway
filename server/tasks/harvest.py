@@ -17,11 +17,14 @@ class Harvest(Task):
         super().__init__(event_time, bb)
         self.device = device
         self.barn: dict[int, dict] = {}
-        
-        self.backoff_time = 1000 # start with a 1-second backoff
+        self.backoff_time = 1000  # start with a 1-second backoff
         self.transport_factory = transport_factory
         self.last_transport_time = bb.time_ms()
         self.harvest_count = 0
+        self.total_harvest_time_ms = 0
+        self.packet_count = 0
+        self.data_points_count = 0
+        self.packet_counter_timestamp = event_time
 
     def execute(self, event_time) -> Union[List[ITask], ITask, None]:
 
@@ -33,20 +36,19 @@ class Harvest(Task):
             # self.bb.devices.remove(self.device)
             # self.bb.add_warning("Device unexpectedly closed, removing from blackboard and starting a new open device perpetual task")
 
-            
             transports = self._create_transport(event_time, self.bb.settings.harvest.endpoints, force_transport=True)
 
             #  if the devices is not terminated, we need to start a new open device perpetual to try to reconnect
             if not self.device.is_disconnected():
-                
+
                 logger.info("Disconnecting device from harvest task")
                 self.device.disconnect()
-                
+
                 open_inverter = DevicePerpetualTask(event_time + 30000, self.bb, self.device.clone())
                 transports.append(open_inverter)
-            
+
             return transports
-    
+
         try:
             harvest = self.device.read_harvest_data(force_verbose=self.harvest_count % 10 == 0)
             self.harvest_count += 1
@@ -54,24 +56,24 @@ class Harvest(Task):
 
             elapsed_time_ms = end_time - start_time
             self.backoff_time = self.device.get_backoff_time_ms(elapsed_time_ms, self.backoff_time)
-            logger.debug("Harvest from [%s] took %s ms", self.device.get_SN(), elapsed_time_ms)
+            logger.debug("Harvest from [%s] took %s ms. Data points: %s", self.device.get_SN(), elapsed_time_ms, len(harvest))
 
+            self.total_harvest_time_ms += elapsed_time_ms
 
             self.barn[end_time] = harvest
 
         except Exception as e:
-            
+
             # To-Do: Solarmanv5 can raise ConnectionResetError, so handle it!
-            logger.debug("Handling exeption reading harvest: %s", str(e))
-            logger.debug("Kill everything, transport what is left and reopen in 30 seconds")
-            
+
             self.device.disconnect()
-            
-            open_inverter = DevicePerpetualTask(self.bb.time_ms() + 30000, self.bb, self.device.clone())
+
+            clone = self.device.clone()
+            open_inverter = DevicePerpetualTask(self.bb.time_ms() + 30000, self.bb, clone)
             transports = self._create_transport(self.bb.time_ms(), self.bb.settings.harvest.endpoints, force_transport=True)
-    
+
             return [open_inverter] + transports
-            
+
         self.time = self.bb.time_ms() + self.backoff_time
 
         # check if it is time to transport the harvest
@@ -79,7 +81,7 @@ class Harvest(Task):
         if len(transport) > 0:
             return [self] + transport
         return self
-    
+
     def _create_headers(self, device: ICom) -> dict:
         headers = {"model": ""}
         headers["dtype"] = device.get_harvest_data_type().value
@@ -92,18 +94,29 @@ class Harvest(Task):
 
         if not force_transport:
             # check if the lowest time in the barn is more than 10 seconds old
-            force_transport =  self.bb.time_ms() - self.last_transport_time >= 10000
+            force_transport = self.bb.time_ms() - self.last_transport_time >= 10000
 
         if (len(self.barn) > 0 and force_transport):
+            logger.info("Filling the barn took %s ms for [%s] to endpoint %s", self.total_harvest_time_ms, self.device.get_SN(), endpoints)
             for endpoint in endpoints:
-                logger.info("Creating transport for %s", endpoint)
-                
+
                 headers = self._create_headers(self.device)
-                    
+
                 transport = self.transport_factory(event_time + 100, self.bb, self.barn, headers)
                 transport.post_url = endpoint
                 ret.append(transport)
 
+                self.packet_count += 1
+                self.data_points_count += len(self.barn)
+
+            if self.bb.time_ms() >= self.packet_counter_timestamp + 60000:
+                logger.info("A total of [%s] data points were harvested from device [%s] in the last minute and [%s] packets were sent", self.data_points_count, self.device.get_SN(), self.packet_count)
+                self.packet_counter_timestamp = self.bb.time_ms()
+                self.packet_count = 0
+                self.data_points_count = 0
+
             self.last_transport_time = self.bb.time_ms()
             self.barn = {}
+            self.total_harvest_time_ms = 0
+
         return ret

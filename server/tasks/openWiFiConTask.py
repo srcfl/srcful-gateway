@@ -2,9 +2,8 @@ import logging
 import time
 from server.network.wifi import WiFiHandler, is_connected, get_ip_address
 from server.app.blackboard import BlackBoard
-from server.tasks.saveStateTask import SaveStateTask
-from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.network.network_utils import NetworkUtils
+from server.tasks.discoverHostsTask import DiscoverHostsTask
 
 from .task import Task
 
@@ -77,7 +76,10 @@ class OpenWiFiConTask(Task):
                     subscription = GraphQLSubscriptionClient.getInstance(self.bb, self.bb.settings.api.ws_endpoint)
                     subscription.restart_async()
 
-                    return None
+                    # Scan for hosts with ports 502, 6607, 8899, now that WiFi is connected
+                    discover_hosts_task = DiscoverHostsTask(self.bb.time_ms() + 1000, self.bb)
+
+                    return discover_hosts_task
                 else:
                     log.warning("Network configuration failed after successful WiFi connection")
                     self.bb.add_warning("Connected to WiFi but no internet access")

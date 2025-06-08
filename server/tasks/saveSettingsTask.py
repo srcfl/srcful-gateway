@@ -14,7 +14,7 @@ class SaveSettingsTask(ConfigurationMutationTask):
 
     def _on_200(self, reply):
         super()._on_200(reply)
-        logger.info("Settings saved to backend")
+        logger.info("Settings saved to backend: %s", self.settings.to_dict())
 
     def _on_error(self, reply):
         super()._on_error(reply)

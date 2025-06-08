@@ -104,7 +104,8 @@ class ModbusSolarman(ModbusTCP):
             log.error("Error opening inverter: %s", self.get_config())
             return False
 
-        self.sn = self._read_SN()
+        if self.sn is None:
+            self.sn = self._read_SN()
 
         return bool(self.client.sock) and self.mac != NetworkUtils.INVALID_MAC and self.sn is not None
 
@@ -120,7 +121,7 @@ class ModbusSolarman(ModbusTCP):
         try:
             self.client.disconnect()
             self.client.sock = None
-            log.info("Close -> Inverter disconnected successfully: %s", self._get_type())
+            log.info("Closing client ModbusTCP %s with logger SN %s", self.mac, self.sn)
         except Exception as e:
             log.error("Close -> Error disconnecting inverter: %s", self._get_type())
             log.error(e)
@@ -149,10 +150,10 @@ class ModbusSolarman(ModbusTCP):
         super_config = super().get_config()
 
         my_config = {
-            self.SN: self.sn,
             self.LOGGER_SN: self.logger_sn,
             self.VERBOSE: self.verbose
         }
+
         return {**super_config, **my_config}
 
     def _get_connection_type(self) -> str:
@@ -173,21 +174,23 @@ class ModbusSolarman(ModbusTCP):
     def _read_registers(self, function_code: FunctionCodeKey, scan_start: int, scan_range: int) -> list:
         resp = None
 
-        if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
-            resp = self.client.read_input_registers(register_addr=scan_start, quantity=scan_range)
-        elif function_code == FunctionCodeKey.READ_HOLDING_REGISTERS:
-            resp = self.client.read_holding_registers(register_addr=scan_start, quantity=scan_range)
+        with self._lock:
+            if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
+                resp = self.client.read_input_registers(register_addr=scan_start, quantity=scan_range)
+            elif function_code == FunctionCodeKey.READ_HOLDING_REGISTERS:
+                resp = self.client.read_holding_registers(register_addr=scan_start, quantity=scan_range)
 
-        return resp
+            return resp
 
     def write_registers(self, starting_register: int, values: list) -> bool:
-        try:
-            self.client.write_multiple_holding_registers(starting_register, values)
-            log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
-            return True
-        except Exception as e:
-            log.error("Error writing registers: %s", e)
-            return False
+        with self._lock:
+            try:
+                self.client.write_multiple_holding_registers(starting_register, values)
+                log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
+                return True
+            except Exception as e:
+                log.error("Error writing registers: %s", e)
+                return False
 
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
 

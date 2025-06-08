@@ -12,7 +12,20 @@ def test_doGet():
         with patch("server.crypto.crypto.atcab_read_serial_number", return_value=crypto.ATCA_SUCCESS):
 
             # Create a RequestData object with the parameters you want to test
-            request_data = RequestData(BlackBoard(Mock(spec=CryptoState)), post_params={}, query_params={}, data={})
+            mock_crypto_state = Mock(spec=CryptoState)
+            mock_crypto_state.to_dict.return_value = {
+                'deviceName': 'test_device',
+                'serialNumber': '123456789',
+                'publicKey': 'abcdef',
+                'compactKey': 'compact',
+                'chipDeathCount': '0'
+            }
+            bb = BlackBoard(mock_crypto_state)
+            # The state property is computed from individual components
+            bb._start_time = 0  # This affects uptime
+            bb._devices.saved = []  # Set saved devices to empty list
+
+            request_data = RequestData(bb, post_params={}, query_params={}, data={})
 
             # Create an instance of Handler
             handler = Handler()

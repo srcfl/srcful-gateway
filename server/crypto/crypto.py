@@ -8,6 +8,7 @@ from .software import SoftwareCrypto
 
 import logging
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 try:
     # https://github.com/MicrochipTech/cryptoauthlib/blob/79013219556263bd4a3a43678a5e1d0faddba5ba/python/cryptoauthlib/atcab.py#L1
@@ -20,7 +21,10 @@ try:
         atcab_sign,
         atcab_read_serial_number,
         atcab_get_pubkey,
-        atcab_random
+        atcab_random,
+        atcab_verify_extern,
+        atcab_verify_stored,
+        AtcaReference
     )
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes
@@ -36,7 +40,10 @@ except Exception:
         atcab_sign,
         atcab_read_serial_number,
         atcab_get_pubkey,
-        atcab_random
+        atcab_random,
+        atcab_verify_extern,
+        atcab_verify_stored,
+        AtcaReference
     )
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import hashes
@@ -49,7 +56,7 @@ ATCA_SUCCESS = 0x00
 
 class HardwareCrypto(CryptoInterface):
     def __init__(self):
-        from cryptoauthlib import atcab_init, atcab_release, atcab_info, atcab_read_serial_number, atcab_get_pubkey, atcab_sign
+        from cryptoauthlib import atcab_init, atcab_release, atcab_info, atcab_read_serial_number, atcab_get_pubkey, atcab_sign, atcab_verify_extern, atcab_verify_stored
         self._atcab_init = atcab_init
         self._atcab_release = atcab_release
         self._atcab_info = atcab_info
@@ -57,6 +64,8 @@ class HardwareCrypto(CryptoInterface):
         self._atcab_get_pubkey = atcab_get_pubkey
         self._atcab_sign = atcab_sign
         self._atcab_random = atcab_random
+        self._atcab_verify_extern = atcab_verify_extern
+        self._atcab_verify_stored = atcab_verify_stored
 
     def atcab_init(self, cfg):
         return self._atcab_init(cfg)
@@ -89,6 +98,32 @@ class HardwareCrypto(CryptoInterface):
         status = self._atcab_random(random_bytes)
         return status, bytes(random_bytes)
 
+    def atcab_verify(self, data_hash, signature, public_key=None) -> tuple[int, bool]:
+        """Verify an ECDSA signature using either the provided public key or stored key.
+
+        Args:
+            data_hash: The pre-computed SHA256 hash to verify
+            signature: 64-byte signature (r|s format)
+            public_key: Optional external public key to use for verification
+
+        Returns:
+            tuple: (status, verified) where status is 0 for success and verified is True if signature is valid
+        """
+        try:
+            # Create AtcaReference for is_verified output parameter
+            is_verified = AtcaReference(False)
+
+            if public_key is not None:
+                # Use external key verification
+                status = self._atcab_verify_extern(data_hash, signature, public_key, is_verified)
+            else:
+                # Use stored key verification with key slot 0
+                status = self._atcab_verify_stored(data_hash, signature, 0, is_verified)
+
+            return status, bool(is_verified.value)
+        except Exception:
+            return 0, False
+
 
 def base64_url_encode(data):
     return urlsafe_b64encode(data).rstrip(b"=")
@@ -115,14 +150,14 @@ class ChipError(Exception):
     def __str__(self) -> str:
         return super().__str__() + f" cryptauthlib error code: {self.code}"
 
+
 # we need an external flag so that we can skip the hardware crypto tests without creating a new Chip object
 USE_HARDWARE_CRYPTO = True
+
 
 class Chip:
     _lock = threading.Lock()
     _lock_count = 0
-
-    # def __init__(self, crypto_impl: CryptoInterface = SoftwareCrypto()):
 
     def __init__(self, crypto_impl: CryptoInterface = HardwareCrypto() if USE_HARDWARE_CRYPTO else SoftwareCrypto()):
         self.crypto_impl = crypto_impl
@@ -222,13 +257,13 @@ class Chip:
 
         return public_key
 
-    # def get_chip_info(self):
-    #     self.ensure_chip_initialized()
-    #     return {
-    #         "deviceName": self.get_device_name(),
-    #         "serialNumber": self.get_serial_number().hex(),
-    #         "publicKey": self.get_public_key().hex(),
-    #     }
+    def verify_signature(self, data_hash: bytes, signature: bytes, public_key: bytes = None) -> bool:
+        self.ensure_chip_initialized()
+
+        code, verified = self.crypto_impl.atcab_verify(data_hash, signature, public_key)
+        self._throw_on_error(code, "Failed to verify signature")
+        log.info(f"Verified signature: {verified}")
+        return verified
 
     def build_header(self, headers: dict) -> dict:
         self.ensure_chip_initialized()

@@ -3,17 +3,17 @@ import time
 import logging
 from websocket import WebSocketApp
 import json
-from server.app.blackboard import BlackBoard
-from typing import Optional
+from typing import Optional, Dict, Any
 from datetime import datetime
 
+
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
-class CustomWebSocketApp(WebSocketApp):
+class BaseWebSocketApp(WebSocketApp):
     """
-    Custom WebSocketApp that handles pings and pongs with the case where the server sends unsolicited pongs and we need to reset the pong timer
+    Base WebSocket app that handles pings and pongs with the case where the server sends unsolicited pongs
     """
 
     def __init__(self, *args, **kwargs):
@@ -33,8 +33,9 @@ class CustomWebSocketApp(WebSocketApp):
                     self.sock.ping(self.ping_payload)
                     self.last_ping_tm = time.time()
                     self.expected_pongs += 1
+                    logger.debug(f"Expected pongs: {self.expected_pongs}")
                 except Exception as e:
-                    logger.debug(f"Failed to send ping: {e}")
+                    logger.error(f"Failed to send ping: {e}")
 
     def _callback(self, callback, *args):
         if callback == self.on_pong:
@@ -42,6 +43,7 @@ class CustomWebSocketApp(WebSocketApp):
                 # This is a response to our ping
                 self.expected_pongs -= 1
                 self.last_valid_pong_tm = time.time()
+                logger.debug(f"Remaining expected pongs: {self.expected_pongs}")
                 super()._callback(callback, *args)
             else:
                 # This is an unsolicited pong, reset the pong timer so we dont time out
@@ -52,40 +54,43 @@ class CustomWebSocketApp(WebSocketApp):
             super()._callback(callback, *args)
 
 
-class ControlSubscription(threading.Thread):
+class BaseWebSocketClient(threading.Thread):
     """
-    A simple WebSocket client that handles basic socket communication with custom message formats
+    Base WebSocket client that handles basic socket communication
     """
 
-    def __init__(self, bb: BlackBoard, url: str):
+    def __init__(self, url: str, protocol: str = "json"):
         super().__init__()
-        self.bb = bb
         self.url = url
-        self.ws: Optional[WebSocketApp] = None
+        self.ws: Optional[BaseWebSocketApp] = None
         self.stop_event = threading.Event()
-        self.PING_INTERVAL = 45  # seconds
+        self.PING_INTERVAL = 60  # seconds
+        self.PING_TIMEOUT = 30  # seconds
+        self.headers = {
+            # "User-Agent": "Python/WebSocket-Client",
+            "Sec-WebSocket-Protocol": protocol
+        }
+
+        self.connection_start_time = None
+        self.reconnect_count = 0
+        self.last_error_time = None
 
     def run(self):
         while not self.stop_event.is_set():
             try:
-                logger.info(f"Attempting to connect to WebSocket at {self.url} from ControlSubscription")
-                headers = {
-                    "User-Agent": "Python/WebSocket-Client",
-                    "Sec-WebSocket-Protocol": "json"  # Add this to indicate we're using JSON protocol
-                }
-                self.ws = CustomWebSocketApp(
+                logger.info(f"Connecting to WebSocket at {self.url}")
+                self.ws = BaseWebSocketApp(
                     self.url,
-                    header=headers,
+                    header=self.headers,
                     on_open=self.on_open,
                     on_message=self.on_message,
                     on_error=self.on_error,
                     on_close=self.on_close,
                     on_ping=self.on_ping,
-                    on_pong=self.on_pong,
+                    on_pong=self.on_pong
                 )
-
-                logger.info(f"WebSocket connection opened")
-                self.ws.run_forever(ping_interval=self.PING_INTERVAL, ping_timeout=10)
+                self.ws.run_forever(ping_interval=self.PING_INTERVAL, ping_timeout=self.PING_TIMEOUT)
+                self.connected = False
             except Exception as e:
                 logger.error(f"WebSocket error: {e} url: {self.url}")
 
@@ -99,59 +104,60 @@ class ControlSubscription(threading.Thread):
         if self.ws:
             self.ws.close()
 
-    def send_message(self, message: dict):
+    def send_message(self, message: Dict[str, Any]) -> None:
         """Send a message through the WebSocket"""
         if self.ws and self.ws.sock:
             try:
-                self.ws.send(json.dumps(message))
+                if isinstance(message, (dict, list)):
+                    self.ws.send(json.dumps(message))
+                else:
+                    self.ws.send(str(message))
             except Exception as e:
                 logger.error(f"Error sending message: {e}")
 
     def on_open(self, ws):
         """Called when the WebSocket connection is opened"""
+        self.connection_start_time = time.time()
         logger.info("WebSocket connection opened")
-        # Send connection initialization message
-        init_message = {
-            "type": "connection_init",
-            "payload": {}
-        }
-        self.send_message(init_message)
-        logger.info("Sent connection_init message")
+        if self.reconnect_count > 0:
+            connection_gap = "unknown"
+            if self.last_error_time:
+                connection_gap = f"{time.time() - self.last_error_time:.2f} seconds"
+            logger.info(f"Reconnected after {connection_gap} (attempt #{self.reconnect_count})")
+        self.send_connection_init()
+
+    def send_connection_init(self):
+        """Send connection initialization message"""
+        # TODO: Implement connection initialization message if needed, here or in a subclass
+        pass
 
     def on_ping(self, ws, message):
-        logger.debug(f"Received ping: {message}")
+        pass
 
     def on_pong(self, ws, message):
-        formatted_time = datetime.fromtimestamp(ws.last_ping_tm).strftime('%H:%M:%S.%f')
-        logger.debug(f"Received ping at {formatted_time}: {repr(message)}")
-        formatted_time = datetime.fromtimestamp(ws.last_pong_tm).strftime('%H:%M:%S.%f')
-        logger.debug(f"Received pong at {formatted_time}: {repr(message)}")
-        diff = ws.last_pong_tm - ws.last_ping_tm
-        logger.debug(f"Ping/pong difference: {diff} seconds")
+        pass
 
     def on_message(self, ws, message):
         """Called when a message is received"""
-        logger.debug("Received message: %s", message)
-        try:
-            data = json.loads(message)
-            message_type = data.get('type')
-            logger.info(f"Received message type: {message_type}")
-
-            if message_type == 'connection_ack':
-                logger.info("Connection acknowledged")
-            else:
-                # Process your custom message format here
-                logger.info(f"Processed message: {data}")
-
-        except json.JSONDecodeError:
-            logger.error(f"Invalid JSON message received: {message}")
-        except Exception as e:
-            logger.error(f"Error processing message: {message} error: {e}")
+        # TODO: Implement message handling if needed, here or in a subclass
+        pass
 
     def on_error(self, ws, error):
         """Called when a WebSocket error occurs"""
-        logger.error(f"WebSocket error: {error}, url: {self.url}")
+        self.last_error_time = time.time()
+
+        error_type = type(error).__name__
+        connection_duration = "unknown"
+        if self.connection_start_time:
+            connection_duration = f"{time.time() - self.connection_start_time:.2f} seconds"
+
+        logger.error(f"WebSocket error: {error}, type: {error_type}, duration: {connection_duration}")
 
     def on_close(self, ws, close_status_code, close_msg):
         """Called when the WebSocket connection is closed"""
-        logger.info(f"WebSocket connection closed: {close_status_code} - {close_msg}")
+        connection_duration = "unknown"
+        if self.connection_start_time:
+            connection_duration = f"{time.time() - self.connection_start_time:.2f} seconds"
+
+        logger.info(f"WebSocket connection closed: {close_status_code} - {close_msg}, duration: {connection_duration}")
+        self.reconnect_count += 1

@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod 
+from abc import ABC, abstractmethod
 import logging
 import requests
 from typing import List, Union, Tuple
@@ -57,7 +57,8 @@ class SrcfulAPICallTask(Task, ABC):
                 json = self._json()
                 if json is not None:
                     logger.debug("%s %s", self.post_url, arg_2_str(json))
-                    return requests.post(self.post_url, json=json, timeout=5)
+                    ret = requests.post(self.post_url, json=json, timeout=5)
+                    return ret
                 else:
                     logger.debug("%s %s", self.post_url, "no data or json")
                     return requests.post(self.post_url, timeout=5)
@@ -69,7 +70,7 @@ class SrcfulAPICallTask(Task, ABC):
             else:
                 self.got_error = True
                 return self._handle_error(response, event_time)
-                
+
         except Exception as e:
             self.got_error = True
             logger.error("Error in SrcfulAPICallTask")
@@ -92,7 +93,7 @@ class SrcfulAPICallTask(Task, ABC):
             retry_delay = 0
         else:
             return None
-            
+
         if retry_delay > 0:
             self.time = event_time + retry_delay
             # add self to the returned tasks, can be None, a single task or a list of tasks

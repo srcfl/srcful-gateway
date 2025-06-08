@@ -3,12 +3,13 @@ import logging
 import requests
 import xml.etree.ElementTree as ET
 from server.devices.inverters.common import INVERTER_CLIENT_NAME
-from server.network import mdns as mdns
+from server.network.mdns import mdns
+from server.network.mdns.mdns import ServiceResult
 from ..ICom import HarvestDataType, ICom
 from typing import List, Optional
 from server.network.network_utils import HostInfo, NetworkUtils
 import urllib3
-
+import time
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -72,25 +73,31 @@ class Enphase(TCPDevice):
     def get_config_schema():
         return {
             **TCPDevice.get_config_schema(Enphase.CONNECTION),
-            Enphase.bearer_token_key(): 'string, (optional) Bearer token for the device, either the token is provided or the username/password and iq gateway serial number.',
-            Enphase.username_key(): 'string, (optional) Username for the device',
-            Enphase.password_key(): 'string, (optional) Password for the device',
+            Enphase.bearer_token_key(): 'string, (optional, required if username and password are not provided) Bearer token for the device, either the token is provided or the username/password and iq gateway serial number.',
+            Enphase.username_key(): 'string, (optional, required if bearer token is not provided) Username for the device',
+            Enphase.password_key(): 'string, (optional, required if bearer token is not provided) Password for the device',
             Enphase.iq_gw_serial_key(): 'string, (optional) IQ Gateway serial number'
         }
 
     def make_get_request(self, path: str) -> requests.Response:
-        return self.session.get(self.base_url + path, timeout=45)
+        time.sleep(2)  # to prevent rate limiting
+        try:
+            logger.info(f"Enphase make_get_request: Requesting {self.base_url + path}")
+            response = self.session.get(self.base_url + path, timeout=45)
+            logger.info(f"Enphase make_get_request: Response: {response}")
+            return response
+        except Exception as e:
+            logger.error(f"Failed to make get request to {self.base_url + path}. Reason: {e}")
+            return None
 
     def __init__(self, **kwargs) -> None:
 
+        logger.info(f"Enphase __init__: kwargs: {kwargs}")
+
         self.username: str = kwargs.get(self.username_key(), "")
         self.password: str = kwargs.get(self.password_key(), "")
-        self.iq_gw_serial: str = kwargs.get(self.iq_gw_serial_key(), "")
+        self.iq_gw_serial: str = kwargs.get(self.iq_gw_serial_key(), None)
         self.bearer_token: str = kwargs.get(self.bearer_token_key(), "")
-
-        if self.bearer_token == "":
-            if not self.username or not self.password or not self.iq_gw_serial:
-                raise ValueError("Bearer token or username, password, and iq gateway serial number is required")
 
         ip: str = kwargs.get(self.IP, None)
         TCPDevice.__init__(self, ip, kwargs.get(self.PORT, 80))
@@ -100,19 +107,19 @@ class Enphase(TCPDevice):
         self.session: requests.Session = None
         self.mac: str = kwargs.get(NetworkUtils.MAC_KEY, NetworkUtils.INVALID_MAC)
 
-    def _read_device_info(self) -> Optional[str]:
+    def _read_SN(self) -> Optional[str]:
         """Read device information from the info.xml endpoint.
 
         Returns:
             Optional[str]: The device serial number if successful, None otherwise
         """
-        info_response = self.make_get_request(self.ENDPOINTS[Enphase.INFORMATION])
-        if info_response.status_code != 200:
-            logger.error(f"Failed to get device info from {self.ip}. Reason: {info_response.text}")
+        response = self.make_get_request(self.ENDPOINTS[Enphase.INFORMATION])
+        if not response or response.status_code != 200:
+            logger.error(f"Failed to get device info from {self.ip}. Reason: {response.text}")
             return None
 
         try:
-            root = ET.fromstring(info_response.text)
+            root = ET.fromstring(response.text)
             sn = root.find(".//device/sn").text
             logger.info(f"Found device serial number: {sn}")
             return sn
@@ -122,6 +129,10 @@ class Enphase(TCPDevice):
 
     def _connect(self, **kwargs) -> bool:
         """Connect to the device by url and return True if successful, False otherwise."""
+
+        if self.bearer_token == "":
+            if not self.username or not self.password or not self.iq_gw_serial:
+                raise ValueError("Bearer token or username, password, and iq gateway serial number is required")
 
         if not self.bearer_token:
             self.bearer_token = self._get_bearer_token(self.iq_gw_serial, self.username, self.password)
@@ -139,14 +150,15 @@ class Enphase(TCPDevice):
         self.session.headers = {"Authorization": f"Bearer {self.bearer_token}"}
 
         # Get device info to read serial number
-        self.iq_gw_serial = self._read_device_info()
+        if self.iq_gw_serial is None:
+            self.iq_gw_serial = self._read_SN()
+
         if not self.iq_gw_serial:
             return False
 
         # make a request to the production endpoint to check if the device is reachable
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
-
-        if response.status_code != 200:
+        if not response or response.status_code != 200:
             logger.error(f"Failed to connect to {self.ip}. Reason: {response.text}")
             return False
 
@@ -190,9 +202,11 @@ class Enphase(TCPDevice):
 
     def _read_harvest_data(self, force_verbose: bool = False) -> dict:
         data: dict = {}
+
         # Read data from the production endpoint
         response = self.make_get_request(self.ENDPOINTS[Enphase.PRODUCTION])
-        if response.status_code != 200:
+
+        if not response or response.status_code != 200:
             logger.error(f"Failed to read data from {self.ip}. Reason: {response.text}")
             return {}
 
@@ -215,7 +229,7 @@ class Enphase(TCPDevice):
     def get_config(self) -> dict:
         return {
             **super().get_config(),
-            self.iq_gw_serial_key(): self.get_SN(),
+            self.iq_gw_serial_key(): self.iq_gw_serial,
             self.mac_key(): self.mac,
             self.bearer_token_key(): self.bearer_token
         }
@@ -240,28 +254,30 @@ class Enphase(TCPDevice):
         config = self.get_config()
         config[self.ip_key()] = host.ip
         config[self.port_key()] = host.port
+        logger.info(f"Enphase _clone_with_host: Cloning with config: {config}")
         return Enphase(**config)
-
-    def _scan_for_devices(self, domain: str) -> Optional['Enphase']:
-        mdns_services: List[mdns.ServiceResult] = mdns.scan(5, domain)
-        for service in mdns_services:
-            if service.address and service.port:
-                enphase = Enphase(ip=service.address, port=service.port, bearer_token=self.bearer_token)
-                if enphase.connect():
-                    return enphase
-        return None
 
     def find_device(self) -> 'ICom':
         """ If there is an id we try to find a device with that id, using multicast dns for for supported devices"""
-        if self.mac != NetworkUtils.INVALID_MAC:
-            # TODO: This is unknown at this point
-            domain_names = {"_enphase-envoy._tcp.local.": {"name": "Enphase IQ Gateway"}}
+        logger.info("Finding Enphase device...")
+        service_results: List[ServiceResult] = mdns.scan(5, "_enphase-envoy._tcp.local.")
+        logger.info(f"Enphase find_device: Found {len(service_results)} Enphase devices: {service_results}")
 
-            for domain, info in domain_names.items():
-                enphase = self._scan_for_devices(domain)
-                if enphase:
-                    enphase.model_name = info["name"]
-                    return enphase
+        if len(service_results) == 0:
+            return None
+
+        # We loop since multiple devices with the same mDNS name are possible and until we manage to clone a device
+        for service_result in service_results:
+            mac = NetworkUtils.get_mac_from_ip(service_result.address)
+            host: HostInfo = HostInfo(service_result.address, service_result.port, mac)
+
+            logger.info(f"Enphase find_device: Found device {host.ip}:{host.port} with mac {host.mac}. Attempting to clone...")
+
+            clone = self._clone_with_host(host)
+            if clone is not None:
+                return clone
+
+        logger.info("This Enphase device was not found in the mDNS scan")
         return None
 
     def get_SN(self) -> str:

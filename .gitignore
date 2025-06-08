@@ -42,4 +42,4 @@ htmlcov
 venv 
 .venv
 
-/examples/
+/examples

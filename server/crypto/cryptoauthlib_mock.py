@@ -2,8 +2,16 @@
 # this is basically a copy of https://github.com/MicrochipTech/cryptoauthlib/blob/main/python/tests/cryptoauthlib_mock.py
 # the purpose is to be able to run the server without the crypto chip
 
-from ctypes import create_string_buffer, memmove, byref, cast, c_void_p
+from ctypes import create_string_buffer, memmove, byref, cast, c_void_p, c_bool
 from .status_mock import Status
+
+# Add AtcaReference class to match cryptoauthlib
+
+
+class AtcaReference:
+    def __init__(self, value):
+        self.value = value
+
 
 r_revision = create_string_buffer(4)
 r_revision.value = bytes(bytearray([0, 1, 2, 3]))
@@ -22,8 +30,10 @@ r_genkey_pubkey.value = bytes(bytearray([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x0
                                          0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                                          0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07]))
 
+
 def atcab_random(random_data):
     return Status.ATCA_SUCCESS
+
 
 def atcab_init(cfg):
     return Status.ATCA_SUCCESS
@@ -94,7 +104,7 @@ def get_device_name_with_device_id(revision):
                0x6A: 'TA010',
                0x35: 'SHA104',
                0x3B: 'SHA105'}
-    
+
     device_name = devices.get(revision[1], 'UNKNOWN')
     return device_name
 
@@ -165,4 +175,64 @@ def atcab_get_pubkey(key_id, public_key):
     )
     public_key[0:] = bytes(c_public_key.raw)
 
+    return Status.ATCA_SUCCESS
+
+
+# --------------------------------------------------------------------#
+# atcab_verify(public_key, signature, data):
+def atcab_verify(public_key, signature, data):
+    """Mock hardware verification - always returns success in mock implementation.
+
+    In real hardware this would perform actual signature verification.
+    """
+    return Status.ATCA_SUCCESS
+
+
+# --------------------------------------------------------------------#
+# atcab_verify_extern(message, signature, public_key, is_verified):
+def atcab_verify_extern(message, signature, public_key, is_verified):
+    """Mock external key verification - always returns success in mock implementation.
+
+    Args:
+        message: The message that was signed (SHA256 digest)
+        signature: The signature to verify
+        public_key: The public key to use for verification
+        is_verified: AtcaReference boolean indicating if the signature is valid
+    """
+    if not isinstance(message, bytes):
+        return Status.ATCA_BAD_PARAM
+    if not isinstance(signature, bytes):
+        return Status.ATCA_BAD_PARAM
+    if not isinstance(public_key, bytes):
+        return Status.ATCA_BAD_PARAM
+    if not isinstance(is_verified, AtcaReference):
+        return Status.ATCA_BAD_PARAM
+
+    # In mock implementation, always verify as true
+    is_verified.value = True
+    return Status.ATCA_SUCCESS
+
+
+# --------------------------------------------------------------------#
+# atcab_verify_stored(message, signature, key_id, is_verified):
+def atcab_verify_stored(message, signature, key_id, is_verified):
+    """Mock stored key verification - always returns success in mock implementation.
+
+    Args:
+        message: The message that was signed (SHA256 digest)
+        signature: The signature to verify
+        key_id: The key slot containing the public key
+        is_verified: AtcaReference boolean indicating if the signature is valid
+    """
+    if not isinstance(message, bytes):
+        return Status.ATCA_BAD_PARAM
+    if not isinstance(signature, bytes):
+        return Status.ATCA_BAD_PARAM
+    if not isinstance(key_id, int):
+        return Status.ATCA_BAD_PARAM
+    if not isinstance(is_verified, AtcaReference):
+        return Status.ATCA_BAD_PARAM
+
+    # In mock implementation, always verify as true
+    is_verified.value = True
     return Status.ATCA_SUCCESS

@@ -6,7 +6,7 @@ import ipaddress
 import subprocess
 from furl import furl
 from concurrent.futures import ThreadPoolExecutor
-from server.network.mdns import MDNSAdvertiser
+from server.network.mdns.mdns_advertiser import MDNSAdvertiser
 from server.crypto.crypto_state import CryptoState
 
 try:
@@ -16,6 +16,12 @@ except Exception:
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
+
+try:
+    import dbus
+except ImportError:
+    logger.info("dbus not found - possibly on non linux platform")
+    logger.info("wifi provisioning will not work")
 
 
 @dataclass
@@ -45,7 +51,7 @@ class NetworkUtils:
     MASK_KEY = 'mask'
     DEVICE_KEY = 'device'
     TIMEOUT_KEY = 'timeout'
-    DEFAULT_MODBUS_PORTS = "502,6607,8899"
+    DEFAULT_MODBUS_PORTS = "502,1502,6607,8899"
     DEFAULT_TIMEOUT = 5
 
     INVALID_MAC = "00:00:00:00:00:00"
@@ -511,7 +517,7 @@ class NetworkUtils:
         Returns:
             List of dictionaries containing 'hostname' and 'ip' for each discovered blixt device
         """
-        from server.network.mdns import scan
+        from server.network.mdns.mdns import scan
 
         logger = logging.getLogger(__name__)
         logger.info(f"Scanning for blixt devices on the network for {scan_duration} seconds...")
@@ -521,7 +527,7 @@ class NetworkUtils:
 
         # Scan for sourceful services
         service_type = "_sourceful._tcp.local."
-        results = scan(duration=scan_duration, service_type=service_type)
+        results = scan(duration=scan_duration, services=service_type)
 
         devices = []
         for result in results:

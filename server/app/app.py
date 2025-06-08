@@ -13,7 +13,7 @@ from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.getSettingsTask import GetSettingsTask
 from server.web.socket.settings_subscription import GraphQLSubscriptionClient
-from server.web.socket.control.control_subscription import ControlSubscription
+from server.web.socket.control.control_task_subscription import ControlSubscription
 from server.app.settings_device_listener import SettingsDeviceListener
 from server.app.blackboard import BlackBoard
 from server.tasks.discoverHostsTask import DiscoverHostsTask
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Constants
 MAX_WORKERS = 4
-CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
+# CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
 INITIAL_SETTINGS_DELAY = 500  # milliseconds
 SAVE_STATE_DELAY = 10000  # milliseconds (10 seconds)
 CHECK_WEB_REQUEST_DELAY = 1000  # milliseconds
@@ -68,10 +68,10 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     scheduler.add_task(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
 
     # put some initial tasks in the queue
-    scheduler.add_task(GetSettingsTask(bb.time_ms() + 500, bb))
+    scheduler.add_task(GetSettingsTask(bb.time_ms() + 30000, bb))
 
     if inverter is not None:
-        bb.task_scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
+        scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
 
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
     scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))
@@ -105,12 +105,12 @@ if __name__ == "__main__":
     import logging
 
     logging.basicConfig()
-    # handler = logging.StreamHandler(sys.stdout)
-    # logging.root.addHandler(handler)
+
     logging.root.setLevel(logging.INFO)
     args = {
-        NetworkUtils.IP_KEY: "192.168.1.100",
+        NetworkUtils.IP_KEY: "192.168.50.11",
         NetworkUtils.MAC_KEY: NetworkUtils.INVALID_MAC,
+        ModbusTCP.sn_key(): "2311286262",
         NetworkUtils.PORT_KEY: 502,
         ModbusTCP.slave_id_key(): 1,
         ModbusTCP.device_type_key(): "huawei"

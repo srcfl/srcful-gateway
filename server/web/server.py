@@ -29,6 +29,9 @@ class Endpoints:
 
             "device": handler.get.device.Handler(),
             "device/scan": handler.get.device_scan.DeviceScanHandler(),
+            "device/mdns/scan": handler.get.mdns_scan.MdnsScanHandler(),
+            "device/modbus/scan": handler.get.modbus_scan.ModbusScanHandler(),
+
             "device/supported": handler.get.supported_devices.Handler(),
             "device/supported/configurations": handler.get.supported_devices.SupportedConfigurations(),
 

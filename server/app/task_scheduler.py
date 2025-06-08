@@ -3,7 +3,6 @@ import logging
 import threading
 import queue
 from concurrent.futures import ThreadPoolExecutor
-
 from server.app.isystem_time import ISystemTime
 from server.app.itask_source import ITaskSource
 from server.tasks.itask import ITask
@@ -22,7 +21,6 @@ class TaskScheduler:
         self.system_time = system_time
         self.task_source = task_source
 
-    
     def add_task(self, task: ITask):
         with self.new_tasks_condition:
 
@@ -48,6 +46,7 @@ class TaskScheduler:
     def worker(self, task: ITask):
         try:
             new_tasks = task.execute(self.system_time.time_ms())
+
             if new_tasks is None:
                 new_tasks = []
         except StopIteration:
@@ -57,7 +56,7 @@ class TaskScheduler:
         except Exception as e:
             logging.error(f"Failed to execute task {task}: {e}")
             new_tasks = None
-            
+
         if new_tasks is not None:
             if not isinstance(new_tasks, list):
                 new_tasks_list = [new_tasks]
@@ -66,7 +65,7 @@ class TaskScheduler:
             new_tasks_list = new_tasks_list + self.task_source.purge_tasks()
             for new_task in new_tasks_list:
                 self.add_task(new_task)
-        
+
         with self.new_tasks_condition:
             self.active_threads -= 1
             self.new_tasks_condition.notify()
@@ -87,7 +86,7 @@ class TaskScheduler:
 
                 if self.stop_event.is_set():
                     break
-                
+
                 if not self.tasks.empty() and self.tasks.queue[0].get_time() <= self.system_time.time_ms():
                     task = self.tasks.get()
                     self.executor.submit(self.worker, task)

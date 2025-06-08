@@ -1,7 +1,6 @@
 import threading
 import time
 import logging
-from websocket import WebSocketApp
 import json
 from server.app.blackboard import BlackBoard
 import server.crypto.crypto as crypto
@@ -9,54 +8,13 @@ from typing import Callable
 from datetime import datetime, timezone
 from server.tasks.getSettingsTask import handle_settings
 from server.tasks.requestResponseTask import handle_request_task, RequestTask
-
+from server.web.socket.base_websocket import BaseWebSocketApp
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class CustomWebSocketApp(WebSocketApp):
-    """
-    Custom WebSocketApp that handles pings and pongs with the case where the server sends unsolicited pongs and we need to reset the pong timer
-    """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.expected_pongs = 0
-        self.last_valid_pong_tm = 0
-
-    def _send_ping(self) -> None:
-        if self.stop_ping.wait(self.ping_interval) or self.keep_running is False:
-            return
-        
-        while not self.stop_ping.wait(self.ping_interval) and self.keep_running is True:
-            if self.sock:
- 
-                try:
-                    logger.debug("Sending ping")
-                    self.sock.ping(self.ping_payload)
-                    self.last_ping_tm = time.time()
-                    self.expected_pongs += 1
-                except Exception as e:
-                    logger.debug(f"Failed to send ping: {e}")
-
-    def _callback(self, callback, *args):
-        if callback == self.on_pong:
-            if self.expected_pongs > 0:
-                # This is a response to our ping
-                self.expected_pongs -= 1
-                self.last_valid_pong_tm = time.time()
-                super()._callback(callback, *args)
-            else:
-                # This is an unsolicited pong, reset the pong timer so we dont time out
-                logger.debug("Received unsolicited pong, resetting pong timer")
-                self.last_pong_tm = self.last_valid_pong_tm
-                return
-        else:
-            super()._callback(callback, *args)
-
-
 class GraphQLSubscriptionClient(threading.Thread):
-
 
     _instances = {}  # Class variable to store instances
     _instances_lock = threading.Lock()  # Thread-safe instance creation
@@ -73,7 +31,6 @@ class GraphQLSubscriptionClient(threading.Thread):
         with cls._instances_lock:
             if url in cls._instances:
                 del cls._instances[url]
-
 
     def __init__(self, bb: BlackBoard, url: str):
         if url in self._instances:
@@ -94,7 +51,7 @@ class GraphQLSubscriptionClient(threading.Thread):
         while not self.stop_event.is_set():
             try:
                 logger.info(f"Attempting to connect to WebSocket at {self.url}")
-                self.ws = CustomWebSocketApp(
+                self.ws = BaseWebSocketApp(
                     self.url,
                     on_open=self.on_open,
                     on_message=self.on_message,
@@ -104,17 +61,18 @@ class GraphQLSubscriptionClient(threading.Thread):
                     on_pong=self.on_pong,
                     header=self.headers
                 )
-                
+
                 logger.info(f"WebSocket connection opened")
                 self.ws.run_forever(ping_interval=self.PING_INTERVAL, ping_timeout=10)
             except Exception as e:
                 logger.error(f"WebSocket error: {e} url: {self.url}")
-            
+
             if not self.stop_event.is_set():
                 logger.info("Reconnecting in 5 seconds...")
                 time.sleep(5)
 
     def stop(self):
+        """Stop the WebSocket client"""
         self.stop_event.set()
         if self.ws:
             self.ws.close()
@@ -140,22 +98,21 @@ class GraphQLSubscriptionClient(threading.Thread):
         self.stop_event.set()
         if self.ws:
             self.ws.close()
-        
+
         try:
             self.join(timeout=3*self.PING_INTERVAL)
         except threading.TimeoutError:
             logger.error("Thread join timed out during restart - thread might not have cleaned up properly")
-        
+
         # Remove this instance
         GraphQLSubscriptionClient.removeInstance(url)
-        
+
         # Create and start new instance
         GraphQLSubscriptionClient.getInstance(bb, url).start()
 
     def on_open(self, ws):
         logger.info("WebSocket connection opened")
         self.send_connection_init()
-
 
     def on_ping(self, ws, message):
         logger.debug(f"Received ping: {message}")
@@ -167,7 +124,6 @@ class GraphQLSubscriptionClient(threading.Thread):
         logger.debug(f"Received pong at {formatted_time}: {repr(message)}")
         diff = ws.last_pong_tm - ws.last_ping_tm
         logger.debug(f"Ping/pong difference: {diff} seconds")
-        
 
     def on_message(self, ws, message):
         logger.debug("Received message: %s", message)
@@ -198,7 +154,6 @@ class GraphQLSubscriptionClient(threading.Thread):
                     logger.info("Error received, reconnecting")
                     self.send_connection_init()
             return
-            
 
     def on_error(self, ws, error):
         logger.error(f"WebSocket error: {error}, url: {self.url}")
@@ -215,7 +170,6 @@ class GraphQLSubscriptionClient(threading.Thread):
         logger.info("Sent connection_init message")
         logger.debug(f"socked timeout: {self.ws.sock.gettimeout()}")
 
-
     def _get_subscription_query(self, chip_constructor: Callable[[], crypto.Chip]):
         query = """
         subscription {
@@ -229,7 +183,6 @@ class GraphQLSubscriptionClient(threading.Thread):
           }
         }
         """
-
 
         # Convert Unix timestamp to datetime object
         unix_timestamp = int(time.time())
@@ -251,8 +204,6 @@ class GraphQLSubscriptionClient(threading.Thread):
 
         return query
 
-    
-
     def subscribe_to_settings(self):
 
         query = self._get_subscription_query(crypto.Chip)
@@ -266,4 +217,3 @@ class GraphQLSubscriptionClient(threading.Thread):
         }
 
         self.ws.send(json.dumps(subscription_message))
-        

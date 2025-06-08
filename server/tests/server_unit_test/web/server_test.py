@@ -148,6 +148,20 @@ def test_handler_get_no_path_returns_root(mock_setup, mock_handle, mock_finish, 
     h.end_headers = Mock()
     h.wfile = BytesIO()
 
+    # Set up the crypto state mock
+    mock_crypto_state = Mock(spec=CryptoState)
+    mock_crypto_state.to_dict.return_value = {
+        'deviceName': 'test_device',
+        'serialNumber': '123456789',
+        'publicKey': 'abcdef',
+        'compactKey': 'compact',
+        'chipDeathCount': '0'
+    }
+    bb._crypto_state = mock_crypto_state
+    # Set individual components that make up the state
+    bb._start_time = 0  # This affects uptime
+    bb._devices.saved = []  # Set saved devices to empty list
+
     with patch("server.crypto.crypto.HardwareCrypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
         with patch("server.crypto.crypto.HardwareCrypto.atcab_read_serial_number", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
             h.path = ""

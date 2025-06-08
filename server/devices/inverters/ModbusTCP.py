@@ -8,11 +8,13 @@ from pymodbus.exceptions import ModbusIOException
 from pymodbus.pdu import ExceptionResponse
 from pymodbus import pymodbus_apply_logging_config
 from server.network.network_utils import HostInfo, NetworkUtils
-from server.devices.supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile, RegisterInterval
+from server.devices.supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
+from server.devices.supported_devices.profile import RegisterInterval
 import logging
 from server.devices.profile_keys import ProtocolKey
 from server.devices.registerValue import RegisterValue
 import time
+import threading
 
 
 log = logging.getLogger(__name__)
@@ -34,6 +36,7 @@ class ModbusTCP(Modbus, TCPDevice):
     """
 
     CONNECTION = "TCP"
+    _lock = threading.Lock()
 
     @staticmethod
     def ip_key() -> str:
@@ -105,6 +108,7 @@ class ModbusTCP(Modbus, TCPDevice):
 
     def _connect(self, **kwargs) -> bool:
         self._create_client(**kwargs)
+
         if not self.client.connect():
             log.error("FAILED to open Modbus TCP device: %s", self._get_type())
             return False
@@ -116,8 +120,17 @@ class ModbusTCP(Modbus, TCPDevice):
         # A short delay is necessary for some devices before a new connection can be established
         time.sleep(1)
 
-        # If the serial number is not set, or if its set to the MAC address (for version < 0.18.16), read the serial number from the device
-        if self.sn is None or self.sn == self.mac:
+        # check if the profile has any primary profiles to try first
+        log.info(f"{self.device_type} has {len(self.profile.primary_profiles)} primary profiles")
+        for profile in self.profile.primary_profiles:
+            log.info(f"Trying primary profile: {profile.name}")
+            if profile.profile_is_valid(self):
+                log.info(f"Primary profile {profile.name} is valid, using it")
+                self.device_type = profile.name
+                self.profile = profile
+                break  # Break and use the first valid profile and continue with the rest of the code
+
+        if self.sn is None:
             log.info("Reading SN from device")
             self.sn = self._read_SN()
 
@@ -127,7 +140,7 @@ class ModbusTCP(Modbus, TCPDevice):
             log.info("Setting SN to MAC because SN register is not defined but frequency is valid")
             self.sn = self.mac
 
-        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self.sn is not None
+        return bool(self.client.socket) and self.mac != NetworkUtils.INVALID_MAC and self.sn is not None and self.profile.profile_is_valid(self)
 
     def _get_type(self) -> str:
         return self.device_type
@@ -136,7 +149,7 @@ class ModbusTCP(Modbus, TCPDevice):
         return bool(self.client) and bool(self.client.socket)
 
     def _close(self) -> None:
-        log.info("Closing client ModbusTCP %s", self.mac)
+        log.info("Closing client ModbusTCP %s with logger SN %s", self.mac, self.sn)
         self.client.close()
 
     def _disconnect(self) -> None:
@@ -169,38 +182,39 @@ class ModbusTCP(Modbus, TCPDevice):
     def _read_registers(self, function_code: FunctionCodeKey, scan_start: int, scan_range: int) -> list:
         resp = None
 
-        if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
-            log.debug(f"Reading input registers - Start: {scan_start}, Range: {scan_range}, Slave ID: {self.slave_id}")
-            resp = self.client.read_input_registers(scan_start, scan_range, slave=self.slave_id)
-        elif function_code == FunctionCodeKey.READ_HOLDING_REGISTERS:
-            log.debug(f"Reading holding registers - Start: {scan_start}, Range: {scan_range}, Slave ID: {self.slave_id}")
-            resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.slave_id)
+        with self._lock:
+            if function_code == FunctionCodeKey.READ_INPUT_REGISTERS:
+                log.debug(f"Reading input registers - Start: {scan_start}, Range: {scan_range}, Slave ID: {self.slave_id}")
+                resp = self.client.read_input_registers(scan_start, scan_range, slave=self.slave_id)
+            elif function_code == FunctionCodeKey.READ_HOLDING_REGISTERS:
+                log.debug(f"Reading holding registers - Start: {scan_start}, Range: {scan_range}, Slave ID: {self.slave_id}")
+                resp = self.client.read_holding_registers(scan_start, scan_range, slave=self.slave_id)
 
-        # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
-        # We solve this by raising the exception manually
-        if isinstance(resp, ModbusIOException):
-            raise ModbusIOException(f"ModbusIOException occurred while reading registers: {resp.message}")
+            # Not sure why read_input_registers dose not raise an ModbusIOException but rather returns it
+            # We solve this by raising the exception manually
+            if isinstance(resp, ModbusIOException):
+                raise ModbusIOException(f"ModbusIOException occurred while reading registers: {resp.message}")
 
-        return resp.registers
+            return resp.registers
 
     def write_registers(self, starting_register: int, values: list) -> bool:
         """
         Write a range of holding registers from a start address
         """
+        with self._lock:
+            try:
+                resp = self.client.write_registers(
+                    starting_register, values, slave=self.slave_id
+                )
 
-        try:
-            resp = self.client.write_registers(
-                starting_register, values, slave=self.slave_id
-            )
+                if isinstance(resp, ExceptionResponse):
+                    return False
 
-            if isinstance(resp, ExceptionResponse):
+                log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
+                return True
+            except Exception as e:
+                log.error("Error writing registers: %s", e)
                 return False
-
-            log.debug("OK - Writing Holdings: %s - %s", str(starting_register),  str(values))
-            return True
-        except Exception as e:
-            log.error("Error writing registers: %s", e)
-            return False
 
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
 
@@ -227,12 +241,12 @@ class ModbusTCP(Modbus, TCPDevice):
 
             # Read and interpret value
             a, b, value = reg_value.read_value(self)
-            log.debug("Values read in the format of [raw, raw, value]: %s, %s, %s", a, b, value)
+            log.debug("Values read from %s %s in the format of [raw, raw, value]: %s, %s, %s", self.device_type, self.sn, a, b, value)
 
             return value
 
         except Exception as e:
-            log.error(f"Error reading frequency: {str(e)}")
+            log.error(f"Error reading register: {register.start_register}")
             self.disconnect()
             return None
 

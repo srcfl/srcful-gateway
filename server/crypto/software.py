@@ -4,8 +4,10 @@ from cryptography.utils import int_to_bytes
 from cryptography.hazmat.primitives import hashes
 from .crypto_interface import CryptoInterface
 import random
-import os
 import logging
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -80,15 +82,68 @@ class SoftwareCrypto(CryptoInterface):
         return 0, bytes(public_key)
 
     def atcab_sign(self, key_id, message):
+        """Sign a message using ECDSA with SHA256.
+
+        Args:
+            key_id: Key slot to use (ignored in software implementation)
+            message: The message to sign (should be SHA256 hash)
+
+        Returns:
+            tuple: (status, signature) where signature is in r|s format (64 bytes)
+        """
+        # Sign the pre-computed hash
         signature = self.private_key.sign(
-            message,
+            message,  # message is already a hash
             ec.ECDSA(utils.Prehashed(hashes.SHA256()))
         )
-        (r, s) = utils.decode_dss_signature(signature)
-        result = int_to_bytes(r, 32) + int_to_bytes(s, 32)
-        return 0, bytes(result)
+
+        # Convert to r|s format (64 bytes)
+        r, s = utils.decode_dss_signature(signature)
+        signature_bytes = int_to_bytes(r, 32) + int_to_bytes(s, 32)
+
+        return 0, bytes(signature_bytes)
 
     def atcab_random(self):
         # generate a list of 32 random bytes
         random_data = [random.randint(0, 255) for _ in range(32)]
         return 0, bytearray(random_data)
+
+    def atcab_verify(self, data_hash, signature, public_key=None) -> tuple[int, bool]:
+        """Verify an ECDSA signature using either the provided public key or instance public key.
+
+        Args:
+            signature: 64-byte signature (r|s format)
+            data_hash: The pre-computed SHA256 hash to verify
+            public_key: Optional bytes of public key in X962 uncompressed format (64 bytes without prefix)
+                       If not provided, uses the instance's public key
+
+        Returns:
+            tuple: (status, verified) where status is 0 for success and verified is True if signature is valid
+        """
+        try:
+            # Convert signature from r|s format to DER format
+            r = int.from_bytes(signature[:32], byteorder='big')
+            s = int.from_bytes(signature[32:], byteorder='big')
+            der_signature = utils.encode_dss_signature(r, s)
+
+            # Get the verifying key
+            verifying_key = self.public_key
+            if public_key is not None:
+                # Add 0x04 prefix for uncompressed point format
+                public_key_with_prefix = b'\x04' + public_key
+                verifying_key = ec.EllipticCurvePublicKey.from_encoded_point(
+                    ec.SECP256R1(),
+                    public_key_with_prefix
+                )
+
+            # Verify the signature
+            verifying_key.verify(
+                der_signature,
+                data_hash,  # Data should already be hashed
+                ec.ECDSA(utils.Prehashed(hashes.SHA256()))
+            )
+            return 0, True
+
+        except Exception as e:
+            log.error(f"Signature verification failed: {e}")
+            return 0, False

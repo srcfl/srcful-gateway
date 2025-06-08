@@ -39,7 +39,8 @@ except ImportError:
         return NetworkUtils.get_ip_address()
 
     def get_ip_addresses_with_interfaces():
-        return [('No active connection', '0.0.0.0')]
+        ip = get_ip_address()
+        return [('Active connection', ip)]
 
 else:
 

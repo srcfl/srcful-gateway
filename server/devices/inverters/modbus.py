@@ -48,15 +48,13 @@ class Modbus(Device, ABC):
         self.slave_id = kwargs.get(self.SLAVE_ID, None)
         self.device_type = kwargs.get(self.DEVICE_TYPE, None)
 
-        logger.debug("Device Type: %s", str(self.device_type))
+        logger.info("Device Type: %s", str(self.device_type))
 
         if self.device_type:
             self.device_type = self.device_type.lower()
             self.profile: ModbusProfile = ModbusDeviceProfiles().get(self.device_type)
 
-            if not self.profile:
-                self.profile: ModbusProfile = ModbusDeviceProfiles(
-                    device_category=DeviceCategoryKey.METERS).get(self.device_type)
+        self.always_included = {}  # This is populated every time we do a verbose read
 
     def _read_harvest_data(self, force_verbose: bool) -> dict:
         regs = []
@@ -88,7 +86,15 @@ class Modbus(Device, ABC):
         # Zip the registers and values together convert them into a dictionary
         res = dict(zip(regs, vals))
 
-        logger.debug("OK - Reading Harvest Data: %s", str(res))
+        if force_verbose or self.profile.verbose_always:
+            for i in self.profile.always_include:
+                if i in res:
+                    self.always_included[i] = res[i]
+        else:
+            # Merge the always-included data with the non-verbose res dictionary
+            res = {**self.always_included, **res}
+
+        logger.debug("Harvest payload: %s", str(res))
 
         if res:
             return res
@@ -115,7 +121,7 @@ class Modbus(Device, ABC):
         try:
             logger.debug("Reading %s: %s - %s", self.device_type, str(scan_start), str(scan_range))
             resp = self._read_registers(function_code, scan_start, scan_range)
-            logger.debug("OK - Reading %s: %s - %s", self.device_type, str(scan_start), str(scan_range))
+            logger.debug("OK - Reading %s: %s", self.device_type, str(resp))
 
         except ModbusException as me:
             # Decide whether to break or continue based on the type of ModbusException

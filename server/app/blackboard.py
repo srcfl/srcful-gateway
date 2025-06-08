@@ -1,8 +1,10 @@
+from server.network.network_utils import HostInfo
 import random
 import time
 import os
 import socket
 import logging
+import os
 from server.app.isystem_time import ISystemTime
 from server.app.itask_source import ITaskSource
 import server.crypto.crypto as crypto
@@ -54,7 +56,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._available_hosts = []
 
     def get_version(self) -> str:
-        return "0.19.6"
+        return "0.22.5"
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
