@@ -17,22 +17,16 @@ class Handler(GetHandler):
         )
     
     def do_get(self, data: RequestData):
-        ret = data.bb.crypto_state().to_dict(data.bb.chip_death_count)
 
-        meter = {
-            "production": 195,
-            "consumption": 100,
-        }
+        dees = []
 
-        battery = {
-            "power": 95,
-        }
+        for device in data.bb.devices.lst:
+            last_harvest_data = device.get_last_harvest_data()
+            dee_decoder = device.get_dee_decoder()
+            if dee_decoder:
+                dees = dees + dee_decoder.decode(last_harvest_data)
 
-        solar = {
-            "power": 100,
-        }
-
-        return 200, json.dumps({"status":"success", "data":{"dee":[{"meter":meter}, {"battery":battery}, {"solar":solar}]}})
+        return 200, json.dumps({"status":"success", "data":{"dee":dees}})
 
 
 
