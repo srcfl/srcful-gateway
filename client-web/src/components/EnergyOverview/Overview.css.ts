@@ -187,12 +187,22 @@ export const CurveStyle = css`
     bottom: 190px;
     left: 190px;
     transform: rotate(-180deg);
+    
+    path.particle {
+      stroke: #888;
+      stroke-width: 3;
+    }
   }
   
   &.export-battery-to-house {
     bottom: 190px;
     right: 190px;
     transform: rotate(90deg);
+    
+    path.particle {
+      stroke: #6f42c1;
+      stroke-width: 3;
+    }
   }
 `;
 
@@ -214,11 +224,21 @@ export const LineStyle = css`
     top: 240px;
     left: 190px;
     transform: rotate(90deg);
+    
+    line.particle {
+      stroke: #ffa500;
+      stroke-width: 3;
+    }
   }
   
   &.import-grid-to-house {
     top: 240px;
     left: 190px;
     transform: rotate(0deg);
+    
+    line.particle {
+      stroke: #888;
+      stroke-width: 3;
+    }
   }
 `; 
