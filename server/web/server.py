@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 class Endpoints:
     def __init__(self):
         self.api_get_dict = {
+            "dee": handler.get.dee.Handler(),
+
             "crypto": handler.get.crypto.Handler(),
             "crypto/revive": handler.get.crypto.ReviveHandler(),
 
@@ -148,13 +150,17 @@ def request_handler_factory(bb: BlackBoard):
             super(Handler, self).__init__(*args, **kwargs)
 
         def send_api_response(self, code: int, response: str):
-            self.send_response(code)
-            self.send_header("Content-type", "application/json")
-            response = bytes(response, "utf-8")
-            self.send_header("Content-Length", len(response))
-            self.end_headers()
-            self.wfile.write(response)
-            self.wfile.flush()
+            try:
+                self.send_response(code)
+                self.send_header("Content-type", "application/json")
+                self.send_header("Connection", "close")
+                response = bytes(response, "utf-8")
+                self.send_header("Content-Length", len(response))
+                self.end_headers()
+                self.wfile.write(response)
+                self.wfile.flush()
+            except Exception as e:
+                logger.exception("Exception in send_api_response: %s", e)
 
         def send_html_response(self, code: int, response: str):
             self.send_response(code)
@@ -191,40 +197,44 @@ def request_handler_factory(bb: BlackBoard):
 
         # this needs to be GET as this is a direct mapping of the http method
         def do_GET(self):
-            path, query = self.endpoints.pre_do(self.path)
+            try:
+                path, query = self.endpoints.pre_do(self.path)
 
-            if path.startswith("/doc/") or path.endswith("/doc"):
-                schema = self.get_doc(path[4:])
-                self.send_api_response(200, schema)
-                return
-
-            api_handler, params = Endpoints.get_api_handler(path, "/api/", self.endpoints.api_get)
-            rdata = handler.RequestData(bb, params, query, {})
-
-            if path == "" or path == "/":
-                code, response = handler.get.root.Handler().do_get(rdata)
-                self.send_html_response(code, response)
-                return
-
-            if api_handler is not None:
-                try:
-                    code, response = api_handler.do_get(rdata)
-                except Exception as e:
-                    logger.exception("Exception in GET handler: %s", e)
-                    code = 500
-                    response = json.dumps({"exception": str(e), "endpoint": path})
-                self.send_api_response(code, response)
-            else:
-                # check if we have a post handler
-                api_handler, params = self.endpoints.get_api_handler(
-                    path, "/api/", self.endpoints.api_post
-                )
-                if api_handler is not None:
-                    self.send_api_response(200, api_handler.schema())
+                if path.startswith("/doc/") or path.endswith("/doc"):
+                    schema = self.get_doc(path[4:])
+                    self.send_api_response(200, schema)
                     return
 
-            self.send_response(404)
-            self.end_headers()
+                api_handler, params = Endpoints.get_api_handler(path, "/api/", self.endpoints.api_get)
+                rdata = handler.RequestData(bb, params, query, {})
+
+                if path == "" or path == "/":
+                    code, response = handler.get.root.Handler().do_get(rdata)
+                    self.send_html_response(code, response)
+                    return
+
+                if api_handler is not None:
+                    try:
+                        code, response = api_handler.do_get(rdata)
+                    except Exception as e:
+                        logger.exception("Exception in GET handler: %s", e)
+                        code = 500
+                        response = json.dumps({"exception": str(e), "endpoint": path})
+                    self.send_api_response(code, response)
+                    return
+                else:
+                    # check if we have a post handler
+                    api_handler, params = self.endpoints.get_api_handler(
+                        path, "/api/", self.endpoints.api_post
+                    )
+                    if api_handler is not None:
+                        self.send_api_response(200, api_handler.schema())
+                        return
+
+                self.send_response(404)
+                self.end_headers()
+            except Exception as e:
+                logger.exception("Exception in do_GET: %s", e)
             return
 
         # this needs to be DELETE as this is a direct mapping of the http method
@@ -274,7 +284,7 @@ class Server:
     def __init__(self, web_host: tuple[str, int], bb: BlackBoard):
         self._web_server = HTTPServer(web_host, request_handler_factory(bb))
 
-        self._web_server.timeout = 0.1
+        self._web_server.timeout = 0.25
         # self._web_server.socket.setblocking(False)
 
     def close(self):
