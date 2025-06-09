@@ -58,6 +58,28 @@ const wattToKW = (watt: number): number => {
   return formatNumber(kW, decimals);
 };
 
+// Helper function to format power with appropriate unit
+const formatPowerWithUnit = (kWValue: number): { value: number; unit: string } => {
+  if (!kWValue) return { value: 0, unit: 'kW' };
+  
+  const absValue = Math.abs(kWValue);
+  if (absValue < 1) {
+    // Convert to watts for values under 1kW
+    const watts = kWValue * 1000;
+    return { 
+      value: formatNumber(watts, 0), // No decimals for watts
+      unit: 'W' 
+    };
+  } else {
+    // Keep as kW for values 1kW and above
+    const decimals = absValue >= 10 ? 1 : 2;
+    return { 
+      value: formatNumber(kWValue, decimals), 
+      unit: 'kW' 
+    };
+  }
+};
+
 // Process DEE data into our energy structure
 const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
   let solarPower = 0;
@@ -245,8 +267,11 @@ const Overview: React.FC = () => {
         >
           <PvIcon />
           <span>
-            {energyData.solar.isActive ? wattToKW(energyData.solar.power) : '-'}
-            <span>kW</span>
+            {energyData.solar.isActive ? (() => {
+              const formatted = formatPowerWithUnit(wattToKW(energyData.solar.power));
+              return formatted.value;
+            })() : '-'}
+            <span>{energyData.solar.isActive ? formatPowerWithUnit(wattToKW(energyData.solar.power)).unit : 'kW'}</span>
           </span>
         </div>
 
@@ -279,11 +304,14 @@ const Overview: React.FC = () => {
                 ) : (
                   <UilArrowRight style={ArrowColorStyle('#e69373')} />
                 )}
-                {formatNumber(Math.abs(energyData.grid.net))}
+                {(() => {
+                  const formatted = formatPowerWithUnit(Math.abs(energyData.grid.net));
+                  return formatted.value;
+                })()}
               </>
             )}
             {!energyData.grid.isActive && '-'}
-            <span>kW</span>
+            <span>{energyData.grid.isActive ? formatPowerWithUnit(Math.abs(energyData.grid.net)).unit : 'kW'}</span>
           </span>
         </div>
 
@@ -296,8 +324,11 @@ const Overview: React.FC = () => {
         <div css={[Circle, HomeCircle]}>
           <HomeIcon />
           <span>
-            {formatNumber(state.houseConsumption)} 
-            <span>kW</span>
+            {(() => {
+              const formatted = formatPowerWithUnit(state.houseConsumption);
+              return formatted.value;
+            })()} 
+            <span>{formatPowerWithUnit(state.houseConsumption).unit}</span>
           </span>
         </div>
 
@@ -315,11 +346,14 @@ const Overview: React.FC = () => {
                 ) : (
                   <UilArrowUp style={ArrowColorStyle('#e69373')} />
                 )}
-                {formatNumber(Math.abs(energyData.battery.net))}
+                {(() => {
+                  const formatted = formatPowerWithUnit(Math.abs(energyData.battery.net));
+                  return formatted.value;
+                })()}
               </>
             )}
             {!energyData.battery.isActive && '-'}
-            <span>kW</span>
+            <span>{energyData.battery.isActive ? formatPowerWithUnit(Math.abs(energyData.battery.net)).unit : 'kW'}</span>
           </span>
         </div>
 

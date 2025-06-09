@@ -2,7 +2,6 @@ import { css } from '@emotion/react';
 
 export const OverviewWrapperStyle = css`
   padding: 20px;
-  background: #1a1a2e;
   border-radius: 12px;
   margin: 20px;
   
@@ -80,10 +79,9 @@ export const Circle = css`
     text-align: center;
     
     span {
-      font-size: 12px;
+      font-size: 16px;
       font-weight: normal;
       color: #ccc;
-      text-transform: lowercase;
     }
     
     &.in, &.out {
