@@ -38,9 +38,9 @@ const HARDCODED_DATA = {
     consumption: 2.9 // 2.9 kW total consumption
   },
   battery: {
-    charging: 0, // 0 kW (inactive for now)
-    discharging: 0, // 0 kW (inactive for now)
-    isActive: false
+    charging: 1.5, // 1.5 kW charging
+    discharging: 0, // 0 kW discharging
+    isActive: true
   }
 };
 
@@ -114,7 +114,7 @@ const Overview: React.FC = () => {
   return (
     <div css={OverviewWrapperStyle}>
       <h2>Energy overview (beta)</h2>
-      <p>Battery support coming soon</p>
+      <p>Real-time energy flow visualization</p>
       <div css={FlowWrapper}>
         {/* Solar Panel */}
         <div 
@@ -171,17 +171,20 @@ const Overview: React.FC = () => {
           </span>
         </div>
 
-        {/* Battery (inactive) */}
-        <div css={[Circle, BatteryCircle]} className="inactive">
+        {/* Battery */}
+        <div 
+          css={[Circle, BatteryCircle]} 
+          className={HARDCODED_DATA.battery.isActive ? '' : 'inactive'}
+        >
           <BatteryIcon css={css`width: 70px!important;`} />
           <span className="in">
             <UilArrowDown style={ArrowColorStyle('lightblue')} />
-            {HARDCODED_DATA.battery.charging} 
+            {HARDCODED_DATA.battery.isActive ? formatNumber(HARDCODED_DATA.battery.charging) : '-'} 
             <span>kW</span>
           </span>
           <span className="out">
             <UilArrowUp style={ArrowColorStyle('#e69373')} />
-            {HARDCODED_DATA.battery.discharging} 
+            {HARDCODED_DATA.battery.isActive ? formatNumber(HARDCODED_DATA.battery.discharging) : '-'} 
             <span>kW</span>
           </span>
         </div>
