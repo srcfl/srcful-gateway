@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import Overview from './components/EnergyOverview/Overview';
 
 interface NetworkInfo {
   ip: string;
@@ -73,6 +74,8 @@ const App: React.FC = () => {
           API calls to <code>/api/*</code> are routed to your backend service.
         </p>
       </header>
+      
+      <Overview />
     </div>
   );
 };
