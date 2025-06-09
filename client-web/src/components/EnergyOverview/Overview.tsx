@@ -1,5 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BatteryCircle, 
   Circle, 
@@ -22,27 +22,29 @@ import {
   UilArrowRight 
 } from '../Icons/ArrowIcons';
 import { css } from '@emotion/react';
+import { gatewayService, GatewayApiError } from '../../services/GatewayService';
+import { EnergyOverviewResponse } from '../../types/api';
 
-// Hardcoded values for demonstration
-const HARDCODED_DATA = {
+// Energy data structure
+interface EnergyData {
   solar: {
-    power: 3500, // 3.5 kW
-    isActive: true
-  },
+    power: number;
+    isActive: boolean;
+  };
   grid: {
-    import: 1.2, // 1.2 kW from grid
-    export: 0.8, // 0.8 kW to grid
-    isActive: true
-  },
+    import: number;
+    export: number;
+    isActive: boolean;
+  };
   home: {
-    consumption: 2.9 // 2.9 kW total consumption
-  },
+    consumption: number;
+  };
   battery: {
-    charging: 1.5, // 1.5 kW charging
-    discharging: 0, // 0 kW discharging
-    isActive: true
-  }
-};
+    charging: number;
+    discharging: number;
+    isActive: boolean;
+  };
+}
 
 const formatNumber = (number: number, decimals: number = 2): number => {
   if (!number) return 0;
@@ -58,10 +60,65 @@ const wattToKW = (watt: number): number => {
   return formatNumber(kW, decimals);
 };
 
-const getSystemState = () => {
-  const solarKw = wattToKW(HARDCODED_DATA.solar.power);
-  const gridExport = HARDCODED_DATA.grid.export;
-  const gridImport = HARDCODED_DATA.grid.import;
+// Process DEE data into our energy structure
+const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
+  let solarPower = 0;
+  let batteryPower = 0;
+  let meterProduction = 0;
+  let meterConsumption = 0;
+
+  // Process DEE items
+  deeData.data.dee.forEach(item => {
+    // Sum solar power
+    if (item.solar) {
+      solarPower += item.solar.power;
+    }
+
+    // Sum battery power (negative = discharge, positive = charge)
+    if (item.battery) {
+      batteryPower += item.battery.power;
+    }
+
+    // Use first meter data found
+    if (item.meter && meterProduction === 0 && meterConsumption === 0) {
+      meterProduction = item.meter.production;
+      meterConsumption = item.meter.consumption;
+    }
+  });
+
+  // Calculate grid import/export based on energy balance
+  // Total production = solar + battery discharge (if negative)
+  const totalProduction = solarPower + (batteryPower < 0 ? Math.abs(batteryPower) : 0);
+  // Total consumption = home consumption + battery charging (if positive)
+  const totalConsumption = meterConsumption + (batteryPower > 0 ? batteryPower : 0);
+  
+  const energyBalance = totalProduction - totalConsumption;
+  
+  return {
+    solar: {
+      power: solarPower,
+      isActive: solarPower > 0
+    },
+    grid: {
+      import: energyBalance < 0 ? Math.abs(energyBalance) / 1000 : 0, // Convert to kW
+      export: energyBalance > 0 ? energyBalance / 1000 : 0, // Convert to kW
+      isActive: Math.abs(energyBalance) > 0
+    },
+    home: {
+      consumption: meterConsumption / 1000 // Convert to kW
+    },
+    battery: {
+      charging: batteryPower > 0 ? batteryPower / 1000 : 0, // Convert to kW
+      discharging: batteryPower < 0 ? Math.abs(batteryPower) / 1000 : 0, // Convert to kW
+      isActive: batteryPower !== 0
+    }
+  };
+};
+
+const getSystemState = (energyData: EnergyData) => {
+  const solarKw = wattToKW(energyData.solar.power);
+  const gridExport = energyData.grid.export;
+  const gridImport = energyData.grid.import;
   
   // Calculate energy flows
   const isExportingSolarToGrid = solarKw > 0 && gridExport > 0;
@@ -72,7 +129,7 @@ const getSystemState = () => {
     isExportingSolarToGrid,
     isExportingSolarToHouse,
     isImportingGridToHouse,
-    houseConsumption: HARDCODED_DATA.home.consumption
+    houseConsumption: energyData.home.consumption
   };
 };
 
@@ -109,21 +166,77 @@ const Line: React.FC<{ className: string; animate?: boolean }> = ({ className, a
 };
 
 const Overview: React.FC = () => {
-  const state = getSystemState();
+  const [energyData, setEnergyData] = useState<EnergyData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchEnergyData = async () => {
+      try {
+        const response = await gatewayService.getEnergyOverview();
+        const processedData = processEnergyData(response);
+        setEnergyData(processedData);
+        setLoading(false);
+      } catch (err) {
+        if (err instanceof GatewayApiError) {
+          setError(err.message);
+        } else {
+          setError('Failed to fetch energy data');
+        }
+        setLoading(false);
+      }
+    };
+
+    fetchEnergyData();
+    
+    // Refresh data every 5 seconds
+    const interval = setInterval(fetchEnergyData, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) {
+    return (
+      <div css={OverviewWrapperStyle}>
+        <h2>Energy System Overview</h2>
+        <p>Loading energy data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div css={OverviewWrapperStyle}>
+        <h2>Energy System Overview</h2>
+        <p style={{color: 'red'}}>Error: {error}</p>
+      </div>
+    );
+  }
+
+  if (!energyData) {
+    return (
+      <div css={OverviewWrapperStyle}>
+        <h2>Energy System Overview</h2>
+        <p>No energy data available</p>
+      </div>
+    );
+  }
+
+  const state = getSystemState(energyData);
 
   return (
     <div css={OverviewWrapperStyle}>
-      <h2>Energy overview (beta)</h2>
+      <h2>Energy System Overview</h2>
       <p>Real-time energy flow visualization</p>
       <div css={FlowWrapper}>
         {/* Solar Panel */}
         <div 
           css={[Circle, SolarCircle]} 
-          className={HARDCODED_DATA.solar.isActive ? '' : 'inactive'}
+          className={energyData.solar.isActive ? '' : 'inactive'}
         >
           <PvIcon />
           <span>
-            {HARDCODED_DATA.solar.isActive ? wattToKW(HARDCODED_DATA.solar.power) : '-'}
+            {energyData.solar.isActive ? wattToKW(energyData.solar.power) : '-'}
             <span>kW</span>
           </span>
         </div>
@@ -142,17 +255,17 @@ const Overview: React.FC = () => {
         {/* Grid */}
         <div 
           css={[Circle, GridCircle]} 
-          className={HARDCODED_DATA.grid.isActive ? '' : 'inactive'}
+          className={energyData.grid.isActive ? '' : 'inactive'}
         >
           <GridIcon />
           <span className="in">
             <UilArrowLeft style={ArrowColorStyle('lightblue')} /> 
-            {HARDCODED_DATA.grid.isActive ? formatNumber(HARDCODED_DATA.grid.export) : '-'} 
+            {energyData.grid.isActive ? formatNumber(energyData.grid.export) : '-'} 
             <span>kW</span>
           </span>
           <span className="out">
             <UilArrowRight style={ArrowColorStyle('#e69373')} /> 
-            {HARDCODED_DATA.grid.isActive ? formatNumber(HARDCODED_DATA.grid.import) : '-'} 
+            {energyData.grid.isActive ? formatNumber(energyData.grid.import) : '-'} 
             <span>kW</span>
           </span>
         </div>
@@ -174,17 +287,17 @@ const Overview: React.FC = () => {
         {/* Battery */}
         <div 
           css={[Circle, BatteryCircle]} 
-          className={HARDCODED_DATA.battery.isActive ? '' : 'inactive'}
+          className={energyData.battery.isActive ? '' : 'inactive'}
         >
           <BatteryIcon css={css`width: 70px!important;`} />
           <span className="in">
             <UilArrowDown style={ArrowColorStyle('lightblue')} />
-            {HARDCODED_DATA.battery.isActive ? formatNumber(HARDCODED_DATA.battery.charging) : '-'} 
+            {energyData.battery.isActive ? formatNumber(energyData.battery.charging) : '-'} 
             <span>kW</span>
           </span>
           <span className="out">
             <UilArrowUp style={ArrowColorStyle('#e69373')} />
-            {HARDCODED_DATA.battery.isActive ? formatNumber(HARDCODED_DATA.battery.discharging) : '-'} 
+            {energyData.battery.isActive ? formatNumber(energyData.battery.discharging) : '-'} 
             <span>kW</span>
           </span>
         </div>

@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import Overview from './components/EnergyOverview/Overview';
-
-interface NetworkInfo {
-  ip: string;
-  port: number;
-  eth0_mac: string;
-  wlan0_mac: string;
-  interfaces?: Record<string, string>;
-}
+import { gatewayService, GatewayApiError } from './services/GatewayService';
+import { NetworkInfo } from './types/api';
 
 const App: React.FC = () => {
   const [networkInfo, setNetworkInfo] = useState<NetworkInfo | null>(null);
@@ -16,22 +10,23 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Test API call to your backend
-    fetch('/api/network/address')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data: NetworkInfo) => {
+    // Use the Gateway Service for API calls
+    const fetchNetworkInfo = async () => {
+      try {
+        const data = await gatewayService.getNetworkInfo();
         setNetworkInfo(data);
         setLoading(false);
-      })
-      .catch((err: Error) => {
-        setError(err.message);
+      } catch (err) {
+        if (err instanceof GatewayApiError) {
+          setError(err.message);
+        } else {
+          setError('Failed to fetch network information');
+        }
         setLoading(false);
-      });
+      }
+    };
+
+    fetchNetworkInfo();
   }, []);
 
   return (
