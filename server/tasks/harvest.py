@@ -1,6 +1,7 @@
 
 import logging
 from typing import List, Union
+from server.devices.Device import DeviceMode
 from server.tasks.itask import ITask
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.app.blackboard import BlackBoard
@@ -50,6 +51,11 @@ class Harvest(Task):
             return transports
 
         try:
+
+            if self.device.get_mode() == DeviceMode.CONTROL:
+                logger.info("Device is in control mode, skipping harvest")
+
+
             harvest = self.device.read_harvest_data(force_verbose=self.harvest_count % 10 == 0)
             self.harvest_count += 1
             end_time = self.bb.time_ms()
