@@ -46,6 +46,17 @@ class PowerLimitControllerTask(Task):
                                                           decoder.battery_max_charge_discharge_power,
                                                           decoder.min_battery_soc,
                                                           decoder.max_battery_soc)
+        logger.info('--------------------------------')
+        logger.info(f"State: {state}")
+        logger.info(f"Battery power: {battery_power}")
+        logger.info(f"Grid power: {decoder.grid_power}")
+        logger.info(f"Grid power limit: {decoder.grid_power_limit}")
+        logger.info(f"Instantaneous battery power: {decoder.instantaneous_battery_power}")
+        logger.info(f"Battery SOC: {decoder.battery_soc}")
+        logger.info(f"Battery max charge discharge power: {decoder.battery_max_charge_discharge_power}")
+        logger.info(f"Min battery SOC: {decoder.min_battery_soc}")
+        logger.info(f"Max battery SOC: {decoder.max_battery_soc}")
+        logger.info('--------------------------------')
 
         if state == State.DISCHARGE_BATTERY:
             self.device.profile.set_battery_power(self.device, -battery_power)
