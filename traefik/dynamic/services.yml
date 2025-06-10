@@ -1,0 +1,26 @@
+http:
+  routers:   
+    api-router:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/api`)"
+      priority: 100
+      service: api-service
+    
+    web-router:
+      entryPoints:
+        - web
+      rule: "HostRegexp(`{host:.+}`)"
+      priority: 1
+      service: client-web-service
+
+  services:
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:5000"  # Access host network service from bridge
+    
+    client-web-service:
+      loadBalancer:
+        servers:
+          - url: "http://client-web:80"  # Use service name instead of container name
