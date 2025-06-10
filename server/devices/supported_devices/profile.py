@@ -110,8 +110,8 @@ class ModbusProfile(DeviceProfile):
     def get_registers(self) -> List[RegisterInterval]:
         return self.registers
 
-    def init_device():
+    def init_device(self, device: ModbusDevice) -> bool:
         pass
 
-    def deinit_device():
+    def deinit_device(self, device: ModbusDevice) -> bool:
         pass

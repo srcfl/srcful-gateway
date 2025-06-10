@@ -22,7 +22,7 @@ class SungrowProfile(ModbusProfile):
     def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
 
-    def init_device(self, device: ModbusDevice) -> None:
+    def init_device(self, device: ModbusDevice) -> bool:
         reg = 13049  # Grid Mode
         val = 2  # Forced mode
         success = RegisterValue.write_single(device=device, address=reg, value=val)
@@ -31,23 +31,25 @@ class SungrowProfile(ModbusProfile):
 
         reg = 13050  # Charging/Discharging mode
         val = 204  # Stop
-        success = RegisterValue.write_single(device=device, address=reg, value=val)
+        success &= RegisterValue.write_single(device=device, address=reg, value=val)
         if success:
             logger.info(f"Successfully set register {reg} to {val}")
 
         reg = 33046  # Max charge power
         val = 500
-        success = RegisterValue.write_single(device=device, address=reg, value=val)
+        success &= RegisterValue.write_single(device=device, address=reg, value=val)
         if success:
             logger.info(f"Successfully set register {reg} to {val}")
 
         reg = 33047  # Max discharge power
         val = 500
-        success = RegisterValue.write_single(device=device, address=reg, value=val)
+        success &= RegisterValue.write_single(device=device, address=reg, value=val)
         if success:
             logger.info(f"Successfully set register {reg} to {val}")
 
-    def deinit_device(self, device: ModbusDevice) -> None:
+        return success
+
+    def deinit_device(self, device: ModbusDevice) -> bool:
         reg = 13050  # Charging/Discharging mode
         val = 204  # Stop
         success = RegisterValue.write_single(device=device, address=reg, value=val)
@@ -56,9 +58,11 @@ class SungrowProfile(ModbusProfile):
 
         reg = 13049  # Grid Mode
         val = 0  # self-consumption mode
-        success = RegisterValue.write_single(device=device, address=reg, value=val)
+        success &= RegisterValue.write_single(device=device, address=reg, value=val)
         if success:
             logger.info(f"Successfully set register {reg} to {val}")
+
+        return success
 
 
 sungrow_profile = {
