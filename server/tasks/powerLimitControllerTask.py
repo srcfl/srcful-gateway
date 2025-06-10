@@ -37,6 +37,8 @@ class PowerLimitControllerTask(Task):
         # check import/export limits
         decoder: SungrowDeeDecoder = self.device.get_dee_decoder()
 
+        decoder.decode(self.device.get_last_harvest_data())
+
         battery_power, state = check_import_export_limits(decoder.grid_power,
                                                           decoder.grid_power_limit,
                                                           decoder.instantaneous_battery_power,
@@ -49,12 +51,12 @@ class PowerLimitControllerTask(Task):
             self.device.profile.set_battery_power(self.device, -battery_power)
             bb_message = f"Discharging battery to {battery_power} W to reduce import"
             logger.info(bb_message)
-            self.bb.add_message(bb_message)
+            self.bb.add_warning(bb_message)
         elif state == State.CHARGE_BATTERY:
             self.device.profile.set_battery_power(self.device, battery_power)
             bb_message = f"Charging battery to {battery_power} W to reduce export"
             logger.info(bb_message)
-            self.bb.add_message(bb_message)
+            self.bb.add_warning(bb_message)
         elif state == State.NO_ACTION:
             if self.is_initialized:
                 while self.device.has_commands():
@@ -62,18 +64,18 @@ class PowerLimitControllerTask(Task):
                     if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
                         self.device.profile.set_battery_power(self.device, command.values[0])
 
-            # deinit check here
-            if self.device.get_mode() == DeviceMode.READ:
-                # if self.is_initialized:
-                if self.device.profile.deinit_device(self.device):
-                    logging.info(f"Successfully deinitialized device {self.device.get_SN()}")
-                    self.is_initialized = False
-                else:
-                    logging.error(f"Failed to deinitialize device {self.device.get_SN()}")
+        # deinit check here
+        if self.device.get_mode() == DeviceMode.READ:
+            # if self.is_initialized:
+            if self.device.profile.deinit_device(self.device):
+                logging.info(f"Successfully deinitialized device {self.device.get_SN()}")
+                self.is_initialized = False
+            else:
+                logging.error(f"Failed to deinitialize device {self.device.get_SN()}")
 
-                logging.info(f"Device {self.device.get_SN()} is in read mode, go to harvest")
+            logging.info(f"Device {self.device.get_SN()} is in read mode, go to harvest")
 
-                return Harvest(event_time, self.bb, self.device, DefaultHarvestTransportFactory())
+            return Harvest(event_time, self.bb, self.device, DefaultHarvestTransportFactory())
 
         self.time = event_time + 500
         return self

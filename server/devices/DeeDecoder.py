@@ -25,7 +25,7 @@ class DeeDecoder:
 class SungrowDeeDecoder(DeeDecoder):
     def __init__(self):
         self.grid_power = 0  # check
-        self.grid_power_limit = 8000  # check
+        self.grid_power_limit = 3000  # check
         self.instantaneous_battery_power = 0  # check
         self.battery_soc = 0  # check
         self.battery_max_charge_discharge_power = 5000  # check
@@ -86,9 +86,9 @@ class SungrowDeeDecoder(DeeDecoder):
             battery_power = -battery_power_raw  # Negative when charging (power flowing in)
         else:
             battery_power = 0  # No activity
-            self.instantaneous_battery_power = battery_power
+        self.instantaneous_battery_power = battery_power
 
-        self.battery_soc = harvest_data.get(13021, None) * 0.1
+        self.battery_soc = harvest_data.get(13022, 0) * 0.1
 
         meter = {
             "production": production,
