@@ -167,7 +167,7 @@ sungrow_profile = {
             RegistersKey.SCALE_FACTOR: 1,
             RegistersKey.ENDIANNESS: EndiannessKey.BIG,
         },
-         {
+        {
             RegistersKey.NAME: "Running State",
             RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
             RegistersKey.START_REGISTER: 13000,
