@@ -167,6 +167,17 @@ sungrow_profile = {
             RegistersKey.SCALE_FACTOR: 1,
             RegistersKey.ENDIANNESS: EndiannessKey.BIG,
         },
+        {
+            RegistersKey.NAME: "Running State",
+            RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+            RegistersKey.START_REGISTER: 13000,
+            RegistersKey.NUM_OF_REGISTERS: 1,
+            RegistersKey.DATA_TYPE: DataTypeKey.U16,
+            RegistersKey.UNIT: "",
+            RegistersKey.DESCRIPTION: "Current running state of the inverter, refer to Appendix 1.2",
+            RegistersKey.SCALE_FACTOR: 1,
+            RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+        },
     ],
     ProfileKey.KEYWORDS: ["sungrow", "Espressif"],
 }

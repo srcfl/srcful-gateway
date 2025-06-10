@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from server.devices.ICom import ICom
-
+from server.devices.DeeDecoder import DeeDecoder, SungrowDeeDecoder
 
 class Device(ICom, ABC):
     _is_disconnected: bool = False
@@ -11,6 +11,7 @@ class Device(ICom, ABC):
 
     def __init__(self):
         super().__init__()
+        self._last_harvest_data = {}
 
     def is_disconnected(self) -> bool:
         return self._is_disconnected
@@ -23,10 +24,17 @@ class Device(ICom, ABC):
         if self.is_disconnected() != True:
             return self._connect(**kwargs)
         return False
+    
+    def get_dee_decoder(self) -> DeeDecoder:
+        return SungrowDeeDecoder()
+
+    def get_last_harvest_data(self) -> dict:
+        return self._last_harvest_data
 
     def read_harvest_data(self, force_verbose) -> dict:
         if self.is_disconnected() != True:
-            return self._read_harvest_data(force_verbose)
+            self._last_harvest_data = self._read_harvest_data(force_verbose)
+            return self._last_harvest_data
 
         raise Exception("Device is disconnected")
 
