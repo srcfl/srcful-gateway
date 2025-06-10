@@ -15,7 +15,7 @@ class State(Enum):
     OVER_LIMIT = "over_limit"
 
 
-def _get_distances(number, min_val, max_val):
+def _get_available_range(number, min_val, max_val):
     lower_distance = number - min_val
     upper_distance = max_val - number
     return lower_distance, upper_distance
@@ -24,7 +24,7 @@ def _get_distances(number, min_val, max_val):
 def check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc) -> tuple[int, State]:
 
     # This is how much we can decrease/increase the power with, best case with battery_max_charge_discharge_power * 2 if we are charging at max or discharging at max
-    available_power_to_reduce_with, available_power_to_increase_with = _get_distances(instantaneous_battery_power, -battery_max_charge_discharge_power, battery_max_charge_discharge_power)
+    available_power_to_reduce_with, available_power_to_increase_with = _get_available_range(instantaneous_battery_power, -battery_max_charge_discharge_power, battery_max_charge_discharge_power)
     log(f"Available power to reduce with: {available_power_to_reduce_with}, Available power to increase with: {available_power_to_increase_with}")
 
     # Over import limit (importing too much power from grid)
