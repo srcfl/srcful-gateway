@@ -122,18 +122,18 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
   return {
     solar: {
       power: solarPower,
-      isActive: solarPower > 0
+      isActive: true  // Always active
     },
     grid: {
       net: netGridFlow / 1000, // Convert to kW (positive = export, negative = import)
-      isActive: netGridFlow !== 0
+      isActive: true  // Always active
     },
     home: {
       consumption: homeConsumption / 1000 // Convert to kW
     },
     battery: {
       net: batteryPower / 1000, // Convert to kW (positive = charging, negative = discharging)
-      isActive: batteryPower !== 0
+      isActive: true  // Always active
     }
   };
 };
