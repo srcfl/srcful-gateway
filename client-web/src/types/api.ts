@@ -34,4 +34,25 @@ export interface EnergyOverviewData {
 export interface EnergyOverviewResponse {
   status: string;
   data: EnergyOverviewData;
-} 
+}
+
+// Device related types
+export interface DeviceConnection {
+  device_type: string;
+  slave_id: number;
+  sn: string;
+  connection: string;
+  ip: string;
+  port: number;
+  mac: string;
+}
+
+export interface Device {
+  connection: DeviceConnection;
+  is_open: boolean;
+  id: string;
+  name: string;
+  client_name: string;
+}
+
+export type DeviceMode = 'control' | 'read'; 

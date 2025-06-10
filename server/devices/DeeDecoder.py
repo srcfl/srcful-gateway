@@ -4,6 +4,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+class DeeController:
+    def init():
+        pass
+    def deinit():
+        pass
+
 class DeeDecoder:
     def __init__(self):
         pass
@@ -31,8 +37,8 @@ class SungrowDeeDecoder(DeeDecoder):
         
         # Extract Total Active Power from registers 13033-13034 (I32, little-endian)
         # Register 13033: lower 16 bits, Register 13034: upper 16 bits
-        meter_lower = harvest_data.get(13033, 0)
-        meter_upper = harvest_data.get(13034, 0)
+        meter_lower = harvest_data.get(13009, 0)
+        meter_upper = harvest_data.get(13010, 0)
         
         # Combine into I32 value (little-endian: upper << 16 | lower)
         meter_power_raw = (meter_upper << 16) | meter_lower
@@ -44,8 +50,8 @@ class SungrowDeeDecoder(DeeDecoder):
             meter_power = meter_power_raw
         
         # Assign production/consumption based on sign
-        # Negative = production (feeding back to grid), Positive = consumption (drawing from grid)
-        if meter_power < 0:
+        # Positive = production (feeding back to grid), Positive = consumption (drawing from grid)
+        if meter_power > 0:
             production = abs(meter_power)
             consumption = 0
         else:

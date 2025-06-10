@@ -1,4 +1,4 @@
-import { NetworkInfo, EnergyOverviewResponse } from '../types/api';
+import { NetworkInfo, EnergyOverviewResponse, Device, DeviceMode } from '../types/api';
 
 // Base configuration for the Gateway API
 const API_BASE_URL = '/api';
@@ -96,6 +96,23 @@ export class GatewayService {
   // Energy related API calls
   public async getEnergyOverview(): Promise<EnergyOverviewResponse> {
     return this.fetchWithTimeout<EnergyOverviewResponse>('/dee');
+  }
+
+  // Device related API calls
+  public async getDevices(): Promise<Device[]> {
+    return this.fetchWithTimeout<Device[]>('/device');
+  }
+
+  public async setDeviceMode(deviceSn: string, mode: DeviceMode): Promise<void> {
+    return this.fetchWithTimeout<void>(`/device/${deviceSn}/mode/${mode}`, {
+      method: 'POST',
+    });
+  }
+
+  public async setBatteryPower(deviceSn: string, power: number): Promise<void> {
+    return this.fetchWithTimeout<void>(`/device/${deviceSn}/battery/power/${power}`, {
+      method: 'POST',
+    });
   }
 }
 

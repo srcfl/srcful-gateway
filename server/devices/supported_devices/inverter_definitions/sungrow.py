@@ -66,6 +66,18 @@ class SungrowProfile(ModbusProfile):
             logger.info(f"Successfully set register {reg} to {val}")
 
         return success
+    
+    def set_battery_power(self, device: ModbusDevice, power: int) -> bool:
+        success = RegisterValue.write_single(device=device, address=13051, value=abs(power))
+        if success:
+            logger.info(f"Successfully set register 13050 to {abs(power)}")
+        
+        command = 170 if power > 0 else 187 if power < 0 else 204 #"0xAA(170):Charge; 0xBB(187):Discharge; 0xCC(204):Stop",
+        success = success and RegisterValue.write_single(device=device, address=13050, value=command)
+        if success:
+            logger.info(f"Successfully set register 13050 to {command}")
+
+        return success
 
 
 sungrow_profile = {
@@ -198,7 +210,7 @@ sungrow_profile = {
         {
             RegistersKey.NAME: "Total Active Power",
             RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
-            RegistersKey.START_REGISTER: 13033,
+            RegistersKey.START_REGISTER: 13009,
             RegistersKey.NUM_OF_REGISTERS: 2,
             RegistersKey.DATA_TYPE: DataTypeKey.I32,
             RegistersKey.UNIT: "W",
