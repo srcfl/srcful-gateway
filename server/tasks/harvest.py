@@ -1,9 +1,11 @@
 
 import logging
 from typing import List, Union
+from server.devices.Device import DeviceMode
 from server.tasks.itask import ITask
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.app.blackboard import BlackBoard
+
 from .task import Task
 from .harvestTransport import ITransportFactory
 from server.devices.ICom import ICom
@@ -50,6 +52,13 @@ class Harvest(Task):
             return transports
 
         try:
+
+            if self.device.get_mode() == DeviceMode.CONTROL:
+                logger.info("Device is in control mode, going to power limit controller task")
+                from server.tasks.powerLimitControllerTask import PowerLimitControllerTask
+                return PowerLimitControllerTask(self.bb.time_ms() + 1000, self.bb, self.device)
+
+
             harvest = self.device.read_harvest_data(force_verbose=self.harvest_count % 10 == 0)
             self.harvest_count += 1
             end_time = self.bb.time_ms()

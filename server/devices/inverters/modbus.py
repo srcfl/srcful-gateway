@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import logging
 from pymodbus.exceptions import ConnectionException, ModbusException, ModbusIOException
-from server.devices.Device import Device
+from server.devices.Device import Device, DeviceMode
 from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from ..ICom import HarvestDataType
 from ..supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
@@ -55,6 +55,10 @@ class Modbus(Device, ABC):
             self.profile: ModbusProfile = ModbusDeviceProfiles().get(self.device_type)
 
         self.always_included = {}  # This is populated every time we do a verbose read
+
+    def set_mode(self, state: DeviceMode) -> None:
+        if self.profile.is_controllable():
+            self._mode = state
 
     def _read_harvest_data(self, force_verbose: bool) -> dict:
         regs = []

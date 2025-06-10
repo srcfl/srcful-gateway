@@ -1,6 +1,13 @@
 from abc import ABC, abstractmethod
+from enum import Enum
 from server.devices.ICom import ICom
 from server.devices.DeeDecoder import DeeDecoder, SungrowDeeDecoder
+
+
+class DeviceMode(Enum):
+    NONE = "none"
+    READ = "read"
+    CONTROL = "control"
 
 class Device(ICom, ABC):
     _is_disconnected: bool = False
@@ -9,9 +16,18 @@ class Device(ICom, ABC):
     MAKER = "maker"
     DISPLAY_NAME = "display_name"
 
+
     def __init__(self):
         super().__init__()
         self._last_harvest_data = {}
+        self._mode = DeviceMode.READ
+
+    def set_mode(self, state: DeviceMode) -> None:
+        # override in subclasses to allow controll
+        self._mode = DeviceMode.READ
+
+    def get_mode(self) -> DeviceMode:
+        return self._mode
 
     def is_disconnected(self) -> bool:
         return self._is_disconnected

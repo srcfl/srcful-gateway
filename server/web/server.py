@@ -70,6 +70,7 @@ class Endpoints:
             "crypto/sign": handler.post.crypto_sign.Handler(),
             "system/reboot": handler.post.reboot.Handler(),
             "system/ble/stop": handler.post.ble_stop.Handler(),
+            "device/{device_sn}/mode/{mode}": handler.post.device_mode.Handler(),
         }
 
         self.api_delete_dict = {
