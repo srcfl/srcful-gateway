@@ -71,6 +71,7 @@ class Endpoints:
             "system/reboot": handler.post.reboot.Handler(),
             "system/ble/stop": handler.post.ble_stop.Handler(),
             "device/{device_sn}/mode/{mode}": handler.post.device_mode.Handler(),
+            "device/{device_sn}/battery/power/{power}": handler.post.device_battery_power.Handler(),
         }
 
         self.api_delete_dict = {

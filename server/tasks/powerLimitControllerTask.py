@@ -1,6 +1,6 @@
 import logging
 from server.app.blackboard import BlackBoard
-from server.devices.Device import Device, DeviceMode
+from server.devices.Device import Device, DeviceMode, DeviceCommand, DeviceCommandType
 from server.tasks.harvest import Harvest
 from server.tasks.harvestTransport import DefaultHarvestTransportFactory
 from .task import Task
@@ -29,6 +29,17 @@ class PowerLimitControllerTask(Task):
             else:
                 logging.error(f"Failed to initialize device {self.device.get_SN()}")
 
+        # harvest data
+        self.device.read_harvest_data(force_verbose=False)
+        # TODO: check fuse protection
+
+        if self.is_initialized:
+            while self.device.has_commands():
+                command:DeviceCommand = self.device.pop_command() # pop each command from the device
+                if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
+                    self.device.profile.set_battery_power(self.device, command.values[0])
+
+
         # deinit check here
         if self.device.get_mode() == DeviceMode.READ:
             #if self.is_initialized:
@@ -42,8 +53,7 @@ class PowerLimitControllerTask(Task):
 
             return Harvest(event_time, self.bb, self.device, DefaultHarvestTransportFactory())
 
-        self.time = self.bb.time_ms() + 1000
-
+        self.time = self.bb.time_ms() + 500
         return self
 
         # logic function

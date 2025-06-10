@@ -9,3 +9,4 @@ from . import crypto_sign
 from . import reboot
 from . import ble_stop
 from . import device_mode
+from . import device_battery_power
