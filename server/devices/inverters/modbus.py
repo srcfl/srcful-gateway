@@ -57,9 +57,8 @@ class Modbus(Device, ABC):
         self.always_included = {}  # This is populated every time we do a verbose read
 
     def set_mode(self, state: DeviceMode) -> None:
-        # only sungrow can be controlled
         if self.profile.is_controllable():
-            self._state = state
+            self._mode = state
 
     def _read_harvest_data(self, force_verbose: bool) -> dict:
         regs = []

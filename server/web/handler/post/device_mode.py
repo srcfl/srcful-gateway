@@ -1,8 +1,14 @@
 import json
+import logging
 
 from ..handler import PostHandler
 from ..requestData import RequestData
 from server.devices.Device import DeviceMode
+
+
+
+logger = logging.getLogger(__name__)
+
 
 class Handler(PostHandler):
     def schema(self):

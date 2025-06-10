@@ -115,3 +115,6 @@ class ModbusProfile(DeviceProfile):
 
     def deinit_device():
         pass
+
+    def is_controllable(self) -> bool:
+        return False

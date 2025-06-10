@@ -21,6 +21,9 @@ class SungrowProfile(ModbusProfile):
 
     def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
+    
+    def is_controllable(self) -> bool:
+        return True
 
     def init_device(self, device: ModbusDevice) -> None:
         reg = 13049  # Grid Mode
