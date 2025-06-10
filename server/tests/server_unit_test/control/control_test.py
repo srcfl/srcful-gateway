@@ -19,7 +19,13 @@ def test_handle_import_when_max_charging():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = check_import_export_limits(grid_power,
+                                                      grid_power_limit,
+                                                      instantaneous_battery_power,
+                                                      battery_soc,
+                                                      battery_max_charge_discharge_power,
+                                                      min_battery_soc,
+                                                      max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == -5000  # discharge at max power
     assert state == State.DISCHARGE_BATTERY
