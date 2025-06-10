@@ -8,6 +8,11 @@ from ...profile_keys import (
 )
 from ..profile import ModbusProfile
 from ...common.types import ModbusDevice
+from ...registerValue import RegisterValue
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class SungrowProfile(ModbusProfile):
@@ -16,6 +21,44 @@ class SungrowProfile(ModbusProfile):
 
     def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
+
+    def init_device(self, device: ModbusDevice) -> None:
+        reg = 13049  # Grid Mode
+        val = 2  # Forced mode
+        success = RegisterValue.write_single(device=device, address=reg, value=val)
+        if success:
+            logger.info(f"Successfully set register {reg} to {val}")
+
+        reg = 13050  # Charging/Discharging mode
+        val = 204  # Stop
+        success = RegisterValue.write_single(device=device, address=reg, value=val)
+        if success:
+            logger.info(f"Successfully set register {reg} to {val}")
+
+        reg = 33046  # Max charge power
+        val = 500
+        success = RegisterValue.write_single(device=device, address=reg, value=val)
+        if success:
+            logger.info(f"Successfully set register {reg} to {val}")
+
+        reg = 33047  # Max discharge power
+        val = 500
+        success = RegisterValue.write_single(device=device, address=reg, value=val)
+        if success:
+            logger.info(f"Successfully set register {reg} to {val}")
+
+    def deinit_device(self, device: ModbusDevice) -> None:
+        reg = 13050  # Charging/Discharging mode
+        val = 204  # Stop
+        success = RegisterValue.write_single(device=device, address=reg, value=val)
+        if success:
+            logger.info(f"Successfully set register {reg} to {val}")
+
+        reg = 13049  # Grid Mode
+        val = 0  # self-consumption mode
+        success = RegisterValue.write_single(device=device, address=reg, value=val)
+        if success:
+            logger.info(f"Successfully set register {reg} to {val}")
 
 
 sungrow_profile = {
