@@ -39,7 +39,7 @@ interface EnergyData {
     consumption: number;
   };
   battery: {
-    net: number; // Positive = charging, Negative = discharging
+    net: number; // Positive = discharging, Negative = charging
     isActive: boolean;
     soc?: number;
     isCharging?: boolean;
@@ -87,8 +87,8 @@ const formatPowerWithUnit = (kWValue: number): { value: number; unit: string } =
 const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
   let solarPower = 0;
   let batteryPower = 0;
-  let gridProduction = 0;  // Export TO grid
-  let gridConsumption = 0; // Import FROM grid
+  let gridImport = 0;   // Power imported FROM grid (always positive)
+  let gridExport = 0;   // Power exported TO grid (always positive)
   let batterySoC = 0;
   let batteryCount = 0;
 
@@ -108,21 +108,25 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
         batterySoC += item.battery.soc;
         batteryCount++;
       }
-
     }
 
-    // Sum meter data (handle Sungrow negative import values)
+    // Process meter data - handle grid import/export
     if (item.meter) {
-      // For Sungrow: negative values indicate import, positive values indicate export
+      // Sungrow meter logic:
+      // production > 0 = exporting to grid
+      // production < 0 = importing from grid
+      // consumption < 0 = importing from grid
+      
       if (item.meter.production > 0) {
-        gridProduction += item.meter.production;   // Export to grid
-      } else if (item.meter.production < 0) {
-        gridConsumption += Math.abs(item.meter.production); // Import from grid (negative value)
+        gridExport += item.meter.production;
       }
       
-      // Also handle consumption field if present (fallback for other meter types)
-      if (item.meter.consumption > 0) {
-        gridConsumption += item.meter.consumption; // Import from grid
+      if (item.meter.production < 0) {
+        gridImport += Math.abs(item.meter.production);
+      }
+      
+      if (item.meter.consumption < 0) {
+        gridImport += Math.abs(item.meter.consumption);
       }
     }
   });
@@ -130,18 +134,20 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
   // Calculate average SoC for multiple batteries
   const averageSoC = batteryCount > 0 ? batterySoC / batteryCount : undefined;
 
-  // Calculate home consumption using energy balance:
-  // Energy Sources = Energy Consumers
-  // Solar + Battery_discharge + Grid_import = Home + Battery_charging + Grid_export
-  // Therefore: Home = Solar + Battery_discharge + Grid_import - Battery_charging - Grid_export
+  // Energy balance calculation:
+  // Home Load = Solar Generation + Battery Discharge + Grid Import - Battery Charge - Grid Export
+  // 
+  // Battery power from backend:
+  // Positive = discharging (power flowing OUT of battery)
+  // Negative = charging (power flowing INTO battery)
   
-  const batteryDischarge = batteryPower < 0 ? Math.abs(batteryPower) : 0;
-  const batteryCharging = batteryPower > 0 ? batteryPower : 0;
+  const batteryDischarge = batteryPower > 0 ? batteryPower : 0;  // Positive = discharging
+  const batteryCharge = batteryPower < 0 ? Math.abs(batteryPower) : 0;  // Negative = charging
   
-  const homeConsumption = solarPower + batteryDischarge + gridConsumption - batteryCharging - gridProduction;
+  const homeConsumption = solarPower + batteryDischarge + gridImport - batteryCharge - gridExport;
   
   // Calculate net grid flow (positive = export, negative = import)
-  const netGridFlow = gridProduction - gridConsumption;
+  const netGridFlow = gridExport - gridImport;
   
   // Determine charging/discharging status based on power flow
   const isCharging = batteryPower < -50; // Negative power = charging (with 50W threshold)
@@ -160,7 +166,7 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
       consumption: homeConsumption / 1000 // Convert to kW
     },
     battery: {
-      net: batteryPower / 1000, // Convert to kW (positive = charging, negative = discharging)
+      net: batteryPower / 1000, // Convert to kW (positive = discharging, negative = charging)
       isActive: true,  // Always active
       soc: averageSoC,
       isCharging: isCharging,
@@ -408,9 +414,9 @@ const Overview: React.FC = () => {
             {energyData.battery.isActive && (
               <>
                 {energyData.battery.net > 0 ? (
-                  <UilArrowDown style={ArrowColorStyle('lightblue')} />
-                ) : energyData.battery.net < 0 ? (
                   <UilArrowUp style={ArrowColorStyle('#e69373')} />
+                ) : energyData.battery.net < 0 ? (
+                  <UilArrowDown style={ArrowColorStyle('lightblue')} />
                 ) : null}
               </>
             )}
