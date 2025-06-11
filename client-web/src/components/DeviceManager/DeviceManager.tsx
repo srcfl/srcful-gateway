@@ -10,6 +10,10 @@ const DeviceManager: React.FC = () => {
   const [deviceModes, setDeviceModes] = useState<Record<string, DeviceMode>>({});
   const [batteryPowers, setBatteryPowers] = useState<Record<string, string>>({});
   const [processingBattery, setProcessingBattery] = useState<string | null>(null);
+  const [gridPowerLimits, setGridPowerLimits] = useState<Record<string, string>>({});
+  const [batteryPowerLimits, setBatteryPowerLimits] = useState<Record<string, string>>({});
+  const [processingGridLimit, setProcessingGridLimit] = useState<string | null>(null);
+  const [processingBatteryLimit, setProcessingBatteryLimit] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDevices();
@@ -24,12 +28,22 @@ const DeviceManager: React.FC = () => {
       
       // Initialize battery power inputs to 0 for new devices
       const newBatteryPowers: Record<string, string> = {};
+      const newGridPowerLimits: Record<string, string> = {};
+      const newBatteryPowerLimits: Record<string, string> = {};
       deviceList.forEach(device => {
         if (!batteryPowers[device.connection.sn]) {
           newBatteryPowers[device.connection.sn] = '0';
         }
+        if (!gridPowerLimits[device.connection.sn]) {
+          newGridPowerLimits[device.connection.sn] = '3000'; // Default 3kW
+        }
+        if (!batteryPowerLimits[device.connection.sn]) {
+          newBatteryPowerLimits[device.connection.sn] = '5000'; // Default 5kW
+        }
       });
       setBatteryPowers(prev => ({ ...prev, ...newBatteryPowers }));
+      setGridPowerLimits(prev => ({ ...prev, ...newGridPowerLimits }));
+      setBatteryPowerLimits(prev => ({ ...prev, ...newBatteryPowerLimits }));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch devices');
     } finally {
@@ -75,6 +89,54 @@ const DeviceManager: React.FC = () => {
       setError(err instanceof Error ? err.message : `Failed to set battery power to ${power}W`);
     } finally {
       setProcessingBattery(null);
+    }
+  };
+
+  const handleGridPowerLimitChange = (deviceSn: string, value: string) => {
+    setGridPowerLimits(prev => ({ ...prev, [deviceSn]: value }));
+  };
+
+  const handleBatteryPowerLimitChange = (deviceSn: string, value: string) => {
+    setBatteryPowerLimits(prev => ({ ...prev, [deviceSn]: value }));
+  };
+
+  const handleSetGridPowerLimit = async (deviceSn: string) => {
+    const limitStr = gridPowerLimits[deviceSn] || '3000';
+    const limit = parseInt(limitStr, 10);
+    
+    if (isNaN(limit) || limit <= 0) {
+      setError('Please enter a valid positive integer for grid power limit');
+      return;
+    }
+
+    try {
+      setProcessingGridLimit(deviceSn);
+      await gatewayService.setGridPowerLimit(deviceSn, limit);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to set grid power limit to ${limit}W`);
+    } finally {
+      setProcessingGridLimit(null);
+    }
+  };
+
+  const handleSetBatteryPowerLimit = async (deviceSn: string) => {
+    const limitStr = batteryPowerLimits[deviceSn] || '5000';
+    const limit = parseInt(limitStr, 10);
+    
+    if (isNaN(limit) || limit <= 0) {
+      setError('Please enter a valid positive integer for battery power limit');
+      return;
+    }
+
+    try {
+      setProcessingBatteryLimit(deviceSn);
+      await gatewayService.setBatteryPowerLimit(deviceSn, limit);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to set battery power limit to ${limit}W`);
+    } finally {
+      setProcessingBatteryLimit(null);
     }
   };
 
@@ -224,6 +286,75 @@ const DeviceManager: React.FC = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Power Limits Configuration - Always visible */}
+                <div className="bg-gray-600 rounded-lg p-4 border-l-4 border-blue-500">
+                  <h4 className="text-sm font-medium text-white mb-3">Power Limits Configuration</h4>
+                  
+                  {/* Grid Power Limit */}
+                  <div className="mb-4">
+                    <label className="block text-xs font-medium text-gray-300 mb-2">Grid Power Limit</label>
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-1">
+                        <input
+                          type="number"
+                          value={gridPowerLimits[device.connection.sn] || '3000'}
+                          onChange={(e) => handleGridPowerLimitChange(device.connection.sn, e.target.value)}
+                          placeholder="Grid Limit (W)"
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          disabled={processingGridLimit === device.connection.sn}
+                          min="1"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Maximum power import/export to grid (Watts)
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleSetGridPowerLimit(device.connection.sn)}
+                        disabled={processingGridLimit === device.connection.sn}
+                        className={`px-4 py-2 rounded-lg transition-colors font-medium whitespace-nowrap ${
+                          processingGridLimit === device.connection.sn
+                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white'
+                        }`}
+                      >
+                        {processingGridLimit === device.connection.sn ? 'Setting...' : 'Set Limit'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Battery Power Limit */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-300 mb-2">Battery Power Limit</label>
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-1">
+                        <input
+                          type="number"
+                          value={batteryPowerLimits[device.connection.sn] || '5000'}
+                          onChange={(e) => handleBatteryPowerLimitChange(device.connection.sn, e.target.value)}
+                          placeholder="Battery Limit (W)"
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          disabled={processingBatteryLimit === device.connection.sn}
+                          min="1"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          Maximum battery charge/discharge power (Watts)
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleSetBatteryPowerLimit(device.connection.sn)}
+                        disabled={processingBatteryLimit === device.connection.sn}
+                        className={`px-4 py-2 rounded-lg transition-colors font-medium whitespace-nowrap ${
+                          processingBatteryLimit === device.connection.sn
+                            ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                            : 'bg-purple-600 hover:bg-purple-700 text-white'
+                        }`}
+                      >
+                        {processingBatteryLimit === device.connection.sn ? 'Setting...' : 'Set Limit'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           ))}

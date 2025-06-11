@@ -15,8 +15,7 @@ class DeeController:
 
 class DeeDecoder:
     def __init__(self):
-        self.grid_power_limit = 0
-        self.battery_max_charge_discharge_power = 0
+        pass
 
     @abstractmethod
     def decode(self, harvest_data: dict) -> List[dict]:
@@ -33,9 +32,18 @@ class SungrowDeeDecoder(DeeDecoder):
         self.min_battery_soc = 5  # check
         self.max_battery_soc = 100  # check
 
+    def set_grid_power_limit(self, limit: int):
+        self.grid_power_limit = limit
+
+    def set_battery_power_limit(self, limit: int):
+        self.battery_max_charge_discharge_power = limit
+
     def decode(self, harvest_data: dict) -> List[dict]:
 
-        logger.info(harvest_data)
+        logger.info("GRID POWER LIMIT: " + str(self.grid_power_limit))
+        logger.info("BATTERY POWER LIMIT: " + str(self.battery_max_charge_discharge_power))
+
+        # logger.info(harvest_data)
         # Extract Grid Frequency from register 5035 (U16, little-endian)
         # Extract Total DC Power from registers 5016-5017 (U32, little-endian)
         # Register 5016: lower 16 bits, Register 5017: upper 16 bits
@@ -77,16 +85,17 @@ class SungrowDeeDecoder(DeeDecoder):
         running_state = harvest_data.get(13000, 0)
 
         # Check bit flags for battery state
-        is_charging = (running_state & 0x01) != 0      # bit 1
-        is_discharging = (running_state & 0x02) != 0   # bit 2
+        is_charging = (running_state & 0x02) != 0      # bit 1
+        is_discharging = (running_state & 0x03) != 0   # bit 2
+
+        battery_power = 0
 
         # Apply sign based on charge/discharge state
         if is_discharging:
             battery_power = battery_power_raw  # Positive when discharging (power flowing out)
-        elif is_charging:
+        if is_charging:
             battery_power = -battery_power_raw  # Negative when charging (power flowing in)
-        else:
-            battery_power = 0  # No activity
+
         self.instantaneous_battery_power = battery_power
 
         self.battery_soc = harvest_data.get(13022, 0) * 0.1

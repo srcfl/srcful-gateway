@@ -23,7 +23,7 @@ import {
 } from '../Icons/ArrowIcons';
 import { css } from '@emotion/react';
 import { gatewayService, GatewayApiError } from '../../services/GatewayService';
-import { EnergyOverviewResponse } from '../../types/api';
+import { EnergyOverviewResponse, EnergyOverviewSettings } from '../../types/api';
 
 // Energy data structure
 interface EnergyData {
@@ -41,6 +41,9 @@ interface EnergyData {
   battery: {
     net: number; // Positive = charging, Negative = discharging
     isActive: boolean;
+    soc?: number;
+    isCharging?: boolean;
+    isDischarging?: boolean;
   };
 }
 
@@ -86,6 +89,8 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
   let batteryPower = 0;
   let gridProduction = 0;  // Export TO grid
   let gridConsumption = 0; // Import FROM grid
+  let batterySoC = 0;
+  let batteryCount = 0;
 
   // Process DEE items
   deeData.data.dee.forEach(item => {
@@ -94,9 +99,16 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
       solarPower += item.solar.power;
     }
 
-    // Sum battery power (positive = charging/consuming, negative = discharging/producing)
+    // Sum battery power and extract status info
     if (item.battery) {
       batteryPower += item.battery.power;
+      
+      // Aggregate SoC (we'll average multiple batteries)
+      if (item.battery.soc !== undefined) {
+        batterySoC += item.battery.soc;
+        batteryCount++;
+      }
+
     }
 
     // Sum meter data (handle Sungrow negative import values)
@@ -115,6 +127,9 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
     }
   });
 
+  // Calculate average SoC for multiple batteries
+  const averageSoC = batteryCount > 0 ? batterySoC / batteryCount : undefined;
+
   // Calculate home consumption using energy balance:
   // Energy Sources = Energy Consumers
   // Solar + Battery_discharge + Grid_import = Home + Battery_charging + Grid_export
@@ -127,6 +142,10 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
   
   // Calculate net grid flow (positive = export, negative = import)
   const netGridFlow = gridProduction - gridConsumption;
+  
+  // Determine charging/discharging status based on power flow
+  const isCharging = batteryPower < -50; // Negative power = charging (with 50W threshold)
+  const isDischarging = batteryPower > 50; // Positive power = discharging (with 50W threshold)
   
   return {
     solar: {
@@ -142,7 +161,10 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
     },
     battery: {
       net: batteryPower / 1000, // Convert to kW (positive = charging, negative = discharging)
-      isActive: true  // Always active
+      isActive: true,  // Always active
+      soc: averageSoC,
+      isCharging: isCharging,
+      isDischarging: isDischarging
     }
   };
 };
@@ -207,6 +229,7 @@ const Line: React.FC<{ className: string; animate?: boolean; reverse?: boolean }
 
 const Overview: React.FC = () => {
   const [energyData, setEnergyData] = useState<EnergyData | null>(null);
+  const [settings, setSettings] = useState<EnergyOverviewSettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -216,6 +239,7 @@ const Overview: React.FC = () => {
         const response = await gatewayService.getEnergyOverview();
         const processedData = processEnergyData(response);
         setEnergyData(processedData);
+        setSettings(response.settings);
         setLoading(false);
       } catch (err) {
         if (err instanceof GatewayApiError) {
@@ -268,6 +292,39 @@ const Overview: React.FC = () => {
     <div css={OverviewWrapperStyle}>
       <h2>Energy System Overview</h2>
       <p>Real-time energy flow visualization</p>
+      
+      {/* Power Limits Display */}
+      {settings && (
+        <div css={css`
+          display: flex;
+          justify-content: center;
+          gap: 20px;
+          margin-bottom: 15px;
+          font-size: 11px;
+        `}>
+          <div css={css`
+            background: rgba(42, 42, 64, 0.6);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #666;
+            color: #ccc;
+          `}>
+            <span css={css`color: #888; font-weight: 500;`}>Grid Limit: </span>
+            <span css={css`color: #fff; font-weight: 600;`}>{(settings.grid_power_limit / 1000).toFixed(1)} kW</span>
+          </div>
+          <div css={css`
+            background: rgba(42, 42, 64, 0.6);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid #6f42c1;
+            color: #ccc;
+          `}>
+            <span css={css`color: #888; font-weight: 500;`}>Battery Limit: </span>
+            <span css={css`color: #fff; font-weight: 600;`}>{(settings.battery_power_limit / 1000).toFixed(1)} kW</span>
+          </div>
+        </div>
+      )}
+      
       <div css={FlowWrapper}>
         {/* Solar Panel */}
         <div 
@@ -346,15 +403,23 @@ const Overview: React.FC = () => {
           css={[Circle, BatteryCircle]} 
           className={energyData.battery.isActive ? '' : 'inactive'}
         >
-          <BatteryIcon css={css`width: 70px!important;`} />
-          <span>
+          {/* Power Arrow - Above battery icon */}
+          <div css={css`margin-bottom: 4px;`}>
             {energyData.battery.isActive && (
               <>
                 {energyData.battery.net > 0 ? (
                   <UilArrowDown style={ArrowColorStyle('lightblue')} />
-                ) : (
+                ) : energyData.battery.net < 0 ? (
                   <UilArrowUp style={ArrowColorStyle('#e69373')} />
-                )}
+                ) : null}
+              </>
+            )}
+          </div>
+          
+          <BatteryIcon css={css`width: 70px!important;`} />
+          <span>
+            {energyData.battery.isActive && (
+              <>
                 {(() => {
                   const formatted = formatPowerWithUnit(Math.abs(energyData.battery.net));
                   return formatted.value;
@@ -363,6 +428,38 @@ const Overview: React.FC = () => {
             )}
             {!energyData.battery.isActive && '-'}
             <span>{energyData.battery.isActive ? formatPowerWithUnit(Math.abs(energyData.battery.net)).unit : 'kW'}</span>
+          </span>
+          
+          {/* SoC Display - Without "SoC" text */}
+          {energyData.battery.soc !== undefined && (
+            <span css={css`
+              font-size: 12px;
+              color: ${energyData.battery.soc < 20 ? '#f44336' : energyData.battery.soc < 50 ? '#FF9800' : '#4CAF50'};
+              font-weight: 600;
+              margin-top: 2px;
+            `}>
+              {Math.round(energyData.battery.soc)}%
+            </span>
+          )}
+        </div>
+
+        {/* Battery Status Display - Below the circle */}
+        <div css={css`
+          position: absolute;
+          bottom: 10px;
+          left: 180px;
+          text-align: center;
+          width: 140px;
+        `}>
+          <span css={css`
+            font-size: 12px;
+            color: ${energyData.battery.isCharging ? '#4CAF50' : energyData.battery.isDischarging ? '#f44336' : '#fff'} !important;
+            font-weight: 500;
+            text-transform: uppercase;
+            display: block;
+            text-align: center;
+          `}>
+            {energyData.battery.isCharging ? 'CHARGING' : energyData.battery.isDischarging ? 'DISCHARGING' : 'IDLE'}
           </span>
         </div>
 

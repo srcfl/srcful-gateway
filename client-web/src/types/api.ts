@@ -15,6 +15,9 @@ export interface MeterData {
 
 export interface BatteryData {
   power: number;
+  soc: number;
+  is_charging: boolean;
+  is_discharging: boolean;
 }
 
 export interface SolarData {
@@ -31,8 +34,14 @@ export interface EnergyOverviewData {
   dee: DeeItem[];
 }
 
+export interface EnergyOverviewSettings {
+  grid_power_limit: number;
+  battery_power_limit: number;
+}
+
 export interface EnergyOverviewResponse {
   status: string;
+  settings: EnergyOverviewSettings;
   data: EnergyOverviewData;
 }
 
@@ -55,4 +64,4 @@ export interface Device {
   client_name: string;
 }
 
-export type DeviceMode = 'control' | 'read'; 
+export type DeviceMode = "control" | "read";
