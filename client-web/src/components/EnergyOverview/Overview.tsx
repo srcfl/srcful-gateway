@@ -99,10 +99,19 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
       batteryPower += item.battery.power;
     }
 
-    // Sum meter data (absolute values)
+    // Sum meter data (handle Sungrow negative import values)
     if (item.meter) {
-      gridProduction += item.meter.production;   // Export to grid
-      gridConsumption += item.meter.consumption; // Import from grid
+      // For Sungrow: negative values indicate import, positive values indicate export
+      if (item.meter.production > 0) {
+        gridProduction += item.meter.production;   // Export to grid
+      } else if (item.meter.production < 0) {
+        gridConsumption += Math.abs(item.meter.production); // Import from grid (negative value)
+      }
+      
+      // Also handle consumption field if present (fallback for other meter types)
+      if (item.meter.consumption > 0) {
+        gridConsumption += item.meter.consumption; // Import from grid
+      }
     }
   });
 

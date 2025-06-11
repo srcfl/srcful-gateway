@@ -15,7 +15,8 @@ class DeeController:
 
 class DeeDecoder:
     def __init__(self):
-        pass
+        self.grid_power_limit = 0
+        self.battery_max_charge_discharge_power = 0
 
     @abstractmethod
     def decode(self, harvest_data: dict) -> List[dict]:
@@ -96,7 +97,10 @@ class SungrowDeeDecoder(DeeDecoder):
         }
 
         battery = {
-            "power": battery_power,
+            "power": self.instantaneous_battery_power,
+            "soc": self.battery_soc,
+            "is_charging": is_charging,
+            "is_discharging": is_discharging,
         }
 
         solar = {
