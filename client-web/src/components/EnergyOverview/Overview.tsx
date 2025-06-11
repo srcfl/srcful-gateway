@@ -47,6 +47,12 @@ interface EnergyData {
   };
 }
 
+// Historical data point structure
+interface GridDataPoint {
+  timestamp: number;
+  power: number; // Grid power in kW
+}
+
 const formatNumber = (number: number, decimals: number = 2): number => {
   if (!number) return 0;
   return Number(number.toFixed(decimals));
@@ -239,11 +245,277 @@ const Line: React.FC<{ className: string; animate?: boolean; reverse?: boolean }
   );
 };
 
+// Time frame options
+const TIME_FRAMES = [
+  { label: '30s', value: 30 * 1000 },
+  { label: '1m', value: 60 * 1000 },
+  { label: '5m', value: 5 * 60 * 1000 },
+  { label: '10m', value: 10 * 60 * 1000 },
+  { label: '15m', value: 15 * 60 * 1000 },
+  { label: '20m', value: 20 * 60 * 1000 },
+];
+
+// Grid Power Chart Component
+const GridPowerChart: React.FC<{ 
+  data: GridDataPoint[], 
+  gridLimit: number,
+  selectedTimeFrame: number,
+  onTimeFrameChange: (timeFrame: number) => void
+}> = ({ data, gridLimit, selectedTimeFrame, onTimeFrameChange }) => {
+  const chartWidth = 650;
+  const chartHeight = 200;
+  const padding = { top: 20, right: 30, bottom: 30, left: 50 };
+  const plotWidth = chartWidth - padding.left - padding.right;
+  const plotHeight = chartHeight - padding.top - padding.bottom;
+
+  // Filter data for selected time frame
+  const now = Date.now();
+  const startTime = now - selectedTimeFrame;
+  const filteredData = data.filter(point => point.timestamp >= startTime);
+
+  if (!filteredData.length) {
+    return (
+      <div css={css`
+        background: rgba(42, 42, 64, 0.3);
+        border-radius: 8px;
+        border: 1px solid #666;
+        padding: 10px;
+      `}>
+        {/* Time Frame Selector */}
+        <div css={css`
+          display: flex;
+          justify-content: center;
+          gap: 5px;
+          margin-bottom: 10px;
+        `}>
+          {TIME_FRAMES.map(({ label, value }) => (
+            <button
+              key={value}
+              onClick={() => onTimeFrameChange(value)}
+              css={css`
+                padding: 4px 8px;
+                font-size: 11px;
+                border: 1px solid ${selectedTimeFrame === value ? '#4CAF50' : '#666'};
+                background: ${selectedTimeFrame === value ? 'rgba(76, 175, 80, 0.2)' : 'rgba(42, 42, 64, 0.6)'};
+                color: ${selectedTimeFrame === value ? '#4CAF50' : '#ccc'};
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.2s;
+                
+                &:hover {
+                  background: ${selectedTimeFrame === value ? 'rgba(76, 175, 80, 0.3)' : 'rgba(66, 66, 84, 0.8)'};
+                }
+              `}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        
+        <div css={css`
+          width: ${chartWidth}px;
+          height: ${chartHeight}px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #888;
+          font-size: 14px;
+        `}>
+          Collecting data...
+        </div>
+      </div>
+    );
+  }
+
+  // Find min/max values for scaling
+  const maxAbsPower = Math.max(
+    Math.abs(Math.min(...filteredData.map(d => d.power))),
+    Math.abs(Math.max(...filteredData.map(d => d.power))),
+    gridLimit / 1000 // Include grid limit in scaling
+  );
+  const yRange = maxAbsPower * 1.2; // Add 20% padding
+
+  // Scale functions
+  const scaleX = (timestamp: number) => {
+    const relativeTime = timestamp - startTime;
+    return padding.left + (relativeTime / selectedTimeFrame) * plotWidth;
+  };
+
+  const scaleY = (power: number) => {
+    return padding.top + plotHeight / 2 - (power / yRange) * (plotHeight / 2);
+  };
+
+  // Create path for the line chart
+  const pathData = filteredData
+    .map((point, index) => {
+      const x = scaleX(point.timestamp);
+      const y = scaleY(point.power);
+      return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+    })
+    .join(' ');
+
+  // Grid limit line positions
+  const gridLimitKW = gridLimit / 1000;
+  const gridLimitYPos = scaleY(gridLimitKW);
+  const gridLimitYNeg = scaleY(-gridLimitKW);
+
+  // Format time label based on selected timeframe
+  const getTimeLabel = () => {
+    const timeFrame = TIME_FRAMES.find(tf => tf.value === selectedTimeFrame);
+    return `Time (${timeFrame?.label} window)`;
+  };
+
+  return (
+    <div css={css`
+      background: rgba(42, 42, 64, 0.3);
+      border-radius: 8px;
+      border: 1px solid #666;
+      padding: 10px;
+    `}>
+      {/* Time Frame Selector */}
+      <div css={css`
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-bottom: 10px;
+      `}>
+        {TIME_FRAMES.map(({ label, value }) => (
+          <button
+            key={value}
+            onClick={() => onTimeFrameChange(value)}
+            css={css`
+              padding: 4px 8px;
+              font-size: 11px;
+              border: 1px solid ${selectedTimeFrame === value ? '#4CAF50' : '#666'};
+              background: ${selectedTimeFrame === value ? 'rgba(76, 175, 80, 0.2)' : 'rgba(42, 42, 64, 0.6)'};
+              color: ${selectedTimeFrame === value ? '#4CAF50' : '#ccc'};
+              border-radius: 4px;
+              cursor: pointer;
+              transition: all 0.2s;
+              
+              &:hover {
+                background: ${selectedTimeFrame === value ? 'rgba(76, 175, 80, 0.3)' : 'rgba(66, 66, 84, 0.8)'};
+              }
+            `}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <h3 css={css`
+        margin: 0 0 10px 0;
+        font-size: 14px;
+        color: #fff;
+        text-align: center;
+      `}>
+        Grid Power ({TIME_FRAMES.find(tf => tf.value === selectedTimeFrame)?.label})
+      </h3>
+      
+      <svg width={chartWidth} height={chartHeight}>
+        {/* Background grid */}
+        <defs>
+          <pattern id="grid" width="40" height="30" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 30" fill="none" stroke="#333" strokeWidth="1" opacity="0.3"/>
+          </pattern>
+        </defs>
+        <rect width={chartWidth} height={chartHeight} fill="url(#grid)"/>
+        
+        {/* Zero line */}
+        <line 
+          x1={padding.left} 
+          y1={scaleY(0)} 
+          x2={chartWidth - padding.right} 
+          y2={scaleY(0)} 
+          stroke="#666" 
+          strokeWidth="2"
+          strokeDasharray="5,5"
+        />
+        
+        {/* Grid limit lines */}
+        <line 
+          x1={padding.left} 
+          y1={gridLimitYPos} 
+          x2={chartWidth - padding.right} 
+          y2={gridLimitYPos} 
+          stroke="#ff6b6b" 
+          strokeWidth="2"
+          strokeDasharray="3,3"
+        />
+        <line 
+          x1={padding.left} 
+          y1={gridLimitYNeg} 
+          x2={chartWidth - padding.right} 
+          y2={gridLimitYNeg} 
+          stroke="#ff6b6b" 
+          strokeWidth="2"
+          strokeDasharray="3,3"
+        />
+        
+        {/* Data line */}
+        {pathData && (
+          <path 
+            d={pathData} 
+            fill="none" 
+            stroke="#4CAF50" 
+            strokeWidth="2"
+          />
+        )}
+        
+        {/* Data points */}
+        {filteredData.map((point, index) => (
+          <circle
+            key={index}
+            cx={scaleX(point.timestamp)}
+            cy={scaleY(point.power)}
+            r="2"
+            fill={point.power > 0 ? "#4CAF50" : "#f44336"}
+          />
+        ))}
+        
+        {/* Y-axis labels */}
+        <text x={padding.left - 10} y={gridLimitYPos + 5} textAnchor="end" fontSize="10" fill="#ff6b6b">
+          +{gridLimitKW.toFixed(1)}
+        </text>
+        <text x={padding.left - 10} y={scaleY(0) + 5} textAnchor="end" fontSize="10" fill="#666">
+          0
+        </text>
+        <text x={padding.left - 10} y={gridLimitYNeg + 5} textAnchor="end" fontSize="10" fill="#ff6b6b">
+          -{gridLimitKW.toFixed(1)}
+        </text>
+        
+        {/* X-axis label */}
+        <text x={chartWidth / 2} y={chartHeight - 5} textAnchor="middle" fontSize="10" fill="#888">
+          {getTimeLabel()}
+        </text>
+        
+        {/* Y-axis label */}
+        <text x={15} y={chartHeight / 2} textAnchor="middle" fontSize="10" fill="#888" transform={`rotate(-90, 15, ${chartHeight / 2})`}>
+          Power (kW)
+        </text>
+        
+        {/* Legend */}
+        <g transform={`translate(${chartWidth - 120}, 25)`}>
+          <rect x="0" y="0" width="110" height="50" fill="rgba(0,0,0,0.7)" rx="5"/>
+          <line x1="10" y1="15" x2="25" y2="15" stroke="#4CAF50" strokeWidth="2"/>
+          <text x="30" y="19" fontSize="10" fill="#fff">Export</text>
+          <line x1="10" y1="30" x2="25" y2="30" stroke="#f44336" strokeWidth="2"/>
+          <text x="30" y="34" fontSize="10" fill="#fff">Import</text>
+          <line x1="10" y1="42" x2="25" y2="42" stroke="#ff6b6b" strokeWidth="2" strokeDasharray="3,3"/>
+          <text x="30" y="46" fontSize="10" fill="#fff">Limit</text>
+        </g>
+      </svg>
+    </div>
+  );
+};
+
 const Overview: React.FC = () => {
   const [energyData, setEnergyData] = useState<EnergyData | null>(null);
   const [settings, setSettings] = useState<EnergyOverviewSettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [gridHistory, setGridHistory] = useState<GridDataPoint[]>([]);
+  const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(30 * 1000); // Default to 30 seconds
 
   useEffect(() => {
     const fetchEnergyData = async () => {
@@ -253,6 +525,22 @@ const Overview: React.FC = () => {
         setEnergyData(processedData);
         console.log(processedData);
         setSettings(response.settings);
+        
+        // Add current grid power to history
+        const now = Date.now();
+        const newDataPoint: GridDataPoint = {
+          timestamp: now,
+          power: processedData.grid.net
+        };
+        
+        setGridHistory(prev => {
+          const updated = [...prev, newDataPoint];
+          // Keep data for the longest timeframe (20 minutes) to allow switching
+          const maxTimeFrame = 20 * 60 * 1000;
+          const cutoffTime = now - maxTimeFrame;
+          return updated.filter(point => point.timestamp >= cutoffTime);
+        });
+        
         setLoading(false);
       } catch (err) {
         if (err instanceof GatewayApiError) {
@@ -302,43 +590,42 @@ const Overview: React.FC = () => {
   const state = getSystemState(energyData);
 
   return (
-    <div css={OverviewWrapperStyle}>
-      <h2>Energy System Overview</h2>
-      <p>Real-time energy flow visualization</p>
-      
-      {/* Power Limits Display */}
-      {settings && (
+    <div css={css`
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 10px;
+    `}>
+      {/* Energy Flow Visualization - Compact for side-by-side */}
+      <div css={css`
+        width: 100%;
+        max-width: 500px;
+        background: rgba(26, 26, 46, 0.8);
+        border-radius: 12px;
+        border: 1px solid #444;
+        padding: 20px;
+      `}>
+        <h2 css={css`
+          color: #fff;
+          margin: 0 0 5px 0;
+          font-size: 18px;
+          text-align: center;
+        `}>Energy System Overview</h2>
+        <p css={css`
+          color: #ccc;
+          margin: 0 0 15px 0;
+          font-size: 12px;
+          text-align: center;
+        `}>Real-time energy flow visualization</p>
+        
         <div css={css`
-          display: flex;
-          justify-content: center;
-          gap: 20px;
-          margin-bottom: 15px;
-          font-size: 11px;
+          ${FlowWrapper};
+          transform: scale(0.8);
+          transform-origin: center;
+          margin: -20px;
         `}>
-          <div css={css`
-            background: rgba(42, 42, 64, 0.6);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid #666;
-            color: #ccc;
-          `}>
-            <span css={css`color: #888; font-weight: 500;`}>Grid Limit: </span>
-            <span css={css`color: #fff; font-weight: 600;`}>{(settings.grid_power_limit / 1000).toFixed(1)} kW</span>
-          </div>
-          <div css={css`
-            background: rgba(42, 42, 64, 0.6);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid #6f42c1;
-            color: #ccc;
-          `}>
-            <span css={css`color: #888; font-weight: 500;`}>Battery Limit: </span>
-            <span css={css`color: #fff; font-weight: 600;`}>{(settings.battery_power_limit / 1000).toFixed(1)} kW</span>
-          </div>
-        </div>
-      )}
-      
-      <div css={FlowWrapper}>
         {/* Solar Panel */}
         <div 
           css={[Circle, SolarCircle]} 
@@ -486,9 +773,10 @@ const Overview: React.FC = () => {
           animate={state.isExportingBatteryToHouse}
           reverse={true}
         />
+        </div>
       </div>
     </div>
   );
 };
 
-export default Overview; 
+export default Overview;
