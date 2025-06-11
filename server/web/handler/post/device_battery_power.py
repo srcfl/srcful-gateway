@@ -6,7 +6,6 @@ from ..requestData import RequestData
 from server.devices.Device import DeviceCommand, DeviceCommandType, DeviceMode
 
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -22,13 +21,13 @@ class Handler(PostHandler):
 
         if "power" not in data.post_params:
             return 400, json.dumps({"status": "error", "message": "Power not found"})
-        
+
         # check that power is an integer
         try:
-            power:int = int(data.post_params["power"])
+            power: int = int(data.post_params["power"])
         except ValueError:
             return 400, json.dumps({"status": "error", "message": "Power is not an integer: " + data.post_params["power"]})
-        
+
         command = DeviceCommand(DeviceCommandType.SET_BATTERY_POWER, power)
 
         for device in data.bb.devices.lst:
@@ -38,5 +37,5 @@ class Handler(PostHandler):
                     return 200, json.dumps({"status": "success", "message": "Device battery power set to " + str(power)})
                 else:
                     return 400, json.dumps({"status": "error", "message": "Device is not in control mode"})
-        
+
         return 404, json.dumps({"status": "error", "message": "Device not found"})

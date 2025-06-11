@@ -39,24 +39,27 @@ class PowerLimitControllerTask(Task):
 
         decoder.decode(self.device.get_last_harvest_data())
 
-        battery_power, state = check_import_export_limits(decoder.grid_power,
-                                                          decoder.grid_power_limit,
-                                                          decoder.instantaneous_battery_power,
-                                                          decoder.battery_soc,
-                                                          decoder.battery_max_charge_discharge_power,
-                                                          decoder.min_battery_soc,
-                                                          decoder.max_battery_soc)
-        logger.info('--------------------------------')
-        logger.info(f"State: {state}")
-        logger.info(f"Battery power: {battery_power}")
-        logger.info(f"Grid power: {decoder.grid_power}")
-        logger.info(f"Grid power limit: {decoder.grid_power_limit}")
-        logger.info(f"Instantaneous battery power: {decoder.instantaneous_battery_power}")
-        logger.info(f"Battery SOC: {decoder.battery_soc}")
-        logger.info(f"Battery max charge discharge power: {decoder.battery_max_charge_discharge_power}")
-        logger.info(f"Min battery SOC: {decoder.min_battery_soc}")
-        logger.info(f"Max battery SOC: {decoder.max_battery_soc}")
-        logger.info('--------------------------------')
+        # check import/export limits every 5 seconds
+        if event_time % 5000 == 0:
+            logger.info('--------------------------------')
+            logger.info(f"State: {state}")
+            logger.info(f"Battery power: {battery_power}")
+            logger.info(f"Grid power: {decoder.grid_power}")
+            logger.info(f"Grid power limit: {decoder.grid_power_limit}")
+            logger.info(f"Instantaneous battery power: {decoder.instantaneous_battery_power}")
+            logger.info(f"Battery SOC: {decoder.battery_soc}")
+            logger.info(f"Battery max charge discharge power: {decoder.battery_max_charge_discharge_power}")
+            logger.info(f"Min battery SOC: {decoder.min_battery_soc}")
+            logger.info(f"Max battery SOC: {decoder.max_battery_soc}")
+            logger.info('--------------------------------')
+
+            battery_power, state = check_import_export_limits(decoder.grid_power,
+                                                              decoder.grid_power_limit,
+                                                              decoder.instantaneous_battery_power,
+                                                              decoder.battery_soc,
+                                                              decoder.battery_max_charge_discharge_power,
+                                                              decoder.min_battery_soc,
+                                                              decoder.max_battery_soc)
 
         if state == State.DISCHARGE_BATTERY:
             self.device.profile.set_battery_power(self.device, -battery_power)

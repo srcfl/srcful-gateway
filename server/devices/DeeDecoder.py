@@ -58,7 +58,7 @@ class SungrowDeeDecoder(DeeDecoder):
         else:
             meter_power = meter_power_raw
 
-        self.grid_power = meter_power
+        self.grid_power = -meter_power  # sungrow meter is negative when importing...
 
         # Assign production/consumption based on sign
         # Positive = production (feeding back to grid), Positive = consumption (drawing from grid)
