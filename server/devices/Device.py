@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
+import uuid
 from server.devices.ICom import ICom
 from server.devices.DeeDecoder import DeeDecoder, SungrowDeeDecoder
 from typing import Any
@@ -12,12 +13,22 @@ class DeviceMode(Enum):
 class DeviceCommandType(Enum):
     SET_BATTERY_POWER = "set_battery_power"
 
+class DeviceCommandStatus(Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
+    PENDING = "pending"
+
 class DeviceCommand:
     def __init__(self, command_type: DeviceCommandType, value: Any):
         self.command_type = command_type
         self.values:list[Any] = []
         self.values.append(value)
 
+        self.id = str(uuid.uuid4())
+        self.success = DeviceCommandStatus.PENDING
+        self.ts_executed = 0
+
+    
 class Device(ICom, ABC):
     _is_disconnected: bool = False
 

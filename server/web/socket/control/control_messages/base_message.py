@@ -5,7 +5,7 @@ class BaseMessage:
     def __init__(self, data: dict):
         # Common header fields
         self.type: str = data.get(PayloadType.TYPE)
-        self.payload: str = data.get(PayloadType.PAYLOAD)
+        self.payload: dict = data.get(PayloadType.PAYLOAD, {})
         self.id: int | None = self.payload.get(PayloadType.ID, None)
 
         # Common payload fields

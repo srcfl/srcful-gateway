@@ -23,6 +23,7 @@ class ControlMessageType(str, Enum):
     EMS_CONTROL_SCHEDULE_CANCEL = "ems_control_schedule_cancel"
     EMS_DATA_REQUEST = "ems_data_request"
     EMS_PRE_SETUP = "ems_pre_setup"
+    
 
 
 class PayloadType(str, Enum):
@@ -42,3 +43,16 @@ class PayloadType(str, Enum):
     EXECUTE_AT = "execute_at"
     PROTOCOL = "protocol"
     COMMANDS = "commands"
+    ACTION = "action"
+
+    
+# {\"power\": 1830, \"actionType\": \"battery.discharge\"}
+class PayloadAction(str, Enum):
+    NONE = "none",
+    TYPE = "actionType",
+    POWER = "power"
+
+class PayloadActionType(str, Enum):
+    NONE = "none",
+    BATTERY_DISCHARGE = "battery.discharge"
+    BATTERY_CHARGE = "battery.charge"

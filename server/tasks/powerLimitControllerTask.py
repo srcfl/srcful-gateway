@@ -1,7 +1,7 @@
 import logging
 from typing import List, Union
 from server.app.blackboard import BlackBoard
-from server.devices.Device import Device, DeviceMode, DeviceCommand, DeviceCommandType
+from server.devices.Device import Device, DeviceMode, DeviceCommand, DeviceCommandType, DeviceCommandStatus
 from server.tasks.harvest import Harvest
 from server.tasks.harvestTransport import DefaultHarvestTransportFactory
 from server.tasks.itask import ITask
@@ -83,7 +83,12 @@ class PowerLimitControllerTask(HarvestableTask):
                 while self.device.has_commands():
                     command: DeviceCommand = self.device.pop_command()  # pop each command from the device
                     if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
-                        self.device.profile.set_battery_power(self.device, command.values[0])
+                        if (self.device.profile.set_battery_power(self.device, command.values[0])):
+                            command.success = DeviceCommandStatus.SUCCESS
+                        else:
+                            command.success = DeviceCommandStatus.FAILED
+                        command.ts_executed = self.bb.time_ms()
+
 
         # deinit check here
         if self.device.get_mode() == DeviceMode.READ:

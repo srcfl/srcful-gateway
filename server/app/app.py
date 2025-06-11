@@ -23,7 +23,8 @@ logger = logging.getLogger(__name__)
 
 # Constants
 MAX_WORKERS = 4
-# CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
+CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
+
 INITIAL_SETTINGS_DELAY = 500  # milliseconds
 SAVE_STATE_DELAY = 10000  # milliseconds (10 seconds)
 CHECK_WEB_REQUEST_DELAY = 1000  # milliseconds
@@ -59,8 +60,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     graphql_client = GraphQLSubscriptionClient(bb, bb.settings.api.ws_endpoint)
     graphql_client.start()
 
-    # control_client = ControlSubscription(bb, CONTROL_SUBSCRIPTION_URL)
-    # control_client.start()
+    control_client = ControlSubscription(bb, CONTROL_SUBSCRIPTION_URL)
+    control_client.start()
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
