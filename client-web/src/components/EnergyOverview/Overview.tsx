@@ -109,6 +109,7 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
         batteryCount++;
       }
     }
+    
 
     // Process meter data - handle grid import/export
     if (item.meter) {
@@ -141,17 +142,18 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
   // Positive = discharging (power flowing OUT of battery)
   // Negative = charging (power flowing INTO battery)
   
-  const batteryDischarge = batteryPower > 0 ? batteryPower : 0;  // Positive = discharging
-  const batteryCharge = batteryPower < 0 ? Math.abs(batteryPower) : 0;  // Negative = charging
+  // Positive = charging, negative = discharging
+  const batteryDischarge = batteryPower < 0 ? Math.abs(batteryPower) : 0;  
+  const batteryCharge = batteryPower > 0 ? batteryPower : 0;  
   
   const homeConsumption = solarPower + batteryDischarge + gridImport - batteryCharge - gridExport;
   
   // Calculate net grid flow (positive = export, negative = import)
   const netGridFlow = gridExport - gridImport;
   
-  // Determine charging/discharging status based on power flow
-  const isCharging = batteryPower < -50; // Negative power = charging (with 50W threshold)
-  const isDischarging = batteryPower > 50; // Positive power = discharging (with 50W threshold)
+     // Determine charging/discharging status based on power flow
+   const isCharging = batteryPower > 50; // Positive power = charging (with 50W threshold)
+   const isDischarging = batteryPower < -50; // Negative power = discharging (with 50W threshold)
   
   return {
     solar: {
@@ -245,6 +247,7 @@ const Overview: React.FC = () => {
         const response = await gatewayService.getEnergyOverview();
         const processedData = processEnergyData(response);
         setEnergyData(processedData);
+        console.log(processedData);
         setSettings(response.settings);
         setLoading(false);
       } catch (err) {
@@ -260,7 +263,7 @@ const Overview: React.FC = () => {
     fetchEnergyData();
     
     // Refresh data every 5 seconds
-    const interval = setInterval(fetchEnergyData, 5000);
+    const interval = setInterval(fetchEnergyData, 1000);
     
     return () => clearInterval(interval);
   }, []);

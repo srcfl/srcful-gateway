@@ -92,9 +92,9 @@ class SungrowDeeDecoder(DeeDecoder):
 
         # Apply sign based on charge/discharge state
         if is_discharging:
-            battery_power = battery_power_raw  # Positive when discharging (power flowing out)
+            battery_power = -battery_power_raw  # Negative when discharging (power flowing out)
         if is_charging:
-            battery_power = -battery_power_raw  # Negative when charging (power flowing in)
+            battery_power = battery_power_raw  # Positive when charging (power flowing in)
 
         self.instantaneous_battery_power = battery_power
 

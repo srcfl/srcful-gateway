@@ -22,6 +22,8 @@ class Handler(PostHandler):
         if "power" not in data.post_params:
             return 400, json.dumps({"status": "error", "message": "Power not found"})
 
+        logger.info(f"Setting battery power to {data.post_params['power']} for device {data.post_params.get('device_sn', 'none')}")
+
         # check that power is an integer
         try:
             power: int = int(data.post_params["power"])
@@ -34,8 +36,10 @@ class Handler(PostHandler):
             if device.sn == data.post_params.get("device_sn", "none"):
                 if device.get_mode() == DeviceMode.CONTROL:
                     device.add_command(command)
+                    logger.info(f"Device {device.sn} added command to set battery power to {power}")
                     return 200, json.dumps({"status": "success", "message": "Device battery power set to " + str(power)})
                 else:
+                    logger.info(f"Device {device.sn} is not in control mode")
                     return 400, json.dumps({"status": "error", "message": "Device is not in control mode"})
 
         return 404, json.dumps({"status": "error", "message": "Device not found"})

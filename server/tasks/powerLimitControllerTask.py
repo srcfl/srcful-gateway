@@ -89,6 +89,12 @@ class PowerLimitControllerTask(HarvestableTask):
         elif state == State.NO_ACTION:
             pass  # do nothing
 
+        if self.is_initialized:  # if in control mode, execute commands
+            while self.device.has_commands():
+                command: DeviceCommand = self.device.pop_command()  # pop each command from the device
+                if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
+                    self.device.profile.set_battery_power(self.device, command.values[0])
+
         # deinit check here
         if self.device.get_mode() == DeviceMode.READ:
             # if self.is_initialized:
