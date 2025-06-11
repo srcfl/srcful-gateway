@@ -353,3 +353,23 @@ def test_handle_export_partial_charge_needed():
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 1000  # Change from -1000 to +1000 (2000W increase)
     assert state == State.CHARGE_BATTERY
+
+
+def test_handle_export_over_limit_by_1149W():
+    """Test when partial charge is needed to stay within export limits"""
+    grid_power = -4149  # Over export limit by 1149W
+    instantaneous_battery_power = -2999  # Currently discharging 2999W
+
+    # Grid
+    grid_power_limit = 3000
+
+    # Battery
+    battery_soc = 50
+    battery_max_charge_discharge_power = 5000
+    min_battery_soc = 5
+    max_battery_soc = 100
+
+    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    print(f"Power: {battery_power}, State: {state}")
+    assert battery_power == -1850
+    assert state == State.CHARGE_BATTERY

@@ -39,46 +39,55 @@ class PowerLimitControllerTask(HarvestableTask):
         elapsed_time_ms = self.bb.time_ms() - start_time
 
         # check import/export limits
-        decoder: DeeDecoder = self.device.get_dee_decoder()
+        decoder: SungrowDeeDecoder = self.device.get_dee_decoder()
 
         decoder.decode(self.device.get_last_harvest_data())
 
         # Initialize variables
-        battery_power = 0
         state = State.NO_ACTION
 
         # check import/export limits every 5 seconds
         if event_time - self.last_action_time >= 5000:
+            battery_power, state = check_import_export_limits(decoder.grid_power,
+                                                              decoder.grid_power_limit,
+                                                              decoder.instantaneous_battery_power,
+                                                              decoder.battery_soc,
+                                                              decoder.battery_max_charge_discharge_power,
+                                                              decoder.min_battery_soc,
+                                                              decoder.max_battery_soc)
+
+        if state == State.DISCHARGE_BATTERY:
             logger.info('--------------------------------')
+            logger.info(f"Event time: {event_time} Discharging battery")
             logger.info(f"State: {state}")
-            logger.info(f"Battery power: {battery_power}")
             logger.info(f"Grid power: {decoder.grid_power}")
             logger.info(f"Grid power limit: {decoder.grid_power_limit}")
             logger.info(f"Instantaneous battery power: {decoder.instantaneous_battery_power}")
-            # logger.info(f"Battery SOC: {decoder.battery_soc}")
-            # logger.info(f"Battery max charge discharge power: {decoder.battery_max_charge_discharge_power}")
-            # logger.info(f"Min battery SOC: {decoder.min_battery_soc}")
-            # logger.info(f"Max battery SOC: {decoder.max_battery_soc}")
+            logger.info(f"Target battery power: {battery_power}")
             logger.info('--------------------------------')
 
-        if state == State.DISCHARGE_BATTERY:
             self.device.profile.set_battery_power(self.device, -battery_power)
             bb_message = f"Discharging battery to {battery_power} W to reduce import"
             logger.info(bb_message)
             self.bb.add_warning(bb_message)
             self.last_action_time = event_time
         elif state == State.CHARGE_BATTERY:
+            logger.info('--------------------------------')
+            logger.info(f"Event time: {event_time} Charging battery")
+            logger.info(f"State: {state}")
+            logger.info(f"Grid power: {decoder.grid_power}")
+            logger.info(f"Grid power limit: {decoder.grid_power_limit}")
+            logger.info(f"Instantaneous battery power: {decoder.instantaneous_battery_power}")
+            logger.info(f"Target battery power: {battery_power}")
+            logger.info('--------------------------------')
+
             self.device.profile.set_battery_power(self.device, battery_power)
             bb_message = f"Charging battery to {battery_power} W to reduce export"
             logger.info(bb_message)
             self.bb.add_warning(bb_message)
             self.last_action_time = event_time
         elif state == State.NO_ACTION:
-            if self.is_initialized:
-                while self.device.has_commands():
-                    command: DeviceCommand = self.device.pop_command()  # pop each command from the device
-                    if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
-                        self.device.profile.set_battery_power(self.device, command.values[0])
+            pass  # do nothing
 
         # deinit check here
         if self.device.get_mode() == DeviceMode.READ:
