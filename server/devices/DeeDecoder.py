@@ -53,6 +53,11 @@ class SungrowDeeDecoder(DeeDecoder):
         # Combine into U32 value (little-endian: upper << 16 | lower)
         solar_power = (upper_bits << 16) | lower_bits
 
+        load_lower = harvest_data.get(13007, 0)
+        load_upper = harvest_data.get(13008, 0)
+
+        load_power = (load_upper << 16) | load_lower
+
         # Extract Total Active Power from registers 13033-13034 (I32, little-endian)
         # Register 13033: lower 16 bits, Register 13034: upper 16 bits
         meter_lower = harvest_data.get(13009, 0)
@@ -103,6 +108,7 @@ class SungrowDeeDecoder(DeeDecoder):
         meter = {
             "production": production,
             "consumption": consumption,
+            "load_power": load_power,
         }
 
         battery = {

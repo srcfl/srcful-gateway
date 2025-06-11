@@ -36,7 +36,7 @@ interface EnergyData {
     isActive: boolean;
   };
   home: {
-    consumption: number;
+    load_power: number;
   };
   battery: {
     net: number; // Positive = discharging, Negative = charging
@@ -85,10 +85,12 @@ const formatPowerWithUnit = (kWValue: number): { value: number; unit: string } =
 
 // Process DEE data into our energy structure
 const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
+  
   let solarPower = 0;
   let batteryPower = 0;
   let gridImport = 0;   // Power imported FROM grid (always positive)
   let gridExport = 0;   // Power exported TO grid (always positive)
+  let loadPower = 0;
   let batterySoC = 0;
   let batteryCount = 0;
 
@@ -117,6 +119,7 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
       // production > 0 = exporting to grid
       // production < 0 = importing from grid
       // consumption < 0 = importing from grid
+      loadPower = item.meter.load_power;
       
       if (item.meter.production > 0) {
         gridExport += item.meter.production;
@@ -146,7 +149,7 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
   const batteryDischarge = batteryPower < 0 ? Math.abs(batteryPower) : 0;  
   const batteryCharge = batteryPower > 0 ? batteryPower : 0;  
   
-  const homeConsumption = solarPower + batteryDischarge + gridImport - batteryCharge - gridExport;
+  const homeConsumption = loadPower;
   
   // Calculate net grid flow (positive = export, negative = import)
   const netGridFlow = gridExport - gridImport;
@@ -165,7 +168,7 @@ const processEnergyData = (deeData: EnergyOverviewResponse): EnergyData => {
       isActive: true  // Always active
     },
     home: {
-      consumption: homeConsumption / 1000 // Convert to kW
+      load_power: homeConsumption / 1000 // Convert to kW
     },
     battery: {
       net: batteryPower / 1000, // Convert to kW (positive = discharging, negative = charging)
@@ -183,8 +186,9 @@ const getSystemState = (energyData: EnergyData) => {
   
   // Calculate energy flows
   const isExportingSolarToGrid = solarKw > 0 && gridNet > 0;
-  const isExportingSolarToHouse = solarKw > 0 && energyData.home.consumption > 0;
+  const isExportingSolarToHouse = solarKw > 0 && energyData.home.load_power > 0;
   const isImportingGridToHouse = gridNet < 0;
+  
   
   return {
     isExportingSolarToGrid,
@@ -192,9 +196,9 @@ const getSystemState = (energyData: EnergyData) => {
     isImportingGridToHouse,
     isExportingSolarToBattery: solarKw > 0 && energyData.battery.net > 0,
     isExportingBatteryToGrid: energyData.battery.net < 0 && gridNet > 0,
-    isExportingBatteryToHouse: energyData.battery.net < 0 && energyData.home.consumption > 0,
+    isExportingBatteryToHouse: energyData.battery.net < 0 && energyData.home.load_power > 0,
     isImportingGridToBattery: energyData.battery.net > 0 && gridNet < 0,
-    houseConsumption: energyData.home.consumption
+    houseConsumption: energyData.home.load_power
   };
 };
 

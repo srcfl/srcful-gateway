@@ -11,6 +11,7 @@ export interface NetworkInfo {
 export interface MeterData {
   production: number;
   consumption: number;
+  load_power: number;
 }
 
 export interface BatteryData {

@@ -208,6 +208,17 @@ sungrow_profile = {
             RegistersKey.ENDIANNESS: EndiannessKey.BIG,
         },
         {
+            RegistersKey.NAME: "Load Power",
+            RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+            RegistersKey.START_REGISTER: 13007,
+            RegistersKey.NUM_OF_REGISTERS: 2,
+            RegistersKey.DATA_TYPE: DataTypeKey.U32,
+            RegistersKey.UNIT: "W",
+            RegistersKey.DESCRIPTION: "Load power",
+            RegistersKey.SCALE_FACTOR: 1,
+            RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+        },
+        {
             RegistersKey.NAME: "Total Active Power",
             RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
             RegistersKey.START_REGISTER: 13009,
