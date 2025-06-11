@@ -46,13 +46,6 @@ class PowerLimitControllerTask(HarvestableTask):
         # Initialize variables
         state = State.NO_ACTION
 
-        logger.info('--------------------------------')
-        logger.info(f"Event time: {event_time} Discharging battery")
-        logger.info(f"State: {state}")
-        logger.info(f"Grid power: {decoder.grid_power}")
-        logger.info(f"Grid power limit: {decoder.grid_power_limit}")
-        logger.info(f"Instantaneous battery power: {decoder.instantaneous_battery_power}")
-        logger.info('--------------------------------')
         if event_time - self.last_action_time >= 5000:
             battery_power, state = check_import_export_limits(decoder.grid_power,
                                                               decoder.grid_power_limit,
