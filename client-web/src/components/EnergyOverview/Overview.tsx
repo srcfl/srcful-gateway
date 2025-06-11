@@ -416,10 +416,10 @@ const Overview: React.FC = () => {
           <div css={css`margin-bottom: 4px;`}>
             {energyData.battery.isActive && (
               <>
-                {energyData.battery.net > 0 ? (
-                  <UilArrowUp style={ArrowColorStyle('#e69373')} />
-                ) : energyData.battery.net < 0 ? (
+                {energyData.battery.isCharging ? (
                   <UilArrowDown style={ArrowColorStyle('lightblue')} />
+                ) : energyData.battery.isDischarging ? (
+                  <UilArrowUp style={ArrowColorStyle('#e69373')} />
                 ) : null}
               </>
             )}
