@@ -16,6 +16,7 @@ class PowerLimitControllerTask(Task):
         super().__init__(event_time, bb)
         self.device: Device = device
         self.is_initialized = False
+        self.last_action_time = 0
 
     def execute(self, event_time):
 
@@ -39,8 +40,16 @@ class PowerLimitControllerTask(Task):
 
         decoder.decode(self.device.get_last_harvest_data())
 
-        # check import/export limits every 5 seconds
-        if event_time % 5000 == 0:
+        # check import/export limits every iteration, but wait 5 seconds after an action
+        if event_time - self.last_action_time >= 5000:
+            battery_power, state = check_import_export_limits(decoder.grid_power,
+                                                              decoder.grid_power_limit,
+                                                              decoder.instantaneous_battery_power,
+                                                              decoder.battery_soc,
+                                                              decoder.battery_max_charge_discharge_power,
+                                                              decoder.min_battery_soc,
+                                                              decoder.max_battery_soc)
+
             logger.info('--------------------------------')
             logger.info(f"State: {state}")
             logger.info(f"Battery power: {battery_power}")
@@ -53,30 +62,24 @@ class PowerLimitControllerTask(Task):
             logger.info(f"Max battery SOC: {decoder.max_battery_soc}")
             logger.info('--------------------------------')
 
-            battery_power, state = check_import_export_limits(decoder.grid_power,
-                                                              decoder.grid_power_limit,
-                                                              decoder.instantaneous_battery_power,
-                                                              decoder.battery_soc,
-                                                              decoder.battery_max_charge_discharge_power,
-                                                              decoder.min_battery_soc,
-                                                              decoder.max_battery_soc)
-
-        if state == State.DISCHARGE_BATTERY:
-            self.device.profile.set_battery_power(self.device, -battery_power)
-            bb_message = f"Discharging battery to {battery_power} W to reduce import"
-            logger.info(bb_message)
-            self.bb.add_warning(bb_message)
-        elif state == State.CHARGE_BATTERY:
-            self.device.profile.set_battery_power(self.device, battery_power)
-            bb_message = f"Charging battery to {battery_power} W to reduce export"
-            logger.info(bb_message)
-            self.bb.add_warning(bb_message)
-        elif state == State.NO_ACTION:
-            if self.is_initialized:
-                while self.device.has_commands():
-                    command: DeviceCommand = self.device.pop_command()  # pop each command from the device
-                    if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
-                        self.device.profile.set_battery_power(self.device, command.values[0])
+            if state == State.DISCHARGE_BATTERY:
+                self.device.profile.set_battery_power(self.device, -battery_power)
+                bb_message = f"Discharging battery to {battery_power} W to reduce import"
+                logger.info(bb_message)
+                self.bb.add_warning(bb_message)
+                self.last_action_time = event_time
+            elif state == State.CHARGE_BATTERY:
+                self.device.profile.set_battery_power(self.device, battery_power)
+                bb_message = f"Charging battery to {battery_power} W to reduce export"
+                logger.info(bb_message)
+                self.bb.add_warning(bb_message)
+                self.last_action_time = event_time
+            elif state == State.NO_ACTION:
+                if self.is_initialized:
+                    while self.device.has_commands():
+                        command: DeviceCommand = self.device.pop_command()  # pop each command from the device
+                        if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
+                            self.device.profile.set_battery_power(self.device, command.values[0])
 
         # deinit check here
         if self.device.get_mode() == DeviceMode.READ:
