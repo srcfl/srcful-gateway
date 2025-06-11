@@ -21,7 +21,7 @@ class SungrowProfile(ModbusProfile):
 
     def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
-    
+
     def is_controllable(self) -> bool:
         return True
 
@@ -66,13 +66,13 @@ class SungrowProfile(ModbusProfile):
             logger.info(f"Successfully set register {reg} to {val}")
 
         return success
-    
+
     def set_battery_power(self, device: ModbusDevice, power: int) -> bool:
         success = RegisterValue.write_single(device=device, address=13051, value=abs(power))
         if success:
             logger.info(f"Successfully set register 13050 to {abs(power)}")
-        
-        command = 170 if power > 0 else 187 if power < 0 else 204 #"0xAA(170):Charge; 0xBB(187):Discharge; 0xCC(204):Stop",
+
+        command = 170 if power > 0 else 187 if power < 0 else 204  # "0xAA(170):Charge; 0xBB(187):Discharge; 0xCC(204):Stop",
         success = success and RegisterValue.write_single(device=device, address=13050, value=command)
         if success:
             logger.info(f"Successfully set register 13050 to {command}")
@@ -227,6 +227,17 @@ sungrow_profile = {
             RegistersKey.UNIT: "W",
             RegistersKey.DESCRIPTION: "Battery power",
             RegistersKey.SCALE_FACTOR: 1,
+            RegistersKey.ENDIANNESS: EndiannessKey.BIG,
+        },
+        {
+            RegistersKey.NAME: "Battery SoC",
+            RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_INPUT_REGISTERS,
+            RegistersKey.START_REGISTER: 13022,
+            RegistersKey.NUM_OF_REGISTERS: 1,
+            RegistersKey.DATA_TYPE: DataTypeKey.U16,
+            RegistersKey.UNIT: "%",
+            RegistersKey.DESCRIPTION: "Battery SoC",
+            RegistersKey.SCALE_FACTOR: 0.1,
             RegistersKey.ENDIANNESS: EndiannessKey.BIG,
         },
         {
