@@ -40,9 +40,6 @@ class SungrowDeeDecoder(DeeDecoder):
 
     def decode(self, harvest_data: dict) -> List[dict]:
 
-        logger.info("GRID POWER LIMIT: " + str(self.grid_power_limit))
-        logger.info("BATTERY POWER LIMIT: " + str(self.battery_max_charge_discharge_power))
-
         # logger.info(harvest_data)
         # Extract Grid Frequency from register 5035 (U16, little-endian)
         # Extract Total DC Power from registers 5016-5017 (U32, little-endian)
@@ -91,7 +88,7 @@ class SungrowDeeDecoder(DeeDecoder):
 
         # Check bit flags for battery state
         is_charging = (running_state & 0x02) != 0      # bit 1
-        is_discharging = (running_state & 0x03) != 0   # bit 2
+        is_discharging = (running_state & 0x04) != 0   # bit 2
 
         battery_power = 0
 
