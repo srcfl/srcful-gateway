@@ -124,6 +124,18 @@ export class GatewayService {
     );
   }
 
+  public async setGridCurrentLimit(
+    deviceSn: string,
+    limit: number
+  ): Promise<void> {
+    return this.fetchWithTimeout<void>(
+      `/device/${deviceSn}/grid/current/${limit}`,
+      {
+        method: "POST",
+      }
+    );
+  }
+
   public async setGridPowerLimit(
     deviceSn: string,
     limit: number

@@ -27,6 +27,7 @@ class Handler(GetHandler):
             dee_decoder: SungrowDeeDecoder = device.get_dee_decoder()
 
             settings = {
+                "mode": dee_decoder.mode,
                 "grid_power_limit": dee_decoder.grid_power_limit,
                 "battery_power_limit": dee_decoder.battery_max_charge_discharge_power,
             }

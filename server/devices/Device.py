@@ -10,15 +10,18 @@ class DeviceMode(Enum):
     NONE = "none"
     READ = "read"
     CONTROL = "control"
+    SELF_CONSUMPTION = "self_consumption"
 
 
 class DeviceCommandType(Enum):
     SET_BATTERY_POWER = "set_battery_power"
 
+
 class DeviceCommandStatus(Enum):
     SUCCESS = "success"
     FAILED = "failed"
     PENDING = "pending"
+
 
 class DeviceCommand:
     def __init__(self, command_type: DeviceCommandType, value: Any):
@@ -30,7 +33,7 @@ class DeviceCommand:
         self.success = DeviceCommandStatus.PENDING
         self.ts_executed = 0
 
-    
+
 class Device(ICom, ABC):
     _is_disconnected: bool = False
 
@@ -46,7 +49,8 @@ class Device(ICom, ABC):
         self.decoder = SungrowDeeDecoder()
 
     def add_command(self, command: DeviceCommand) -> None:
-        self.commands.append(command)
+        if self._mode == DeviceMode.CONTROL:
+            self.commands.append(command)
 
     def pop_command(self) -> DeviceCommand:
         return self.commands.pop(0)
@@ -74,6 +78,7 @@ class Device(ICom, ABC):
         return False
 
     def get_dee_decoder(self) -> DeeDecoder:
+        self.decoder.set_mode(self._mode.value)
         return self.decoder
 
     def get_last_harvest_data(self) -> dict:

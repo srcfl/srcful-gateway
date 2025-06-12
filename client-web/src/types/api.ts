@@ -12,6 +12,14 @@ export interface MeterData {
   production: number;
   consumption: number;
   load_power: number;
+  l1_current: number;
+  l2_current: number;
+  l3_current: number;
+  l1_voltage: number;
+  l2_voltage: number;
+  l3_voltage: number;
+  grid_frequency: number;
+  grid_current_limit: number;
 }
 
 export interface BatteryData {
@@ -36,8 +44,10 @@ export interface EnergyOverviewData {
 }
 
 export interface EnergyOverviewSettings {
+  mode: string;
   grid_power_limit: number;
   battery_power_limit: number;
+  grid_current_limit: number;
 }
 
 export interface EnergyOverviewResponse {
@@ -65,4 +75,4 @@ export interface Device {
   client_name: string;
 }
 
-export type DeviceMode = "control" | "read";
+export type DeviceMode = "control" | "self_consumption" | "read";

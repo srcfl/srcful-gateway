@@ -10,8 +10,10 @@ const DeviceManager: React.FC = () => {
   const [deviceModes, setDeviceModes] = useState<Record<string, DeviceMode>>({});
   const [batteryPowers, setBatteryPowers] = useState<Record<string, string>>({});
   const [processingBattery, setProcessingBattery] = useState<string | null>(null);
+  const [gridCurrentLimits, setGridCurrentLimits] = useState<Record<string, string>>({});
   const [gridPowerLimits, setGridPowerLimits] = useState<Record<string, string>>({});
   const [batteryPowerLimits, setBatteryPowerLimits] = useState<Record<string, string>>({});
+  const [processingGridCurrentLimit, setProcessingGridCurrentLimit] = useState<string | null>(null);
   const [processingGridLimit, setProcessingGridLimit] = useState<string | null>(null);
   const [processingBatteryLimit, setProcessingBatteryLimit] = useState<string | null>(null);
 
@@ -28,11 +30,15 @@ const DeviceManager: React.FC = () => {
       
       // Initialize inputs as empty for new devices (no default values)
       const newBatteryPowers: Record<string, string> = {};
+      const newGridCurrentLimits: Record<string, string> = {};
       const newGridPowerLimits: Record<string, string> = {};
       const newBatteryPowerLimits: Record<string, string> = {};
       deviceList.forEach(device => {
         if (!(device.connection.sn in batteryPowers)) {
           newBatteryPowers[device.connection.sn] = '';
+        }
+        if (!(device.connection.sn in gridCurrentLimits)) {
+          newGridCurrentLimits[device.connection.sn] = '';
         }
         if (!(device.connection.sn in gridPowerLimits)) {
           newGridPowerLimits[device.connection.sn] = '';
@@ -42,6 +48,7 @@ const DeviceManager: React.FC = () => {
         }
       });
       setBatteryPowers(prev => ({ ...prev, ...newBatteryPowers }));
+      setGridCurrentLimits(prev => ({ ...prev, ...newGridCurrentLimits }));
       setGridPowerLimits(prev => ({ ...prev, ...newGridPowerLimits }));
       setBatteryPowerLimits(prev => ({ ...prev, ...newBatteryPowerLimits }));
     } catch (err) {
@@ -97,12 +104,41 @@ const DeviceManager: React.FC = () => {
     }
   };
 
+  const handleGridCurrentLimitChange = (deviceSn: string, value: string) => {
+    setGridCurrentLimits(prev => ({ ...prev, [deviceSn]: value }));
+  };
+
   const handleGridPowerLimitChange = (deviceSn: string, value: string) => {
     setGridPowerLimits(prev => ({ ...prev, [deviceSn]: value }));
   };
 
   const handleBatteryPowerLimitChange = (deviceSn: string, value: string) => {
     setBatteryPowerLimits(prev => ({ ...prev, [deviceSn]: value }));
+  };
+
+  const handleSetGridCurrentLimit = async (deviceSn: string) => {
+    const limitStr = gridCurrentLimits[deviceSn] || '';
+    
+    if (limitStr.trim() === '') {
+      setError('Please enter a grid current limit value');
+      return;
+    }
+    
+    const limit = parseInt(limitStr, 10);
+    if (isNaN(limit) || limit <= 0) {
+      setError('Please enter a valid positive integer for grid current limit');
+      return;
+    }
+
+    try {
+      setProcessingGridCurrentLimit(deviceSn);
+      await gatewayService.setGridCurrentLimit(deviceSn, limit);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to set grid current limit to ${limit}A`);
+    } finally {
+      setProcessingGridCurrentLimit(null);
+    }
   };
 
   const handleSetGridPowerLimit = async (deviceSn: string) => {
@@ -260,6 +296,19 @@ const DeviceManager: React.FC = () => {
                       {processingDevice === device.connection.sn ? 'Processing...' : 'Control Mode'}
                     </button>
                     <button
+                      onClick={() => handleSetDeviceMode(device.connection.sn, 'self_consumption')}
+                      disabled={processingDevice === device.connection.sn}
+                      className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+                        processingDevice === device.connection.sn
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                          : deviceModes[device.connection.sn] === 'self_consumption'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      {processingDevice === device.connection.sn ? 'Processing...' : 'Self Consumption'}
+                    </button>
+                    <button
                       onClick={() => handleSetDeviceMode(device.connection.sn, 'read')}
                       disabled={processingDevice === device.connection.sn}
                       className={`px-4 py-2 rounded-lg transition-colors font-medium ${
@@ -311,6 +360,37 @@ const DeviceManager: React.FC = () => {
                   <div className="bg-gray-600 rounded-lg p-4 border-l-4 border-blue-500">
                     <h4 className="text-sm font-medium text-white mb-3">Power Limits Configuration</h4>
                     
+                    {/* Grid Current Limit */}
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-gray-300 mb-2">Grid Current Limit</label>
+                      <div className="flex items-center space-x-3">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={gridCurrentLimits[device.connection.sn] || ''}
+                            onChange={(e) => handleGridCurrentLimitChange(device.connection.sn, e.target.value)}
+                            placeholder="Current Limit (A)"
+                            className="w-full px-3 py-2 bg-gray-700 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                            disabled={processingGridCurrentLimit === device.connection.sn}
+                          />
+                          <p className="text-xs text-gray-400 mt-1">
+                            Maximum current import/export to grid (Amperes)
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleSetGridCurrentLimit(device.connection.sn)}
+                          disabled={processingGridCurrentLimit === device.connection.sn}
+                          className={`px-4 py-2 rounded-lg transition-colors font-medium whitespace-nowrap ${
+                            processingGridCurrentLimit === device.connection.sn
+                              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                              : 'bg-cyan-600 hover:bg-cyan-700 text-white'
+                          }`}
+                        >
+                          {processingGridCurrentLimit === device.connection.sn ? 'Setting...' : 'Set Limit'}
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Grid Power Limit */}
                     <div className="mb-4">
                       <label className="block text-xs font-medium text-gray-300 mb-2">Grid Power Limit</label>

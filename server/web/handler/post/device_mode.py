@@ -6,7 +6,6 @@ from ..requestData import RequestData
 from server.devices.Device import DeviceMode
 
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -19,16 +18,17 @@ class Handler(PostHandler):
         }
 
     def do_post(self, data: RequestData):
-                        
+
         mode: DeviceMode = DeviceMode.NONE
         if data.post_params.get("mode", "none") == "read":
             mode = DeviceMode.READ
+        elif data.post_params.get("mode", "none") == "self_consumption":
+            mode = DeviceMode.SELF_CONSUMPTION
         elif data.post_params.get("mode", "none") == "control":
             mode = DeviceMode.CONTROL
 
         if mode == DeviceMode.NONE:
             return 400, json.dumps({"status": "error", "message": "Invalid mode"})
-        
 
         for device in data.bb.devices.lst:
             if device.sn == data.post_params.get("device_sn", "none"):
@@ -37,7 +37,7 @@ class Handler(PostHandler):
                     return 200, json.dumps({"status": "success", "message": "Device mode set to " + data.post_params.get("mode", "none")})
                 else:
                     return 500, json.dumps({"status": "error", "message": "Failed to set device mode, device is not controllable"})
-        
+
         return 404, json.dumps({"status": "error", "message": "Device not found"})
 
         return 200, json.dumps([data.post_params.get("device_sn", "none"), data.post_params.get("mode", "none")])

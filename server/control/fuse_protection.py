@@ -21,41 +21,48 @@ def _get_available_range(number, min_val, max_val):
     return lower_distance, upper_distance
 
 
-def handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc) -> tuple[int, State]:
+def handle_fuse_limit(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc) -> tuple[int, State]:
 
     # This is how much we can decrease/increase the power with, best case with battery_max_charge_discharge_power * 2 if we are charging at max or discharging at max
     available_power_to_reduce_with, available_power_to_increase_with = _get_available_range(instantaneous_battery_power, -battery_max_charge_discharge_power, battery_max_charge_discharge_power)
     log(f"Available power to reduce with: {available_power_to_reduce_with}, Available power to increase with: {available_power_to_increase_with}")
 
+    max_current = max(L1_A, L2_A, L3_A)
+    min_current = min(L1_A, L2_A, L3_A)
+
     # Over import limit (importing too much power from grid)
-    if grid_power > grid_power_limit:
+    if max_current > grid_current_limit:
         if battery_soc < min_battery_soc:
             log(f"Battery SoC is under min, we can't discharge to reduce import")
             return 0, State.NO_ACTION
 
-        power_excess = grid_power - grid_power_limit
+        excess_current = (max_current - grid_current_limit) * 3
+        power_excess = excess_current * L1_V
+
         if available_power_to_reduce_with >= power_excess:
-            new_battery_power_setpoint = instantaneous_battery_power - power_excess
-            log(f"Reducing import by discharging battery: {new_battery_power_setpoint} W from {instantaneous_battery_power} W, decrease by {power_excess} W")
+            new_battery_power_setpoint = instantaneous_battery_power - (excess_current * L1_V)
+            log(f"Reducing import by discharging battery: {new_battery_power_setpoint} W from {instantaneous_battery_power} W, decrease by {excess_current} W")
             return new_battery_power_setpoint, State.DISCHARGE_BATTERY
         else:
-            log(f"Can't discharge enough, over limit by {power_excess - available_power_to_reduce_with} W, discharging at max power")
-            return battery_max_charge_discharge_power, State.DISCHARGE_BATTERY
+            log(f"Can't discharge enough, over limit by {excess_current - available_power_to_reduce_with} W, discharging at max power")
+            return -battery_max_charge_discharge_power, State.DISCHARGE_BATTERY
 
     # Over export limit (exporting too much power to grid)
-    elif grid_power < -grid_power_limit:
+    elif min_current < -grid_current_limit:
         if battery_soc >= max_battery_soc:
             log(f"Battery SoC is over max, we can't charge to reduce export")
             return 0, State.NO_ACTION
 
-        power_excess = -grid_power_limit - grid_power  # How much we're over the export limit
+        excess_current = (-grid_current_limit - min_current) * 3  # How much we're over the export limit
+        power_excess = excess_current * L1_V
+
         if available_power_to_increase_with >= power_excess:
-            new_battery_power_setpoint = instantaneous_battery_power + power_excess
-            log(f"Reducing export by charging battery: {new_battery_power_setpoint} W from {instantaneous_battery_power} W, increase by {power_excess} W")
+            new_battery_power_setpoint = instantaneous_battery_power + (excess_current * L1_V)
+            log(f"Reducing export by charging battery: {new_battery_power_setpoint} W from {instantaneous_battery_power} W, increase by {excess_current} W")
             return new_battery_power_setpoint, State.CHARGE_BATTERY
         else:
-            log(f"Can't charge enough, over export limit by {power_excess - available_power_to_increase_with} W, charging at max power")
-            return -battery_max_charge_discharge_power, State.CHARGE_BATTERY
+            log(f"Can't charge enough, over export limit by {excess_current - available_power_to_increase_with} W, charging at max power")
+            return battery_max_charge_discharge_power, State.CHARGE_BATTERY
 
     # Within limits
     else:

@@ -1,4 +1,4 @@
-from server.control.control import check_import_export_limits, State
+from server.control.control import handle_self_consumption, State
 
 ########################################################################################
 # Import tests
@@ -6,7 +6,7 @@ from server.control.control import check_import_export_limits, State
 
 
 def test_handle_import_when_max_charging():
-    """Test when we are max charging and we are over limit"""
+    """Test when battery is max charging and grid power is 10kW over 10kW limit"""
     grid_power = 20000
     instantaneous_battery_power = 5000
 
@@ -19,20 +19,20 @@ def test_handle_import_when_max_charging():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power,
-                                                      grid_power_limit,
-                                                      instantaneous_battery_power,
-                                                      battery_soc,
-                                                      battery_max_charge_discharge_power,
-                                                      min_battery_soc,
-                                                      max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power,
+                                                   grid_power_limit,
+                                                   instantaneous_battery_power,
+                                                   battery_soc,
+                                                   battery_max_charge_discharge_power,
+                                                   min_battery_soc,
+                                                   max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == -5000  # discharge at max power
     assert state == State.DISCHARGE_BATTERY
 
 
 def test_handle_import_when_max_discharging():
-    """Test when we are max discharging at max power but we are just at the limit"""
+    """Test when battery is max discharging and grid power is exactly at 10kW limit"""
     grid_power = 10000
     instantaneous_battery_power = -5000
 
@@ -45,14 +45,14 @@ def test_handle_import_when_max_discharging():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 0  # No need to do anything
     assert state == State.NO_ACTION
 
 
 def test_handle_import_when_over_limit():
-    """Test when we are over limit by 1W"""
+    """Test when grid power is 5001W over 10kW limit with neutral battery"""
     grid_power = 15001
     instantaneous_battery_power = 0
 
@@ -65,14 +65,14 @@ def test_handle_import_when_over_limit():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 5000  # Discharge at max power
+    assert battery_power == 5000
     assert state == State.DISCHARGE_BATTERY
 
 
-def test_handle_export_when_under_limit():
-    """Test when we just at the limit"""
+def test_handle_import_when_at_limit():
+    """Test when grid power is exactly at 10kW limit with neutral battery"""
     grid_power = 10000
     instantaneous_battery_power = 0
 
@@ -85,14 +85,14 @@ def test_handle_export_when_under_limit():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 0  # No need to do anything
+    assert battery_power == 0
     assert state == State.NO_ACTION
 
 
 def test_handle_import_battery_soc_too_low():
-    """Test when battery SOC is below minimum threshold"""
+    """Test when grid power is over limit but battery SOC is below minimum threshold"""
     grid_power = 15000
     instantaneous_battery_power = 0
 
@@ -105,14 +105,14 @@ def test_handle_import_battery_soc_too_low():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 0  # Can't do anything, SoC is too low
+    assert battery_power == 0
     assert state == State.NO_ACTION
 
 
 def test_handle_import_partial_discharge_needed():
-    """Test when we need partial discharge to stay within limits"""
+    """Test when grid power is 3kW over 10kW limit and battery is charging 1kW"""
     grid_power = 13000
     instantaneous_battery_power = 1000  # Currently charging at 1kW
 
@@ -125,14 +125,14 @@ def test_handle_import_partial_discharge_needed():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == -2000  # Need to reduce by 3000W from +1000 to -2000
+    assert battery_power == -2000
     assert state == State.DISCHARGE_BATTERY
 
 
 def test_handle_import_exact_power_match():
-    """Test when required power reduction exactly matches available power"""
+    """Test when grid power is exactly at 10kW limit with neutral battery"""
     grid_power = 10000
     instantaneous_battery_power = 0  # Neutral battery state
 
@@ -141,18 +141,18 @@ def test_handle_import_exact_power_match():
 
     # Battery
     battery_soc = 50
-    battery_max_charge_discharge_power = 5000  # Can discharge exactly 5000W
+    battery_max_charge_discharge_power = 5000
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 0  # At limit, no action needed
+    assert battery_power == 0
     assert state == State.NO_ACTION
 
 
 def test_handle_import_small_adjustment_needed():
-    """Test when only a small adjustment is needed"""
+    """Test when grid power is 500W over 10kW limit with neutral battery"""
     grid_power = 10500
     instantaneous_battery_power = 0
 
@@ -165,16 +165,16 @@ def test_handle_import_small_adjustment_needed():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == -500  # Small discharge to handle 500W excess
+    assert battery_power == -500
     assert state == State.DISCHARGE_BATTERY
 
 
 def test_handle_import_when_already_optimal():
-    """Test when current battery power setpoint would be the same"""
+    """Test when grid power is at 10kW limit and battery is already discharging"""
     grid_power = 10000
-    instantaneous_battery_power = -2000  # Already discharging the right amount
+    instantaneous_battery_power = -2000  # Already discharging
 
     # Grid
     grid_power_limit = 10000
@@ -185,14 +185,14 @@ def test_handle_import_when_already_optimal():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 0  # At limit, no change needed
+    assert battery_power == 0
     assert state == State.NO_ACTION
 
 
 def test_handle_import_moderate_charging_state():
-    """Test when battery is in moderate charging state"""
+    """Test when grid power is 5kW over 10kW limit and battery is charging 2kW"""
     grid_power = 15000
     instantaneous_battery_power = 2000  # Charging at 2kW
 
@@ -205,14 +205,14 @@ def test_handle_import_moderate_charging_state():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == -3000  # Change from +2000 to -3000 (5000W reduction)
+    assert battery_power == -3000
     assert state == State.DISCHARGE_BATTERY
 
 
 def test_handle_import_with_pv_generation():
-    """Test scenario with PV generation reducing net power"""
+    """Test when grid power is 3kW over 10kW limit with battery charging 1kW"""
     grid_power = 13000
     instantaneous_battery_power = 1000
 
@@ -225,14 +225,14 @@ def test_handle_import_with_pv_generation():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert state == State.DISCHARGE_BATTERY
 
 
 def test_handle_export_at_limit():
-    """Test scenario at export limit"""
-    grid_power = -10000  # At export limit
+    """Test when grid power is exactly at -10kW export limit"""
+    grid_power = -10000  # At -10kW export limit
     instantaneous_battery_power = 0
 
     # Grid
@@ -244,9 +244,9 @@ def test_handle_export_at_limit():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 0  # At limit, no action needed
+    assert battery_power == 0
     assert state == State.NO_ACTION
 
 
@@ -256,8 +256,8 @@ def test_handle_export_at_limit():
 
 
 def test_handle_export_over_limit():
-    """Test scenario over export limit"""
-    grid_power = -10001  # Over export limit by 1W
+    """Test when grid power is 1W over -10kW export limit"""
+    grid_power = -10001  # 1W over -10kW export limit
     instantaneous_battery_power = 0
 
     # Grid
@@ -269,15 +269,15 @@ def test_handle_export_over_limit():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 1  # Charge by 1W to reduce export
+    assert battery_power == 1
     assert state == State.CHARGE_BATTERY
 
 
 def test_handle_export_under_limit():
-    """Test scenario under export limit"""
-    grid_power = -5000  # Under export limit
+    """Test when grid power is under -10kW export limit"""
+    grid_power = -5000  # Under -10kW export limit
     instantaneous_battery_power = 0
 
     # Grid
@@ -289,15 +289,15 @@ def test_handle_export_under_limit():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 0  # Within limits, no action needed
+    assert battery_power == 0
     assert state == State.NO_ACTION
 
 
 def test_handle_export_battery_soc_too_high():
-    """Test when battery SOC is above maximum threshold"""
-    grid_power = -15000  # Over export limit
+    """Test when grid power is over export limit but battery SOC is at maximum"""
+    grid_power = -15000  # 5kW over -10kW export limit
     instantaneous_battery_power = 0
 
     # Grid
@@ -309,15 +309,15 @@ def test_handle_export_battery_soc_too_high():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 0  # Can't charge, SOC is too high
+    assert battery_power == 0
     assert state == State.NO_ACTION
 
 
 def test_handle_export_max_charge_needed():
-    """Test when maximum charge is needed to reduce export"""
-    grid_power = -16000  # Way over export limit
+    """Test when grid power is 6kW over -10kW export limit requiring max charge"""
+    grid_power = -16000  # 6kW over -10kW export limit
     instantaneous_battery_power = 0
 
     # Grid
@@ -329,15 +329,15 @@ def test_handle_export_max_charge_needed():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == -5000  # Charge at max power (negative for charging)
+    assert battery_power == -5000
     assert state == State.CHARGE_BATTERY
 
 
 def test_handle_export_partial_charge_needed():
-    """Test when partial charge is needed to stay within export limits"""
-    grid_power = -12000  # Over export limit by 2000W
+    """Test when grid power is 2kW over -10kW export limit and battery is discharging"""
+    grid_power = -12000  # 2kW over -10kW export limit
     instantaneous_battery_power = -1000  # Currently discharging at 1kW
 
     # Grid
@@ -349,15 +349,15 @@ def test_handle_export_partial_charge_needed():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 1000  # Change from -1000 to +1000 (2000W increase)
+    assert battery_power == 1000
     assert state == State.CHARGE_BATTERY
 
 
 def test_handle_export_over_limit_by_1149W():
-    """Test when partial charge is needed to stay within export limits"""
-    grid_power = -4149  # Over export limit by 1149W
+    """Test when grid power is 1149W over -3kW export limit and battery is discharging"""
+    grid_power = -4149  # 1149W over -3kW export limit
     instantaneous_battery_power = -2999  # Currently discharging 2999W
 
     # Grid
@@ -369,7 +369,7 @@ def test_handle_export_over_limit_by_1149W():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == -1850
     assert state == State.CHARGE_BATTERY

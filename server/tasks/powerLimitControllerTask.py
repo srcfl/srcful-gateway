@@ -6,18 +6,33 @@ from server.tasks.harvest import Harvest
 from server.tasks.harvestTransport import DefaultHarvestTransportFactory
 from server.tasks.itask import ITask
 from .harvestableTask import HarvestableTask
-from server.control.control import check_import_export_limits, State
+from server.control.fuse_protection import handle_fuse_limit, State
+from server.control.control import handle_self_consumption
 from server.devices.DeeDecoder import DeeDecoder, SungrowDeeDecoder
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
+def logg_status(decoder: SungrowDeeDecoder, state: State, battery_power: int, event_time: int):
+    logger.info('--------------------------------')
+    logger.info(f"Event time: {event_time} Discharging battery")
+    logger.info(f"State: {state}")
+    logger.info(f"Grid power: {decoder.grid_power}")
+    logger.info(f"Grid power limit: {decoder.grid_power_limit}")
+    logger.info(f"Instantaneous battery power: {decoder.instantaneous_battery_power}")
+    logger.info(f"Target battery power: {battery_power}")
+    logger.info('--------------------------------')
+
+
 class PowerLimitControllerTask(HarvestableTask):
     def __init__(self, event_time: int, bb: BlackBoard, device: Device):
         super().__init__(event_time, bb, device)
         self.is_initialized = False
-        self.last_action_time = 0
+        self.fuse_check_interval = 5000  # ms
+        self.self_consumption_check_interval = 500  # ms
+        self.last_fuse_check_action_time = 0
+        self.last_self_consumption_check_action_time = 0
 
     def execute(self, event_time) -> Union[List[ITask], ITask, None]:
         start_time = event_time
@@ -44,58 +59,49 @@ class PowerLimitControllerTask(HarvestableTask):
         decoder.decode(self.device.get_last_harvest_data())
 
         # Initialize variables
-        state = State.NO_ACTION
+        fuse_check_state = State.NO_ACTION
 
-        if event_time - self.last_action_time >= 5000:
-            battery_power, state = check_import_export_limits(decoder.grid_power,
-                                                              decoder.grid_power_limit,
-                                                              decoder.instantaneous_battery_power,
-                                                              decoder.battery_soc,
-                                                              decoder.battery_max_charge_discharge_power,
-                                                              decoder.min_battery_soc,
-                                                              decoder.max_battery_soc)
+        if event_time - self.last_fuse_check_action_time >= self.fuse_check_interval:
+            battery_power, fuse_check_state = handle_fuse_limit(decoder.l1_current,
+                                                                decoder.l2_current,
+                                                                decoder.l3_current,
+                                                                decoder.l1_voltage,
+                                                                decoder.grid_current_limit,
+                                                                decoder.instantaneous_battery_power,
+                                                                decoder.battery_soc,
+                                                                decoder.battery_max_charge_discharge_power)
+            self.last_fuse_check_action_time = event_time
 
-        if state == State.DISCHARGE_BATTERY:
-            logger.info('--------------------------------')
-            logger.info(f"Event time: {event_time} Discharging battery")
-            logger.info(f"State: {state}")
-            logger.info(f"Grid power: {decoder.grid_power}")
-            logger.info(f"Grid power limit: {decoder.grid_power_limit}")
-            logger.info(f"Instantaneous battery power: {decoder.instantaneous_battery_power}")
-            logger.info(f"Target battery power: {battery_power}")
-            logger.info('--------------------------------')
+        if fuse_check_state == fuse_check_state.NO_ACTION:
+            if self.device.get_mode() == DeviceMode.SELF_CONSUMPTION:
+                # Fuse check passed, we can continue with self consumption
+                if event_time - self.last_self_consumption_check_action_time >= self.self_consumption_check_interval:
+                    battery_power, self_consumption_check_state = handle_self_consumption(decoder.grid_power,
+                                                                                          0,  # grid power limit is 0 in self consumption mode
+                                                                                          decoder.instantaneous_battery_power,
+                                                                                          decoder.battery_soc,
+                                                                                          decoder.battery_max_charge_discharge_power,
+                                                                                          decoder.min_battery_soc,
+                                                                                          decoder.max_battery_soc)
+                    if self_consumption_check_state != State.NO_ACTION:
+                        self.device.profile.set_battery_power(self.device, battery_power)
+                        self.last_self_consumption_check_action_time = event_time
 
-            self.device.profile.set_battery_power(self.device, battery_power)
-            bb_message = f"Discharging battery to {battery_power} W to reduce import"
-            logger.info(bb_message)
-            self.bb.add_warning(bb_message)
-            self.last_action_time = event_time
-        elif state == State.CHARGE_BATTERY:
-            logger.info('--------------------------------')
-            logger.info(f"Event time: {event_time} Charging battery")
-            logger.info(f"State: {state}")
-            logger.info(f"Grid power: {decoder.grid_power}")
-            logger.info(f"Grid power limit: {decoder.grid_power_limit}")
-            logger.info(f"Instantaneous battery power: {decoder.instantaneous_battery_power}")
-            logger.info(f"Target battery power: {battery_power}")
-            logger.info('--------------------------------')
-
-            self.device.profile.set_battery_power(self.device, battery_power)
-            bb_message = f"Charging battery to {battery_power} W to reduce export"
-            logger.info(bb_message)
-            self.bb.add_warning(bb_message)
-            self.last_action_time = event_time
-        elif state == State.NO_ACTION:
-            if self.is_initialized:
+                # This is just to not queue up commands in self consumption mode in case we enqueue commands in other modes
                 while self.device.has_commands():
                     command: DeviceCommand = self.device.pop_command()  # pop each command from the device
-                    if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
-                        if (self.device.profile.set_battery_power(self.device, command.values[0])):
-                            command.success = DeviceCommandStatus.SUCCESS
-                        else:
-                            command.success = DeviceCommandStatus.FAILED
-                        command.ts_executed = self.bb.time_ms()
+            elif self.device.get_mode() == DeviceMode.CONTROL:
+                # We are in control mode, execute commands
+                if self.is_initialized:  # if in control mode, execute commands
+                    while self.device.has_commands():
+                        command: DeviceCommand = self.device.pop_command()  # pop each command from the device
+                        if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
+                            self.device.profile.set_battery_power(self.device, command.values[0])
 
+        else:
+            # Fuse check failed, we need to adjust the battery power to the new limit
+            self.device.profile.set_battery_power(self.device, battery_power)
+            logg_status(decoder, fuse_check_state, battery_power, event_time)
 
         # deinit check here
         if self.device.get_mode() == DeviceMode.READ:

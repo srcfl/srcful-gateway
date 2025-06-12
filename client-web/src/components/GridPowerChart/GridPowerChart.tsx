@@ -535,6 +535,7 @@ const Chart: React.FC<{
 // Main GridPowerChart Component
 const GridPowerChart: React.FC = () => {
   const [settings, setSettings] = useState<EnergyOverviewSettings | null>(null);
+  const [responseData, setResponseData] = useState<EnergyOverviewResponse | null>(null);
   const [gridHistory, setGridHistory] = useState<GridDataPoint[]>([]);
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<number>(30 * 1000);
   const [loading, setLoading] = useState<boolean>(true);
@@ -545,6 +546,7 @@ const GridPowerChart: React.FC = () => {
         const response = await gatewayService.getEnergyOverview();
         const processedData = processEnergyData(response);
         setSettings(response.settings);
+        setResponseData(response);
         
         // Add current grid power to history
         const now = Date.now();
@@ -585,16 +587,81 @@ const GridPowerChart: React.FC = () => {
   return (
     <div className="w-full bg-gray-800 rounded-lg p-6 border border-gray-600">
       {/* Power Limits Display */}
-      <div className="flex justify-center gap-5 mb-6 text-sm">
-        <div className="bg-gray-700 px-4 py-2 rounded-lg border border-gray-500">
-          <span className="text-gray-400 font-medium">Grid Limit: </span>
-          <span className="text-white font-semibold">{(settings.grid_power_limit / 1000).toFixed(1)} kW</span>
-        </div>
-        <div className="bg-gray-700 px-4 py-2 rounded-lg border border-purple-500">
-          <span className="text-gray-400 font-medium">Battery Limit: </span>
-          <span className="text-white font-semibold">{(settings.battery_power_limit / 1000).toFixed(1)} kW</span>
-        </div>
+      <div className="flex justify-center gap-3 mb-4 text-sm">
+        {(() => {
+          const meterData = responseData?.data?.dee?.find((item: any) => item.meter)?.meter;
+          return (
+            <>
+              {meterData && (
+                <div className="bg-gray-700 px-3 py-2 rounded-lg border border-cyan-500">
+                  <span className="text-gray-400 font-medium">Grid Current: </span>
+                  <span className="text-white font-semibold">{meterData.grid_current_limit} A</span>
+                </div>
+              )}
+              <div className="bg-gray-700 px-3 py-2 rounded-lg border border-gray-500">
+                <span className="text-gray-400 font-medium">Grid Power: </span>
+                <span className="text-white font-semibold">{(settings.grid_power_limit / 1000).toFixed(1)} kW</span>
+              </div>
+              <div className="bg-gray-700 px-3 py-2 rounded-lg border border-purple-500">
+                <span className="text-gray-400 font-medium">Battery Limit: </span>
+                <span className="text-white font-semibold">{(settings.battery_power_limit / 1000).toFixed(1)} kW</span>
+              </div>
+              <div className="bg-gray-700 px-3 py-2 rounded-lg border border-orange-500">
+                <span className="text-gray-400 font-medium">Mode: </span>
+                <span className="text-white font-semibold uppercase">{settings.mode}</span>
+              </div>
+            </>
+          );
+        })()}
       </div>
+
+      {/* Phase Currents Display */}
+      {(() => {
+        const meterData = responseData?.data?.dee?.find((item: any) => item.meter)?.meter;
+        if (!meterData || !settings) return null;
+        
+        const currentLimit = meterData.grid_current_limit;
+        const phases = [
+          { name: 'L1', current: meterData.l1_current, voltage: meterData.l1_voltage },
+          { name: 'L2', current: meterData.l2_current, voltage: meterData.l2_voltage },
+          { name: 'L3', current: meterData.l3_current, voltage: meterData.l3_voltage }
+        ];
+
+        return (
+          <div className="mb-6">
+            <div className="text-center mb-3">
+              <span className="text-gray-400 text-sm font-medium">
+                Phase Currents (Limit: {currentLimit} A)
+              </span>
+            </div>
+            <div className="flex justify-center gap-3 text-sm">
+              {phases.map((phase) => {
+                const isOverLimit = phase.current > currentLimit;
+                return (
+                  <div 
+                    key={phase.name}
+                    className={`px-3 py-2 rounded-lg border ${
+                      isOverLimit 
+                        ? 'bg-red-900/50 border-red-500 animate-pulse' 
+                        : 'bg-gray-700 border-cyan-500'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="font-medium text-white">{phase.name}</div>
+                      <div className={`font-bold ${isOverLimit ? 'text-red-300' : 'text-cyan-300'}`}>
+                        {phase.current.toFixed(1)} A
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {phase.voltage.toFixed(0)} V
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
       
       <Chart 
         data={gridHistory} 
