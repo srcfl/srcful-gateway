@@ -5,30 +5,35 @@ from server.devices.ICom import ICom
 from server.devices.DeeDecoder import DeeDecoder, SungrowDeeDecoder
 from typing import Any
 
+
 class DeviceMode(Enum):
     NONE = "none"
     READ = "read"
     CONTROL = "control"
+    SELF_CONSUMPTION = "self_consumption"
+
 
 class DeviceCommandType(Enum):
     SET_BATTERY_POWER = "set_battery_power"
+
 
 class DeviceCommandStatus(Enum):
     SUCCESS = "success"
     FAILED = "failed"
     PENDING = "pending"
 
+
 class DeviceCommand:
     def __init__(self, command_type: DeviceCommandType, value: Any):
         self.command_type = command_type
-        self.values:list[Any] = []
+        self.values: list[Any] = []
         self.values.append(value)
 
         self.id = str(uuid.uuid4())
         self.success = DeviceCommandStatus.PENDING
         self.ts_executed = 0
 
-    
+
 class Device(ICom, ABC):
     _is_disconnected: bool = False
 
@@ -36,19 +41,20 @@ class Device(ICom, ABC):
     MAKER = "maker"
     DISPLAY_NAME = "display_name"
 
-
     def __init__(self):
         super().__init__()
         self._last_harvest_data = {}
         self._mode = DeviceMode.READ
         self.commands = []
+        self.decoder = SungrowDeeDecoder()
 
     def add_command(self, command: DeviceCommand) -> None:
-        self.commands.append(command)
+        if self._mode == DeviceMode.CONTROL:
+            self.commands.append(command)
 
     def pop_command(self) -> DeviceCommand:
         return self.commands.pop(0)
-    
+
     def has_commands(self) -> bool:
         return len(self.commands) > 0
 
@@ -70,9 +76,10 @@ class Device(ICom, ABC):
         if self.is_disconnected() != True:
             return self._connect(**kwargs)
         return False
-    
+
     def get_dee_decoder(self) -> DeeDecoder:
-        return SungrowDeeDecoder()
+        self.decoder.set_mode(self._mode.value)
+        return self.decoder
 
     def get_last_harvest_data(self) -> dict:
         return self._last_harvest_data

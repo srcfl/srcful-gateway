@@ -11,10 +11,22 @@ export interface NetworkInfo {
 export interface MeterData {
   production: number;
   consumption: number;
+  load_power: number;
+  l1_current: number;
+  l2_current: number;
+  l3_current: number;
+  l1_voltage: number;
+  l2_voltage: number;
+  l3_voltage: number;
+  grid_frequency: number;
+  grid_current_limit: number;
 }
 
 export interface BatteryData {
   power: number;
+  soc: number;
+  is_charging: boolean;
+  is_discharging: boolean;
 }
 
 export interface SolarData {
@@ -31,8 +43,16 @@ export interface EnergyOverviewData {
   dee: DeeItem[];
 }
 
+export interface EnergyOverviewSettings {
+  mode: string;
+  grid_power_limit: number;
+  battery_power_limit: number;
+  grid_current_limit: number;
+}
+
 export interface EnergyOverviewResponse {
   status: string;
+  settings: EnergyOverviewSettings;
   data: EnergyOverviewData;
 }
 
@@ -55,4 +75,4 @@ export interface Device {
   client_name: string;
 }
 
-export type DeviceMode = 'control' | 'read'; 
+export type DeviceMode = "control" | "self_consumption" | "read";

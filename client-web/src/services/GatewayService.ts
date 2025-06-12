@@ -1,18 +1,19 @@
-import { NetworkInfo, EnergyOverviewResponse, Device, DeviceMode } from '../types/api';
+import {
+  NetworkInfo,
+  EnergyOverviewResponse,
+  Device,
+  DeviceMode,
+} from "../types/api";
 
 // Base configuration for the Gateway API
-const API_BASE_URL = '/api';
+const API_BASE_URL = "/api";
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
 
 // Custom error class for Gateway API errors
 export class GatewayApiError extends Error {
-  constructor(
-    message: string,
-    public status?: number,
-    public response?: any
-  ) {
+  constructor(message: string, public status?: number, public response?: any) {
     super(message);
-    this.name = 'GatewayApiError';
+    this.name = "GatewayApiError";
   }
 }
 
@@ -47,7 +48,7 @@ export class GatewayService {
       ...options,
       signal: controller.signal,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...options.headers,
       },
     };
@@ -58,7 +59,7 @@ export class GatewayService {
 
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        
+
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
@@ -73,46 +74,90 @@ export class GatewayService {
       return data;
     } catch (error: unknown) {
       clearTimeout(timeoutId);
-      
+
       if (error instanceof GatewayApiError) {
         throw error;
       }
-      
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new GatewayApiError('Request timeout - Gateway service not responding');
+
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new GatewayApiError(
+          "Request timeout - Gateway service not responding"
+        );
       }
-      
+
       throw new GatewayApiError(
-        error instanceof Error ? error.message : 'Unknown error occurred'
+        error instanceof Error ? error.message : "Unknown error occurred"
       );
     }
   }
 
   // Network related API calls
   public async getNetworkInfo(): Promise<NetworkInfo> {
-    return this.fetchWithTimeout<NetworkInfo>('/network/address');
+    return this.fetchWithTimeout<NetworkInfo>("/network/address");
   }
 
   // Energy related API calls
   public async getEnergyOverview(): Promise<EnergyOverviewResponse> {
-    return this.fetchWithTimeout<EnergyOverviewResponse>('/dee');
+    return this.fetchWithTimeout<EnergyOverviewResponse>("/dee");
   }
 
   // Device related API calls
   public async getDevices(): Promise<Device[]> {
-    return this.fetchWithTimeout<Device[]>('/device');
+    return this.fetchWithTimeout<Device[]>("/device");
   }
 
-  public async setDeviceMode(deviceSn: string, mode: DeviceMode): Promise<void> {
+  public async setDeviceMode(
+    deviceSn: string,
+    mode: DeviceMode
+  ): Promise<void> {
     return this.fetchWithTimeout<void>(`/device/${deviceSn}/mode/${mode}`, {
-      method: 'POST',
+      method: "POST",
     });
   }
 
   public async setBatteryPower(deviceSn: string, power: number): Promise<void> {
-    return this.fetchWithTimeout<void>(`/device/${deviceSn}/battery/power/${power}`, {
-      method: 'POST',
-    });
+    return this.fetchWithTimeout<void>(
+      `/device/${deviceSn}/battery/power/${power}`,
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  public async setGridCurrentLimit(
+    deviceSn: string,
+    limit: number
+  ): Promise<void> {
+    return this.fetchWithTimeout<void>(
+      `/device/${deviceSn}/grid/current/${limit}`,
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  public async setGridPowerLimit(
+    deviceSn: string,
+    limit: number
+  ): Promise<void> {
+    return this.fetchWithTimeout<void>(
+      `/device/${deviceSn}/grid/limit/${limit}`,
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  public async setBatteryPowerLimit(
+    deviceSn: string,
+    limit: number
+  ): Promise<void> {
+    return this.fetchWithTimeout<void>(
+      `/device/${deviceSn}/battery/limit/${limit}`,
+      {
+        method: "POST",
+      }
+    );
   }
 }
 
@@ -120,4 +165,4 @@ export class GatewayService {
 export const gatewayService = GatewayService.getInstance();
 
 // Export default instance
-export default gatewayService; 
+export default gatewayService;

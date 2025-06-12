@@ -72,6 +72,9 @@ class Endpoints:
             "system/ble/stop": handler.post.ble_stop.Handler(),
             "device/{device_sn}/mode/{mode}": handler.post.device_mode.Handler(),
             "device/{device_sn}/battery/power/{power}": handler.post.device_battery_power.Handler(),
+            "device/{device_sn}/grid/limit/{limit}": handler.post.device_grid_limit.Handler(),
+            "device/{device_sn}/grid/current/{current}": handler.post.device_grid_current_limit.Handler(),
+            "device/{device_sn}/battery/limit/{limit}": handler.post.device_battery_limit.Handler(),
         }
 
         self.api_delete_dict = {
