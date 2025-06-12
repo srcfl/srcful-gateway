@@ -69,7 +69,9 @@ class PowerLimitControllerTask(HarvestableTask):
                                                                 decoder.grid_current_limit,
                                                                 decoder.instantaneous_battery_power,
                                                                 decoder.battery_soc,
-                                                                decoder.battery_max_charge_discharge_power)
+                                                                decoder.battery_max_charge_discharge_power,
+                                                                decoder.min_battery_soc,
+                                                                decoder.max_battery_soc)
             self.last_fuse_check_action_time = event_time
 
         if fuse_check_state == fuse_check_state.NO_ACTION:

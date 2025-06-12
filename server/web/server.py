@@ -10,6 +10,7 @@ from . import handler
 import logging
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class Endpoints:
@@ -149,7 +150,7 @@ def request_handler_factory(bb: BlackBoard):
     class Handler(BaseHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
 
-            logger.info("initializing a request handler")
+            logger.debug("initializing a request handler")
             self.endpoints = Endpoints()
 
             super(Handler, self).__init__(*args, **kwargs)
@@ -175,6 +176,12 @@ def request_handler_factory(bb: BlackBoard):
             self.end_headers()
             self.wfile.write(response)
             self.wfile.flush()
+
+        def log_message(self, format, *args):
+            """Override BaseHTTPRequestHandler's log_message to use our logger instead of stderr"""
+            # Use debug level for HTTP request logging to reduce verbosity
+            # Change to logger.info() or logger.warning() if you want to see these messages
+            logger.debug("%s - %s" % (self.address_string(), format % args))
 
         # this needs to be POST as this is a direct mapping of the http method
         def do_POST(self):
