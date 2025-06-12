@@ -36,7 +36,7 @@ def check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, insta
             log(f"Battery SoC is under min, we can't discharge to reduce import")
             return 0, State.NO_ACTION
 
-        excess_current = max_current - grid_current_limit
+        excess_current = (max_current - grid_current_limit) * 3
         power_excess = excess_current * L1_V
 
         if available_power_to_reduce_with >= power_excess:
@@ -53,10 +53,10 @@ def check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, insta
             log(f"Battery SoC is over max, we can't charge to reduce export")
             return 0, State.NO_ACTION
 
-        excess_current = -grid_current_limit - min_current  # How much we're over the export limit
+        excess_current = (-grid_current_limit - min_current) * 3  # How much we're over the export limit
         power_excess = excess_current * L1_V
 
-        if available_power_to_increase_with >= (excess_current * L1_V):
+        if available_power_to_increase_with >= power_excess:
             new_battery_power_setpoint = instantaneous_battery_power + (excess_current * L1_V)
             log(f"Reducing export by charging battery: {new_battery_power_setpoint} W from {instantaneous_battery_power} W, increase by {excess_current} W")
             return new_battery_power_setpoint, State.CHARGE_BATTERY

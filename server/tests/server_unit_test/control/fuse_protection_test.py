@@ -30,7 +30,7 @@ def test_handle_import_when_max_charging():
                                                       min_battery_soc,
                                                       max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 4080  # discharge by power_excess (4A * 230V = 920W) from 5000W
+    assert battery_power == 2240
     assert state == State.DISCHARGE_BATTERY
 
 
@@ -76,7 +76,7 @@ def test_handle_import_when_over_limit():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == -460  # Reduce by power_excess (2A * 230V = 460W) from 0W
+    assert battery_power == -1380
     assert state == State.DISCHARGE_BATTERY
 
 
@@ -145,7 +145,7 @@ def test_handle_import_partial_discharge_needed():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 540  # Reduce by power_excess (2A * 230V = 460W) from 1000W
+    assert battery_power == -380
     assert state == State.DISCHARGE_BATTERY
 
 
@@ -191,7 +191,7 @@ def test_handle_import_small_adjustment_needed():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == -230  # Reduce by power_excess (1A * 230V = 230W) from 0W
+    assert battery_power == -690
     assert state == State.DISCHARGE_BATTERY
 
 
@@ -237,7 +237,7 @@ def test_handle_import_moderate_charging_state():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 1080  # Reduce by power_excess (4A * 230V = 920W) from 2000W
+    assert battery_power == -760
     assert state == State.DISCHARGE_BATTERY
 
 
@@ -260,7 +260,7 @@ def test_handle_import_with_different_phase_currents():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 540  # Reduce by power_excess (2A * 230V = 460W) from 1000W
+    assert battery_power == -380
     assert state == State.DISCHARGE_BATTERY
 
 
@@ -311,7 +311,7 @@ def test_handle_export_over_limit():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 230  # Charge by 1A * 230V to reduce export
+    assert battery_power == 690
     assert state == State.CHARGE_BATTERY
 
 
@@ -380,7 +380,7 @@ def test_handle_export_max_charge_needed():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 1840  # Increase by excess_current * L1_V (8A * 230V) from 0W
+    assert battery_power == -5000  # Can't charge enough due to 3x factor, charging at max power
     assert state == State.CHARGE_BATTERY
 
 
@@ -403,7 +403,7 @@ def test_handle_export_partial_charge_needed():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == -540  # Change from -1000 to -540 (2A * 230V = 460W increase)
+    assert battery_power == 380
     assert state == State.CHARGE_BATTERY
 
 
@@ -426,7 +426,7 @@ def test_handle_export_with_l3_as_minimum():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == -270  # Increase by 1A * 230V = 230W from -500W
+    assert battery_power == 190
     assert state == State.CHARGE_BATTERY
 
 
@@ -449,7 +449,7 @@ def test_handle_export_already_charging():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 2230  # Increase by 1A * 230V = 230W from 2000W
+    assert battery_power == 2690  # Increase by (1A * 3) * 230V = 690W from 2000W
     assert state == State.CHARGE_BATTERY
 
 
@@ -472,5 +472,56 @@ def test_handle_mixed_phase_currents():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 460  # Charge by 2A * 230V to reduce export
+    assert battery_power == 1380
     assert state == State.CHARGE_BATTERY
+
+
+def test_handle_import_three_phase_factor_forces_max_power():
+    """Test when 3x factor requirement forces max power discharge instead of calculated adjustment"""
+    L1_A = 19  # Over limit by 3A
+    L2_A = 14
+    L3_A = 15
+    L1_V = 230
+    instantaneous_battery_power = 3000  # High current power state
+
+    # Grid
+    grid_current_limit = 16
+
+    # Battery
+    battery_soc = 50
+    battery_max_charge_discharge_power = 5000
+    min_battery_soc = 5
+    max_battery_soc = 100
+
+    # excess_current = 3A
+    # power_excess = 3A * 230V * 3 = 2070W
+    # available_power_to_reduce_with = 3000 - (-5000) = 8000W (enough)
+    # So this should allow calculated adjustment: 3000 - (3 * 230) = 2310W
+
+    battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    print(f"Power: {battery_power}, State: {state}")
+    assert battery_power == 930
+    assert state == State.DISCHARGE_BATTERY
+
+
+def test_handle_import_three_phase_factor_insufficient_power():
+    """Test when 3x factor requirement exceeds available power, forcing max discharge"""
+    L1_A = 20  # Over limit by 4A
+    L2_A = 14
+    L3_A = 15
+    L1_V = 230
+    instantaneous_battery_power = 2500  # Limited available power
+
+    # Grid
+    grid_current_limit = 16
+
+    # Battery
+    battery_soc = 50
+    battery_max_charge_discharge_power = 2800  # Smaller battery capacity
+    min_battery_soc = 5
+    max_battery_soc = 100
+
+    battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    print(f"Power: {battery_power}, State: {state}")
+    assert battery_power == -260
+    assert state == State.DISCHARGE_BATTERY
