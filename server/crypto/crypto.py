@@ -152,7 +152,7 @@ class ChipError(Exception):
 
 
 # we need an external flag so that we can skip the hardware crypto tests without creating a new Chip object
-USE_HARDWARE_CRYPTO = True
+USE_HARDWARE_CRYPTO = False
 
 
 class Chip:

@@ -31,6 +31,13 @@ class SungrowDeeDecoder(DeeDecoder):
         self.battery_max_charge_discharge_power = 5000  # check
         self.min_battery_soc = 5  # check
         self.max_battery_soc = 100  # check
+        self.grid_frequency = 0  # check
+        self.l1_current = 0  # check
+        self.l2_current = 0  # check
+        self.l3_current = 0  # check
+        self.l1_voltage = 0  # check
+        self.l2_voltage = 0  # check
+        self.l3_voltage = 0  # check
 
     def set_grid_power_limit(self, limit: int):
         self.grid_power_limit = limit
@@ -102,10 +109,27 @@ class SungrowDeeDecoder(DeeDecoder):
 
         self.battery_soc = harvest_data.get(13022, 0) * 0.1
 
+        self.l1_current = harvest_data.get(13030, 0) * 0.1
+        self.l2_current = harvest_data.get(13031, 0) * 0.1
+        self.l3_current = harvest_data.get(13032, 0) * 0.1
+
+        self.l1_voltage = harvest_data.get(5018, 0) * 0.1
+        self.l2_voltage = harvest_data.get(5019, 0) * 0.1
+        self.l3_voltage = harvest_data.get(5020, 0) * 0.1
+
+        self.grid_frequency = harvest_data.get(5035, 0) * 0.1
+
         meter = {
             "production": production,
             "consumption": consumption,
             "load_power": load_power,
+            "l1_current": self.l1_current,
+            "l2_current": self.l2_current,
+            "l3_current": self.l3_current,
+            "l1_voltage": self.l1_voltage,
+            "l2_voltage": self.l2_voltage,
+            "l3_voltage": self.l3_voltage,
+            "grid_frequency": self.grid_frequency,
         }
 
         battery = {
