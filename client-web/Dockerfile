@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -9,8 +9,12 @@ COPY package*.json ./
 # Install dependencies (including dev dependencies needed for build)
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy source code (excluding node_modules which we just installed)
+COPY src/ src/
+COPY public/ public/
+COPY tsconfig.json ./
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
 
 # Build the app
 RUN npm run build
@@ -27,3 +31,5 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"] 
+
+

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 import json
 from server.app.blackboard import BlackBoard
 from server.crypto.crypto_state import CryptoState
@@ -216,10 +216,12 @@ class ControlSubscription(BaseWebSocketClient, ControlDeviceTaskListener):
         # Convert execute_at to milliseconds since epoch
         time_now_ms: int = int(datetime.now().timestamp() * 1000)
 
-        execute_at_ms: int = int(datetime.strptime(control_message.execute_at, DATE_TIME_FORMAT).timestamp() * 1000)
+        # explicit set the timezone to UTC needed if the os has timezone set
+        execute_at_dt: datetime = datetime.strptime(str(control_message.execute_at), DATE_TIME_FORMAT).replace(tzinfo=UTC)
+        execute_at_ms: int = int(execute_at_dt.timestamp() * 1000)
 
         # print the ETA in a human readable format, e.g. "ETA: 1:30:10"
-        eta: datetime = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
+        eta: timedelta = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
 
         logger.info(f"ETA: {eta}, or {execute_at_ms - time_now_ms} milliseconds")
 

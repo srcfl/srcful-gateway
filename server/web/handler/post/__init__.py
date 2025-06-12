@@ -10,3 +10,5 @@ from . import reboot
 from . import ble_stop
 from . import device_mode
 from . import device_battery_power
+from . import device_grid_limit
+from . import device_battery_limit
