@@ -92,6 +92,7 @@ class PowerLimitControllerTask(HarvestableTask):
                 # This is just to not queue up commands in self consumption mode in case we enqueue commands in other modes
                 while self.device.has_commands():
                     command: DeviceCommand = self.device.pop_command()  # pop each command from the device
+
             elif self.device.get_mode() == DeviceMode.CONTROL:
                 # We are in control mode, execute commands
                 if self.is_initialized:  # if in control mode, execute commands
@@ -99,6 +100,12 @@ class PowerLimitControllerTask(HarvestableTask):
                         command: DeviceCommand = self.device.pop_command()  # pop each command from the device
                         if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
                             self.device.profile.set_battery_power(self.device, command.values[0])
+                            if command.command_type == DeviceCommandType.SET_BATTERY_POWER:  # Add commentMore actions
+                                if (self.device.profile.set_battery_power(self.device, command.values[0])):
+                                    command.success = DeviceCommandStatus.SUCCESS
+                                else:
+                                    command.success = DeviceCommandStatus.FAILED
+                                command.ts_executed = self.bb.time_ms()
 
         else:
             # Fuse check failed, we need to adjust the battery power to the new limit
