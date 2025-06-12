@@ -22,6 +22,8 @@ class Handler(PostHandler):
         mode: DeviceMode = DeviceMode.NONE
         if data.post_params.get("mode", "none") == "read":
             mode = DeviceMode.READ
+        elif data.post_params.get("mode", "none") == "self_consumption":
+            mode = DeviceMode.SELF_CONSUMPTION
         elif data.post_params.get("mode", "none") == "control":
             mode = DeviceMode.CONTROL
 

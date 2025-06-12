@@ -66,6 +66,7 @@ class Device(ICom, ABC):
         return False
 
     def get_dee_decoder(self) -> DeeDecoder:
+        self.decoder.set_mode(self._mode.value)
         return self.decoder
 
     def get_last_harvest_data(self) -> dict:

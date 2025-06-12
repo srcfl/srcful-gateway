@@ -1,4 +1,4 @@
-from server.control.control import check_import_export_limits, State
+from server.control.control import handle_self_consumption, State
 
 ########################################################################################
 # Import tests
@@ -19,13 +19,13 @@ def test_handle_import_when_max_charging():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power,
-                                                      grid_power_limit,
-                                                      instantaneous_battery_power,
-                                                      battery_soc,
-                                                      battery_max_charge_discharge_power,
-                                                      min_battery_soc,
-                                                      max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power,
+                                                   grid_power_limit,
+                                                   instantaneous_battery_power,
+                                                   battery_soc,
+                                                   battery_max_charge_discharge_power,
+                                                   min_battery_soc,
+                                                   max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == -5000  # discharge at max power
     assert state == State.DISCHARGE_BATTERY
@@ -45,7 +45,7 @@ def test_handle_import_when_max_discharging():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 0  # No need to do anything
     assert state == State.NO_ACTION
@@ -65,7 +65,7 @@ def test_handle_import_when_over_limit():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 5000
     assert state == State.DISCHARGE_BATTERY
@@ -85,7 +85,7 @@ def test_handle_import_when_at_limit():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 0
     assert state == State.NO_ACTION
@@ -105,7 +105,7 @@ def test_handle_import_battery_soc_too_low():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 0
     assert state == State.NO_ACTION
@@ -125,7 +125,7 @@ def test_handle_import_partial_discharge_needed():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == -2000
     assert state == State.DISCHARGE_BATTERY
@@ -145,7 +145,7 @@ def test_handle_import_exact_power_match():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 0
     assert state == State.NO_ACTION
@@ -165,7 +165,7 @@ def test_handle_import_small_adjustment_needed():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == -500
     assert state == State.DISCHARGE_BATTERY
@@ -185,7 +185,7 @@ def test_handle_import_when_already_optimal():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 0
     assert state == State.NO_ACTION
@@ -205,7 +205,7 @@ def test_handle_import_moderate_charging_state():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == -3000
     assert state == State.DISCHARGE_BATTERY
@@ -225,7 +225,7 @@ def test_handle_import_with_pv_generation():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert state == State.DISCHARGE_BATTERY
 
@@ -244,7 +244,7 @@ def test_handle_export_at_limit():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 0
     assert state == State.NO_ACTION
@@ -269,7 +269,7 @@ def test_handle_export_over_limit():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 1
     assert state == State.CHARGE_BATTERY
@@ -289,7 +289,7 @@ def test_handle_export_under_limit():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 0
     assert state == State.NO_ACTION
@@ -309,7 +309,7 @@ def test_handle_export_battery_soc_too_high():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 0
     assert state == State.NO_ACTION
@@ -329,7 +329,7 @@ def test_handle_export_max_charge_needed():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == -5000
     assert state == State.CHARGE_BATTERY
@@ -349,7 +349,7 @@ def test_handle_export_partial_charge_needed():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 1000
     assert state == State.CHARGE_BATTERY
@@ -369,7 +369,7 @@ def test_handle_export_over_limit_by_1149W():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    battery_power, state = check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
+    battery_power, state = handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == -1850
     assert state == State.CHARGE_BATTERY

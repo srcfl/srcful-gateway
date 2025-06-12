@@ -296,6 +296,19 @@ const DeviceManager: React.FC = () => {
                       {processingDevice === device.connection.sn ? 'Processing...' : 'Control Mode'}
                     </button>
                     <button
+                      onClick={() => handleSetDeviceMode(device.connection.sn, 'self_consumption')}
+                      disabled={processingDevice === device.connection.sn}
+                      className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+                        processingDevice === device.connection.sn
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                          : deviceModes[device.connection.sn] === 'self_consumption'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      {processingDevice === device.connection.sn ? 'Processing...' : 'Self Consumption'}
+                    </button>
+                    <button
                       onClick={() => handleSetDeviceMode(device.connection.sn, 'read')}
                       disabled={processingDevice === device.connection.sn}
                       className={`px-4 py-2 rounded-lg transition-colors font-medium ${

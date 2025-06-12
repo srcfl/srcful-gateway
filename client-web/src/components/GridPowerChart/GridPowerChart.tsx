@@ -606,6 +606,10 @@ const GridPowerChart: React.FC = () => {
                 <span className="text-gray-400 font-medium">Battery Limit: </span>
                 <span className="text-white font-semibold">{(settings.battery_power_limit / 1000).toFixed(1)} kW</span>
               </div>
+              <div className="bg-gray-700 px-3 py-2 rounded-lg border border-orange-500">
+                <span className="text-gray-400 font-medium">Mode: </span>
+                <span className="text-white font-semibold uppercase">{settings.mode}</span>
+              </div>
             </>
           );
         })()}

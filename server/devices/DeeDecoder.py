@@ -39,6 +39,7 @@ class SungrowDeeDecoder(DeeDecoder):
         self.l1_voltage = 0  # check
         self.l2_voltage = 0  # check
         self.l3_voltage = 0  # check
+        self.mode = "none"
 
     def set_grid_power_limit(self, limit: int):
         self.grid_power_limit = limit
@@ -48,6 +49,9 @@ class SungrowDeeDecoder(DeeDecoder):
 
     def set_grid_current_limit(self, limit: int):
         self.grid_current_limit = limit
+
+    def set_mode(self, mode: str):
+        self.mode = mode
 
     def decode(self, harvest_data: dict) -> List[dict]:
 

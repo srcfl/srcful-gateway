@@ -21,7 +21,7 @@ def _get_available_range(number, min_val, max_val):
     return lower_distance, upper_distance
 
 
-def check_import_export_limits(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc) -> tuple[int, State]:
+def handle_self_consumption(grid_power, grid_power_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc) -> tuple[int, State]:
 
     # This is how much we can decrease/increase the power with, best case with battery_max_charge_discharge_power * 2 if we are charging at max or discharging at max
     available_power_to_reduce_with, available_power_to_increase_with = _get_available_range(instantaneous_battery_power, -battery_max_charge_discharge_power, battery_max_charge_discharge_power)
