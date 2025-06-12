@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def logg_status(decoder: SungrowDeeDecoder, state: State, battery_power: int, event_time: int):
+def logg_status(decoder: SungrowDeeDecoder, state: State, battery_power: int, event_time: int, msg: str):
     logger.info('--------------------------------')
-    logger.info(f"Event time: {event_time} Discharging battery")
+    logger.info(f"Reason: {msg}")
     logger.info(f"State: {state}")
     logger.info(f"Grid power: {decoder.grid_power}")
     logger.info(f"Grid power limit: {decoder.grid_power_limit}")
@@ -103,7 +103,7 @@ class PowerLimitControllerTask(HarvestableTask):
         else:
             # Fuse check failed, we need to adjust the battery power to the new limit
             self.device.profile.set_battery_power(self.device, battery_power)
-            logg_status(decoder, fuse_check_state, battery_power, event_time)
+            logg_status(decoder, fuse_check_state, battery_power, event_time, "Fuse check failed")
 
         # deinit check here
         if self.device.get_mode() == DeviceMode.READ:
