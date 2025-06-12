@@ -6,8 +6,8 @@ from server.control.fuse_protection import check_import_export_limits, State
 
 
 def test_handle_import_when_max_charging():
-    """Test when we are max charging and we are over current limit"""
-    L1_A = 20  # Over limit
+    """Test when battery is max charging and L1 current is 4A over 16A limit"""
+    L1_A = 20  # 4A over 16A limit
     L2_A = 18
     L3_A = 19
     L1_V = 230
@@ -35,8 +35,8 @@ def test_handle_import_when_max_charging():
 
 
 def test_handle_import_when_max_discharging():
-    """Test when we are max discharging at max power but we are just at the limit"""
-    L1_A = 16  # At limit
+    """Test when battery is max discharging and L1 current is exactly at 16A limit"""
+    L1_A = 16  # Exactly at 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230
@@ -58,8 +58,8 @@ def test_handle_import_when_max_discharging():
 
 
 def test_handle_import_when_over_limit():
-    """Test when we are over current limit by small amount"""
-    L1_A = 18  # Over limit by 2A
+    """Test when L1 current is 2A over 16A limit with neutral battery"""
+    L1_A = 18  # 2A over 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230
@@ -81,8 +81,8 @@ def test_handle_import_when_over_limit():
 
 
 def test_handle_import_when_under_limit():
-    """Test when we are just under the limit"""
-    L1_A = 15  # Under limit
+    """Test when all phase currents are under 16A limit"""
+    L1_A = 15  # 1A under 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230
@@ -104,8 +104,8 @@ def test_handle_import_when_under_limit():
 
 
 def test_handle_import_battery_soc_too_low():
-    """Test when battery SOC is below minimum threshold"""
-    L1_A = 20  # Over limit
+    """Test when L1 current is over limit but battery SOC is below minimum threshold"""
+    L1_A = 20  # 4A over 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230
@@ -127,8 +127,8 @@ def test_handle_import_battery_soc_too_low():
 
 
 def test_handle_import_partial_discharge_needed():
-    """Test when we need partial discharge to stay within limits"""
-    L1_A = 18  # Over limit by 2A
+    """Test when L1 current is 2A over limit and battery is charging 1kW"""
+    L1_A = 18  # 2A over 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230
@@ -150,8 +150,8 @@ def test_handle_import_partial_discharge_needed():
 
 
 def test_handle_import_exact_current_match():
-    """Test when required current reduction exactly matches available power"""
-    L1_A = 16  # At limit
+    """Test when L1 current is exactly at 16A limit with neutral battery"""
+    L1_A = 16  # Exactly at 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230
@@ -173,8 +173,8 @@ def test_handle_import_exact_current_match():
 
 
 def test_handle_import_small_adjustment_needed():
-    """Test when only a small adjustment is needed"""
-    L1_A = 17  # Over limit by 1A
+    """Test when L1 current is 1A over 16A limit with neutral battery"""
+    L1_A = 17  # 1A over 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230
@@ -196,8 +196,8 @@ def test_handle_import_small_adjustment_needed():
 
 
 def test_handle_import_when_already_optimal():
-    """Test when current battery power setpoint would be the same"""
-    L1_A = 16  # At limit
+    """Test when L1 current is at 16A limit and battery is already discharging"""
+    L1_A = 16  # Exactly at 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230
@@ -219,8 +219,8 @@ def test_handle_import_when_already_optimal():
 
 
 def test_handle_import_moderate_charging_state():
-    """Test when battery is in moderate charging state"""
-    L1_A = 20  # Over limit by 4A
+    """Test when L1 current is 4A over 16A limit and battery is charging 2kW"""
+    L1_A = 20  # 4A over 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230
@@ -242,9 +242,9 @@ def test_handle_import_moderate_charging_state():
 
 
 def test_handle_import_with_different_phase_currents():
-    """Test scenario with different phase currents where L2 is highest"""
+    """Test when L2 current is highest at 2A over 16A limit"""
     L1_A = 14
-    L2_A = 18  # Highest phase, over limit by 2A
+    L2_A = 18  # 2A over 16A limit (highest phase)
     L3_A = 12
     L1_V = 230
     instantaneous_battery_power = 1000
@@ -270,8 +270,8 @@ def test_handle_import_with_different_phase_currents():
 
 
 def test_handle_export_at_limit():
-    """Test scenario at export limit"""
-    L1_A = -16  # At export limit
+    """Test when L1 current is exactly at -16A export limit"""
+    L1_A = -16  # Exactly at -16A export limit
     L2_A = -14
     L3_A = -15
     L1_V = 230
@@ -293,8 +293,8 @@ def test_handle_export_at_limit():
 
 
 def test_handle_export_over_limit():
-    """Test scenario over export limit"""
-    L1_A = -17  # Over export limit by 1A
+    """Test when L1 current is 1A over -16A export limit"""
+    L1_A = -17  # 1A over -16A export limit
     L2_A = -14
     L3_A = -15
     L1_V = 230
@@ -316,8 +316,8 @@ def test_handle_export_over_limit():
 
 
 def test_handle_export_under_limit():
-    """Test scenario under export limit"""
-    L1_A = -8  # Under export limit
+    """Test when all phase currents are under -16A export limit"""
+    L1_A = -8  # Well under -16A export limit
     L2_A = -6
     L3_A = -7
     L1_V = 230
@@ -339,8 +339,8 @@ def test_handle_export_under_limit():
 
 
 def test_handle_export_battery_soc_too_high():
-    """Test when battery SOC is above maximum threshold"""
-    L1_A = -20  # Over export limit
+    """Test when currents are over export limit but battery SOC is at maximum"""
+    L1_A = -20  # 4A over -16A export limit
     L2_A = -18
     L3_A = -19
     L1_V = 230
@@ -362,8 +362,8 @@ def test_handle_export_battery_soc_too_high():
 
 
 def test_handle_export_max_charge_needed():
-    """Test when maximum charge is needed to reduce export"""
-    L1_A = -24  # Way over export limit by 8A
+    """Test when L1 current is 8A over -16A export limit requiring max charge"""
+    L1_A = -24  # 8A over -16A export limit
     L2_A = -22
     L3_A = -23
     L1_V = 230
@@ -380,15 +380,15 @@ def test_handle_export_max_charge_needed():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == -5000  # Can't charge enough due to 3x factor, charging at max power
+    assert battery_power == 5000
     assert state == State.CHARGE_BATTERY
 
 
 def test_handle_export_partial_charge_needed():
-    """Test when partial charge is needed to stay within export limits"""
+    """Test when L3 current is 2A over -16A export limit and battery is discharging"""
     L1_A = -14
     L2_A = -12
-    L3_A = -18  # Over export limit by 2A (min current)
+    L3_A = -18  # 2A over -16A export limit (most negative)
     L1_V = 230
     instantaneous_battery_power = -1000  # Currently discharging at 1kW
 
@@ -408,10 +408,10 @@ def test_handle_export_partial_charge_needed():
 
 
 def test_handle_export_with_l3_as_minimum():
-    """Test export scenario where L3 has the most negative current"""
+    """Test when L3 current is most negative at 1A over -16A export limit"""
     L1_A = -12
     L2_A = -14
-    L3_A = -17  # Most negative, over export limit by 1A
+    L3_A = -17  # 1A over -16A export limit (most negative)
     L1_V = 230
     instantaneous_battery_power = -500
 
@@ -431,10 +431,10 @@ def test_handle_export_with_l3_as_minimum():
 
 
 def test_handle_export_already_charging():
-    """Test export scenario when battery is already charging"""
+    """Test when L3 current is 1A over -16A export limit and battery is already charging"""
     L1_A = -12
     L2_A = -14
-    L3_A = -17  # Over export limit by 1A
+    L3_A = -17  # 1A over -16A export limit
     L1_V = 230
     instantaneous_battery_power = 2000  # Already charging
 
@@ -449,15 +449,15 @@ def test_handle_export_already_charging():
 
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
-    assert battery_power == 2690  # Increase by (1A * 3) * 230V = 690W from 2000W
+    assert battery_power == 2690
     assert state == State.CHARGE_BATTERY
 
 
 def test_handle_mixed_phase_currents():
-    """Test scenario with mixed positive and negative phase currents"""
-    L1_A = 8   # Importing
-    L2_A = -18  # Exporting (most negative, over export limit by 2A)
-    L3_A = 4   # Importing
+    """Test with mixed phase currents where L2 is 2A over -16A export limit"""
+    L1_A = 8   # Positive (importing)
+    L2_A = -18  # 2A over -16A export limit (most negative)
+    L3_A = 4   # Positive (importing)
     L1_V = 230
     instantaneous_battery_power = 0
 
@@ -477,8 +477,8 @@ def test_handle_mixed_phase_currents():
 
 
 def test_handle_import_three_phase_factor_forces_max_power():
-    """Test when 3x factor requirement forces max power discharge instead of calculated adjustment"""
-    L1_A = 19  # Over limit by 3A
+    """Test when L1 current is 3A over 16A limit with battery charging at 3kW"""
+    L1_A = 19  # 3A over 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230
@@ -493,11 +493,6 @@ def test_handle_import_three_phase_factor_forces_max_power():
     min_battery_soc = 5
     max_battery_soc = 100
 
-    # excess_current = 3A
-    # power_excess = 3A * 230V * 3 = 2070W
-    # available_power_to_reduce_with = 3000 - (-5000) = 8000W (enough)
-    # So this should allow calculated adjustment: 3000 - (3 * 230) = 2310W
-
     battery_power, state = check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, instantaneous_battery_power, battery_soc, battery_max_charge_discharge_power, min_battery_soc, max_battery_soc)
     print(f"Power: {battery_power}, State: {state}")
     assert battery_power == 930
@@ -505,8 +500,8 @@ def test_handle_import_three_phase_factor_forces_max_power():
 
 
 def test_handle_import_three_phase_factor_insufficient_power():
-    """Test when 3x factor requirement exceeds available power, forcing max discharge"""
-    L1_A = 20  # Over limit by 4A
+    """Test when L1 current is 4A over 16A limit with limited battery capacity"""
+    L1_A = 20  # 4A over 16A limit
     L2_A = 14
     L3_A = 15
     L1_V = 230

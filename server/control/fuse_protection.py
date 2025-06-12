@@ -45,7 +45,7 @@ def check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, insta
             return new_battery_power_setpoint, State.DISCHARGE_BATTERY
         else:
             log(f"Can't discharge enough, over limit by {excess_current - available_power_to_reduce_with} W, discharging at max power")
-            return battery_max_charge_discharge_power, State.DISCHARGE_BATTERY
+            return -battery_max_charge_discharge_power, State.DISCHARGE_BATTERY
 
     # Over export limit (exporting too much power to grid)
     elif min_current < -grid_current_limit:
@@ -62,7 +62,7 @@ def check_import_export_limits(L1_A, L2_A, L3_A, L1_V, grid_current_limit, insta
             return new_battery_power_setpoint, State.CHARGE_BATTERY
         else:
             log(f"Can't charge enough, over export limit by {excess_current - available_power_to_increase_with} W, charging at max power")
-            return -battery_max_charge_discharge_power, State.CHARGE_BATTERY
+            return battery_max_charge_discharge_power, State.CHARGE_BATTERY
 
     # Within limits
     else:
