@@ -9,6 +9,7 @@ class DeviceMode(Enum):
     NONE = "none"
     READ = "read"
     CONTROL = "control"
+    SELF_CONSUMPTION = "self_consumption"
 
 
 class DeviceCommandType(Enum):

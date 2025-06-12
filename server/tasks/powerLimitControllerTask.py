@@ -6,7 +6,7 @@ from server.tasks.harvest import Harvest
 from server.tasks.harvestTransport import DefaultHarvestTransportFactory
 from server.tasks.itask import ITask
 from .harvestableTask import HarvestableTask
-from server.control.control import check_import_export_limits, State
+from server.control.fuse_protection import check_import_export_limits, State
 from server.devices.DeeDecoder import DeeDecoder, SungrowDeeDecoder
 
 logger = logging.getLogger(__name__)
@@ -47,13 +47,14 @@ class PowerLimitControllerTask(HarvestableTask):
         state = State.NO_ACTION
 
         if event_time - self.last_action_time >= 5000:
-            battery_power, state = check_import_export_limits(decoder.grid_power,
-                                                              decoder.grid_power_limit,
+            battery_power, state = check_import_export_limits(decoder.l1_current,
+                                                              decoder.l2_current,
+                                                              decoder.l3_current,
+                                                              decoder.l1_voltage,
+                                                              decoder.grid_current_limit,
                                                               decoder.instantaneous_battery_power,
                                                               decoder.battery_soc,
-                                                              decoder.battery_max_charge_discharge_power,
-                                                              decoder.min_battery_soc,
-                                                              decoder.max_battery_soc)
+                                                              decoder.battery_max_charge_discharge_power)
 
         if state == State.DISCHARGE_BATTERY:
             logger.info('--------------------------------')
@@ -86,13 +87,11 @@ class PowerLimitControllerTask(HarvestableTask):
             self.bb.add_warning(bb_message)
             self.last_action_time = event_time
         elif state == State.NO_ACTION:
-            pass  # do nothing
-
-        if self.is_initialized:  # if in control mode, execute commands
-            while self.device.has_commands():
-                command: DeviceCommand = self.device.pop_command()  # pop each command from the device
-                if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
-                    self.device.profile.set_battery_power(self.device, command.values[0])
+            if self.is_initialized:  # if in control mode, execute commands
+                while self.device.has_commands():
+                    command: DeviceCommand = self.device.pop_command()  # pop each command from the device
+                    if command.command_type == DeviceCommandType.SET_BATTERY_POWER:
+                        self.device.profile.set_battery_power(self.device, command.values[0])
 
         # deinit check here
         if self.device.get_mode() == DeviceMode.READ:
