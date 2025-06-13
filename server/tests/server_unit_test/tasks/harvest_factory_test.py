@@ -3,6 +3,7 @@ from unittest.mock import Mock, MagicMock
 from server.app.blackboard import BlackBoard
 from server.crypto.crypto_state import CryptoState
 from server.devices.ICom import ICom
+from server.tasks.deviceTask import DeviceTask
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.harvest import Harvest
 import server.tests.config_defaults as config_defaults
@@ -25,7 +26,7 @@ def test_create_harvest_factory(blackboard):
     assert factory is not None
     assert factory.bb == blackboard
 
-def test_add_device_creates_harvest_task(blackboard, mock_device):
+def test_add_device_creates_device_task(blackboard, mock_device):
     factory = HarvestFactory(blackboard)
     
     assert len(blackboard.messages) == 0
@@ -36,7 +37,7 @@ def test_add_device_creates_harvest_task(blackboard, mock_device):
     # Verify harvest task was created and we have added an info message
     tasks = blackboard.purge_tasks()
     assert len(tasks) > 0
-    assert isinstance(tasks[0], Harvest)
+    assert isinstance(tasks[0], DeviceTask)
     assert len(blackboard.messages) > 0
 
     # Verify device was added to settings

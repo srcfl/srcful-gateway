@@ -1,7 +1,8 @@
 import json
 import time
 from server.crypto.crypto_state import CryptoState
-from server.devices.ICom import HarvestDataType, ICom
+from server.devices.ICom import DeviceMode, HarvestDataType, ICom
+from server.tasks import deviceTask
 import server.tasks.harvest as harvest
 import server.tasks.harvestTransport as harvestTransport
 import server.tasks.openDevicePerpetualTask as oit
@@ -20,7 +21,7 @@ def blackboard():
 
 
 def test_create_harvest(blackboard: BlackBoard):
-    t = harvest.Harvest(0, blackboard, None,  harvestTransport.DefaultHarvestTransportFactory())
+    t = harvest.Harvest()
     assert t is not None
 
 
@@ -29,40 +30,46 @@ def test_create_harvest_transport(blackboard: BlackBoard):
     assert t is not None
 
 
+# TODO: Move to deviceTask test
 def test_inverter_terminated(blackboard: BlackBoard):
     mock_inverter = Mock()
     mock_inverter.is_open.return_value = False
     mock_inverter.is_disconnected.return_value = False
 
-    t = harvest.Harvest(0, blackboard, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
+    t = deviceTask.DeviceTask(0, blackboard, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
     assert len(ret) == 1
     assert type(ret[0]) is oit.DevicePerpetualTask
 
 
-def test_execute_harvest(blackboard: BlackBoard):
+# TODO: Move to deviceTask test
+def test_execute_device_task(blackboard: BlackBoard):
     mock_inverter = Mock(spec=ICom)
     registers = {"1": "1717"}
     mock_inverter.read_harvest_data.return_value = registers
     mock_inverter.connect.return_value = True
     mock_inverter.get_backoff_time_ms.return_value = 1000
+    mock_inverter.get_device_mode.return_value = DeviceMode.READ
 
-    t = harvest.Harvest(0, blackboard, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
+
+    t = deviceTask.DeviceTask(0, blackboard, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
-    assert ret is t
+    assert t in ret
     assert t.barn[max(t.barn.keys())] == registers
     assert len(t.barn) == 1
     assert t.time > 17
 
 
-def test_execute_harvest_transport_on_long_interval(blackboard: BlackBoard):
+# TODO: Move to deviceTask test
+def test_execute_device_task_transport_on_long_interval(blackboard: BlackBoard):
     mock_inverter = Mock(spec=ICom)
     mock_inverter.connect.return_value = True
     mock_inverter.get_backoff_time_ms.return_value = 10  # 10 mseconds
     mock_inverter.read_harvest_data.return_value = {"0": "1337"}
+    mock_inverter.get_device_mode.return_value = DeviceMode.READ
 
     blackboard.time_ms = Mock(return_value=1000)
-    t = harvest.Harvest(0, blackboard, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
+    t = deviceTask.DeviceTask(0, blackboard, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
 
     blackboard.time_ms.return_value += 10000  # that the time has passed 10 seconds after a long harvest.
     ret = t.execute(17)
@@ -72,8 +79,8 @@ def test_execute_harvest_transport_on_long_interval(blackboard: BlackBoard):
     assert t.time > 17
 
 
-def test_execute_harvest_10s(blackboard: BlackBoard):
-    # in this test we check that we get the desired behavior when we execute a harvest task 10 times
+def test_execute_device_task_10s(blackboard: BlackBoard):
+    # in this test we check that we get the desired behavior when we execute a device task 10 times
     # the first 9 times we should get the same task back
     # the 10th time we should get a list of 2 tasks back
     mock_inverter = Mock(spec=ICom)
@@ -82,16 +89,17 @@ def test_execute_harvest_10s(blackboard: BlackBoard):
     bb.settings.harvest.clear_endpoints(ChangeSource.LOCAL)
     bb.settings.harvest.add_endpoint("http://dret.com:8080", ChangeSource.LOCAL)
     bb.time_ms = Mock(return_value=1000)
-    t = harvest.Harvest(0, bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
+    t = deviceTask.DeviceTask(0, bb, mock_inverter, harvestTransport.DefaultHarvestTransportFactory())
     mock_inverter.connect.return_value = True
     mock_inverter.get_backoff_time_ms.return_value = 1000
+    mock_inverter.get_device_mode.return_value = DeviceMode.READ
 
     index_time_map = {}
 
     for i in range(10):
         mock_inverter.read_harvest_data.return_value = registers[i]
         ret = t.execute(i)
-        assert ret is t
+        assert t in ret
         # the largest key is the last one
         assert t.barn[max(t.barn.keys())] == registers[i]
         assert len(t.barn) == i + 1
@@ -138,23 +146,24 @@ def test_execute_harvest_no_transport():
     mock_inverter = Mock(spec=ICom)
     mock_inverter.is_disconnected.return_value = False
     mock_inverter.get_backoff_time_ms.return_value = 1000
+    mock_inverter.get_device_mode.return_value = DeviceMode.READ
 
     registers = [{"1": 1717 + x} for x in range(11)]
 
     mock_bb = _create_mock_bb()
 
-    t = harvest.Harvest(0, mock_bb, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
+    t = [deviceTask.DeviceTask(0, mock_bb, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())]
 
     for i in range(len(registers)):
         mock_inverter.read_harvest_data.return_value = registers[i]
         mock_bb.time_ms.return_value = 1000 + i * 1000
-        t = t.execute(i)
+        t = t[0].execute(i)
 
     # we should now have issued a transport and the barn should be empty
     assert len(t) == 2
 
     transport = t[0] if type(t[0]) is harvestTransport.HarvestTransport else t[1]
-    t = t[0] if type(t[0]) is harvest.Harvest else t[1]
+    t = t[0] if type(t[0]) is deviceTask.DeviceTask else t[1]
 
     assert type(transport) is harvestTransport.HarvestTransport
 
@@ -168,10 +177,11 @@ def test_execute_harvest_device_terminated():
     mock_inverter.read_harvest_data.return_value = registers
     mock_inverter.connect.return_value = True
     mock_inverter.get_backoff_time_ms.return_value = 1000
+    mock_inverter.get_device_mode.return_value = DeviceMode.READ
 
-    t = harvest.Harvest(0, BlackBoard(Mock(spec=CryptoState)), mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
+    t = deviceTask.DeviceTask(0, BlackBoard(Mock(spec=CryptoState)), mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
-    assert ret is t
+    assert t in ret
     assert t.barn[max(t.barn.keys())] == registers
     assert len(t.barn) == 1
     assert t.time > 17
@@ -236,6 +246,7 @@ def test_execute_harvests_from_two_devices(blackboard: BlackBoard):
     device.is_open.return_value = True
     device.compare_host.return_value = False
     device.get_backoff_time_ms.return_value = 1000
+    device.get_device_mode.return_value = DeviceMode.READ
     task = OpenDeviceTask(0, blackboard, device)
     task.execute(0)
 
@@ -249,6 +260,7 @@ def test_execute_harvests_from_two_devices(blackboard: BlackBoard):
     device2.is_open.return_value = True
     device2.compare_host.return_value = False
     device2.get_backoff_time_ms.return_value = 1000
+    device2.get_device_mode.return_value = DeviceMode.READ
     task2 = OpenDeviceTask(0, blackboard, device2)
     task2.execute(0)
 
@@ -257,12 +269,12 @@ def test_execute_harvests_from_two_devices(blackboard: BlackBoard):
     assert task2.execute(0) is None  # It is already in the blackboard
 
     # Now we create a harvest task
-    harvest_task = harvest.Harvest(0, blackboard, device, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task = deviceTask.DeviceTask(0, blackboard, device, harvestTransport.DefaultHarvestTransportFactory())
     harvest_task.execute(0)
 
     assert device.read_harvest_data.called
 
-    harvest_task2 = harvest.Harvest(0, blackboard, device2, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task2 = deviceTask.DeviceTask(0, blackboard, device2, harvestTransport.DefaultHarvestTransportFactory())
     harvest_task2.execute(0)
 
     assert device2.read_harvest_data.called
@@ -273,10 +285,11 @@ def test_create_headers(blackboard: BlackBoard):
     device.get_harvest_data_type.return_value = HarvestDataType.MODBUS_REGISTERS
     device.get_SN.return_value = "1234567890"
     device.get_name.return_value = "Volvo 240"
+    device.get_device_mode.return_value = DeviceMode.READ
 
-    harvest_task = harvest.Harvest(0, blackboard, device, harvestTransport.DefaultHarvestTransportFactory())
+    harvest_task = deviceTask.DeviceTask(0, blackboard, device, harvestTransport.DefaultHarvestTransportFactory())
 
-    headers = harvest_task._create_headers(device)
+    headers = harvest_task._create_transport_headers(device)
 
     #  check so the headers can be json serialized
     try:
@@ -291,9 +304,10 @@ def test_closed_device_disconnection(blackboard: BlackBoard):
     mock_device.is_open.return_value = False  # Device is closed
     mock_device.is_disconnected.return_value = False  # But not disconnected
     mock_device.clone.return_value = mock_device
+    mock_device.get_device_mode.return_value = DeviceMode.READ
 
     # Create harvest task
-    task = harvest.Harvest(0, blackboard, mock_device, harvestTransport.DefaultHarvestTransportFactory())
+    task = deviceTask.DeviceTask(0, blackboard, mock_device, harvestTransport.DefaultHarvestTransportFactory())
 
     # Execute the task
     result = task.execute(17)

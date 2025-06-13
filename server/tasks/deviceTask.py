@@ -81,12 +81,15 @@ class DeviceTask(Task):
                 next_event_time, harvest = self.harvester.harvest(event_time, self.device, self.bb)
 
                 if harvest:
+                    self.harvest_count += 1
                     self.barn[self.bb.time_ms()] = harvest
 
             elif self.device.get_device_mode() == DeviceMode.CONTROL:
                 # self.controller.execute(event_time)
                 logger.info("Control mode not implemented yet")
                 pass
+            else:
+                logger.error(f"Invalid device mode {self.device.get_device_mode()}")
         except ICom.ConnectionException as e:
             logger.error(f"Error harvesting from device {self.device.get_SN()}")
             self.device.disconnect()
@@ -97,6 +100,7 @@ class DeviceTask(Task):
 
             return next_event_time, [open_inverter] + transports # we return the open_inverter to indicate that we are closing the device and need to reconnect
 
+        
         return next_event_time, [self]  # we return self to indicate that we are ready to use the device again
 
 

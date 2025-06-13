@@ -17,8 +17,6 @@ class Harvest:
         self.backoff_time = 1000  # start with a 1000ms backoff
         self.harvest_count = 0
         self.total_harvest_time_ms = 0
-        self.packet_count = 0
-        self.data_points_count = 0
 
     def harvest(self, event_time:int, device: ICom, bb: BlackBoard) -> tuple[int, dict]:
 

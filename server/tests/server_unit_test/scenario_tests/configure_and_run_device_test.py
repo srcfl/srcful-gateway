@@ -1,5 +1,6 @@
 from server.crypto.crypto_state import CryptoState
-from server.devices.ICom import ICom
+from server.devices.ICom import DeviceMode, ICom
+from server.tasks import deviceTask
 import server.tasks.harvest as harvest
 import server.tasks.harvestTransport as harvestTransport
 from unittest.mock import MagicMock, Mock
@@ -16,6 +17,7 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
 
     # Create and connect first device
     device = MagicMock(spec=ICom)
+    device.get_device_mode.return_value = DeviceMode.READ
     device.connect.return_value = True
     device.is_disconnected.return_value = False
     device.is_open.return_value = True
@@ -29,6 +31,7 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
 
     # Create and connect second device
     device2 = MagicMock(spec=ICom)
+    device2.get_device_mode.return_value = DeviceMode.READ
     device2.connect.return_value = True
     device2.is_open.return_value = True
     device2.is_disconnected.return_value = False
@@ -40,11 +43,11 @@ def test_harvest_from_two_devices_with_one_device_reconnection():
     assert device2 in bb.devices.lst
 
     # Create and execute harvest tasks for both devices
-    device_harvest_task = harvest.Harvest(0, bb, device, harvestTransport.DefaultHarvestTransportFactory())
+    device_harvest_task = deviceTask.DeviceTask(0, bb, device, harvestTransport.DefaultHarvestTransportFactory())
     device_harvest_task.execute(0)
     assert device.read_harvest_data.called
 
-    device2_harvest_task = harvest.Harvest(0, bb, device2, harvestTransport.DefaultHarvestTransportFactory())
+    device2_harvest_task = deviceTask.DeviceTask(0, bb, device2, harvestTransport.DefaultHarvestTransportFactory())
     device2_harvest_task.execute(0)
     assert device2.read_harvest_data.called
 
