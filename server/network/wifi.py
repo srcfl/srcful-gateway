@@ -187,12 +187,13 @@ else:
         def _log_existing_connections(self):
             """Log all existing network connections."""
             for conn in self.settings.ListConnections():
-                con_proxy = self.bus.get_object("org.freedesktop.NetworkManager", conn)
-                settings_connection = dbus.Interface(
-                    con_proxy, "org.freedesktop.NetworkManager.Settings.Connection"
-                )
-                config = settings_connection.GetSettings()
-                logger.info("Connection: %s - %s", conn, config["connection"]["type"])
+                try:
+                    con_proxy = self.bus.get_object("org.freedesktop.NetworkManager", conn)
+                    settings_connection = dbus.Interface(con_proxy, "org.freedesktop.NetworkManager.Settings.Connection")
+                    config = settings_connection.GetSettings()
+                    logger.info("Connection: %s - %s", conn, config["connection"]["type"])
+                except Exception as e:
+                    logger.error("Failed to get connection settings: %s", str(e))
 
         def _find_wireless_device(self):
             """Find the first wireless device."""

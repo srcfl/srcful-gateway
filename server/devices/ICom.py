@@ -17,6 +17,13 @@ class DER_TYPE(Enum):
     UTILITY_METER_P1 = "meter_p1"
 
 
+class DeviceMode(Enum):
+    NONE = "none"
+    READ = "read"
+    CONTROL = "control"
+    SELF_CONSUMPTION = "self_consumption"
+
+
 class ICom(ABC):
 
     # HarvestDataType Enum
@@ -29,8 +36,28 @@ class ICom(ABC):
     def connection_key():
         return "connection"
 
-    def get_der_types(self) -> list[DER_TYPE]:
+    @abstractmethod
+    def get_device_mode(self) -> DeviceMode:
         pass
+
+    @abstractmethod
+    def set_device_mode(self) -> None:
+        pass
+    
+    @abstractmethod
+    def set_device_mode(self, mode: DeviceMode) -> None:
+        pass
+
+    class ConnectionException(Exception):
+        def __init__(self, message: str, device: 'ICom', root_cause: Optional[Exception] = None):
+            self.message = message
+            self.device = device
+            self.root_cause = root_cause
+            super().__init__(self.message)
+
+    #@abstractmethod
+    #def get_der_types(self) -> list[DER_TYPE]:
+    #    pass
 
     # def __eq__(self, other: 'ICom') -> bool:
     #     return self.get_config()[NetworkUtils.MAC_KEY] == other.get_config()[NetworkUtils.MAC_KEY]
