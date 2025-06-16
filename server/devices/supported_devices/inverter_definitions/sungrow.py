@@ -8,6 +8,12 @@ from ...profile_keys import (
 )
 from ..profile import ModbusProfile
 from ...common.types import ModbusDevice
+from ...registerValue import RegisterValue
+from ...supported_devices.value_converter import _interpret_value
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class SungrowProfile(ModbusProfile):
@@ -16,6 +22,18 @@ class SungrowProfile(ModbusProfile):
 
     def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
+
+    def get_decoded_registers(self, harvest_data: dict) -> dict:
+        decoded_registers = {}
+
+        for register in harvest_data.keys():
+            try:
+                register_interval = self.get_register(register)
+                decoded_registers[register_interval.name] = _interpret_value(register_interval)
+            except Exception as e:
+                logger.error(f"Error interpreting register {register_interval.name}: {e}")
+                decoded_registers[register_interval.name] = None
+        return decoded_registers
 
 
 sungrow_profile = {

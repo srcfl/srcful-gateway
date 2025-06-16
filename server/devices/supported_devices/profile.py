@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 from ..profile_keys import ProfileKey, RegistersKey, EndiannessKey, FunctionCodeKey, DataTypeKey
 from ..common.types import ModbusDevice
+from typing import Optional, Union
 
 
 class BaseProfile(ABC):
@@ -38,6 +39,7 @@ class RegisterInterval:
                  start_register: int,
                  offset: int,
                  data_type: DataTypeKey = DataTypeKey.U16,
+                 name: str = "N/A",
                  unit: str = "N/A",
                  description: str = "N/A",
                  scale_factor: float = 1.0,
@@ -47,6 +49,7 @@ class RegisterInterval:
         self.start_register: int = start_register
         self.offset: int = offset
         self.data_type: DataTypeKey = data_type
+        self.name: str = name
         self.unit: str = unit
         self.description: str = description
         self.scale_factor: float = scale_factor
@@ -109,3 +112,12 @@ class ModbusProfile(DeviceProfile):
 
     def get_registers(self) -> List[RegisterInterval]:
         return self.registers
+
+    def get_register(self, register: int) -> Optional[RegisterInterval]:
+        for reg in self.registers:
+            if reg.start_register == register:
+                return reg
+        return None
+
+    def get_decoded_registers(self, harvest_data: dict) -> dict:
+        return {}

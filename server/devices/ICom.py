@@ -29,12 +29,6 @@ class ICom(ABC):
     def connection_key():
         return "connection"
 
-    def get_der_types(self) -> list[DER_TYPE]:
-        pass
-
-    # def __eq__(self, other: 'ICom') -> bool:
-    #     return self.get_config()[NetworkUtils.MAC_KEY] == other.get_config()[NetworkUtils.MAC_KEY]
-
     @abstractmethod
     def connect(self) -> bool:
         ''' Establish a connection to the device using the configuration of the device. If the device has a serial number it will only connect to the device with that serial number. If it has no serial number it will read the serial number from the device.'''

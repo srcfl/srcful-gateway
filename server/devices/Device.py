@@ -11,6 +11,7 @@ class Device(ICom, ABC):
 
     def __init__(self):
         super().__init__()
+        self.harvest_data = {}
 
     def is_disconnected(self) -> bool:
         return self._is_disconnected
@@ -29,6 +30,9 @@ class Device(ICom, ABC):
             return self._read_harvest_data(force_verbose)
 
         raise Exception("Device is disconnected")
+
+    def get_harvest_data(self) -> dict:
+        return self.harvest_data
 
     def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
         ''' computes a backoff time based, this is always between 1 and 256 seconds,
