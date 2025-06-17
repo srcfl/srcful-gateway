@@ -309,85 +309,84 @@ The test IDs in the filename should be the actual test case IDs from this specif
 ```markdown
 # Blixt Robustness Test Report
 **Date**: 2024-03-15  
-**Tester**: John Doe (JD)  
-**Firmware Version**: v1.2.3  
-**Test Focus**: Inverter Connectivity and Network Recovery  
-**Test Duration**: 4 hours
+**Tester**: Local Development Test  
+**Firmware Version**: Development Build  
+**Test Focus**: Network Recovery and Offline Operation  
+**Test Duration**: 15 minutes
 
 ## Test Summary Table
 
 | Test ID | Variant | Result | Comment |
 |:--------|:--------|:-------|:--------|
-| ROB-013 | Physical disconnect | PASS | Reconnected in 3m 45s |
-| ROB-013 | Network interface failure | PASS | Reconnected in 4m 12s |
-| ROB-013 | Inverter power cycle | PASS | Reconnected in 2m 58s |
-| ROB-014 | Single inverter disconnect | PASS | Other inverters unaffected |
-| ROB-014 | Multiple simultaneous disconnects | FAIL | 2 inverters failed to reconnect within 6m |
-| ROB-015 | Pattern A (2-min cycles) | PASS | Stable reconnection pattern |
-| ROB-015 | Pattern B (Random intervals) | PASS | No resource exhaustion observed |
-| ROB-002 | Internet recovery after 1h offline | PASS | All buffered data uploaded successfully |
+| ROB-001 | Wifi disconnect | PASS | System handled disconnect gracefully |
+| ROB-002 | Wifi recovery | PASS | Automatic reconnection successful |
+| ROB-013 | VPN-based inverter disconnect | PASS | Inverter connection lost and recovered with internet |
 
 ## Detailed Results
 
-### ROB-014 Multiple Inverter Disconnect Failure
-**Issue Description**: When 3 inverters were disconnected simultaneously, 2 failed to reconnect within the 6-minute requirement.
-
+### ROB-001, ROB-002 & ROB-013 Network and Inverter Connection Recovery
 **Test Setup**:
-- 5 inverters connected to Blixt
-- All inverters actively sending data
-- Simultaneous physical disconnection of 3 inverters
-- Network monitoring enabled
+- Blixt running in local development environment
+- Connected to real inverter via internet-based VPN at remote site
+- Wifi connection to local network
+- System in normal operation state
+
+**Test Steps**:
+1. System running normally with active inverter connection through VPN
+2. Disabled wifi on test computer
+3. Monitored system behavior during disconnect
+4. Re-enabled wifi
+5. Observed recovery process
 
 **Observed Behavior**:
-- 1 inverter reconnected at 4m 12s
-- 2 inverters failed to reconnect until manual intervention
-- System logs showed connection attempts but increasing delays
-- Resource monitoring showed CPU spike during reconnection attempts
+- System detected network loss
+- Lost both internet and VPN connection to inverter
+- Gracefully handled both connection losses
+- Maintained system stability during offline period
+- Automatically reconnected to internet when wifi restored
+- Automatically reconnected to inverter through VPN
+- Normal operations resumed without manual intervention
 
-**Root Cause Analysis**:
-- Connection attempts were being queued sequentially
-- Each attempt was waiting for previous timeout
-- No parallel connection attempts implemented
-
-**Recommendations**:
-1. Implement parallel connection attempts for multiple inverters
-2. Add connection attempt timeout configuration
-3. Consider implementing connection attempt backoff strategy
+**Success Criteria Met**:
+- ✓ System remained stable during disconnect
+- ✓ Proper handling of both internet and inverter disconnection
+- ✓ Automatic recovery of both connections when network restored
+- ✓ No manual intervention required
+- ✓ Normal operation resumed seamlessly
 
 ## System Metrics
 
-### Resource Usage During Test
-- CPU: Average 45%, Peak 92% during multiple reconnection attempts
-- Memory: Stable at 256MB, no leaks observed
-- Storage: 2.3GB used for buffered data during offline period
-
-### Performance Impact
-- Boot time: Consistent at 85s
-- Reconnection attempts: Average 3.5 minutes
-- Data collection: No gaps during stable connections
+### Resource Usage
+- System remained stable throughout test
+- No resource spikes observed during disconnect/reconnect
+- Normal operation maintained during all phases
 
 ## Test Spec Improvements
 
-1. Add specific resource monitoring requirements for ROB-014
-2. Include maximum acceptable CPU usage during reconnection attempts
-3. Add test for connection attempt queuing behavior
-4. Specify minimum number of inverters for multiple inverter tests
+1. Add specific test case for VPN-based inverter connections
+2. Include metrics for reconnection time for both internet and inverter
+3. Add monitoring of inverter communication state during disconnect
+4. Specify expected behavior for different network interface types (wifi vs ethernet)
+5. Add test scenarios for VPN-based inverter connections in ROB-013
 
 ## Reproducibility
 
-To reproduce the multiple inverter disconnect issue:
-1. Connect 5 inverters to Blixt
-2. Ensure all inverters are actively sending data
-3. Physically disconnect 3 inverters simultaneously
-4. Monitor system logs and resource usage
-5. Expected failure: 2 inverters will not reconnect within 6 minutes
+To reproduce this test:
+1. Set up Blixt in local development environment
+2. Establish VPN connection to remote inverter over internet
+3. Ensure system is in normal operation
+4. Disable wifi on test computer
+5. Monitor system behavior
+6. Re-enable wifi
+7. Verify recovery of both internet and inverter connections
 
 ## Follow-up Actions
 
-1. [ ] Implement parallel connection attempts
-2. [ ] Add connection attempt timeout configuration
-3. [ ] Retest with modified connection handling
-4. [ ] Update test specification with new requirements
+1. [ ] Add specific wifi disconnect test case to specification
+2. [ ] Implement reconnection time monitoring
+3. [ ] Test with different network interface types
+4. [ ] Add metrics collection for network state transitions
+5. [ ] Add VPN-based inverter connection scenarios to ROB-013
 
 Each test execution must include:
 - **Test Metadata**: Execution date, duration, Blixt firmware version, test environment details
