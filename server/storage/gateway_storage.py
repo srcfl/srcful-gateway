@@ -23,9 +23,24 @@ class GatewayStorage:
                 )
             ''')
 
+    # Just force everything to have an sn :skull:
+    def _get_serial_number(self, connection: Dict[str, Any]) -> Optional[str]:
+        """Helper method to extract serial number from connection config.
+        Supports both 'sn' (for inverters) and 'meter_serial_number' (for P1 meters)."""
+        if 'sn' in connection and connection.get('sn'):
+            return connection.get('sn')
+        elif 'meter_serial_number' in connection and connection.get('meter_serial_number'):
+            return connection.get('meter_serial_number')
+        return None
+
     def add_connection(self, connection: Dict[str, Any]) -> bool:
-        if not isinstance(connection, dict) or 'sn' not in connection or not connection.get('sn'):
+        if not isinstance(connection, dict):
             logger.error(f"Invalid connection data: {connection}")
+            return False
+
+        sn = self._get_serial_number(connection)
+        if not sn:
+            logger.error(f"Invalid connection data - no serial number found: {connection}")
             return False
 
         try:
@@ -42,10 +57,9 @@ class GatewayStorage:
                     connections = []
 
                 # Check if SN already exists and update it
-                sn = connection.get('sn')
                 updated = False
                 for i, c in enumerate(connections):
-                    if isinstance(c, dict) and c.get('sn') == sn:
+                    if isinstance(c, dict) and self._get_serial_number(c) == sn:
                         connections[i] = connection
                         updated = True
                         logger.info(f"Updated existing connection for SN: {sn}")
@@ -76,7 +90,7 @@ class GatewayStorage:
                     # Find the connection to remove
                 connection_to_remove = None
                 for connection in connections:
-                    if isinstance(connection, dict) and connection.get('sn') == sn:
+                    if isinstance(connection, dict) and self._get_serial_number(connection) == sn:
                         connection_to_remove = connection
                         break
 

@@ -265,3 +265,86 @@ def test_mixed_data_types_in_connections(temp_storage):
     sns = [c["sn"] for c in connections]
     assert "valid1" in sns
     assert "valid2" in sns
+
+
+def test_p1_meter_serial_number_support(temp_storage):
+    """Test that add_connection and remove_connection work with P1 meters using 'meter_serial_number'"""
+    # P1 meter connection with meter_serial_number
+    p1_connection = {
+        "connection": "P1Telnet",
+        "ip": "192.168.1.100",
+        "port": 23,
+        "meter_serial_number": "LGF5E360"
+    }
+
+    # Add P1 connection
+    result = temp_storage.add_connection(p1_connection)
+    assert result is True
+
+    # Verify it was added
+    connections = temp_storage.get_connections()
+    assert len(connections) == 1
+    assert connections[0]["meter_serial_number"] == "LGF5E360"
+
+    # Remove by serial number
+    result = temp_storage.remove_connection("LGF5E360")
+    assert result is True
+
+    # Verify it was removed
+    connections = temp_storage.get_connections()
+    assert len(connections) == 0
+
+
+def test_mixed_serial_number_formats(temp_storage):
+    """Test that storage can handle both 'sn' and 'meter_serial_number' devices together"""
+    # Regular device with 'sn'
+    inverter_connection = {"sn": "INV123", "ip": "192.168.1.10", "connection": "TCP"}
+
+    # P1 meter with 'meter_serial_number'
+    p1_connection = {
+        "connection": "P1Telnet",
+        "ip": "192.168.1.100",
+        "port": 23,
+        "meter_serial_number": "P1_456"
+    }
+
+    # Add both
+    assert temp_storage.add_connection(inverter_connection) is True
+    assert temp_storage.add_connection(p1_connection) is True
+
+    # Verify both are there
+    connections = temp_storage.get_connections()
+    assert len(connections) == 2
+
+    # Remove inverter by sn
+    assert temp_storage.remove_connection("INV123") is True
+    connections = temp_storage.get_connections()
+    assert len(connections) == 1
+    assert connections[0]["meter_serial_number"] == "P1_456"
+
+    # Remove P1 meter by meter_serial_number
+    assert temp_storage.remove_connection("P1_456") is True
+    connections = temp_storage.get_connections()
+    assert len(connections) == 0
+
+
+def test_duplicate_serial_numbers_mixed_formats(temp_storage):
+    """Test that duplicate serial numbers are handled correctly across different formats"""
+    # First add a regular device
+    inverter_connection = {"sn": "SAME123", "ip": "192.168.1.10", "connection": "TCP"}
+    assert temp_storage.add_connection(inverter_connection) is True
+
+    # Now add a P1 meter with the same serial number
+    p1_connection = {
+        "connection": "P1Telnet",
+        "ip": "192.168.1.100",
+        "port": 23,
+        "meter_serial_number": "SAME123"
+    }
+    assert temp_storage.add_connection(p1_connection) is True
+
+    # Should only have one connection (the P1 meter should replace the inverter)
+    connections = temp_storage.get_connections()
+    assert len(connections) == 1
+    assert connections[0]["connection"] == "P1Telnet"
+    assert connections[0]["meter_serial_number"] == "SAME123"

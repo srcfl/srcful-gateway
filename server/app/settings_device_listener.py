@@ -30,12 +30,6 @@ class SettingsDeviceListener(DebouncedMonitorBase):
                 settings_modified = True
                 continue
 
-            # # check if we have a new format
-            # if com.get_config() != connection:
-            #     logger.info("Device %s has a new format, updating the settings", com.get_SN())
-            #     connection.clear()
-            #     connection.update(com.get_config())
-            #     settings_modified = True
             if self.blackboard.devices.find_sn(com.get_SN()) is None:
                 logger.info("Device %s from settings was not found in the blackboard devices, opening a perpetual task to connect it", com.get_SN())
                 self.blackboard.add_task(DevicePerpetualTask(self.blackboard.time_ms(), self.blackboard, com))

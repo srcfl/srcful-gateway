@@ -15,11 +15,6 @@ from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.tasks.openDeviceTask import OpenDeviceTask
 
 
-@pytest.fixture
-def blackboard():
-    return BlackBoard(Mock(spec=CryptoState))
-
-
 def test_create_harvest(blackboard: BlackBoard):
     t = harvest.Harvest()
     assert t is not None
@@ -50,7 +45,6 @@ def test_execute_device_task(blackboard: BlackBoard):
     mock_inverter.connect.return_value = True
     mock_inverter.get_backoff_time_ms.return_value = 1000
     mock_inverter.get_device_mode.return_value = DeviceMode.READ
-
 
     t = deviceTask.DeviceTask(0, blackboard, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
@@ -171,7 +165,7 @@ def test_execute_harvest_no_transport():
     assert len(transport.barn) == 11
 
 
-def test_execute_harvest_device_terminated():
+def test_execute_harvest_device_terminated(blackboard: BlackBoard):
     mock_inverter = Mock(spec=ICom)
     registers = {"1": "1717"}
     mock_inverter.read_harvest_data.return_value = registers
@@ -179,7 +173,7 @@ def test_execute_harvest_device_terminated():
     mock_inverter.get_backoff_time_ms.return_value = 1000
     mock_inverter.get_device_mode.return_value = DeviceMode.READ
 
-    t = deviceTask.DeviceTask(0, BlackBoard(Mock(spec=CryptoState)), mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
+    t = deviceTask.DeviceTask(0, blackboard, mock_inverter,  harvestTransport.DefaultHarvestTransportFactory())
     ret = t.execute(17)
     assert t in ret
     assert t.barn[max(t.barn.keys())] == registers

@@ -15,11 +15,6 @@ def control_message():
 
 
 @pytest.fixture
-def blackboard():
-    return BlackBoard(Mock(spec=CryptoState))
-
-
-@pytest.fixture
 def open_device():
     device = Mock(spec=ICom)
     device.is_open.return_value = True

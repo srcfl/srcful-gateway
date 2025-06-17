@@ -37,11 +37,6 @@ def mock_finish():
     pass
 
 
-@pytest.fixture
-def bb():
-    return BlackBoard(Mock(spec=CryptoState))
-
-
 @patch.object(BaseHTTPRequestHandler, "finish")
 @patch.object(BaseHTTPRequestHandler, "handle")
 @patch.object(BaseHTTPRequestHandler, "setup")

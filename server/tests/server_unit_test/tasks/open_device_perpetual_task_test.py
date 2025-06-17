@@ -21,11 +21,6 @@ def set_up_listeners(blackboard: BlackBoard):
 
 
 @pytest.fixture
-def bb():
-    return BlackBoard(Mock(spec=CryptoState))
-
-
-@pytest.fixture
 def modbus_devices():
     devices: list[Modbus] = []
 

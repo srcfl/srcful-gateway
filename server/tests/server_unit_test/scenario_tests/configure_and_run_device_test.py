@@ -10,9 +10,9 @@ from server.tasks.harvestFactory import HarvestFactory
 import server.tests.config_defaults as cfg
 
 
-def test_harvest_from_two_devices_with_one_device_reconnection():
+def test_harvest_from_two_devices_with_one_device_reconnection(bb):
     # Setup
-    bb = BlackBoard(Mock(spec=CryptoState))
+
     HarvestFactory(bb)
 
     # Create and connect first device
