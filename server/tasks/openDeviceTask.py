@@ -24,7 +24,6 @@ class OpenDeviceTask(Task):
 
         try:
             if self.device.connect():
-
                 if self.bb.devices.contains(self.device) and not self.device.is_open():
                     message = "Device is already in the blackboard, no action needed"
                     logger.error(message)

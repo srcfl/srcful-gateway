@@ -17,6 +17,8 @@ from server.web.socket.control.control_task_subscription import ControlSubscript
 from server.app.settings_device_listener import SettingsDeviceListener
 from server.app.blackboard import BlackBoard
 from server.tasks.discoverHostsTask import DiscoverHostsTask
+from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
+from server.devices.IComFactory import IComFactory
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +68,18 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
 
     scheduler.add_task(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
+
+    # # Check if there are any connections in the database and start perpetual tasks for each connection
+    # connections = bb.storage.get_connections()
+    # if connections is not None:
+    #     logger.info("Found %d connections in the database", len(connections))
+    #     for connection in connections:
+    #         logger.info("Connection: %s", connection)
+    #         try:
+    #             com = IComFactory.create_com(connection)
+    #             bb.add_task(DevicePerpetualTask(bb.time_ms(), bb, com))
+    #         except Exception as e:
+    #             logger.error("Error creating ICom object for connection: %s", e)
 
     # put some initial tasks in the queue
     scheduler.add_task(GetSettingsTask(bb.time_ms() + 30000, bb))

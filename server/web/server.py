@@ -16,7 +16,7 @@ logger.setLevel(logging.INFO)
 class Endpoints:
     def __init__(self):
         self.api_get_dict = {
-            #"dee": handler.get.dee.Handler(),
+            # "dee": handler.get.dee.Handler(),
 
             "crypto": handler.get.crypto.Handler(),
             "crypto/revive": handler.get.crypto.ReviveHandler(),
@@ -24,6 +24,8 @@ class Endpoints:
             "hello": handler.get.hello.Handler(),
             "name": handler.get.name.Handler(),
             "logger": handler.get.logger.Handler(),
+
+            "connections": handler.get.connections.Handler(),
 
             "inverter": handler.get.inverter.Handler(),
             "inverter/modbus": handler.get.modbus.ModbusHandler(),

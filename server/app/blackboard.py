@@ -15,6 +15,7 @@ from server.tasks.itask import ITask
 from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
 from server.network.network_utils import HostInfo
+from server.storage.gateway_storage import GatewayStorage
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -40,6 +41,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     _available_devices: list[ICom]
     _available_hosts: list[HostInfo]
     _tasks: list[ITask]
+    _storage: GatewayStorage
 
     def __init__(self, crypto_state: CryptoState):
         self._tasks = []
@@ -54,6 +56,11 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._crypto_state = crypto_state
         self._available_devices = []
         self._available_hosts = []
+        self._storage = GatewayStorage()
+
+    @property
+    def storage(self) -> GatewayStorage:
+        return self._storage
 
     def get_version(self) -> str:
         return "0.22.6"
