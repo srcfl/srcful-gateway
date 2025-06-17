@@ -4,6 +4,10 @@
 
 This document specifies robustness test requirements for the Blixt inverter gateway system. Blixt serves as a critical bridge between inverters and internet connectivity, requiring reliable operation under various network conditions and failure scenarios. The gateway must maintain inverter communication and data integrity regardless of internet connectivity status.
 
+While following a spec is good, as a tester you need to be creative in setups and situations. The idea is not to mechanically follow a spec, and ticking the boxes, rather it is to give an as true view of the status of the Blixt as possible.
+
+Do not hesitate to add test cases, procedures, details tips and trix to the specification.
+
 ## Robustness Testing
 
 #### 1.1 Network Connectivity Tests
@@ -275,6 +279,116 @@ TODO
 
 ## Test Reporting
 
+Start each report with a table of testcases/variants executed, and their overall result, Pass, Fail, and a brief comment. Details can follow. Not all tests need to be executed for every report. Try to test things that are not well tested.
+
+### File Naming Standard
+
+Test reports should follow this naming convention:
+```rob-<test-ids>-<sequence>.md
+```
+
+Examples:
+- `rob-013-014-001.md` (covers ROB-013 and ROB-014)
+- `rob-002-001.md` (covers ROB-002)
+- `rob-013-014-002.md` (another report covering ROB-013 and ROB-014)
+
+Note: Since reports are stored in git, the following metadata is automatically available:
+- Author (from git commit)
+- Date (from git commit)
+- Version history (from git history)
+- Related commits and changes
+
+The test IDs in the filename should be the actual test case IDs from this specification (e.g., ROB-013). This makes it easy to:
+- Find all reports for a specific test case
+- Understand exactly what was tested
+- Track test coverage over time
+- Link directly to the test specification
+
+### Example Test Report
+
+```markdown
+# Blixt Robustness Test Report
+**Date**: 2024-03-15  
+**Tester**: John Doe (JD)  
+**Firmware Version**: v1.2.3  
+**Test Focus**: Inverter Connectivity and Network Recovery  
+**Test Duration**: 4 hours
+
+## Test Summary Table
+
+| Test ID | Variant | Result | Comment |
+|:--------|:--------|:-------|:--------|
+| ROB-013 | Physical disconnect | PASS | Reconnected in 3m 45s |
+| ROB-013 | Network interface failure | PASS | Reconnected in 4m 12s |
+| ROB-013 | Inverter power cycle | PASS | Reconnected in 2m 58s |
+| ROB-014 | Single inverter disconnect | PASS | Other inverters unaffected |
+| ROB-014 | Multiple simultaneous disconnects | FAIL | 2 inverters failed to reconnect within 6m |
+| ROB-015 | Pattern A (2-min cycles) | PASS | Stable reconnection pattern |
+| ROB-015 | Pattern B (Random intervals) | PASS | No resource exhaustion observed |
+| ROB-002 | Internet recovery after 1h offline | PASS | All buffered data uploaded successfully |
+
+## Detailed Results
+
+### ROB-014 Multiple Inverter Disconnect Failure
+**Issue Description**: When 3 inverters were disconnected simultaneously, 2 failed to reconnect within the 6-minute requirement.
+
+**Test Setup**:
+- 5 inverters connected to Blixt
+- All inverters actively sending data
+- Simultaneous physical disconnection of 3 inverters
+- Network monitoring enabled
+
+**Observed Behavior**:
+- 1 inverter reconnected at 4m 12s
+- 2 inverters failed to reconnect until manual intervention
+- System logs showed connection attempts but increasing delays
+- Resource monitoring showed CPU spike during reconnection attempts
+
+**Root Cause Analysis**:
+- Connection attempts were being queued sequentially
+- Each attempt was waiting for previous timeout
+- No parallel connection attempts implemented
+
+**Recommendations**:
+1. Implement parallel connection attempts for multiple inverters
+2. Add connection attempt timeout configuration
+3. Consider implementing connection attempt backoff strategy
+
+## System Metrics
+
+### Resource Usage During Test
+- CPU: Average 45%, Peak 92% during multiple reconnection attempts
+- Memory: Stable at 256MB, no leaks observed
+- Storage: 2.3GB used for buffered data during offline period
+
+### Performance Impact
+- Boot time: Consistent at 85s
+- Reconnection attempts: Average 3.5 minutes
+- Data collection: No gaps during stable connections
+
+## Test Spec Improvements
+
+1. Add specific resource monitoring requirements for ROB-014
+2. Include maximum acceptable CPU usage during reconnection attempts
+3. Add test for connection attempt queuing behavior
+4. Specify minimum number of inverters for multiple inverter tests
+
+## Reproducibility
+
+To reproduce the multiple inverter disconnect issue:
+1. Connect 5 inverters to Blixt
+2. Ensure all inverters are actively sending data
+3. Physically disconnect 3 inverters simultaneously
+4. Monitor system logs and resource usage
+5. Expected failure: 2 inverters will not reconnect within 6 minutes
+
+## Follow-up Actions
+
+1. [ ] Implement parallel connection attempts
+2. [ ] Add connection attempt timeout configuration
+3. [ ] Retest with modified connection handling
+4. [ ] Update test specification with new requirements
+
 Each test execution must include:
 - **Test Metadata**: Execution date, duration, Blixt firmware version, test environment details
 - **Detailed Results**: Test outcomes with precise timestamps and measurements
@@ -283,6 +397,7 @@ Each test execution must include:
 - **Log Analysis**: Summary of significant log entries and error patterns
 - **Recommendations**: Suggested improvements or follow-up testing requirements
 - **Reproducibility**: Sufficient detail to reproduce any identified issues
+- **Test Spec Improvement**: Improve the test spec in any way to make it more clear, give hints and tips for testing.
 
 ## Future Test Areas (TODO)
 
