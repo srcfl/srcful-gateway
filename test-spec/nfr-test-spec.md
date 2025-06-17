@@ -284,7 +284,8 @@ Start each report with a table of testcases/variants executed, and their overall
 ### File Naming Standard
 
 Test reports should follow this naming convention:
-```rob-<test-ids>-<sequence>.md
+```
+rob-<test-ids>-<sequence>.md
 ```
 
 Examples:
