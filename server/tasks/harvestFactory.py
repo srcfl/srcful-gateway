@@ -19,10 +19,9 @@ class HarvestFactory:
     def add_device(self, com: ICom):
         """Add the device to the blackboard and create a harvest task and save it to the settings"""
         # Save the connection to persistent storage
-        device_config = com.get_config()
-        logger.debug(f"Attempting to save connection: {device_config}")
+        logger.debug(f"Attempting to save connection: {com.get_config()}")
 
-        if self.bb.storage.add_connection(device_config):
+        if self.bb.storage.add_connection(com):
             logger.info(f"Connection saved for device {com.get_name()} : {com.get_SN()}")
         else:
             logger.warning(f"Failed to save connection for device {com.get_name()} : {com.get_SN()}")

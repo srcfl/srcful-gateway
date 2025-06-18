@@ -2,6 +2,8 @@ import json
 import sqlite3
 import logging
 from typing import Dict, Any, List, Optional
+from server.devices.ICom import ICom
+from server.devices.IComFactory import IComFactory
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -23,24 +25,24 @@ class GatewayStorage:
                 )
             ''')
 
-    # Just force everything to have an sn :skull:
-    def _get_serial_number(self, connection: Dict[str, Any]) -> Optional[str]:
-        """Helper method to extract serial number from connection config.
-        Supports both 'sn' (for inverters) and 'meter_serial_number' (for P1 meters)."""
-        if 'sn' in connection and connection.get('sn'):
-            return connection.get('sn')
-        elif 'meter_serial_number' in connection and connection.get('meter_serial_number'):
-            return connection.get('meter_serial_number')
-        return None
+    def add_connection(self, device: ICom) -> bool:
+        """Add a device connection to storage.
 
-    def add_connection(self, connection: Dict[str, Any]) -> bool:
-        if not isinstance(connection, dict):
-            logger.error(f"Invalid connection data: {connection}")
+        Args:
+            device: ICom object
+
+        Returns:
+            True if connection was added/updated successfully, False otherwise
+        """
+        if not isinstance(device, ICom):
+            logger.error(f"Invalid device type: {type(device)}. Expected ICom object.")
             return False
 
-        sn = self._get_serial_number(connection)
+        connection = device.get_config()
+        sn = device.get_SN()
+
         if not sn:
-            logger.error(f"Invalid connection data - no serial number found: {connection}")
+            logger.error(f"Invalid device - no serial number found: {connection}")
             return False
 
         try:
@@ -58,12 +60,18 @@ class GatewayStorage:
 
                 # Check if SN already exists and update it
                 updated = False
-                for i, c in enumerate(connections):
-                    if isinstance(c, dict) and self._get_serial_number(c) == sn:
-                        connections[i] = connection
-                        updated = True
-                        logger.info(f"Updated existing connection for SN: {sn}")
-                        break
+                for i, stored_config in enumerate(connections):
+                    if isinstance(stored_config, dict):
+                        try:
+                            stored_device = IComFactory.create_com(stored_config)
+                            if stored_device.get_SN() == sn:
+                                connections[i] = connection
+                                updated = True
+                                logger.info(f"Updated existing connection for SN: {sn}")
+                                break
+                        except Exception as e:
+                            logger.warning(f"Could not create device from stored config: {e}")
+                            continue
 
                 # If not found, add as new connection
                 if not updated:
@@ -87,12 +95,18 @@ class GatewayStorage:
                 if not isinstance(connections, list):
                     return False
 
-                    # Find the connection to remove
+                # Find the connection to remove
                 connection_to_remove = None
-                for connection in connections:
-                    if isinstance(connection, dict) and self._get_serial_number(connection) == sn:
-                        connection_to_remove = connection
-                        break
+                for stored_config in connections:
+                    if isinstance(stored_config, dict):
+                        try:
+                            stored_device = IComFactory.create_com(stored_config)
+                            if stored_device.get_SN() == sn:
+                                connection_to_remove = stored_config
+                                break
+                        except Exception as e:
+                            logger.warning(f"Could not create device from stored config: {e}")
+                            continue
 
                 if connection_to_remove is None:
                     return False

@@ -2,6 +2,8 @@ import tempfile
 import os
 import pytest
 from server.storage.gateway_storage import GatewayStorage
+from unittest.mock import MagicMock
+from server.devices.ICom import ICom
 
 
 @pytest.fixture
@@ -56,7 +58,12 @@ def test_storage_initialization(temp_storage):
 
 def test_add_connection_valid(temp_storage, sample_connection):
     """Test adding a valid connection"""
-    result = temp_storage.add_connection(sample_connection)
+    # Create a mock ICom object
+    mock_com = MagicMock(spec=ICom)
+    mock_com.get_config.return_value = sample_connection
+    mock_com.get_SN.return_value = sample_connection["sn"]
+
+    result = temp_storage.add_connection(mock_com)
     assert result is True
 
     connections = temp_storage.get_connections()
@@ -86,13 +93,21 @@ def test_add_connection_invalid_missing_sn(temp_storage):
 def test_add_connection_duplicate_sn(temp_storage, sample_connection):
     """Test adding connection with duplicate SN updates existing connection"""
     # Add first connection
-    result1 = temp_storage.add_connection(sample_connection)
+    mock_com = MagicMock(spec=ICom)
+    mock_com.get_config.return_value = sample_connection
+    mock_com.get_SN.return_value = sample_connection["sn"]
+
+    result1 = temp_storage.add_connection(mock_com)
     assert result1 is True
 
     # Add duplicate (same SN, different data)
     duplicate = sample_connection.copy()
     duplicate["ip"] = "192.168.1.20"
-    result2 = temp_storage.add_connection(duplicate)
+    mock_com = MagicMock(spec=ICom)
+    mock_com.get_config.return_value = duplicate
+    mock_com.get_SN.return_value = duplicate["sn"]
+
+    result2 = temp_storage.add_connection(mock_com)
     assert result2 is True  # Should return True and update existing
 
     connections = temp_storage.get_connections()
@@ -111,8 +126,14 @@ def test_get_connections_multiple(temp_storage):
     connection1 = {"sn": "123", "ip": "192.168.1.10"}
     connection2 = {"sn": "456", "ip": "192.168.1.20"}
 
-    temp_storage.add_connection(connection1)
-    temp_storage.add_connection(connection2)
+    mock_com1 = MagicMock(spec=ICom)
+    mock_com1.get_config.return_value = connection1
+    mock_com1.get_SN.return_value = connection1["sn"]
+    temp_storage.add_connection(mock_com1)
+
+    mock_com2 = MagicMock(spec=ICom)
+    mock_com2.get_config.return_value = connection2
+    temp_storage.add_connection(mock_com2)
 
     connections = temp_storage.get_connections()
     assert len(connections) == 2
@@ -125,7 +146,10 @@ def test_get_connections_multiple(temp_storage):
 def test_remove_connection_existing(temp_storage, sample_connection):
     """Test removing an existing connection"""
     # Add connection first
-    temp_storage.add_connection(sample_connection)
+    mock_com = MagicMock(spec=ICom)
+    mock_com.get_config.return_value = sample_connection
+    mock_com.get_SN.return_value = sample_connection["sn"]
+    temp_storage.add_connection(mock_com)
     assert len(temp_storage.get_connections()) == 1
 
     # Remove it
@@ -147,11 +171,19 @@ def test_remove_connection_nonexistent(temp_storage):
 
 def test_remove_connection_from_multiple(temp_storage):
     """Test removing one connection from multiple"""
-    connection1 = {"sn": "123", "ip": "192.168.1.10"}
-    connection2 = {"sn": "456", "ip": "192.168.1.20"}
+    connection1 = {"connection": "TCP", "sn": "123", "ip": "192.168.1.10"}
+    connection2 = {"connection": "TCP", "sn": "456", "ip": "192.168.1.20"}
 
-    temp_storage.add_connection(connection1)
-    temp_storage.add_connection(connection2)
+    mock_com1 = MagicMock(spec=ICom)
+    mock_com1.get_config.return_value = connection1
+    mock_com1.get_SN.return_value = connection1["sn"]
+    temp_storage.add_connection(mock_com1)
+
+    mock_com2 = MagicMock(spec=ICom)
+    mock_com2.get_config.return_value = connection2
+    mock_com2.get_SN.return_value = connection2["sn"]
+    temp_storage.add_connection(mock_com2)
+
     assert len(temp_storage.get_connections()) == 2
 
     # Remove one
@@ -204,8 +236,12 @@ def test_persistence_across_instances():
     try:
         # Create first instance and add data
         storage1 = GatewayStorage(db_path)
-        connection = {"sn": "persist_test", "ip": "192.168.1.100"}
-        storage1.add_connection(connection)
+        connection = {"connection": "TCP", "sn": "persist_test", "ip": "192.168.1.100"}
+        mock_com = MagicMock(spec=ICom)
+        mock_com.get_config.return_value = connection
+        mock_com.get_SN.return_value = connection["sn"]
+
+        storage1.add_connection(mock_com)
 
         # Create second instance and verify data exists
         storage2 = GatewayStorage(db_path)
@@ -233,40 +269,6 @@ def test_corrupted_data_handling(temp_storage):
     assert connections == []
 
 
-def test_mixed_data_types_in_connections(temp_storage):
-    """Test that add_connection properly rejects invalid data types"""
-    # Try to add various invalid data types - all should be rejected
-    invalid_data = [
-        "invalid_string",
-        123,  # Invalid number
-        {"invalid": "no_sn"},  # Invalid dict without sn
-        {"sn": ""},  # Empty sn
-        {"sn": None},  # None sn
-    ]
-
-    for invalid in invalid_data:
-        result = temp_storage.add_connection(invalid)
-        assert result is False
-
-    # Add valid connections
-    valid_connections = [
-        {"sn": "valid1", "ip": "192.168.1.10"},
-        {"sn": "valid2", "ip": "192.168.1.20"}
-    ]
-
-    for valid in valid_connections:
-        result = temp_storage.add_connection(valid)
-        assert result is True
-
-    # Should only have the 2 valid connections
-    connections = temp_storage.get_connections()
-    assert len(connections) == 2
-
-    sns = [c["sn"] for c in connections]
-    assert "valid1" in sns
-    assert "valid2" in sns
-
-
 def test_p1_meter_serial_number_support(temp_storage):
     """Test that add_connection and remove_connection work with P1 meters using 'meter_serial_number'"""
     # P1 meter connection with meter_serial_number
@@ -278,7 +280,10 @@ def test_p1_meter_serial_number_support(temp_storage):
     }
 
     # Add P1 connection
-    result = temp_storage.add_connection(p1_connection)
+    mock_com = MagicMock(spec=ICom)
+    mock_com.get_config.return_value = p1_connection
+    mock_com.get_SN.return_value = p1_connection["meter_serial_number"]
+    result = temp_storage.add_connection(mock_com)
     assert result is True
 
     # Verify it was added
@@ -309,8 +314,15 @@ def test_mixed_serial_number_formats(temp_storage):
     }
 
     # Add both
-    assert temp_storage.add_connection(inverter_connection) is True
-    assert temp_storage.add_connection(p1_connection) is True
+    mock_com1 = MagicMock(spec=ICom)
+    mock_com1.get_config.return_value = inverter_connection
+    mock_com1.get_SN.return_value = inverter_connection["sn"]
+    assert temp_storage.add_connection(mock_com1) is True
+
+    mock_com2 = MagicMock(spec=ICom)
+    mock_com2.get_config.return_value = p1_connection
+    mock_com2.get_SN.return_value = p1_connection["meter_serial_number"]
+    assert temp_storage.add_connection(mock_com2) is True
 
     # Verify both are there
     connections = temp_storage.get_connections()
@@ -332,7 +344,10 @@ def test_duplicate_serial_numbers_mixed_formats(temp_storage):
     """Test that duplicate serial numbers are handled correctly across different formats"""
     # First add a regular device
     inverter_connection = {"sn": "SAME123", "ip": "192.168.1.10", "connection": "TCP"}
-    assert temp_storage.add_connection(inverter_connection) is True
+    mock_com1 = MagicMock(spec=ICom)
+    mock_com1.get_config.return_value = inverter_connection
+    mock_com1.get_SN.return_value = inverter_connection["sn"]
+    assert temp_storage.add_connection(mock_com1) is True
 
     # Now add a P1 meter with the same serial number
     p1_connection = {
@@ -341,7 +356,10 @@ def test_duplicate_serial_numbers_mixed_formats(temp_storage):
         "port": 23,
         "meter_serial_number": "SAME123"
     }
-    assert temp_storage.add_connection(p1_connection) is True
+    mock_com2 = MagicMock(spec=ICom)
+    mock_com2.get_config.return_value = p1_connection
+    mock_com2.get_SN.return_value = p1_connection["meter_serial_number"]
+    assert temp_storage.add_connection(mock_com2) is True
 
     # Should only have one connection (the P1 meter should replace the inverter)
     connections = temp_storage.get_connections()

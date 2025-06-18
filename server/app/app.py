@@ -69,17 +69,17 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     scheduler.add_task(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
 
-    # # Check if there are any connections in the database and start perpetual tasks for each connection
-    # connections = bb.storage.get_connections()
-    # if connections is not None:
-    #     logger.info("Found %d connections in the database", len(connections))
-    #     for connection in connections:
-    #         logger.info("Connection: %s", connection)
-    #         try:
-    #             com = IComFactory.create_com(connection)
-    #             bb.add_task(DevicePerpetualTask(bb.time_ms(), bb, com))
-    #         except Exception as e:
-    #             logger.error("Error creating ICom object for connection: %s", e)
+    # Check if there are any connections in the database and start perpetual tasks for each connection
+    connections = bb.storage.get_connections()
+    if connections is not None:
+        logger.info("Found %d connections in the database", len(connections))
+        for connection in connections:
+            logger.info("Connection: %s", connection)
+            try:
+                com = IComFactory.create_com(connection)
+                bb.add_task(DevicePerpetualTask(bb.time_ms(), bb, com))
+            except Exception as e:
+                logger.error("Error creating ICom object for connection: %s", e)
 
     # put some initial tasks in the queue
     scheduler.add_task(GetSettingsTask(bb.time_ms() + 30000, bb))
