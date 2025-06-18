@@ -80,6 +80,10 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
                 bb.add_task(DevicePerpetualTask(bb.time_ms(), bb, com))
             except Exception as e:
                 logger.error("Error creating ICom object for connection: %s", e)
+    else:
+        # No connections, check for connections in the cloud
+        logger.info("No connections found in the database, checking for connections in the cloud")
+        pass
 
     # put some initial tasks in the queue
     scheduler.add_task(GetSettingsTask(bb.time_ms() + 30000, bb))

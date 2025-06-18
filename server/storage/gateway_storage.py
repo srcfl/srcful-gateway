@@ -67,7 +67,7 @@ class GatewayStorage:
                             if stored_device.get_SN() == sn:
                                 connections[i] = connection
                                 updated = True
-                                logger.info(f"Updated existing connection for SN: {sn}")
+                                logger.info(f"Updated existing connection for SN: {sn}. Was: {stored_config}, and now: {connection}")
                                 break
                         except Exception as e:
                             logger.warning(f"Could not create device from stored config: {e}")
