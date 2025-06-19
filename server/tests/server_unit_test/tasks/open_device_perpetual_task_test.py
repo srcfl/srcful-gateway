@@ -404,3 +404,87 @@ def test_device_with_sn_none(bb: BlackBoard):
     assert task2 is None
 
     assert len(bb.devices.lst) == 1
+
+
+# #########################################################################################################################
+# Test that a device that is in the settings but not in the storage is added to the storage
+# This is a migration scenario from 0.22.6 to 0.22.7
+# From 0.22.8, the local storage will be the primary source of connections
+# #########################################################################################################################
+
+
+def test_migration_scenario(bb: BlackBoard):
+    set_up_listeners(bb)
+
+    # create a device with a sn and a connection in the settings
+    device = MagicMock(spec=ICom)
+    device.get_SN.return_value = "123123"
+    device.get_config.return_value = {"connection": "SUNSPEC", "ip": "192.168.1.15", "sn": "123123", "mac": "22:af:0b:72:aa:fe", "port": 1502, "slave_id": 2}
+    device.connect.return_value = True
+    device.find_device.return_value = None
+
+    bb.settings.devices._connections.append(device.get_config())
+
+    task = DevicePerpetualTask(0, bb, device)
+    task.execute(0)
+
+    assert device in bb.devices.lst
+    assert len(bb.devices.lst) == 1
+
+    assert len(bb.storage.get_connections()) == 1  # Ensure that the device is added to the storage
+
+
+def test_migration_several_devices(bb: BlackBoard):
+    set_up_listeners(bb)
+
+    # create a device with a sn and a connection in the settings
+    device1 = MagicMock(spec=ICom)
+    device1.get_SN.return_value = "123123"
+    device1.get_config.return_value = {"connection": "SUNSPEC", "ip": "192.168.1.15", "sn": "123123", "mac": "22:af:0b:72:aa:fe", "port": 1502, "slave_id": 2}
+    device1.connect.return_value = True
+    device1.find_device.return_value = None
+
+    bb.settings.devices._connections.append(device1.get_config())
+
+    task = DevicePerpetualTask(0, bb, device1)
+    task.execute(0)
+
+    assert device1 in bb.devices.lst
+    assert len(bb.devices.lst) == 1
+
+    assert len(bb.storage.get_connections()) == 1
+    assert bb.storage.connection_exists(device1)
+
+    device2 = MagicMock(spec=ICom)
+    device2.get_SN.return_value = "123124"
+    device2.get_config.return_value = {"connection": "SUNSPEC", "ip": "192.168.1.15", "sn": "123124", "mac": "22:af:0b:72:aa:fe", "port": 1502, "slave_id": 2}
+    device2.connect.return_value = True
+    device2.find_device.return_value = None
+
+    bb.settings.devices._connections.append(device2.get_config())
+
+    task2 = DevicePerpetualTask(0, bb, device2)
+    task2.execute(0)
+
+    assert device2 in bb.devices.lst
+    assert len(bb.devices.lst) == 2
+
+    assert len(bb.storage.get_connections()) == 2  # Ensure that the device is added to the storage
+    assert bb.storage.connection_exists(device2)
+
+    device3 = MagicMock(spec=ICom)
+    device3.get_SN.return_value = "123125"
+    device3.get_config.return_value = {"connection": "P1Telnet", "ip": "192.168.1.15", "port": 80, "meter_serial_number": "123125"}
+    device3.connect.return_value = True
+    device3.find_device.return_value = None
+
+    bb.settings.devices._connections.append(device3.get_config())
+
+    task3 = DevicePerpetualTask(0, bb, device3)
+    task3.execute(0)
+
+    assert device3 in bb.devices.lst
+    assert len(bb.devices.lst) == 3
+
+    assert len(bb.storage.get_connections()) == 3  # Ensure that the device is added to the storage
+    assert bb.storage.connection_exists(device3)

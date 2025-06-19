@@ -137,6 +137,14 @@ class GatewayStorage:
             logger.error(f"Failed to get connections: {e}")
             return []
 
+    def connection_exists(self, device: ICom) -> bool:
+        connections = self.get_connections()
+        for connection in connections:
+            d = IComFactory.create_com(connection)
+            if d.get_SN() == device.get_SN():
+                return True
+        return False
+
     def save_settings(self, settings: Dict[str, Any]) -> bool:
         if not isinstance(settings, dict):
             return False
