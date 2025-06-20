@@ -136,7 +136,7 @@ class ModbusSunspec(TCPDevice):
         elif 802 in self.client.models:
             self.battery = self.client.models[802][0]
 
-        return len(self.client.models) > 0 and self.mac != NetworkUtils.INVALID_MAC
+        return len(self.client.models) > 0
 
     def _disconnect(self) -> None:
         self.client.disconnect()

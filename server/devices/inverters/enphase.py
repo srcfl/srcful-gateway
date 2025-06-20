@@ -162,9 +162,7 @@ class Enphase(TCPDevice):
             logger.error(f"Failed to connect to {self.ip}. Reason: {response.text}")
             return False
 
-        self.mac = NetworkUtils.get_mac_from_ip(self.ip)
-
-        return self.mac != NetworkUtils.INVALID_MAC
+        return True
 
     def _get_bearer_token(self, serial: str, username: str, password: str) -> str:
         envoy_serial = serial
