@@ -1,0 +1,19 @@
+entryPoints:
+  web:
+    address: ":80"
+  traefik:
+    address: ":8080"
+
+log:
+  level: DEBUG
+
+accessLog: {}
+
+api:
+  dashboard: true
+  insecure: true
+
+providers:
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true

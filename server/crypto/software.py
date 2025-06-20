@@ -9,6 +9,8 @@ import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 def load_env_file(file_path):
     env_vars = {}
@@ -19,6 +21,15 @@ def load_env_file(file_path):
                 env_vars[key] = value.strip('"').strip("'")
     return env_vars
 
+def load_env_vars():
+    # load from file if exists, otherwise load from environment variables
+    try:
+        env_vars = load_env_file('test_config.env')
+    except FileNotFoundError:
+        logger.info("No test_config.env file found, using environment variables")
+        env_vars = os.environ
+    return env_vars
+
 
 def load_private_key_from_hex(private_key_hex):
     private_value = int(private_key_hex, 16)
@@ -26,7 +37,7 @@ def load_private_key_from_hex(private_key_hex):
 
     # check that the private key matches the public key
     # Fetch the expected public key from the environment variable
-    env_vars = load_env_file('test_config.env')
+    env_vars = load_env_vars()
     expected_public_key = env_vars.get('TEST_PUBLIC_KEY')
     if not expected_public_key:
         raise ValueError("TEST_PUBLIC_KEY variable not set in test_config.env")
@@ -40,11 +51,13 @@ def load_private_key_from_hex(private_key_hex):
 
 
 def get_test_private_key_serial():
-    env_vars = load_env_file('test_config.env')
-    private_key_hex = env_vars.get('TEST_PRIVATE_KEY')
-    if not private_key_hex:
-        raise ValueError("TEST_PRIVATE_KEY variable not set in test_config.env")
-    return load_private_key_from_hex(private_key_hex), bytes.fromhex(env_vars.get('TEST_SERIAL'))
+    env_vars = load_env_vars()
+    if "TEST_SERIAL" in env_vars and "TEST_PRIVATE_KEY" in env_vars:
+        logger.info("Using test private key and serial number")
+        return load_private_key_from_hex(env_vars.get('TEST_PRIVATE_KEY')), bytes.fromhex(env_vars.get('TEST_SERIAL'))
+    else:
+        logger.error("TEST_SERIAL or TEST_PRIVATE_KEY variable not set in test_config.env")
+        raise ValueError("TEST_SERIAL or TEST_PRIVATE_KEY variable not set in test_config.env")
 
 
 class SoftwareCrypto(CryptoInterface):

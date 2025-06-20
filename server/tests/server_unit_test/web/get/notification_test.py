@@ -3,10 +3,12 @@ from unittest.mock import Mock
 import pytest
 from server.crypto.crypto_state import CryptoState
 from server.web.handler.get.notification import ListHandler, MessageHandler
-from server.app.message import Message 
+from server.app.message import Message
 from server.app.blackboard import BlackBoard
 
 # Assuming Message class has a constructor accepting these parameters
+
+
 @pytest.fixture
 def mock_messages():
     return [
@@ -15,13 +17,14 @@ def mock_messages():
         Message("Info message 3", Message.Type.Info, 1617890125, 3),
     ]
 
+
 @pytest.fixture
-def mock_request_data(mock_messages):
+def mock_request_data(mock_messages, blackboard):
     class MockRequestData:
         def __init__(self, messages):
             self.post_params = {}
-            self.bb = BlackBoard(Mock(spec=CryptoState))
-            
+            self.bb = blackboard
+
             messages[0] = self.bb.add_error(messages[0].message)
             messages[1] = self.bb.add_warning(messages[1].message)
             messages[2] = self.bb.add_info(messages[2].message)
@@ -29,6 +32,8 @@ def mock_request_data(mock_messages):
     return MockRequestData(mock_messages)
 
 # Testing ListHandler
+
+
 def test_list_handler_success(mock_request_data):
     list_handler = ListHandler()
     expected_ids = [m.id for m in mock_request_data.bb.messages]
@@ -41,11 +46,13 @@ def test_list_handler_success(mock_request_data):
     assert response_data["ids"] == expected_ids
 
 # Testing MessageHandler success case
+
+
 def test_message_handler_success(mock_request_data):
     message_handler = MessageHandler()
     test_id = mock_request_data.bb.messages[0].id
     mock_request_data.post_params['id'] = str(test_id)
-    
+
     expected_message = next(m for m in mock_request_data.bb.messages if m.id == test_id)
 
     status_code, response = message_handler.do_get(mock_request_data)
@@ -60,6 +67,8 @@ def test_message_handler_success(mock_request_data):
     }
 
 # Testing MessageHandler not found case
+
+
 def test_message_handler_not_found(mock_request_data):
     message_handler = MessageHandler()
     test_id = 99  # Assuming this ID does not exist in mock_messages

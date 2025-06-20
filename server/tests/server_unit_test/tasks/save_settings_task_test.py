@@ -11,11 +11,6 @@ import server.crypto.crypto as crypto
 
 
 @pytest.fixture
-def blackboard():
-    return BlackBoard(Mock(spec=CryptoState))
-
-
-@pytest.fixture
 def settings():
     ret = Settings()
     ret.harvest.add_endpoint("https://example.com")

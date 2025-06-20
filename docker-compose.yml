@@ -7,15 +7,41 @@ x-environment: &shared_env
   - REST_SERVICE_PORT_INTERNAL: 80 # should correspond to the port in the web service below
 
 services:
+
+  # Reverse proxy service
+  traefik:
+    build: ./traefik
+    container_name: eGW-traefik
+    ports:
+      - "80:80"
+      - "8080:8080"
+    restart: always
+    networks:
+      - web-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # React web client
+  client-web:
+    build: ./client-web
+    container_name: eGW-client-web
+    restart: always
+    networks:
+      - web-network
+    ports:
+      - "5005:80"  # Temporary direct access for testing
+
   web:
     build: ./server
     container_name: eGW-web
     ports:
-      - 80:5000
+      - 5000:5000
     restart: always
     network_mode: host
     environment:
       <<: *shared_env
+      REST_SERVICE_PORT: 5000
+      REST_SERVICE_PORT_INTERNAL: 5000
     devices:
       - /dev/i2c-1
     labels:
@@ -73,3 +99,7 @@ services:
 
 volumes:
   srcful-data:
+
+networks:
+  web-network:
+    driver: bridge

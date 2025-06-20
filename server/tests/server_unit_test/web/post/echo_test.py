@@ -6,9 +6,11 @@ from server.web.handler.requestData import RequestData
 from server.web.handler.post.echo import Handler
 from server.app.blackboard import BlackBoard
 
+
 @pytest.fixture
-def request_data():
-    return RequestData(BlackBoard(Mock(spec=CryptoState)), {}, {}, {"sent": "thedata"})
+def request_data(blackboard):
+    return RequestData(blackboard, {}, {}, {"sent": "thedata"})
+
 
 def test_logger(request_data):
     handler = Handler()

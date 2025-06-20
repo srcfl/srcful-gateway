@@ -7,11 +7,7 @@ from server.web.handler.requestData import RequestData
 from server.app.blackboard import BlackBoard
 
 
-@pytest.fixture
-def bb():
-    return BlackBoard(Mock(spec=CryptoState))
-
-# Test that doPost parses commands into tasks correctly 
+# Test that doPost parses commands into tasks correctly
 def test_do_post(bb: BlackBoard):
     inverter = Mock()
     bb.devices.add(inverter)
@@ -34,7 +30,7 @@ def test_do_post(bb: BlackBoard):
 
     rd = RequestData(bb, {}, {}, post_data)
     response_code, response_body = handler.do_post(rd)
-    
+
     tasks = bb.purge_tasks()
     assert len(tasks) == 1
     task = tasks[0]
@@ -43,12 +39,16 @@ def test_do_post(bb: BlackBoard):
     assert isinstance(task.commands[1], ModbusWriteTask.PauseCommand)
 
 # Test error handling for missing 'commands' field
+
+
 def test_missing_commands(bb: BlackBoard):
     handler = Handler()
     rd = RequestData(bb, {}, {}, {})
     response_code, response_body = handler.do_post(rd)
     assert response_code == 400
 # Test error handling for Missing inverter field
+
+
 def test_missing_inverter(bb: BlackBoard):
     handler = Handler()
     rd = RequestData(bb, {}, {}, {'commands': []})
@@ -56,6 +56,8 @@ def test_missing_inverter(bb: BlackBoard):
     assert response_code == 400
 
 # Test that malformed command objects are handled and an error is returned
+
+
 def test_malformed_commands(bb: BlackBoard):
     handler = Handler()
 

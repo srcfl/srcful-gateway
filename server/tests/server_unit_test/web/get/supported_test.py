@@ -6,9 +6,11 @@ from server.web.handler.get.supported import Handler
 from server.app.blackboard import BlackBoard
 from server.crypto.crypto_state import CryptoState
 
+
 @pytest.fixture
-def request_data():
-    return RequestData(BlackBoard(Mock(spec=CryptoState)), {}, {}, {})
+def request_data(blackboard):
+    return RequestData(blackboard, {}, {}, {})
+
 
 def test_logger(request_data):
     handler = Handler()

@@ -23,11 +23,6 @@ def control_message():
 
 
 @pytest.fixture
-def blackboard():
-    return BlackBoard(Mock(spec=CryptoState))
-
-
-@pytest.fixture
 def cancel_message():
     return BaseMessage(
         {

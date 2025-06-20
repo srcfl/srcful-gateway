@@ -8,7 +8,7 @@ from server.app.blackboard import BlackBoard
 
 
 @pytest.fixture
-def request_data():
+def request_data(blackboard):
     new_settings = {
         "settings": {
             "harvest": {
@@ -16,15 +16,15 @@ def request_data():
             }
         }
     }
-     
-    return RequestData(BlackBoard(Mock(spec=CryptoState)), {}, {}, new_settings)
+
+    return RequestData(blackboard, {}, {}, new_settings)
+
 
 def test_settings(request_data):
 
     handler = Handler()
-    status_code, response = handler.do_post(request_data)  
+    status_code, response = handler.do_post(request_data)
 
     assert status_code == 200
     response = json.loads(response)
     assert response == {'success': True}
-    

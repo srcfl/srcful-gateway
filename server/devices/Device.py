@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from server.devices.ICom import ICom
+from server.devices.ICom import ICom, DeviceMode
 
 
 class Device(ICom, ABC):
@@ -12,6 +12,14 @@ class Device(ICom, ABC):
     def __init__(self):
         super().__init__()
         self.harvest_data = {}
+        self._mode = DeviceMode.READ
+
+    def get_device_mode(self) -> DeviceMode:
+        return self._mode
+
+    def set_device_mode(self) -> None:
+        # generic devices only supports read
+        self._mode = DeviceMode.READ
 
     def is_disconnected(self) -> bool:
         return self._is_disconnected
