@@ -28,7 +28,7 @@ class Handler(GetHandler):
 
     def do_get(self, data: RequestData):
         try:
-            connections = data.bb.storage.get_connections()
+            connections = data.bb.device_storage.get_connections()
             return 200, json.dumps({"connections": connections})
         except Exception as e:
             log.error(f"Error retrieving connections: {str(e)}")

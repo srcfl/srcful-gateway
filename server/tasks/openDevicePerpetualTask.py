@@ -16,7 +16,7 @@ class DevicePerpetualTask(Task):
         # self.old_device: Optional[ICom] = None
 
     def in_storage(self, device: ICom):
-        connections = self.bb.storage.get_connections()
+        connections = self.bb.device_storage.get_connections()
         for connection in connections:
             settings_device = IComFactory.create_com(connection)
             if settings_device.get_SN() == device.get_SN():

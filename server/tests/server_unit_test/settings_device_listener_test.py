@@ -65,7 +65,7 @@ def test_add_duplicate_connections(settings_device_listener):
         mock_device = MagicMock(spec=ICom)
         mock_device.get_config.return_value = connection
         mock_device.get_SN.return_value = connection["sn"]
-        settings_device_listener.blackboard.storage.add_connection(mock_device)
+        settings_device_listener.blackboard.device_storage.add_connection(mock_device)
 
     settings_device_listener._perform_action(ChangeSource.BACKEND)
 
@@ -98,7 +98,7 @@ def test_fetch_device_settings_in_old_format(settings_device_listener: SettingsD
     mock_device = MagicMock(spec=ICom)
     mock_device.get_config.return_value = connection
     mock_device.get_SN.return_value = connection["sn"]
-    settings_device_listener.blackboard.storage.add_connection(mock_device)
+    settings_device_listener.blackboard.device_storage.add_connection(mock_device)
 
     settings_device_listener._perform_action(ChangeSource.BACKEND)  # _connection gets updated at this point to conform to the new format
 

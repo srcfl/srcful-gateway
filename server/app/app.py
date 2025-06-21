@@ -70,7 +70,7 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     scheduler.add_task(SaveStatePerpetualTask(bb.time_ms() + 1000 * 10, bb))
 
     # Check if there are any connections in the database and start perpetual tasks for each connection
-    connections = bb.storage.get_connections()
+    connections = bb.device_storage.get_connections()
     if connections is not None:
         logger.info("Found %d connections in the database", len(connections))
         for connection in connections:

@@ -5,7 +5,7 @@ This module provides shared fixtures that solve the SQLite database issue
 when testing components that use BlackBoard.
 
 PROBLEM:
-BlackBoard now initializes a GatewayStorage with an SQLite database at 
+BlackBoard now initializes a DeviceStorage with an SQLite database at 
 /data/srcful/gateway.db. In test environments, this path doesn't exist 
 or isn't writable, causing sqlite3.OperationalError.
 
@@ -37,7 +37,7 @@ import pytest
 
 from server.app.blackboard import BlackBoard
 from server.crypto.crypto_state import CryptoState
-from server.storage.gateway_storage import GatewayStorage
+from server.storage.gateway_storage import DeviceStorage
 
 
 @pytest.fixture
@@ -60,14 +60,14 @@ def blackboard(temp_db_path):
     This fixture is available to all unit tests and provides a properly
     initialized BlackBoard with a temporary SQLite database.
     """
-    with patch('server.app.blackboard.GatewayStorage') as mock_storage_class:
-        mock_storage_class.return_value = GatewayStorage(temp_db_path)
+    with patch('server.app.blackboard.DeviceStorage') as mock_storage_class:
+        mock_storage_class.return_value = DeviceStorage(temp_db_path)
         return BlackBoard(Mock(spec=CryptoState))
 
 
 @pytest.fixture
 def bb(temp_db_path):
     """Alias for blackboard fixture - shorter name for convenience"""
-    with patch('server.app.blackboard.GatewayStorage') as mock_storage_class:
-        mock_storage_class.return_value = GatewayStorage(temp_db_path)
+    with patch('server.app.blackboard.DeviceStorage') as mock_storage_class:
+        mock_storage_class.return_value = DeviceStorage(temp_db_path)
         return BlackBoard(Mock(spec=CryptoState))

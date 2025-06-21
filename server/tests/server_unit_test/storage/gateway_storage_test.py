@@ -1,7 +1,7 @@
 import tempfile
 import os
 import pytest
-from server.storage.gateway_storage import GatewayStorage
+from server.storage.gateway_storage import DeviceStorage
 from unittest.mock import MagicMock
 from server.devices.ICom import ICom
 
@@ -12,7 +12,7 @@ def temp_storage():
     with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp:
         db_path = tmp.name
 
-    storage = GatewayStorage(db_path)
+    storage = DeviceStorage(db_path)
     yield storage
 
     # Cleanup
@@ -235,7 +235,7 @@ def test_persistence_across_instances():
 
     try:
         # Create first instance and add data
-        storage1 = GatewayStorage(db_path)
+        storage1 = DeviceStorage(db_path)
         connection = {"connection": "TCP", "sn": "persist_test", "ip": "192.168.1.100"}
         mock_com = MagicMock(spec=ICom)
         mock_com.get_config.return_value = connection
@@ -244,7 +244,7 @@ def test_persistence_across_instances():
         storage1.add_connection(mock_com)
 
         # Create second instance and verify data exists
-        storage2 = GatewayStorage(db_path)
+        storage2 = DeviceStorage(db_path)
         connections = storage2.get_connections()
 
         assert len(connections) == 1

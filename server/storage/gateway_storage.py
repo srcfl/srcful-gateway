@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class GatewayStorage:
+class DeviceStorage:
     def __init__(self, db_path: str = "/data/srcful/gateway.db"):
         self.db_path = db_path
         self._init_db()

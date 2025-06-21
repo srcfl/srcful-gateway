@@ -21,7 +21,7 @@ class HarvestFactory:
         # Save the connection to persistent storage
         logger.debug(f"Attempting to save connection: {com.get_config()}")
 
-        if self.bb.storage.add_connection(com):
+        if self.bb.device_storage.add_connection(com):
             logger.info(f"Connection saved for device {com.get_name()} : {com.get_SN()}")
         else:
             logger.warning(f"Failed to save connection for device {com.get_name()} : {com.get_SN()}")
@@ -40,7 +40,7 @@ class HarvestFactory:
             logger.warning("Device %s already disconnected", device)
 
         # Remove connection from persistent storage
-        if self.bb.storage.remove_connection(device.get_SN()):
+        if self.bb.device_storage.remove_connection(device.get_SN()):
             logger.info(f"Connection removed from storage for device {device.get_name()} : {device.get_SN()}")
         else:
             logger.warning(f"Failed to remove connection from storage for device {device.get_name()} : {device.get_SN()}")

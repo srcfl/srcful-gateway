@@ -38,13 +38,13 @@ def test_execute_inverter_added(bb: BlackBoard):
     config = cfg.TCP_CONFIG.copy()
     config['sn'] = "1234567890"
     inverter = IComFactory.create_com(config)
-    bb.storage.add_connection(inverter)
+    bb.device_storage.add_connection(inverter)
 
     # Mock the connection methods for testing
     inverter.connect = Mock(return_value=True)
     inverter.is_open = Mock(return_value=True)
 
-    connections = bb.storage.get_connections()
+    connections = bb.device_storage.get_connections()
 
     task = DevicePerpetualTask(0, bb, inverter)
     ret = task.execute(0)
@@ -61,7 +61,7 @@ def test_retry_on_exception(bb: BlackBoard):
     config = cfg.TCP_CONFIG.copy()
     config['sn'] = "test_device_123"
     inverter = IComFactory.create_com(config)
-    bb.storage.add_connection(inverter)
+    bb.device_storage.add_connection(inverter)
     bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
     inverter.connect = Mock(side_effect=Exception("test"))
     task = DevicePerpetualTask(0, bb, inverter)
@@ -78,7 +78,7 @@ def test_execute_inverter_not_found(bb: BlackBoard):
     config = cfg.TCP_CONFIG.copy()
     config['sn'] = "test_device_456"
     device = IComFactory.create_com(config)
-    bb.storage.add_connection(device)
+    bb.device_storage.add_connection(device)
     bb.settings.devices.add_connection(device, ChangeSource.LOCAL)
     device.connect = Mock(return_value=False)
     device.find_device = Mock(return_value=None)  # Device not found on the network
@@ -98,7 +98,7 @@ def test_execute_new_inverter_added_after_rescan(bb: BlackBoard):
     config = cfg.TCP_CONFIG.copy()
     config['sn'] = "test_device_789"
     inverter = IComFactory.create_com(config)
-    bb.storage.add_connection(inverter)
+    bb.device_storage.add_connection(inverter)
     bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
 
     inverter.connect = Mock(return_value=False)
@@ -122,7 +122,7 @@ def test_reconnect_does_not_find_known_device(mock_network_utils, bb: BlackBoard
     config = cfg.TCP_ARGS.copy()
     config['sn'] = "test_device_network"
     inverter = IComFactory.create_com(config)
-    bb.storage.add_connection(inverter)
+    bb.device_storage.add_connection(inverter)
     bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
     inverter.connect = Mock(return_value=False)
     task = DevicePerpetualTask(0, bb, inverter)
@@ -157,7 +157,7 @@ def test_execute_inverter_not_on_local_network(bb: BlackBoard):
     config = cfg.TCP_ARGS.copy()
     config['sn'] = "test_device_not_local"
     inverter = IComFactory.create_com(config)
-    bb.storage.add_connection(inverter)
+    bb.device_storage.add_connection(inverter)
     bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
 
     inverter.connect = Mock(return_value=False)
@@ -189,8 +189,8 @@ def test_add_multiple_devices(bb: BlackBoard):
     device2.is_open = Mock(return_value=True)
     device2.compare_host = Mock(return_value=False)
 
-    bb.storage.add_connection(device1)
-    bb.storage.add_connection(device2)
+    bb.device_storage.add_connection(device1)
+    bb.device_storage.add_connection(device2)
     bb.settings.devices.add_connection(device1, ChangeSource.LOCAL)
     bb.settings.devices.add_connection(device2, ChangeSource.LOCAL)
 
@@ -326,7 +326,7 @@ def test_device_found_but_fails_to_connect(bb: BlackBoard):
 
     set_up_listeners(bb)
 
-    bb.storage.add_connection(existing_device)
+    bb.device_storage.add_connection(existing_device)
     bb.settings.devices.add_connection(existing_device, ChangeSource.LOCAL)
 
     task = DevicePerpetualTask(0, bb, existing_device)
@@ -363,8 +363,8 @@ def test_same_ip_different_ports(bb: BlackBoard):
     device2.is_open = Mock(return_value=True)
 
     # add to both storage and settings
-    bb.storage.add_connection(device1)
-    bb.storage.add_connection(device2)
+    bb.device_storage.add_connection(device1)
+    bb.device_storage.add_connection(device2)
     bb.settings.devices._connections.append(setings_d1)
     bb.settings.devices._connections.append(setings_d2)
 
@@ -390,7 +390,7 @@ def test_device_with_sn_none(bb: BlackBoard):
     device1.connect = Mock(return_value=True)
     device1.is_open = Mock(return_value=True)
 
-    bb.storage.add_connection(device1)
+    bb.device_storage.add_connection(device1)
     bb.settings.devices._connections.append(setings_d1)
 
     task1 = DevicePerpetualTask(0, bb, device1)
@@ -431,7 +431,7 @@ def test_migration_scenario(bb: BlackBoard):
     assert device in bb.devices.lst
     assert len(bb.devices.lst) == 1
 
-    assert len(bb.storage.get_connections()) == 1  # Ensure that the device is added to the storage
+    assert len(bb.device_storage.get_connections()) == 1  # Ensure that the device is added to the storage
 
 
 def test_migration_several_devices(bb: BlackBoard):
@@ -452,8 +452,8 @@ def test_migration_several_devices(bb: BlackBoard):
     assert device1 in bb.devices.lst
     assert len(bb.devices.lst) == 1
 
-    assert len(bb.storage.get_connections()) == 1
-    assert bb.storage.connection_exists(device1)
+    assert len(bb.device_storage.get_connections()) == 1
+    assert bb.device_storage.connection_exists(device1)
 
     device2 = MagicMock(spec=ICom)
     device2.get_SN.return_value = "123124"
@@ -469,8 +469,8 @@ def test_migration_several_devices(bb: BlackBoard):
     assert device2 in bb.devices.lst
     assert len(bb.devices.lst) == 2
 
-    assert len(bb.storage.get_connections()) == 2  # Ensure that the device is added to the storage
-    assert bb.storage.connection_exists(device2)
+    assert len(bb.device_storage.get_connections()) == 2  # Ensure that the device is added to the storage
+    assert bb.device_storage.connection_exists(device2)
 
     device3 = MagicMock(spec=ICom)
     device3.get_SN.return_value = "123125"
@@ -486,5 +486,5 @@ def test_migration_several_devices(bb: BlackBoard):
     assert device3 in bb.devices.lst
     assert len(bb.devices.lst) == 3
 
-    assert len(bb.storage.get_connections()) == 3  # Ensure that the device is added to the storage
-    assert bb.storage.connection_exists(device3)
+    assert len(bb.device_storage.get_connections()) == 3  # Ensure that the device is added to the storage
+    assert bb.device_storage.connection_exists(device3)
