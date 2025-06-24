@@ -6,7 +6,7 @@ from server.crypto.crypto_state import CryptoState
 import server.crypto.crypto as crypto
 
 
-def test_doGet():
+def test_doGet(blackboard):
 
     with patch("server.crypto.crypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
         with patch("server.crypto.crypto.atcab_read_serial_number", return_value=crypto.ATCA_SUCCESS):
@@ -20,7 +20,7 @@ def test_doGet():
                 'compactKey': 'compact',
                 'chipDeathCount': '0'
             }
-            bb = BlackBoard(mock_crypto_state)
+            bb = blackboard
             # The state property is computed from individual components
             bb._start_time = 0  # This affects uptime
             bb._devices.saved = []  # Set saved devices to empty list

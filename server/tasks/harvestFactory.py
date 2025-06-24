@@ -6,7 +6,7 @@ from server.app.settings import ChangeSource
 import logging
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 class HarvestFactory:
@@ -18,9 +18,16 @@ class HarvestFactory:
 
     def add_device(self, com: ICom):
         """Add the device to the blackboard and create a harvest task and save it to the settings"""
-        # now we have an open device, lets create a device task and save it to the settings
-        # if com.is_open():
-        self.bb.add_task(DeviceTask(self.bb.time_ms() + 1000, self.bb, com,  DefaultHarvestTransportFactory()))
+        # Save the connection to persistent storage
+        logger.debug(f"Attempting to save connection: {com.get_config()}")
+
+        if self.bb.device_storage.add_connection(com):
+            logger.info(f"Connection saved for device {com.get_name()} : {com.get_SN()}")
+        else:
+            logger.warning(f"Failed to save connection for device {com.get_name()} : {com.get_SN()}")
+
+        # Create device task and save to settings
+        self.bb.add_task(DeviceTask(self.bb.time_ms() + 1000, self.bb, com, DefaultHarvestTransportFactory()))
         self.bb.settings.devices.add_connection(com, ChangeSource.LOCAL)
         logger.info(f"Added device {com.get_name()} : {com.get_SN()}")
         self.bb.add_info(f"Added device {com.get_name()} : {com.get_SN()}")
@@ -31,6 +38,13 @@ class HarvestFactory:
             device.disconnect()
         except ValueError:
             logger.warning("Device %s already disconnected", device)
+
+        # Remove connection from persistent storage
+        if self.bb.device_storage.remove_connection(device.get_SN()):
+            logger.info(f"Connection removed from storage for device {device.get_name()} : {device.get_SN()}")
+        else:
+            logger.warning(f"Failed to remove connection from storage for device {device.get_name()} : {device.get_SN()}")
+
         self.bb.settings.devices.remove_connection(device, ChangeSource.LOCAL)
         logger.info(f"Removed device {device.get_name()} : {device.get_SN()}")
         self.bb.add_info(f"Removed device {device.get_name()} : {device.get_SN()}")

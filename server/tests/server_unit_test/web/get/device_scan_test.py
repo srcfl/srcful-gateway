@@ -10,9 +10,9 @@ from server.devices.inverters.enphase import Enphase
 
 
 @pytest.fixture
-def setup_handler():
+def setup_handler(blackboard):
     handler = DeviceScanHandler()
-    mock_bb = BlackBoard(MagicMock(spec=CryptoState))
+    mock_bb = blackboard
     request_data = RequestData(bb=mock_bb, query_params={}, post_params={}, data={})
     return handler, mock_bb, request_data
 

@@ -45,19 +45,6 @@ def mock_huawei_profile():
     return profile
 
 
-@pytest.fixture
-def blackboard():
-
-    if crypto.USE_HARDWARE_CRYPTO:
-        pytest.skip("Hardware crypto not supported")
-        return
-
-    from server.app.blackboard import BlackBoard
-    from server.crypto.crypto_state import CryptoState
-    crypto_state = CryptoState()
-    return BlackBoard(crypto_state)
-
-
 @patch('server.devices.inverters.modbus_device_scanner.NetworkUtils.get_hosts')
 def test_scan_no_hosts_found(mock_get_hosts):
     """Test scanning when no hosts are found"""

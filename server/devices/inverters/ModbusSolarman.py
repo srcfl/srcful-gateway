@@ -107,7 +107,7 @@ class ModbusSolarman(ModbusTCP):
         if self.sn is None:
             self.sn = self._read_SN()
 
-        return bool(self.client.sock) and self.mac != NetworkUtils.INVALID_MAC and self.sn is not None
+        return bool(self.client.sock) and self.sn is not None
 
     def _is_open(self) -> bool:
         try:

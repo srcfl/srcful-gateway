@@ -1,13 +1,11 @@
-from server.app.blackboard import BlackBoard
-from unittest.mock import MagicMock, Mock
 from server.app.message import Message
-from server.crypto.crypto_state import CryptoState
+from unittest.mock import MagicMock
 import pytest
 import time
 
 
-def test_blackboard():
-    bb = BlackBoard(Mock(spec=CryptoState))
+def test_blackboard(blackboard):
+    bb = blackboard
     assert bb is not None
     assert bb.devices is not None
     assert bb.devices.lst is not None
@@ -15,16 +13,16 @@ def test_blackboard():
     assert len(bb.settings.harvest.endpoints) > 0
 
 
-def test_blackboard_get_version():
-    bb = BlackBoard(Mock(spec=CryptoState))
+def test_blackboard_get_version(blackboard):
+    bb = blackboard
 
     # assert that string contains two dots
     assert bb.get_version().count(".") == 2
 
 
-def test_blackboard_add_device():
+def test_blackboard_add_device(blackboard):
     listener = MagicMock()
-    bb = BlackBoard(Mock(spec=CryptoState))
+    bb = blackboard
     hw = MagicMock()
     bb.devices.add_listener(listener)
     bb.devices.add(hw)
@@ -32,9 +30,9 @@ def test_blackboard_add_device():
     assert listener.add_device.called
 
 
-def test_blackboard_remove_device():
+def test_blackboard_remove_device(blackboard):
     listener = MagicMock()
-    bb = BlackBoard(Mock(spec=CryptoState))
+    bb = blackboard
     hw = MagicMock()
     bb.devices.add_listener(listener)
     bb.devices.add(hw)
@@ -44,8 +42,8 @@ def test_blackboard_remove_device():
 
 
 @pytest.fixture
-def message_container() -> BlackBoard:
-    return BlackBoard(Mock(spec=CryptoState))  # Replace with actual constructor if there are parameters
+def message_container(blackboard):
+    return blackboard
 
 
 @pytest.fixture
@@ -124,15 +122,15 @@ def test_message_list_limit(message_container):
     assert len(messages) <= 10
 
 
-def test_time_ms():
-    bb = BlackBoard(Mock(spec=CryptoState))
+def test_time_ms(blackboard):
+    bb = blackboard
     # the time must be an UTC time that corresponds to the current time
     assert bb.time_ms() <= int(time.time() * 1000)
 
 
-def test_elapsed_time():
+def test_elapsed_time(blackboard):
     start_time = time.monotonic_ns() // 1_000_000
-    bb = BlackBoard(Mock(spec=CryptoState))
+    bb = blackboard
 
     time.sleep(0.2)
     end_time = time.monotonic_ns() // 1_000_000
@@ -142,8 +140,8 @@ def test_elapsed_time():
     assert abs(diff) < 10
 
 
-def test_chip_death_count():
-    bb = BlackBoard(Mock(spec=CryptoState))
+def test_chip_death_count(blackboard):
+    bb = blackboard
     assert bb.chip_death_count == 0
     bb.increment_chip_death_count()
     assert bb.chip_death_count == 1
@@ -153,8 +151,8 @@ def test_chip_death_count():
     assert bb.chip_death_count == 0
 
 
-def test_add_multiple_devices():
-    bb = BlackBoard(Mock(spec=CryptoState))
+def test_add_multiple_devices(blackboard):
+    bb = blackboard
     hw = MagicMock()
     hw.get_name.return_value = "Test device"
     hw.get_SN.return_value = "1234567890"

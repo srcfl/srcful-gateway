@@ -6,21 +6,20 @@ from server.crypto.crypto_state import CryptoState
 from server.tasks.requestResponseTask import RequestTask, ResponseTask, handle_request, handle_request_task
 from server.web import handler
 
-@pytest.fixture
-def blackboard():
-    return BlackBoard(Mock(spec=CryptoState))
 
 @pytest.fixture
 def mock_handler():
     return Mock(spec=handler.Handler)
 
+
 @pytest.fixture
 def mock_request_data():
     return Mock(spec=handler.RequestData)
 
+
 def test_request_task_execute(blackboard, mock_handler, mock_request_data):
     request_task = RequestTask(1000, blackboard, 17, mock_handler, mock_request_data)
-    
+
     # Set up the mock handler to return a success response
     mock_handler.do.return_value = (200, "Success")
 
@@ -43,10 +42,11 @@ def test_response_task_execute(mock_chip, blackboard):
     mock_chip.return_value.__enter__.return_value = mock_chip_instance
 
     response_task = ResponseTask(1000, blackboard, 17, {"data": "test_data"})
-    
+
     with patch('server.tasks.srcfulAPICallTask.SrcfulAPICallTask.execute') as mock_execute:
         response_task.execute(1500)
         mock_execute.assert_called_once()
+
 
 def test_handle_request_valid(blackboard):
     request_data = {
@@ -70,6 +70,7 @@ def test_handle_request_valid(blackboard):
     assert isinstance(result, RequestTask)
     assert result.id == 'test_id'
 
+
 def test_handle_request_invalid_method(blackboard):
     request_data = {
         'method': 'INVALID',
@@ -86,6 +87,7 @@ def test_handle_request_invalid_method(blackboard):
     assert isinstance(result, ResponseTask)
     assert result.data['error'] == "Method INVALID not allowed"
 
+
 def test_handle_request_old_timestamp(blackboard):
     request_data = {
         'method': 'GET',
@@ -101,6 +103,7 @@ def test_handle_request_old_timestamp(blackboard):
 
     assert isinstance(result, ResponseTask)
     assert "Request too old" in result.data['error']
+
 
 def test_handle_request_task(blackboard):
     request_data = {
@@ -122,6 +125,7 @@ def test_handle_request_task(blackboard):
         handle_request_task(blackboard, data)
         mock_handle_request.assert_called_once_with(blackboard, request_data)
 
+
 def test_handle_request_task_wrong_subkey(blackboard):
     data = {
         'subKey': 'wrong_subkey',
@@ -133,6 +137,8 @@ def test_handle_request_task_wrong_subkey(blackboard):
     assert result is None
 
 # test when the api handler is not found
+
+
 def test_handle_request_task_api_handler_not_found(blackboard):
 
     nonexistent_path = '/api/nonexistent'

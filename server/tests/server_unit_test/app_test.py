@@ -6,17 +6,13 @@ import pytest
 from server.app import app
 from server.app import task_scheduler
 
-from server.app.blackboard import BlackBoard
-from server.crypto.crypto_state import CryptoState
 from server.tasks.itask import ITask
 
 
 @pytest.fixture
-def bb():
-    return BlackBoard(Mock(spec=CryptoState))
-@pytest.fixture
 def scheduler(bb):
     return task_scheduler.TaskScheduler(max_workers=4, system_time=bb, task_source=bb)
+
 
 def create_normal_task(time):
 
@@ -66,7 +62,7 @@ def test_app():
 
 def test_main_loop_exiting(scheduler, bb, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
-    
+
     scheduler.add_task(stop_task)
     scheduler.main_loop()
     assert "StopIteration received" in caplog.text
@@ -74,7 +70,7 @@ def test_main_loop_exiting(scheduler, bb, stop_task, caplog):
 
 def test_main_loop_normal_task(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
-    
+
     scheduler.add_task(normal_task)
     scheduler.add_task(stop_task)
     scheduler.main_loop()
@@ -85,7 +81,7 @@ def test_main_loop_normal_task(scheduler, bb, normal_task, stop_task, caplog):
 
 def test_main_loop_future_task(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
-    
+
     normal_task.get_time.return_value = bb.time_ms() + 1500
     scheduler.add_task(normal_task)
     scheduler.add_task(stop_task)
@@ -104,7 +100,7 @@ def test_main_loop_past_task(scheduler, bb, normal_task, stop_task, caplog):
     assert normal_task < stop_task
     assert child_task < stop_task
     assert child_task < normal_task
-    
+
     normal_task.get_time.return_value = bb.time_ms() - 1500
     scheduler.add_task(normal_task)
     scheduler.add_task(stop_task)
@@ -114,12 +110,13 @@ def test_main_loop_past_task(scheduler, bb, normal_task, stop_task, caplog):
     assert normal_task < child_task
     assert "Failed to execute task" not in caplog.text
 
+
 def test_main_loop_task_from_list_same_time(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
 
     child_task1 = create_normal_task(normal_task.get_time() + 100)
     child_task2 = create_normal_task(normal_task.get_time() + 100)
-    
+
     stop_task.adjust_time(normal_task.get_time() + 200)
     normal_task.execute.return_value = [child_task1, child_task2]
 
@@ -129,6 +126,7 @@ def test_main_loop_task_from_list_same_time(scheduler, bb, normal_task, stop_tas
     assert normal_task.execute.called
     assert child_task1.execute.called
     assert child_task2.execute.called
+
 
 def test_main_loop_task_from_bb(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
@@ -142,6 +140,7 @@ def test_main_loop_task_from_bb(scheduler, bb, normal_task, stop_task, caplog):
     scheduler.add_task(stop_task)
     scheduler.main_loop()
     assert child_task.execute.called
+
 
 def test_main_loop_task_from_bb_2(scheduler, bb, normal_task, stop_task, caplog):
     task_scheduler.logger.setLevel(level=logging.INFO)
@@ -162,7 +161,7 @@ def test_main_loop_task_failure(scheduler, bb, fail_task, stop_task, caplog):
 
     fail_task.name = "fail_task"
     stop_task.name = "stop_task"
-    
+
     fail_task.adjust_time(bb.time_ms() + 100)
     stop_task.adjust_time(bb.time_ms() + 101)
 
@@ -185,6 +184,7 @@ def short_task(bb):
     task = create_normal_task(bb.time_ms() + 500)
     task.execute.side_effect = execute_side_effect
     return task
+
 
 @pytest.fixture
 def long_task(bb):
