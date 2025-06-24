@@ -11,6 +11,7 @@ def mock_response():
     response.raise_for_status.return_value = None
     return response
 
+
 @pytest.fixture
 def mock_response_404():
     response = MagicMock(spec=Response)
@@ -18,23 +19,26 @@ def mock_response_404():
     response.raise_for_status.side_effect = HTTPError("404")
     return response
 
+
 def test_connect_new_device(mock_response):
     """Test connecting to a new device (no serial number specified)"""
     p1_meter = P1Jemac("192.168.0.30", 80)
-    
+
     # Note the corrected patch path
     with patch('server.devices.p1meters.P1Jemac.requests.get', return_value=mock_response) as mock_get:
         assert p1_meter.connect()
         assert p1_meter.meter_serial_number == "LGF5E360"
         mock_get.assert_called_once_with("http://192.168.0.30:80/telegram.json", timeout=5)
 
+
 def test_get_harvest_data(mock_response):
     p1_meter = P1Jemac("192.168.0.30", 80)
     with patch('server.devices.p1meters.P1Jemac.requests.get', return_value=mock_response) as mock_get:
         assert p1_meter.connect()
-        harvest = p1_meter.read_harvest_data(False)
+        harvest = p1_meter._read_harvest_data(False)
         assert harvest['serial_number'] == "LGF5E360"
         assert len(harvest['rows']) == 28
+
 
 def test_is_open(mock_response):
     p1_meter = P1Jemac("192.168.0.30", 80)
@@ -42,19 +46,22 @@ def test_is_open(mock_response):
         assert p1_meter.connect()
         assert p1_meter.is_open()
 
+
 def test_connect_timeout():
     """Test connecting when request times out"""
     p1_meter = P1Jemac("192.168.0.30", 80)
-    
+
     with patch('server.devices.p1meters.P1Jemac.requests.get', side_effect=Timeout()) as mock_get:
         assert not p1_meter.connect()
         mock_get.assert_called_once_with("http://192.168.0.30:80/telegram.json", timeout=5)
+
 
 def test_is_open_fail(mock_response_404):
     p1_meter = P1Jemac("192.168.0.30", 80)
     with patch('server.devices.p1meters.P1Jemac.requests.get', return_value=mock_response_404) as mock_get:
         assert not p1_meter.connect()
         assert not p1_meter.is_open()
+
 
 def test_parse_p1_message():
     p1_data = get_p1_data()

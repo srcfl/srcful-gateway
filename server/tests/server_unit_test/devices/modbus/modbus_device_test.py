@@ -43,7 +43,7 @@ def test_read_harvest_no_data_exception(modbus_devices):
             return [i for i in range(address, address + size)]
 
         device.read_registers = read_registers
-        device.read_harvest_data(True)
+        device._read_harvest_data(True)
 
         # Empty register array should raise an exception
         with pytest.raises(Exception):

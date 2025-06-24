@@ -2,6 +2,8 @@ from typing import Optional
 from server.devices.Device import Device
 from server.devices.ICom import ICom
 from server.network.network_utils import NetworkUtils, HostInfo
+from server.e_system.types import EBaseType
+from typing import List
 
 from abc import ABC, abstractmethod
 
@@ -76,3 +78,6 @@ class TCPDevice(Device, ABC):
     @abstractmethod
     def _clone_with_host(self, host: HostInfo) -> Optional[ICom]:
         pass
+
+    def get_esystem_data(self) -> List[EBaseType]:
+        return []

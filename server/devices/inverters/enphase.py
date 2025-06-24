@@ -10,6 +10,7 @@ from typing import List, Optional
 from server.network.network_utils import HostInfo, NetworkUtils
 import urllib3
 import time
+from server.e_system.types import EBaseType
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 

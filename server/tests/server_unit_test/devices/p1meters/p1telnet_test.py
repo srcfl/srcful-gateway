@@ -1,6 +1,6 @@
 from io import BytesIO
 from server.devices.p1meters.P1Telnet import P1Telnet
-    
+
 
 class DataReader:
     def __init__(self, data):
@@ -16,16 +16,17 @@ class DataReader:
             if char == delimiter:
                 break
         return result
-    
+
     def close(self):
         pass
 
     def get_socket(self):
         return "test_socket"
-    
+
     def clear_buffer(self):
         pass
-    
+
+
 class MockTelnet:
     def __init__(self, ip, port, timeout):
         self.ip = ip
@@ -34,15 +35,17 @@ class MockTelnet:
 
     def connect(self):
         return True
-    
+
     def read_until(self, delimiter, timeout):
         return DataReader(self.data).read_until(delimiter, timeout)
 
 # set to test_ to try real harvesting
+
+
 def real_harvest():
     p1 = P1Telnet("192.168.0.30", 23, "")
     assert p1.connect()
-    harvest = p1.read_harvest_data(False)
+    harvest = p1._read_harvest_data(False)
     p1.disconnect()
 
     assert p1.meter_serial_number is not None
@@ -52,6 +55,8 @@ def real_harvest():
     assert len(harvest['rows']) > 0
 
 # real scan
+
+
 def real_find_device():
     p1 = P1Telnet("192.168.0.30", 23, "abc123")
     try:
@@ -70,6 +75,7 @@ def test_parse_p1_data():
     assert len(harvest['rows']) == 28
     assert harvest['rows'][-1] == '!A267'
 
+
 def test_read_harvest_data():
     mock_telnet = DataReader(get_p1_data())
     p1 = P1Telnet("192.168.0.30", 23, "")
@@ -77,11 +83,11 @@ def test_read_harvest_data():
     assert '/LGF5E360' in harvest
     assert '!A267' in harvest
 
+
 def test_get_backoff_time_ms():
     p1 = P1Telnet("192.168.0.30", 23, "")
     assert p1.get_backoff_time_ms(0, 1000) == 10 * 1000
-    
-    
+
 
 def get_p1_data():
 
@@ -117,4 +123,3 @@ def get_p1_data():
 1-0:71.7.0(000.0A)
 !A267
 """
-

@@ -12,6 +12,7 @@ class Device(ICom, ABC):
     def __init__(self):
         super().__init__()
         self._mode = DeviceMode.READ
+        self.harvest = {}
 
     def get_device_mode(self) -> DeviceMode:
         return self._mode
@@ -32,9 +33,11 @@ class Device(ICom, ABC):
             return self._connect(**kwargs)
         return False
 
-    def read_harvest_data(self, force_verbose) -> dict:
+    def read_harvest_data(self, force_verbose, timestamp_ms: int) -> dict:
         if self.is_disconnected() != True:
-            return self._read_harvest_data(force_verbose)
+            harvest_data = self._read_harvest_data(force_verbose)
+            self.harvest = {timestamp_ms: harvest_data}
+            return harvest_data
 
         raise Exception("Device is disconnected")
 

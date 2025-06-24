@@ -9,6 +9,10 @@ from ...profile_keys import (
 )
 from ..profile import ModbusProfile
 from ...common.types import ModbusDevice
+from typing import List
+from server.e_system.types import EBaseType
+from server.devices.supported_devices.profile import RegisterInterval
+from server.e_system.types import GridType, BatteryType, SolarType, LoadType, Ampere, Volt, Watt
 
 
 class DeyeProfile(ModbusProfile):
@@ -17,6 +21,62 @@ class DeyeProfile(ModbusProfile):
 
     def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
+
+    def _get_esystem_data(self, device_sn: str, timestamp_ms: int, decoded_registers: List[RegisterInterval]) -> List[EBaseType]:
+
+        esystem_data: List[EBaseType] = []
+
+        L1_A = decoded_registers[610]
+        L2_A = decoded_registers[611]
+        L3_A = decoded_registers[612]
+        L1_V = decoded_registers[598]
+        L2_V = decoded_registers[599]
+        L3_V = decoded_registers[600]
+
+        grid_type = GridType(
+            device_sn=device_sn,
+            timestamp_ms=timestamp_ms,
+            L1_A=Ampere(value=L1_A.decoded_value, unit=L1_A.unit),
+            L2_A=Ampere(value=L2_A.decoded_value, unit=L2_A.unit),
+            L3_A=Ampere(value=L3_A.decoded_value, unit=L3_A.unit),
+            L1_V=Volt(value=L1_V.decoded_value, unit=L1_V.unit),
+            L2_V=Volt(value=L2_V.decoded_value, unit=L2_V.unit),
+            L3_V=Volt(value=L3_V.decoded_value, unit=L3_V.unit),
+        )
+
+        BATT_P = decoded_registers[590]
+
+        battery_type = BatteryType(
+            device_sn=device_sn,
+            timestamp_ms=timestamp_ms,
+            power=Watt(value=BATT_P.decoded_value, unit=BATT_P.unit),
+        )
+
+        PV_P_1 = decoded_registers[672]
+        PV_P_2 = decoded_registers[673]
+        PV_P_3 = decoded_registers[674]
+        PV_P_4 = decoded_registers[675]
+
+        solar_type = SolarType(
+            device_sn=device_sn,
+            timestamp_ms=timestamp_ms,
+            power=Watt(value=PV_P_1.decoded_value + PV_P_2.decoded_value + PV_P_3.decoded_value + PV_P_4.decoded_value, unit=PV_P_1.unit),
+        )
+
+        LOAD_P = decoded_registers[653]  # TODO: Incorrect, fix later
+
+        load_type = LoadType(
+            device_sn=device_sn,
+            timestamp_ms=timestamp_ms,
+            power=Watt(value=LOAD_P.decoded_value, unit=LOAD_P.unit),
+        )
+
+        esystem_data.append(grid_type)
+        esystem_data.append(battery_type)
+        esystem_data.append(solar_type)
+        esystem_data.append(load_type)
+
+        return esystem_data
 
 
 deye_profile = {

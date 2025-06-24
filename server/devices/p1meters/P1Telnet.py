@@ -116,7 +116,7 @@ class P1Telnet(TCPDevice):
             self.client = SimpleTelnet(self.ip, self.port, 5)
             self.client.connect()
             logger.info(f"Successfully connected to {self.ip}:{self.port}")
-            harvest = self.read_harvest_data(False)
+            harvest = self._read_harvest_data(False)
             if self.meter_serial_number == "":
                 self.meter_serial_number = harvest['serial_number']
                 return True

@@ -2,6 +2,13 @@ from abc import ABC, abstractmethod
 from typing import List
 from ..profile_keys import ProfileKey, RegistersKey, EndiannessKey, FunctionCodeKey, DataTypeKey
 from ..common.types import ModbusDevice
+import struct
+import logging
+from typing import Tuple, Optional, Union
+from server.e_system.types import EBaseType
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class BaseProfile(ABC):
@@ -42,7 +49,9 @@ class RegisterInterval:
                  description: str = "N/A",
                  scale_factor: float = 1.0,
                  endianness: EndiannessKey = EndiannessKey.BIG,
-                 scale_factor_register: int = None):
+                 scale_factor_register: int = None,
+                 raw_registers: List[int] = None,
+                 decoded_value: float = None):
         self.function_code: FunctionCodeKey = function_code
         self.start_register: int = start_register
         self.offset: int = offset
@@ -52,6 +61,93 @@ class RegisterInterval:
         self.scale_factor: float = scale_factor
         self.endianness: EndiannessKey = endianness
         self.scale_factor_register: int = scale_factor_register
+        self.raw_registers: List[int] = raw_registers
+        self.decoded_value: float = decoded_value
+
+    def decode_value(self) -> Tuple[bytearray, Optional[Union[int, float, str]]]:
+
+        if self.raw_registers is None:
+            return None, None
+
+        raw = bytearray()
+
+        for register in self.raw_registers:
+            raw.extend(register.to_bytes(2, "big"))
+
+        logger.debug(f"Interpreting value - DataType: {self.data_type}, Raw: {raw.hex()}, ScaleFactor: {self.scale_factor}")
+
+        try:
+            # Handle register pair endianness (if applicable)
+            # Example for a 32-bit value (2 registers, 4 bytes total):
+            # Original bytes: [0x12][0x34][0x56][0x78]
+            # Register 1: [0x12][0x34]
+            # Register 2: [0x56][0x78]
+            #
+            # Big Endian (default): [R1][R2] = [0x12][0x34][0x56][0x78] = 0x12345678
+            # Little Endian:        [R2][R1] = [0x56][0x78][0x12][0x34] = 0x56781234
+            #
+            # Note: Bytes within each register stay in big-endian order
+            # as per Modbus specification. We only swap the register order,
+            # not the bytes within registers.
+
+            # For multi-register values, we need to:
+            # 1. Keep the raw bytes as they are for big-endian
+            # 2. For little-endian, interpret the value by swapping register order
+            value_bytes = raw
+            if len(raw) > 2 and self.endianness == EndiannessKey.LITTLE:
+                # For little-endian, we'll read the bytes in reverse register order
+                # but keep bytes within each register in their original order
+                registers = [raw[i:i+2] for i in range(0, len(raw), 2)]
+                value_bytes = bytearray().join(registers[::-1])
+            else:
+                value_bytes = raw
+
+            if self.data_type == DataTypeKey.U16:
+                value = int.from_bytes(value_bytes[0:2], "big", signed=False)
+                self.decoded_value = value * self.scale_factor
+                return value_bytes, self.decoded_value
+
+            elif self.data_type == DataTypeKey.I16:
+                value = int.from_bytes(value_bytes[0:2], "big", signed=True)
+                self.decoded_value = value * self.scale_factor
+                return value_bytes, self.decoded_value
+
+            elif self.data_type == DataTypeKey.U32:
+                value = int.from_bytes(value_bytes[0:4], "big", signed=False)
+                self.decoded_value = value * self.scale_factor
+                return value_bytes, self.decoded_value
+
+            elif self.data_type == DataTypeKey.I32:
+                value = int.from_bytes(value_bytes[0:4], "big", signed=True)
+                self.decoded_value = value * self.scale_factor
+                return value_bytes, self.decoded_value
+
+            elif self.data_type == DataTypeKey.F32:
+                value = struct.unpack(">f", value_bytes[0:4])[0]
+                self.decoded_value = value * self.scale_factor
+                return value_bytes, self.decoded_value
+
+            elif self.data_type == DataTypeKey.U64:
+                value = int.from_bytes(value_bytes[0:8], "big", signed=False)
+                self.decoded_value = value * self.scale_factor
+                return value_bytes, self.decoded_value
+
+            elif self.data_type == DataTypeKey.I64:
+                value = int.from_bytes(value_bytes[0:8], "big", signed=True)
+                self.decoded_value = value * self.scale_factor
+                return value_bytes, self.decoded_value
+
+            elif self.data_type == DataTypeKey.STR:
+                # For strings, we just decode the bytes as they are
+                # Register order swapping (if any) is already handled above
+                self.decoded_value = value_bytes.decode("ascii").rstrip('\x00')
+                return value_bytes, self.decoded_value
+
+            return raw, None
+
+        except Exception as e:
+            logger.error(f"Error interpreting value: {str(e)}")
+            return raw, None
 
 
 class ModbusProfile(DeviceProfile):
@@ -109,3 +205,24 @@ class ModbusProfile(DeviceProfile):
 
     def get_registers(self) -> List[RegisterInterval]:
         return self.registers
+
+    def get_register(self, register: int) -> Optional[RegisterInterval]:
+        for reg in self.registers:
+            if reg.start_register == register:
+                return reg
+        return None
+
+    def get_decoded_registers(self, harvest_data: dict) -> List[RegisterInterval]:
+
+        decoded_registers: List[RegisterInterval] = []
+
+        for register in harvest_data.keys():
+            reg_interval: RegisterInterval = self.get_register(register)
+            reg_interval.raw_registers = [harvest_data[str(int(register) + i)] for i in range(reg_interval.offset)]
+            reg_interval.decode_value()
+            decoded_registers.append(reg_interval)
+
+        return decoded_registers
+
+    def _get_esystem_data(self, device_sn: str, timestamp_ms: int, decoded_registers: List[RegisterInterval]) -> List[EBaseType]:
+        return []

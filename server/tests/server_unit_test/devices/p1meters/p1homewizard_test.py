@@ -35,7 +35,7 @@ def test_get_harvest_data(mock_response):
     p1_meter = P1HomeWizard("192.168.0.30", 80)
     with patch('server.devices.p1meters.P1HomeWizard.requests.get', return_value=mock_response) as mock_get:
         assert p1_meter.connect()
-        harvest = p1_meter.read_harvest_data(False)
+        harvest = p1_meter._read_harvest_data(False)
         assert harvest['serial_number'] == "LGF5E360"
         assert len(harvest['rows']) == 28
 

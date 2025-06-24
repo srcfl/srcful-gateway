@@ -18,13 +18,13 @@ class Harvest:
         self.harvest_count = 0
         self.total_harvest_time_ms = 0
 
-    def harvest(self, event_time:int, device: ICom, bb: BlackBoard) -> tuple[int, dict]:
+    def harvest(self, event_time: int, device: ICom, bb: BlackBoard) -> tuple[int, dict]:
 
         start_time = event_time
         elapsed_time_ms = 1000
 
         try:
-            harvest = device.read_harvest_data(force_verbose=self.harvest_count % 10 == 0)
+            harvest = device.read_harvest_data(force_verbose=self.harvest_count % 10 == 0, timestamp_ms=event_time)
             self.harvest_count += 1
             end_time = bb.time_ms()
 
@@ -45,4 +45,4 @@ class Harvest:
         else:
             next_time = bb.time_ms() + self.backoff_time
 
-        return next_time, harvest    
+        return next_time, harvest

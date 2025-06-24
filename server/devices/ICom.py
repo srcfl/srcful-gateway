@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from enum import Enum
+from server.e_system.types import EBaseType
+from typing import List
 
 
 class HarvestDataType(Enum):
@@ -43,7 +45,7 @@ class ICom(ABC):
     @abstractmethod
     def set_device_mode(self) -> None:
         pass
-    
+
     @abstractmethod
     def set_device_mode(self, mode: DeviceMode) -> None:
         pass
@@ -55,8 +57,8 @@ class ICom(ABC):
             self.root_cause = root_cause
             super().__init__(self.message)
 
-    #@abstractmethod
-    #def get_der_types(self) -> list[DER_TYPE]:
+    # @abstractmethod
+    # def get_der_types(self) -> list[DER_TYPE]:
     #    pass
 
     # def __eq__(self, other: 'ICom') -> bool:
@@ -86,7 +88,7 @@ class ICom(ABC):
         pass
 
     @abstractmethod
-    def read_harvest_data(self, force_verbose) -> dict:
+    def read_harvest_data(self, force_verbose, timestamp_ms: int) -> dict:
         pass
 
     @abstractmethod
@@ -120,4 +122,8 @@ class ICom(ABC):
 
     @abstractmethod
     def get_SN(self) -> str:
+        pass
+
+    @abstractmethod
+    def get_esystem_data(self) -> List[EBaseType]:
         pass

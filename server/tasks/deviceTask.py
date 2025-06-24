@@ -52,7 +52,6 @@ class DeviceTask(Task):
         if len(transport) > 0:
             return tasks + transport
         return tasks
-    
 
     def _handle_device_not_open(self, event_time: int) -> List[ITask]:
         if not self.device.is_open():
@@ -98,11 +97,9 @@ class DeviceTask(Task):
             open_inverter = DevicePerpetualTask(self.bb.time_ms() + 30000, self.bb, clone)
             transports = self._create_transport(self.bb.time_ms(), self.bb.settings.harvest.endpoints, force_transport=True)
 
-            return next_event_time, [open_inverter] + transports # we return the open_inverter to indicate that we are closing the device and need to reconnect
+            return next_event_time, [open_inverter] + transports  # we return the open_inverter to indicate that we are closing the device and need to reconnect
 
-        
         return next_event_time, [self]  # we return self to indicate that we are ready to use the device again
-
 
     def _handle_state_transition(self, from_mode: DeviceMode, to_mode: DeviceMode):
         if from_mode != to_mode:
@@ -114,7 +111,6 @@ class DeviceTask(Task):
                 pass
 
         self.last_device_state = to_mode
-
 
     def _create_transport_headers(self, device: ICom) -> dict:
         headers = {"model": ""}

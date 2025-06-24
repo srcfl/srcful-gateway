@@ -15,7 +15,7 @@ from server.devices.profile_keys import ProtocolKey
 from server.devices.registerValue import RegisterValue
 import time
 import threading
-
+from typing import List
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)

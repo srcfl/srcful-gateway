@@ -53,7 +53,7 @@ class P1Jemac(TCPDevice):
 
     def _connect(self, **kwargs) -> bool:
         try:
-            harvest = self.read_harvest_data(False)
+            harvest = self._read_harvest_data(False)
             if self.meter_serial_number == "":
                 self.meter_serial_number = harvest['serial_number']
                 self._has_connected = True

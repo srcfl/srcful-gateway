@@ -2,7 +2,8 @@ import pytest
 from server.devices.Device import Device
 from server.devices.ICom import ICom, HarvestDataType
 from typing import Optional
-
+from server.e_system.types import EBaseType
+from typing import List
 from server.network.network_utils import HostInfo
 
 
@@ -60,6 +61,9 @@ def device():
         def get_client_name(self) -> str:
             return "device.test"
 
+        def get_esystem_data(self) -> List[EBaseType]:
+            return []
+
     return TestDevice()
 
 
@@ -71,13 +75,13 @@ def test_disconnect(device):
 
 def test_disconnect_harvest_data(device):
 
-    data = device.read_harvest_data(False)
+    data = device.read_harvest_data(False, 0)
     assert data is not None
 
     device.disconnect()
 
     with pytest.raises(Exception):
-        device.read_harvest_data(False)
+        device.read_harvest_data(False, 0)
 
 
 def test_connect(device):

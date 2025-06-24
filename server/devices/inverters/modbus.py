@@ -6,6 +6,9 @@ from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from ..ICom import HarvestDataType
 from ..supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
 from server.devices.profile_keys import FunctionCodeKey, DeviceCategoryKey
+from server.e_system.types import EBaseType
+from typing import List
+from server.devices.supported_devices.profile import RegisterInterval
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -148,3 +151,10 @@ class Modbus(Device, ABC):
             self.SLAVE_ID: self.slave_id,
             self.SN: self.get_SN()
         }
+
+    def get_esystem_data(self) -> List[EBaseType]:
+        harvest = self.harvest[0]
+
+        decoded_registers: List[RegisterInterval] = self.profile.get_decoded_registers(harvest)
+
+        return self.profile._get_esystem_data(decoded_registers)
