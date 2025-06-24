@@ -317,11 +317,11 @@ The test IDs in the filename should be the actual test case IDs from this specif
 
 ## Test Summary Table
 
-| Test ID | Variant | Result | Comment |
-|:--------|:--------|:-------|:--------|
-| ROB-001 | Wifi disconnect | PASS | System handled disconnect gracefully |
-| ROB-002 | Wifi recovery | PASS | Automatic reconnection successful |
-| ROB-013 | VPN-based inverter disconnect | PASS | Inverter connection lost and recovered with internet |
+| Test ID | Variant                       | Result | Comment                                              |
+|:--------|:------------------------------|:-------|:-----------------------------------------------------|
+| ROB-001 | Wifi disconnect               | PASS   | System handled disconnect gracefully                 |
+| ROB-002 | Wifi recovery                 | PASS   | Automatic reconnection successful                    |
+| ROB-013 | VPN-based inverter disconnect | PASS   | Inverter connection lost and recovered with internet |
 
 ## Detailed Results
 
