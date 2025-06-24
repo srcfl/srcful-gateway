@@ -11,51 +11,21 @@ class BaseMeasurement:
 
 
 @dataclass
-class Ampere(BaseMeasurement):
+class Current(BaseMeasurement):
     value: float
     unit: str = "A"
 
 
 @dataclass
-class Volt(BaseMeasurement):
+class Voltage(BaseMeasurement):
     value: float
     unit: str = "V"
 
 
 @dataclass
-class Ohm(BaseMeasurement):
-    value: float
-    unit: str = "Ω"
-
-
-@dataclass
-class Farad(BaseMeasurement):
-    value: float
-    unit: str = "F"
-
-
-@dataclass
-class Henry(BaseMeasurement):
-    value: float
-    unit: str = "H"
-
-
-@dataclass
-class Hertz(BaseMeasurement):
+class Frequency(BaseMeasurement):
     value: float
     unit: str = "Hz"
-
-
-@dataclass
-class Lux(BaseMeasurement):
-    value: float
-    unit: str = "lx"
-
-
-@dataclass
-class Lumen(BaseMeasurement):
-    value: float
-    unit: str = "lm"
 
 
 @dataclass
@@ -65,7 +35,7 @@ class Percent(BaseMeasurement):
 
 
 @dataclass
-class Watt(BaseMeasurement):
+class Power(BaseMeasurement):
     value: float
     unit: str = "W"
 
@@ -78,27 +48,27 @@ class EBaseType:
 
 @dataclass
 class GridType(EBaseType):
-    L1_A: Ampere
-    L2_A: Ampere
-    L3_A: Ampere
-    L1_V: Volt
-    L2_V: Volt
-    L3_V: Volt
+    L1_A: Current
+    L2_A: Current
+    L3_A: Current
+    L1_V: Voltage
+    L2_V: Voltage
+    L3_V: Voltage
 
 
 @dataclass
 class BatteryType(EBaseType):
-    power: Watt
+    power: Power
 
 
 @dataclass
 class SolarType(EBaseType):
-    power: Watt
+    power: Power
 
 
 @dataclass
 class LoadType(EBaseType):
-    power: Watt
+    power: Power
 
 
 @dataclass

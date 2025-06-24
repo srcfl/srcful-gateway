@@ -12,7 +12,7 @@ from ...common.types import ModbusDevice
 from typing import List
 from server.e_system.types import EBaseType
 from server.devices.supported_devices.profile import RegisterInterval
-from server.e_system.types import GridType, BatteryType, SolarType, LoadType, Ampere, Volt, Watt
+from server.e_system.types import GridType, BatteryType, SolarType, LoadType, Current, Voltage, Power
 
 
 class DeyeProfile(ModbusProfile):
@@ -36,12 +36,12 @@ class DeyeProfile(ModbusProfile):
         grid_type = GridType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
-            L1_A=Ampere(value=L1_A.decoded_value, unit=L1_A.unit),
-            L2_A=Ampere(value=L2_A.decoded_value, unit=L2_A.unit),
-            L3_A=Ampere(value=L3_A.decoded_value, unit=L3_A.unit),
-            L1_V=Volt(value=L1_V.decoded_value, unit=L1_V.unit),
-            L2_V=Volt(value=L2_V.decoded_value, unit=L2_V.unit),
-            L3_V=Volt(value=L3_V.decoded_value, unit=L3_V.unit),
+            L1_A=Current(value=L1_A.decoded_value, unit=L1_A.unit),
+            L2_A=Current(value=L2_A.decoded_value, unit=L2_A.unit),
+            L3_A=Current(value=L3_A.decoded_value, unit=L3_A.unit),
+            L1_V=Voltage(value=L1_V.decoded_value, unit=L1_V.unit),
+            L2_V=Voltage(value=L2_V.decoded_value, unit=L2_V.unit),
+            L3_V=Voltage(value=L3_V.decoded_value, unit=L3_V.unit),
         )
 
         BATT_P = decoded_registers[590]
@@ -49,7 +49,7 @@ class DeyeProfile(ModbusProfile):
         battery_type = BatteryType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
-            power=Watt(value=BATT_P.decoded_value, unit=BATT_P.unit),
+            power=Power(value=BATT_P.decoded_value, unit=BATT_P.unit),
         )
 
         PV_P_1 = decoded_registers[672]
@@ -60,7 +60,7 @@ class DeyeProfile(ModbusProfile):
         solar_type = SolarType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
-            power=Watt(value=PV_P_1.decoded_value + PV_P_2.decoded_value + PV_P_3.decoded_value + PV_P_4.decoded_value, unit=PV_P_1.unit),
+            power=Power(value=PV_P_1.decoded_value + PV_P_2.decoded_value + PV_P_3.decoded_value + PV_P_4.decoded_value, unit=PV_P_1.unit),
         )
 
         LOAD_P = decoded_registers[653]  # TODO: Incorrect, fix later
@@ -68,7 +68,7 @@ class DeyeProfile(ModbusProfile):
         load_type = LoadType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
-            power=Watt(value=LOAD_P.decoded_value, unit=LOAD_P.unit),
+            power=Power(value=LOAD_P.decoded_value, unit=LOAD_P.unit),
         )
 
         esystem_data.append(grid_type)
