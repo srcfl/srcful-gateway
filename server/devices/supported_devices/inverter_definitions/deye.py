@@ -12,7 +12,7 @@ from ...common.types import ModbusDevice
 from typing import List
 from server.e_system.types import EBaseType
 from server.devices.supported_devices.profile import RegisterInterval
-from server.e_system.types import GridType, BatteryType, SolarType, LoadType, Current, Voltage, Power
+from server.e_system.types import EGridType, EBatteryType, ESolarType, ELoadType, ECurrent, EVoltage, EPower
 
 
 class DeyeProfile(ModbusProfile):
@@ -35,23 +35,23 @@ class DeyeProfile(ModbusProfile):
         L2_V = decoded_registers[599]
         L3_V = decoded_registers[600]
 
-        grid_type = GridType(
+        grid_type = EGridType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
-            L1_A=Current(value=L1_A.decoded_value, unit=L1_A.unit),
-            L2_A=Current(value=L2_A.decoded_value, unit=L2_A.unit),
-            L3_A=Current(value=L3_A.decoded_value, unit=L3_A.unit),
-            L1_V=Voltage(value=L1_V.decoded_value, unit=L1_V.unit),
-            L2_V=Voltage(value=L2_V.decoded_value, unit=L2_V.unit),
-            L3_V=Voltage(value=L3_V.decoded_value, unit=L3_V.unit),
+            L1_A=ECurrent(value=L1_A.decoded_value),
+            L2_A=ECurrent(value=L2_A.decoded_value),
+            L3_A=ECurrent(value=L3_A.decoded_value),
+            L1_V=EVoltage(value=L1_V.decoded_value),
+            L2_V=EVoltage(value=L2_V.decoded_value),
+            L3_V=EVoltage(value=L3_V.decoded_value),
         )
 
         BATT_P = decoded_registers[590]
 
-        battery_type = BatteryType(
+        battery_type = EBatteryType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
-            power=Power(value=BATT_P.decoded_value, unit=BATT_P.unit),
+            power=EPower(value=BATT_P.decoded_value),
         )
 
         PV_P_1 = decoded_registers[672]
@@ -59,18 +59,18 @@ class DeyeProfile(ModbusProfile):
         PV_P_3 = decoded_registers[674]
         PV_P_4 = decoded_registers[675]
 
-        solar_type = SolarType(
+        solar_type = ESolarType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
-            power=Power(value=PV_P_1.decoded_value + PV_P_2.decoded_value + PV_P_3.decoded_value + PV_P_4.decoded_value, unit=PV_P_1.unit),
+            power=EPower(value=PV_P_1.decoded_value + PV_P_2.decoded_value + PV_P_3.decoded_value + PV_P_4.decoded_value),
         )
 
         LOAD_P = decoded_registers[653]  # TODO: Incorrect, fix later
 
-        load_type = LoadType(
+        load_type = ELoadType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
-            power=Power(value=LOAD_P.decoded_value, unit=LOAD_P.unit),
+            power=EPower(value=LOAD_P.decoded_value),
         )
 
         esystem_data.append(grid_type)
