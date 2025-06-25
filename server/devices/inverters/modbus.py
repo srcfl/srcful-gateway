@@ -155,6 +155,6 @@ class Modbus(Device, ABC):
     def get_esystem_data(self) -> List[EBaseType]:
 
         device_sn = self.get_SN()
-        timestamp_ms, harvest = next(iter(harvest.items()))
+        timestamp_ms, harvest = next(iter(self.harvest.items()))
 
         return self.profile._get_esystem_data(device_sn, timestamp_ms, harvest)
