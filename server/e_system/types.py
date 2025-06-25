@@ -2,78 +2,75 @@ from enum import Enum
 from dataclasses import dataclass
 
 
-@dataclass
-class BaseMeasurement:
+class EUnit(Enum):
+    A = "A"
+    V = "V"
+    Hz = "Hz"
+    Percent = "%"
+    W = "W"
+
+@dataclass(frozen=True, eq=True)
+class EBaseMeasurement:
     value: float
+    unit: EUnit
 
     def __repr__(self):
         return f"{self.value} {self.unit}"
+    
+@dataclass(frozen=True, eq=True)
+class ECurrent(EBaseMeasurement):
+    unit: EUnit = EUnit.A
 
 
-@dataclass
-class Current(BaseMeasurement):
-    value: float
-    unit: str = "A"
+@dataclass(frozen=True, eq=True)
+class EVoltage(EBaseMeasurement):
+    unit: EUnit = EUnit.V
 
 
-@dataclass
-class Voltage(BaseMeasurement):
-    value: float
-    unit: str = "V"
+@dataclass(frozen=True, eq=True)
+class EFrequency(EBaseMeasurement):
+    unit: EUnit = EUnit.Hz
 
 
-@dataclass
-class Frequency(BaseMeasurement):
-    value: float
-    unit: str = "Hz"
+@dataclass(frozen=True, eq=True)
+class EPercent(EBaseMeasurement):
+    unit: EUnit = EUnit.Percent
 
 
-@dataclass
-class Percent(BaseMeasurement):
-    value: float
-    unit: str = "%"
+@dataclass(frozen=True, eq=True)
+class EPower(EBaseMeasurement):
+    unit: EUnit = EUnit.W
 
 
-@dataclass
-class Power(BaseMeasurement):
-    value: float
-    unit: str = "W"
-
-
-@dataclass
+@dataclass(frozen=True, eq=True)
 class EBaseType:
     timestamp_ms: int
     device_sn: str
 
 
-@dataclass
-class GridType(EBaseType):
-    L1_A: Current
-    L2_A: Current
-    L3_A: Current
-    L1_V: Voltage
-    L2_V: Voltage
-    L3_V: Voltage
+@dataclass(frozen=True, eq=True)
+class EGridType(EBaseType):
+    L1_A: ECurrent
+    L2_A: ECurrent
+    L3_A: ECurrent
+    L1_V: EVoltage
+    L2_V: EVoltage
+    L3_V: EVoltage
+
+    def total_power(self) -> EPower:
+        return EPower(self.L1_A.value * self.L1_V.value + self.L2_A.value * self.L2_V.value + self.L3_A.value * self.L3_V.value)
 
 
-@dataclass
-class BatteryType(EBaseType):
-    power: Power
+@dataclass(frozen=True, eq=True)
+class EBatteryType(EBaseType):
+    power: EPower
 
 
-@dataclass
-class SolarType(EBaseType):
-    power: Power
+@dataclass(frozen=True, eq=True)
+class ESolarType(EBaseType):
+    power: EPower
 
 
-@dataclass
-class LoadType(EBaseType):
-    power: Power
-
-
-@dataclass
-class ESystemType(EBaseType):
-    grid: GridType
-    battery: BatteryType
-    solar: SolarType
-    load: LoadType
+@dataclass(frozen=True, eq=True)
+class ELoadType(EBaseType):
+    power: EPower
