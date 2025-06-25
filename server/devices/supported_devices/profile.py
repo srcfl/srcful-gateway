@@ -224,5 +224,5 @@ class ModbusProfile(DeviceProfile):
 
         return decoded_registers
 
-    def _get_esystem_data(self, device_sn: str, timestamp_ms: int, decoded_registers: List[RegisterInterval]) -> List[EBaseType]:
+    def _get_esystem_data(self, device_sn: str, timestamp_ms: int, harvest: dict) -> List[EBaseType]:
         return []

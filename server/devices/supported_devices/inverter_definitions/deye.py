@@ -22,7 +22,9 @@ class DeyeProfile(ModbusProfile):
     def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
 
-    def _get_esystem_data(self, device_sn: str, timestamp_ms: int, decoded_registers: List[RegisterInterval]) -> List[EBaseType]:
+    def _get_esystem_data(self, device_sn: str, timestamp_ms: int, harvest: dict) -> List[EBaseType]:
+
+        decoded_registers = self.get_decoded_registers(harvest)
 
         esystem_data: List[EBaseType] = []
 

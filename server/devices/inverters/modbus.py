@@ -153,8 +153,8 @@ class Modbus(Device, ABC):
         }
 
     def get_esystem_data(self) -> List[EBaseType]:
-        harvest = self.harvest[0]
 
-        decoded_registers: List[RegisterInterval] = self.profile.get_decoded_registers(harvest)
+        device_sn = self.get_SN()
+        timestamp_ms, harvest = next(iter(harvest.items()))
 
-        return self.profile._get_esystem_data(decoded_registers)
+        return self.profile._get_esystem_data(device_sn, timestamp_ms, harvest)
