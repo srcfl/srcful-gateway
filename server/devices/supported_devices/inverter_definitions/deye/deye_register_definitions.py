@@ -43,7 +43,7 @@ deye_registers = [
         RegistersKey.NAME: "Serial Number Byte 1",
         RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
         RegistersKey.START_REGISTER: 3,
-        RegistersKey.NUM_OF_REGISTERS: 1,
+        RegistersKey.NUM_OF_REGISTERS: 8,
         RegistersKey.DATA_TYPE: DataTypeKey.STR,
         RegistersKey.UNIT: "",
         RegistersKey.DESCRIPTION: "First byte of the serial number (ASCII character)",

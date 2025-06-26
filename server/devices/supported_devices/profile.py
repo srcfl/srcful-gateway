@@ -228,6 +228,12 @@ class ModbusProfile(DeviceProfile):
                 return reg
         return None
 
+    def get_register_interval(self, register: int, register_intervals: List[RegisterInterval]) -> RegisterInterval:
+        for register_interval in register_intervals:
+            if register_interval.start_register == register:
+                return register_interval
+        return None
+
     def get_decoded_registers(self, harvest_data: dict) -> List[RegisterInterval]:
 
         decoded_registers: List[RegisterInterval] = []
