@@ -26,7 +26,6 @@ class EUnit(Enum):
 
 @dataclass(frozen=True, eq=True)
 class EBaseMeasurement:
-    register: int
     value: float
     unit: EUnit
 
