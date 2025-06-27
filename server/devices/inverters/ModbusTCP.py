@@ -197,7 +197,7 @@ class ModbusTCP(Modbus, TCPDevice):
 
             return resp.registers
 
-    def _write_registers(self, starting_register: int, values: list) -> bool:
+    def _write_registers(self, starting_register: int, values: list[int] | int) -> bool:
         """
         Write a range of holding registers from a start address
         """

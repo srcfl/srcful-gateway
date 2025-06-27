@@ -6,9 +6,10 @@ from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from ..ICom import HarvestDataType
 from ..supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
 from server.devices.profile_keys import FunctionCodeKey
-from server.e_system.types import EBaseType, EBatteryType
+from server.e_system.types import EBaseType
 from typing import List
 from server.devices.supported_devices.profile import WriteCommand
+import time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -137,11 +138,11 @@ class Modbus(Device, ABC):
         return resp
 
     @abstractmethod
-    def _write_registers(self, starting_register: int, values: list) -> bool:
+    def _write_registers(self, starting_register: int, values: list[int] | int) -> bool:
         """Write a range of holding registers from a start address"""
         pass
 
-    def write_registers(self, starting_register: int, values: list) -> bool:
+    def write_registers(self, starting_register: int, values: list[int] | int) -> bool:
         return self._write_registers(starting_register, values)
 
     def get_harvest_data_type(self) -> HarvestDataType:
@@ -172,6 +173,8 @@ class Modbus(Device, ABC):
 
         commands: List[WriteCommand] = self.profile.get_write_commands(esystem_data)
 
-        # Execute the commands here
+        for command in commands:
+            self.write_registers(command.register, command.value)
+            time.sleep(0.2)
 
         return False
