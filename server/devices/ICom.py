@@ -127,3 +127,7 @@ class ICom(ABC):
     @abstractmethod
     def get_esystem_data(self) -> List[EBaseType]:
         pass
+
+    @abstractmethod
+    def set_esystem_data(self, esystem_data: List[EBaseType]) -> None:
+        pass
