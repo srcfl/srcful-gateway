@@ -29,7 +29,7 @@ class DeyeProfile(ModbusProfile):
     PV_STRING_4_REGISTER = 675
     INVERTER_TEMPERATURE_REGISTER = 541
     PV_TOTAL_ENERGY_REGISTER = 534
-    PV_SELL_TO_GRID_POWER_REGISTER = 145
+    PV_POWER_SELL_TO_GRID_REGISTER = 145
 
     # Battery related registers
     BATTERY_POWER_REGISTER = 590
@@ -57,7 +57,7 @@ class DeyeProfile(ModbusProfile):
 
     # Control registers
     BATTERY_LIMIT_CONTROL_REGISTER = 142
-    ENABLE_TOU_CONTROL_REGISTER = 146
+    TOU_ENABLE_CONTROL_REGISTER = 146
     TOU_START_TIME_REGISTER = 148
     TOU_END_TIME_REGISTER = 149
     BATTERY_OUTPUT_POWER_REGISTER = 154
@@ -78,7 +78,6 @@ class DeyeProfile(ModbusProfile):
     BATTERY_MAX_DISCHARGE_POWER = 5000  # W
     BATTERY_TARGET_SOC_MAX = 90
     BATTERY_TARGET_SOC_MIN = 10
-
     CONTROL_BOARD_SPECIAL_FUNCTION_DEFAULT = 11946  # everything disabled except "Lost Lithium Battery Fault"
     BATTERY_MAX_CHARGE_CURRENT_DEFAULT = 31  # A
     BATTERY_MAX_DISCHARGE_CURRENT_DEFAULT = 31  # A
@@ -86,7 +85,7 @@ class DeyeProfile(ModbusProfile):
     GENERATOR_CHARGE_ENABLE_DEFAULT = 1
     UTILITY_CHARGE_ENABLE_DEFAULT = 1
     ENERGY_MANAGEMENT_ENABLE_DEFAULT = 3  # Load first
-    LIMIT_CONTROL_DEFAULT = 3  # Self-consumption mode
+    LIMIT_CONTROL_DEFAULT = 2  # Self-consumption mode
     MAX_SELL_TO_GRID_POWER_DEFAULT = 10000  # W
     PV_SELL_TO_GRID_DEFAULT = 1
     TOU_ENABLE_DEFAULT = 1
@@ -228,7 +227,19 @@ class DeyeProfile(ModbusProfile):
     def _get_init_commands(self) -> List[WriteCommand]:
         commands: List[WriteCommand] = []
 
-        commands.append(WriteCommand(self.CONTROL_BOARD_SPECIAL_FUNCTION_REGISTER, 1))  # 1 is normal, 2 is test
+        commands.append(WriteCommand(self.CONTROL_BOARD_SPECIAL_FUNCTION_REGISTER, self.CONTROL_BOARD_SPECIAL_FUNCTION_DEFAULT))
+        commands.append(WriteCommand(self.BATTERY_MAX_CHARGE_CURRENT_REGISTER, self.BATTERY_MAX_CHARGE_CURRENT_DEFAULT))
+        commands.append(WriteCommand(self.BATTERY_MAX_DISCHARGE_CURRENT_REGISTER, self.BATTERY_MAX_DISCHARGE_CURRENT_DEFAULT))
+        commands.append(WriteCommand(self.BATTERY_CHARGE_CURRENT_REGISTER, self.BATTERY_CHARGE_CURRENT_DEFAULT))
+        commands.append(WriteCommand(self.GENERATOR_CHARGE_ENABLE_REGISTER, self.GENERATOR_CHARGE_ENABLE_DEFAULT))
+        commands.append(WriteCommand(self.UTILITY_CHARGE_ENABLE_REGISTER, self.UTILITY_CHARGE_ENABLE_DEFAULT))
+        commands.append(WriteCommand(self.ENERGY_MANAGEMENT_ENABLE_REGISTER, self.ENERGY_MANAGEMENT_ENABLE_DEFAULT))
+        commands.append(WriteCommand(self.LIMIT_CONTROL_REGISTER, self.LIMIT_CONTROL_DEFAULT))
+        commands.append(WriteCommand(self.MAX_SELL_TO_GRID_POWER_REGISTER, self.MAX_SELL_TO_GRID_POWER_DEFAULT // self.hv_lv_power_sf))
+        commands.append(WriteCommand(self.PV_POWER_SELL_TO_GRID_REGISTER, self.PV_SELL_TO_GRID_DEFAULT))
+        commands.append(WriteCommand(self.TOU_ENABLE_CONTROL_REGISTER, self.TOU_ENABLE_DEFAULT))
+        commands.append(WriteCommand(self.TOU_START_TIME_REGISTER, self.TOU_START_TIME_DEFAULT))
+        commands.append(WriteCommand(self.TOU_END_TIME_REGISTER, self.TOU_END_TIME_DEFAULT))
 
         return commands
 
