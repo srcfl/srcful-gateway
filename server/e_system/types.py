@@ -85,7 +85,7 @@ class EBaseType:
 @dataclass(frozen=True, eq=True)
 class EMetadata(EBaseType):
     model: str
-    rated_power: int
+    rated_power: EPower
 
 
 @dataclass(frozen=True, eq=True)

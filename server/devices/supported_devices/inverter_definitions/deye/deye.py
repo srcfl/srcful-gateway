@@ -53,7 +53,7 @@ class DeyeProfile(ModbusProfile):
             timestamp_ms=timestamp_ms,
             power=EPower(value=pv_string_total_power),
             temperature=ETemperature(value=INVERTER_TEMPERATURE.decoded_value),
-            TOTAL_PV_ENERGY=EEnergy(value=PV_TOTAL_ENERGY.decoded_value),
+            total_pv_energy=EEnergy(value=PV_TOTAL_ENERGY.decoded_value),
         )
 
     def _get_battery(self, device_sn: str, timestamp_ms: int, decoded_registers: List[RegisterInterval], hv_lv_power_sf: float, hv_lv_voltage_sf: float) -> Optional[EBatteryType]:
