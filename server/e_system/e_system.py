@@ -82,8 +82,14 @@ class ESystem:
             Solve the power balance using batteries only, try to get the grid power to 0.
             Return a new ESystem with the new battery power.
         '''
+
+        if len(self.batteries) == 0:
+            raise ValueError("No batteries found in ESystem")
+        if len(self.batteries) > 1:
+            raise ValueError("Multiple batteries found in ESystem, not supported yet")
+
         # 0 = solar + load + battery -> battery = -solar - load
-        # TODO: this is limited to one battery for now.
+        # TODO: this is limited to one battery for now. For multiple batteries we would need to know the state of charge of each battery and do some balancing there
         new_battery_power = -self.get_solar_power().value - self.get_load_power().value
         new_battery = replace(self.batteries[0], power=EPower(new_battery_power))
         return ESystem(self.battery_sn_list, self.solar_sn_list, self.load_sn_list, self.grid_sn_list, [new_battery])
