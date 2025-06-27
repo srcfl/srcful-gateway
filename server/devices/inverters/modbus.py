@@ -158,3 +158,7 @@ class Modbus(Device, ABC):
         timestamp_ms, harvest = next(iter(self.harvest.items()))
 
         return self.profile._get_esystem_data(device_sn, timestamp_ms, harvest)
+
+    def set_esystem_data(self, esystem_data: List[EBaseType]) -> bool:
+
+        return False

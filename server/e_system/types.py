@@ -90,42 +90,42 @@ class EMetadata(EBaseType):
 
 @dataclass(frozen=True, eq=True)
 class EGridType(EBaseType):
-    L1_A: ECurrent  # Must be in A. Positive for import, negative for export
-    L2_A: ECurrent  # Must be in A. Positive for import, negative for export
-    L3_A: ECurrent  # Must be in A.
-    L1_V: EVoltage  # Must be in V.
-    L2_V: EVoltage  # Must be in V.
-    L3_V: EVoltage  # Must be in V.
-    L1_P: EPower  # Must be in W. Positive for import, negative for export
-    L2_P: EPower  # Must be in W. Positive for import, negative for export
-    L3_P: EPower  # Must be in W. Positive for import, negative for export
-    GRID_FREQUENCY: EFrequency  # Must be in Hz.
-    TOTAL_IMPORT_ENERGY: EEnergy  # Must be in Wh.
-    TOTAL_EXPORT_ENERGY: EEnergy  # Must be in Wh.
+    l1_A: ECurrent  # Must be in A. Positive for import, negative for export
+    l2_A: ECurrent  # Must be in A. Positive for import, negative for export
+    l3_A: ECurrent  # Must be in A.
+    l1_V: EVoltage  # Must be in V.
+    l2_V: EVoltage  # Must be in V.
+    l3_V: EVoltage  # Must be in V.
+    l1_P: EPower  # Must be in W. Positive for import, negative for export
+    l2_P: EPower  # Must be in W. Positive for import, negative for export
+    l3_P: EPower  # Must be in W. Positive for import, negative for export
+    grid_frequency: EFrequency  # Must be in Hz.
+    total_import_energy: EEnergy  # Must be in Wh.
+    total_export_energy: EEnergy  # Must be in Wh.
 
     def total_power(self) -> EPower:
-        return EPower(self.L1_P.value + self.L2_P.value + self.L3_P.value)
+        return EPower(self.l1_P.value + self.l2_P.value + self.l3_P.value)
 
 
 @dataclass(frozen=True, eq=True)
 class EBatteryType(EBaseType):
-    POWER: EPower  # Must be in W. Positive for charge, negative for discharge
-    CURRENT: ECurrent  # Must be in A. Positive for charge, negative for discharge
-    VOLTAGE: EVoltage  # Must be in V.
-    SOC: EPercent  # Must be in %.
-    CAPACITY: EEnergy  # Must be in Wh.
-    TEMPERATURE: ETemperature  # Must be in °C.
-    TOTAL_CHARGE_ENERGY: EPower  # Must be in Wh.
-    TOTAL_DISCHARGE_ENERGY: EPower  # Must be in Wh.
+    power: EPower  # Must be in W. Positive for charge, negative for discharge
+    current: ECurrent  # Must be in A. Positive for charge, negative for discharge
+    voltage: EVoltage  # Must be in V.
+    soc: EPercent  # Must be in %.
+    capacity: EEnergy  # Must be in Wh.
+    temperature: ETemperature  # Must be in °C.
+    total_charge_energy: EPower  # Must be in Wh.
+    total_discharge_energy: EPower  # Must be in Wh.
 
 
 @dataclass(frozen=True, eq=True)
 class ESolarType(EBaseType):
-    POWER: EPower  # Must be in W. Always negative.
-    TEMPERATURE: ETemperature  # Must be in °C.
-    TOTAL_PV_ENERGY: EEnergy  # Must be in Wh. Always negative.
+    power: EPower  # Must be in W. Always negative.
+    temperature: ETemperature  # Must be in °C.
+    total_pv_energy: EEnergy  # Must be in Wh. Always negative.
 
 
 @dataclass(frozen=True, eq=True)
 class ELoadType(EBaseType):
-    POWER: EPower  # Must be in W.
+    power: EPower  # Must be in W.

@@ -51,8 +51,8 @@ class DeyeProfile(ModbusProfile):
         return ESolarType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
-            POWER=EPower(value=pv_string_total_power),
-            TEMPERATURE=ETemperature(value=INVERTER_TEMPERATURE.decoded_value),
+            power=EPower(value=pv_string_total_power),
+            temperature=ETemperature(value=INVERTER_TEMPERATURE.decoded_value),
             TOTAL_PV_ENERGY=EEnergy(value=PV_TOTAL_ENERGY.decoded_value),
         )
 
@@ -72,14 +72,14 @@ class DeyeProfile(ModbusProfile):
             return EBatteryType(
                 device_sn=device_sn,
                 timestamp_ms=timestamp_ms,
-                POWER=EPower(value=BATT_POWER.decoded_value * hv_lv_power_sf),
-                CURRENT=ECurrent(value=BATTERY_CURRENT.decoded_value),
-                VOLTAGE=EVoltage(value=BATTERY_VOLTAGE.decoded_value * hv_lv_voltage_sf),
-                SOC=EPercent(value=BATTERY_SOC.decoded_value),
-                CAPACITY=EEnergy(value=BATTERY_CAPACITY.decoded_value),
-                TEMPERATURE=ETemperature(value=BATT_TEMPERATURE.decoded_value),
-                TOTAL_CHARGE_ENERGY=EEnergy(value=BATT_TOTAL_CHARGE_ENERGY.decoded_value),
-                TOTAL_DISCHARGE_ENERGY=EEnergy(value=BATT_TOTAL_DISCHARGE_ENERGY.decoded_value),
+                power=EPower(value=BATT_POWER.decoded_value * hv_lv_power_sf),
+                current=ECurrent(value=BATTERY_CURRENT.decoded_value),
+                voltage=EVoltage(value=BATTERY_VOLTAGE.decoded_value * hv_lv_voltage_sf),
+                soc=EPercent(value=BATTERY_SOC.decoded_value),
+                capacity=EEnergy(value=BATTERY_CAPACITY.decoded_value),
+                temperature=ETemperature(value=BATT_TEMPERATURE.decoded_value),
+                total_charge_energy=EEnergy(value=BATT_TOTAL_CHARGE_ENERGY.decoded_value),
+                total_discharge_energy=EEnergy(value=BATT_TOTAL_DISCHARGE_ENERGY.decoded_value),
             )
         else:
             return None
@@ -102,18 +102,18 @@ class DeyeProfile(ModbusProfile):
             return EGridType(
                 device_sn=device_sn,
                 timestamp_ms=timestamp_ms,
-                L1_A=ECurrent(value=L1_CURRENT.decoded_value),
-                L2_A=ECurrent(value=L2_CURRENT.decoded_value),
-                L3_A=ECurrent(value=L3_CURRENT.decoded_value),
-                L1_V=EVoltage(value=L1_VOLTAGE.decoded_value),
-                L2_V=EVoltage(value=L2_VOLTAGE.decoded_value),
-                L3_V=EVoltage(value=L3_VOLTAGE.decoded_value),
-                L1_P=EPower(value=L1_POWER.decoded_value),
-                L2_P=EPower(value=L2_POWER.decoded_value),
-                L3_P=EPower(value=L3_POWER.decoded_value),
-                GRID_FREQUENCY=EFrequency(value=GRID_FREQUENCY.decoded_value),
-                TOTAL_IMPORT_ENERGY=EEnergy(value=TOTAL_IMPORT_ENERGY.decoded_value),
-                TOTAL_EXPORT_ENERGY=EEnergy(value=TOTAL_EXPORT_ENERGY.decoded_value),
+                l1_A=ECurrent(value=L1_CURRENT.decoded_value),
+                l2_A=ECurrent(value=L2_CURRENT.decoded_value),
+                l3_A=ECurrent(value=L3_CURRENT.decoded_value),
+                l1_V=EVoltage(value=L1_VOLTAGE.decoded_value),
+                l2_V=EVoltage(value=L2_VOLTAGE.decoded_value),
+                l3_V=EVoltage(value=L3_VOLTAGE.decoded_value),
+                l1_P=EPower(value=L1_POWER.decoded_value),
+                l2_P=EPower(value=L2_POWER.decoded_value),
+                l3_P=EPower(value=L3_POWER.decoded_value),
+                grid_frequency=EFrequency(value=GRID_FREQUENCY.decoded_value),
+                total_import_energy=EEnergy(value=TOTAL_IMPORT_ENERGY.decoded_value),
+                total_export_energy=EEnergy(value=TOTAL_EXPORT_ENERGY.decoded_value),
             )
         else:
             return None
@@ -123,7 +123,7 @@ class DeyeProfile(ModbusProfile):
         return ELoadType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
-            POWER=EPower(value=LOAD_P.decoded_value),
+            power=EPower(value=LOAD_P.decoded_value),
         )
 
     def _get_esystem_data(self, device_sn: str, timestamp_ms: int, harvest: dict) -> List[EBaseType]:
