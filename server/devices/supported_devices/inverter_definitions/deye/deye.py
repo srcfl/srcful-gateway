@@ -29,6 +29,7 @@ class DeyeProfile(ModbusProfile):
     PV_STRING_4_REGISTER = 675
     INVERTER_TEMPERATURE_REGISTER = 541
     PV_TOTAL_ENERGY_REGISTER = 534
+    PV_SELL_TO_GRID_POWER_REGISTER = 145
 
     # Battery related registers
     BATTERY_POWER_REGISTER = 590
@@ -39,13 +40,6 @@ class DeyeProfile(ModbusProfile):
     BATTERY_CAPACITY_REGISTER = 102
     BATTERY_TOTAL_CHARGE_ENERGY_REGISTER = 516
     BATTERY_TOTAL_DISCHARGE_ENERGY_REGISTER = 518
-
-    # Battery control registers
-    BATTERY_LIMIT_CONTROL_REGISTER = 142
-    BATTERY_OUTPUT_POWER_REGISTER = 154
-    BATTERY_TARGET_SOC_REGISTER = 166
-    BATTERY_CHARGE_CURRENT_REGISTER = 108
-    BATTERY_ENABLE_CHARGE_REGISTER = 172
 
     # Grid related registers
     L1_CURRENT_REGISTER = 610
@@ -61,11 +55,43 @@ class DeyeProfile(ModbusProfile):
     TOTAL_IMPORT_ENERGY_REGISTER = 522
     TOTAL_EXPORT_ENERGY_REGISTER = 524
 
+    # Control registers
+    BATTERY_LIMIT_CONTROL_REGISTER = 142
+    ENABLE_TOU_CONTROL_REGISTER = 146
+    TOU_START_TIME_REGISTER = 148
+    TOU_END_TIME_REGISTER = 149
+    BATTERY_OUTPUT_POWER_REGISTER = 154
+    BATTERY_TARGET_SOC_REGISTER = 166
+    BATTERY_MAX_CHARGE_CURRENT_REGISTER = 108
+    BATTERY_MAX_DISCHARGE_CURRENT_REGISTER = 109
+    BATTERY_CHARGE_CURRENT_REGISTER = 128
+    GENERATOR_CHARGE_ENABLE_REGISTER = 129
+    UTILITY_CHARGE_ENABLE_REGISTER = 130
+    ENERGY_MANAGEMENT_ENABLE_REGISTER = 141
+    LIMIT_CONTROL_REGISTER = 142
+    MAX_SELL_TO_GRID_POWER_REGISTER = 143
+    BATTERY_ENABLE_CHARGE_REGISTER = 172
+    CONTROL_BOARD_SPECIAL_FUNCTION_REGISTER = 178
+
     # Configurations, these should come from the backend, not be hard-coded here
     BATTERY_MAX_CHARGE_POWER = 5000  # W
     BATTERY_MAX_DISCHARGE_POWER = 5000  # W
     BATTERY_TARGET_SOC_MAX = 90
     BATTERY_TARGET_SOC_MIN = 10
+
+    CONTROL_BOARD_SPECIAL_FUNCTION_DEFAULT = 11946  # everything disabled except "Lost Lithium Battery Fault"
+    BATTERY_MAX_CHARGE_CURRENT_DEFAULT = 31  # A
+    BATTERY_MAX_DISCHARGE_CURRENT_DEFAULT = 31  # A
+    BATTERY_CHARGE_CURRENT_DEFAULT = 31  # A
+    GENERATOR_CHARGE_ENABLE_DEFAULT = 1
+    UTILITY_CHARGE_ENABLE_DEFAULT = 1
+    ENERGY_MANAGEMENT_ENABLE_DEFAULT = 3  # Load first
+    LIMIT_CONTROL_DEFAULT = 3  # Self-consumption mode
+    MAX_SELL_TO_GRID_POWER_DEFAULT = 10000  # W
+    PV_SELL_TO_GRID_DEFAULT = 1
+    TOU_ENABLE_DEFAULT = 1
+    TOU_START_TIME_DEFAULT = 0  # 00:00
+    TOU_END_TIME_DEFAULT = 2355  # 23:55
 
     def __init__(self):
         super().__init__(deye_legacy_profile)
@@ -201,6 +227,9 @@ class DeyeProfile(ModbusProfile):
 
     def _get_init_commands(self) -> List[WriteCommand]:
         commands: List[WriteCommand] = []
+
+        commands.append(WriteCommand(self.CONTROL_BOARD_SPECIAL_FUNCTION_REGISTER, 1))  # 1 is normal, 2 is test
+
         return commands
 
     def _generate_charge_commands(self, type: EBatteryType) -> List[WriteCommand]:
@@ -209,7 +238,7 @@ class DeyeProfile(ModbusProfile):
         charge_current = type.power.value / type.voltage.value
 
         commands.append(WriteCommand(self.BATTERY_TARGET_SOC_REGISTER, self.BATTERY_TARGET_SOC_MAX))
-        commands.append(WriteCommand(self.BATTERY_CHARGE_CURRENT_REGISTER, charge_current))
+        commands.append(WriteCommand(self.BATTERY_MAX_CHARGE_CURRENT_REGISTER, charge_current))
         commands.append(WriteCommand(self.BATTERY_ENABLE_CHARGE_REGISTER, 3))  # 1 is grid charge, 2 is battery charge, 3 is both
         return commands
 
