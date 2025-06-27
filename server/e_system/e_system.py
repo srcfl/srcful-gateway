@@ -57,13 +57,13 @@ class ESystem:
             raise ValueError(f"Invalid part type: {type(part)}")
 
     def get_solar_power(self) -> EPower:
-        return EPower(sum(solar.POWER.value for solar in self.solar))
+        return EPower(sum(solar.power.value for solar in self.solar))
 
     def get_battery_power(self) -> EPower:
-        return EPower(sum(battery.POWER.value for battery in self.batteries))
+        return EPower(sum(battery.power.value for battery in self.batteries))
 
     def get_load_power(self) -> EPower:
-        return EPower(sum(load.POWER.value for load in self.load))
+        return EPower(sum(load.power.value for load in self.load))
 
     def get_grid_power(self) -> EPower:
         return EPower(sum(grid.total_power().value for grid in self.grid))

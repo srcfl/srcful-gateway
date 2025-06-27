@@ -182,7 +182,7 @@ class ModbusSolarman(ModbusTCP):
 
             return resp
 
-    def write_registers(self, starting_register: int, values: list) -> bool:
+    def _write_registers(self, starting_register: int, values: list) -> bool:
         with self._lock:
             try:
                 self.client.write_multiple_holding_registers(starting_register, values)

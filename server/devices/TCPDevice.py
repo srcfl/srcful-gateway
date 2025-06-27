@@ -81,3 +81,6 @@ class TCPDevice(Device, ABC):
 
     def get_esystem_data(self) -> List[EBaseType]:
         return []
+
+    def set_esystem_data(self, esystem_data: List[EBaseType]) -> bool:
+        return False

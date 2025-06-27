@@ -150,7 +150,26 @@ class RegisterInterval:
             return raw, None
 
 
+class WriteCommand:
+    """Simple representation of a single Modbus register write operation."""
+
+    def __init__(self, register: int, value: int):
+        self.register: int = register
+        self.value: int = value
+
+    def __repr__(self) -> str:
+        return f"WriteCommand(register={self.register}, value={self.value})"
+
+    def to_dict(self) -> dict:
+        """Return a serialisable representation of the command."""
+        return {
+            "register": self.register,
+            "value": self.value,
+        }
+
+
 class ModbusProfile(DeviceProfile):
+
     """Modbus profile class. Used to define register intervals for Modbus profiles."""
 
     def __init__(self, profile_data: dict):
@@ -249,6 +268,9 @@ class ModbusProfile(DeviceProfile):
                 decoded_registers.append(reg_interval)
 
         return decoded_registers
+
+    def get_write_commands(self, esystem_data: List[EBaseType]) -> List[WriteCommand]:
+        return []
 
     def _get_esystem_data(self, device_sn: str, timestamp_ms: int, harvest: dict) -> List[EBaseType]:
         return []

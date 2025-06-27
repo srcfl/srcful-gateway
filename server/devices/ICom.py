@@ -129,5 +129,5 @@ class ICom(ABC):
         pass
 
     @abstractmethod
-    def set_esystem_data(self, esystem_data: List[EBaseType]) -> None:
+    def set_esystem_data(self, esystem_data: List[EBaseType]) -> bool:
         pass
