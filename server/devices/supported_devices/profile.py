@@ -74,7 +74,7 @@ class RegisterInterval:
         for register in self.raw_registers:
             raw.extend(register.to_bytes(2, "big"))
 
-        logger.debug(f"Interpreting value - DataType: {self.data_type}, Raw: {raw.hex()}, ScaleFactor: {self.scale_factor}")
+        # logger.debug(f"Interpreting value - DataType: {self.data_type}, Raw: {raw.hex()}, ScaleFactor: {self.scale_factor}")
 
         try:
             # Handle register pair endianness (if applicable)
@@ -159,6 +159,7 @@ class ModbusProfile(DeviceProfile):
         self.sn: RegisterInterval = None
         self.registers_verbose: List[RegisterInterval] = []
         self.registers: List[RegisterInterval] = []
+        self.all_registers: List[RegisterInterval] = []
 
         if ProfileKey.SN in profile_data:
             sn_reg = profile_data[ProfileKey.SN]
@@ -200,6 +201,21 @@ class ModbusProfile(DeviceProfile):
                     )
                 )
 
+        if ProfileKey.ALL_REGISTERS in profile_data:
+            for register_interval in profile_data[ProfileKey.ALL_REGISTERS]:
+                self.all_registers.append(
+                    RegisterInterval(
+                        register_interval[RegistersKey.FUNCTION_CODE],
+                        register_interval[RegistersKey.START_REGISTER],
+                        register_interval[RegistersKey.NUM_OF_REGISTERS],
+                        register_interval[RegistersKey.DATA_TYPE],
+                        register_interval[RegistersKey.UNIT],
+                        register_interval[RegistersKey.DESCRIPTION],
+                        register_interval[RegistersKey.SCALE_FACTOR],
+                        register_interval[RegistersKey.ENDIANNESS]
+                    )
+                )
+
     def get_registers_verbose(self) -> List[RegisterInterval]:
         return self.registers_verbose
 
@@ -207,9 +223,15 @@ class ModbusProfile(DeviceProfile):
         return self.registers
 
     def get_register(self, register: int) -> Optional[RegisterInterval]:
-        for reg in self.registers:
+        for reg in self.all_registers:
             if reg.start_register == register:
                 return reg
+        return None
+
+    def get_register_interval(self, register: int, register_intervals: List[RegisterInterval]) -> RegisterInterval:
+        for register_interval in register_intervals:
+            if register_interval.start_register == register:
+                return register_interval
         return None
 
     def get_decoded_registers(self, harvest_data: dict) -> List[RegisterInterval]:
@@ -217,10 +239,14 @@ class ModbusProfile(DeviceProfile):
         decoded_registers: List[RegisterInterval] = []
 
         for register in harvest_data.keys():
+            # logger.debug(f"Decoding register: {register}")
+            # logger.debug(f"Harvest data: {harvest_data}")
+            # logger.debug(f"Register interval: {self.get_register(register)}")
             reg_interval: RegisterInterval = self.get_register(register)
-            reg_interval.raw_registers = [harvest_data[str(int(register) + i)] for i in range(reg_interval.offset)]
-            reg_interval.decode_value()
-            decoded_registers.append(reg_interval)
+            if reg_interval is not None:
+                reg_interval.raw_registers = [harvest_data[int(register) + i] for i in range(reg_interval.offset)]
+                reg_interval.decode_value()
+                decoded_registers.append(reg_interval)
 
         return decoded_registers
 

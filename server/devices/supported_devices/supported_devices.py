@@ -10,7 +10,7 @@ from .inverter_definitions.sungrow_sf import SungrowSFProfile
 from .inverter_definitions.sma import SmaProfile
 from .inverter_definitions.fronius import FroniusProfile
 from .inverter_definitions.fronius_sf import FroniusSFProfile
-from .inverter_definitions.deye import DeyeProfile
+from .inverter_definitions.deye.deye import DeyeProfile
 from .inverter_definitions.deye_micro import DeyeMicroProfile
 from .inverter_definitions.growatt import GrowattProfile
 from .inverter_definitions.goodwe import GoodWeProfile

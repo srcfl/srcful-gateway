@@ -13,6 +13,7 @@ class ProfileKey(str, Enum):
     DESCRIPTION = 'description'
     REGISTERS_VERBOSE = 'registers_verbose'
     REGISTERS = 'registers'
+    ALL_REGISTERS = 'all_registers'
     BASE_URL = 'base_url'
     ENDPOINTS = 'endpoints'
     KEYWORDS = 'keywords'

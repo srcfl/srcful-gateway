@@ -8,8 +8,8 @@ class Handler(GetHandler):
     def schema(self):
         return {
             "type": "get",
-            "description": "Returns a simple hello world message",
-            "returns": {"message": "hello world from srcful!"},
+            "description": "Returns e-system data for a specific device",
+            "returns": {"message": "e-system data including grid, battery, solar, and load information"},
         }
 
     def do_get(self, request_data: RequestData):
@@ -24,4 +24,7 @@ class Handler(GetHandler):
 
         ret = device.get_esystem_data()
 
-        return 200, json.dumps(ret)
+        # Use built-in to_dict() methods for JSON serialization
+        ret_dict = [item.to_dict() for item in ret]
+
+        return 200, json.dumps(ret_dict)
