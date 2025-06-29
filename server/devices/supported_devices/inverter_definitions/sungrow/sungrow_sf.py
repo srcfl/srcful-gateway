@@ -1,4 +1,4 @@
-from ...profile_keys import (
+from ....profile_keys import (
     ProtocolKey,
     ProfileKey,
     RegistersKey,
@@ -6,8 +6,8 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
-from ..profile import ModbusProfile
-from ...common.types import ModbusDevice
+from ...profile import ModbusProfile
+from ....common.types import ModbusDevice
 
 
 class SungrowSFProfile(ModbusProfile):

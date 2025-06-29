@@ -1,4 +1,4 @@
-from ...profile_keys import (
+from ....profile_keys import (
     ProtocolKey,
     ProfileKey,
     RegistersKey,
@@ -6,23 +6,14 @@ from ...profile_keys import (
     DataTypeKey,
     EndiannessKey,
 )
-from ..profile import ModbusProfile
-from ...common.types import ModbusDevice
+from .sungrow_register_definitions import sungrow_registers
 
 
-class SungrowProfile(ModbusProfile):
-    def __init__(self):
-        super().__init__(sungrow_profile)
-
-    def profile_is_valid(self, device: ModbusDevice) -> bool:
-        return True
-
-
-sungrow_profile = {
+sungrow_legacy_profile = {
     ProfileKey.NAME: "sungrow",
     ProfileKey.MAKER: "Sungrow",
     ProfileKey.VERSION: "V1.1b3",
-    ProfileKey.VERBOSE_ALWAYS: False,
+    ProfileKey.VERBOSE_ALWAYS: True,
     ProfileKey.DISPLAY_NAME: "Sungrow",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
     ProfileKey.DESCRIPTION: "Another inverter profile...",
@@ -168,5 +159,6 @@ sungrow_profile = {
             RegistersKey.ENDIANNESS: EndiannessKey.BIG,
         },
     ],
+    ProfileKey.ALL_REGISTERS: sungrow_registers,
     ProfileKey.KEYWORDS: ["sungrow", "Espressif"],
 }

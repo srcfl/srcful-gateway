@@ -22,6 +22,9 @@ from .deye_legacy_profile import deye_legacy_profile
 
 class DeyeProfile(ModbusProfile):
 
+    # Metadata related registers
+    RATED_POWER_REGISTER = 20
+
     # PV related registers
     PV_STRING_1_REGISTER = 672
     PV_STRING_2_REGISTER = 673
@@ -54,6 +57,9 @@ class DeyeProfile(ModbusProfile):
     GRID_FREQUENCY_REGISTER = 609
     TOTAL_IMPORT_ENERGY_REGISTER = 522
     TOTAL_EXPORT_ENERGY_REGISTER = 524
+
+    # Load related registers
+    LOAD_POWER_REGISTER = 653
 
     # Control registers
     BATTERY_LIMIT_CONTROL_REGISTER = 142
@@ -102,7 +108,7 @@ class DeyeProfile(ModbusProfile):
 
     def _get_metadata(self, device_sn: str, timestamp_ms: int, decoded_registers: List[RegisterInterval]) -> EMetadata:
         MODEL = "N/A"
-        RATED_POWER = self.get_register_interval(20, decoded_registers)
+        RATED_POWER = self.get_register_interval(self.RATED_POWER_REGISTER, decoded_registers)
         return EMetadata(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,
@@ -181,9 +187,9 @@ class DeyeProfile(ModbusProfile):
                 l1_V=EVoltage(value=L1_VOLTAGE.decoded_value),
                 l2_V=EVoltage(value=L2_VOLTAGE.decoded_value),
                 l3_V=EVoltage(value=L3_VOLTAGE.decoded_value),
-                l1_P=EPower(value=L1_POWER.decoded_value),
-                l2_P=EPower(value=L2_POWER.decoded_value),
-                l3_P=EPower(value=L3_POWER.decoded_value),
+                l1_W=EPower(value=L1_POWER.decoded_value),
+                l2_W=EPower(value=L2_POWER.decoded_value),
+                l3_W=EPower(value=L3_POWER.decoded_value),
                 grid_frequency=EFrequency(value=GRID_FREQUENCY.decoded_value),
                 total_import_energy=EEnergy(value=TOTAL_IMPORT_ENERGY.decoded_value),
                 total_export_energy=EEnergy(value=TOTAL_EXPORT_ENERGY.decoded_value),
@@ -192,7 +198,7 @@ class DeyeProfile(ModbusProfile):
             return None
 
     def _get_load(self, device_sn: str, timestamp_ms: int, decoded_registers: List[RegisterInterval]) -> ELoadType:
-        LOAD_P = self.get_register_interval(653, decoded_registers)
+        LOAD_P = self.get_register_interval(self.LOAD_POWER_REGISTER, decoded_registers)
         return ELoadType(
             device_sn=device_sn,
             timestamp_ms=timestamp_ms,

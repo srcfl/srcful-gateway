@@ -96,15 +96,15 @@ class EGridType(EBaseType):
     l1_V: EVoltage  # Must be in V.
     l2_V: EVoltage  # Must be in V.
     l3_V: EVoltage  # Must be in V.
-    l1_P: EPower  # Must be in W. Positive for import, negative for export
-    l2_P: EPower  # Must be in W. Positive for import, negative for export
-    l3_P: EPower  # Must be in W. Positive for import, negative for export
+    l1_W: EPower  # Must be in W. Positive for import, negative for export
+    l2_W: EPower  # Must be in W. Positive for import, negative for export
+    l3_W: EPower  # Must be in W. Positive for import, negative for export
     grid_frequency: EFrequency  # Must be in Hz.
     total_import_energy: EEnergy  # Must be in Wh.
     total_export_energy: EEnergy  # Must be in Wh.
 
     def total_power(self) -> EPower:
-        return EPower(self.l1_P.value + self.l2_P.value + self.l3_P.value)
+        return EPower(self.l1_W.value + self.l2_W.value + self.l3_W.value)
 
 
 @dataclass(frozen=True, eq=True)
