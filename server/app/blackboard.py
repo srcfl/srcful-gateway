@@ -1,3 +1,4 @@
+from server.e_system.e_system import ESystemTemplate
 from server.network.network_utils import HostInfo
 import random
 import time
@@ -43,6 +44,8 @@ class BlackBoard(ISystemTime, ITaskSource):
     _tasks: list[ITask]
     _device_storage: DeviceStorage
 
+    _esystem: ESystemTemplate
+
     def __init__(self, crypto_state: CryptoState):
         self._tasks = []
         self._devices = BlackBoard.Devices()
@@ -57,6 +60,15 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._available_devices = []
         self._available_hosts = []
         self._device_storage = DeviceStorage()
+        self._esystem = ESystemTemplate()
+
+    @property
+    def esystem(self) -> ESystemTemplate:
+        return self._esystem
+
+    @esystem.setter # not sure this is a good thing
+    def esystem(self, esystem: ESystemTemplate):
+        self._esystem = esystem
 
     @property
     def device_storage(self) -> DeviceStorage:

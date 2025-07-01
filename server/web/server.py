@@ -62,6 +62,8 @@ class Endpoints:
             "state/update": handler.get.state.UpdateStateHandler(),
             "system": handler.get.system.SystemHandler(),
             "system/details": handler.get.system.SystemDetailsHandler(),
+
+            "esystem": handler.get.esystem.Handler(),
         }
 
         self.api_post_dict = {

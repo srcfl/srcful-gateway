@@ -1,7 +1,68 @@
 from typing import List, Tuple
+
+from server.devices.ICom import ICom
 from .types import EBaseType, EBatteryType, ESolarType, ELoadType, EGridType, EPower
 from dataclasses import replace
+from dataclasses import dataclass
 
+
+class ESystemTemplate:
+    """
+    ESystemTemplate is a class that represents a template for an energy system.
+    It contains lists of device serial numbers from wich the batteries, solar panels, loads, and grid type objects will be created.
+    This class is immutable and new instances are created when things are changed.
+    """
+
+    _battery_sn_list: List[str]
+    _solar_sn_list: List[str]
+    _load_sn_list: List[str]
+    _grid_sn_list: List[str]
+
+    def __init__(self):
+        self._battery_sn_list = []
+        self._solar_sn_list = []
+        self._load_sn_list = []
+        self._grid_sn_list = []
+
+    @property
+    def battery_sn_list(self) -> List[str]:
+        return self._battery_sn_list
+    
+    @property
+    def solar_sn_list(self) -> List[str]:
+        return self._solar_sn_list  
+    
+    @property
+    def load_sn_list(self) -> List[str]:
+        return self._load_sn_list
+    
+    @property
+    def grid_sn_list(self) -> List[str]:
+        return self._grid_sn_list
+    
+    def add_battery_sn(self, device:ICom) -> bool:
+        if EBatteryType in [type(part) for part in device.get_esystem_data()]:
+            self._battery_sn_list.append(device.get_SN())
+            return True
+        return False
+    
+    def add_solar_sn(self, device:ICom) -> bool:
+        if ESolarType in [type(part) for part in device.get_esystem_data()]:
+            self._solar_sn_list.append(device.get_SN())
+            return True
+        return False
+    
+    def add_load_sn(self, device:ICom) -> bool:
+        if ELoadType in [type(part) for part in device.get_esystem_data()]:
+            self._load_sn_list.append(device.get_SN())
+            return True
+        return False
+    
+    def add_grid_sn(self, device:ICom) -> bool:
+        if EGridType in [type(part) for part in device.get_esystem_data()]:
+            self._grid_sn_list.append(device.get_SN())
+            return True
+        return False
 
 class ESystem:
     """
@@ -15,7 +76,7 @@ class ESystem:
     load: List[ELoadType]
     grid: List[EGridType]
 
-    def __init__(self, battery_sns: List[str], solar_sns: List[str], load_sns: List[str], grid_sns: List[str], parts: List[EBaseType]):
+    def __init__(self, template: ESystemTemplate, parts: List[EBaseType]):
         """
         Create a new ESystem instance.
         battery_sns, solar_sns, load_sns, grid_sns are the serial numbers of the batteries, solar panels, loads, and grid this esystem should contain.
@@ -23,10 +84,7 @@ class ESystem:
         """
 
         # Store the serial numbers of the batteries, solar panels, loads, and grid as copies.
-        self.battery_sn_list: List[str] = battery_sns.copy()
-        self.solar_sn_list: List[str] = solar_sns.copy()
-        self.load_sn_list: List[str] = load_sns.copy()
-        self.grid_sn_list: List[str] = grid_sns.copy()
+        self.template = template
 
         self.batteries = []
         self.solar = []
@@ -40,33 +98,32 @@ class ESystem:
         return self.add_parts([part])
 
     def add_parts(self, parts: List[EBaseType]) -> 'ESystem':
-        ret = ESystem(self.battery_sn_list, self.solar_sn_list, self.load_sn_list, self.grid_sn_list,
-                      self.batteries + self.solar + self.load + self.grid + parts)
+        ret = ESystem(self.template, self.batteries + self.solar + self.load + self.grid + parts)
         return ret
 
     def _add_part(self, part: EBaseType):
-        if isinstance(part, EBatteryType) and part.device_sn in self.battery_sn_list:
+        if isinstance(part, EBatteryType) and part.device_sn in self.template.battery_sn_list:
             self.batteries.append(part)
-        elif isinstance(part, ESolarType) and part.device_sn in self.solar_sn_list:
+        elif isinstance(part, ESolarType) and part.device_sn in self.template.solar_sn_list:
             self.solar.append(part)
-        elif isinstance(part, ELoadType) and part.device_sn in self.load_sn_list:
+        elif isinstance(part, ELoadType) and part.device_sn in self.template.load_sn_list:
             self.load.append(part)
-        elif isinstance(part, EGridType) and part.device_sn in self.grid_sn_list:
+        elif isinstance(part, EGridType) and part.device_sn in self.template.grid_sn_list:
             self.grid.append(part)
         else:
             raise ValueError(f"Invalid part type: {type(part)}")
 
     def get_solar_power(self) -> EPower:
-        return EPower(sum(solar.power.value for solar in self.solar))
+        return EPower(value=sum(solar.power.value for solar in self.solar))
 
     def get_battery_power(self) -> EPower:
-        return EPower(sum(battery.power.value for battery in self.batteries))
+        return EPower(value=sum(battery.power.value for battery in self.batteries))
 
     def get_load_power(self) -> EPower:
-        return EPower(sum(load.power.value for load in self.load))
+        return EPower(value=sum(load.power.value for load in self.load))
 
     def get_grid_power(self) -> EPower:
-        return EPower(sum(grid.total_power().value for grid in self.grid))
+        return EPower(value=sum(grid.total_power().value for grid in self.grid))
 
     def get_oldest_timestamp(self) -> int:
         return min(part.timestamp_ms for part in self.batteries + self.solar + self.load + self.grid)
@@ -91,5 +148,5 @@ class ESystem:
         # 0 = solar + load + battery -> battery = -solar - load
         # TODO: this is limited to one battery for now. For multiple batteries we would need to know the state of charge of each battery and do some balancing there
         new_battery_power = -self.get_solar_power().value - self.get_load_power().value
-        new_battery = replace(self.batteries[0], power=EPower(new_battery_power))
-        return ESystem(self.battery_sn_list, self.solar_sn_list, self.load_sn_list, self.grid_sn_list, [new_battery])
+        new_battery = replace(self.batteries[0], power=EPower(value=new_battery_power))
+        return ESystem(self.template, self.solar + self.load + self.grid + [new_battery])
