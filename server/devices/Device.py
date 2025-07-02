@@ -17,9 +17,11 @@ class Device(ICom, ABC):
     def get_device_mode(self) -> DeviceMode:
         return self._mode
 
-    def set_device_mode(self) -> None:
-        # generic devices only supports read
-        self._mode = DeviceMode.READ
+    def set_device_mode(self, mode: DeviceMode) -> bool:
+        if mode == DeviceMode.READ:
+            self._mode = DeviceMode.READ
+            return True
+        return False
 
     def is_disconnected(self) -> bool:
         return self._is_disconnected

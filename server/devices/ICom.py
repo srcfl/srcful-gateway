@@ -42,12 +42,9 @@ class ICom(ABC):
     def get_device_mode(self) -> DeviceMode:
         pass
 
-    @abstractmethod
-    def set_device_mode(self) -> None:
-        pass
 
     @abstractmethod
-    def set_device_mode(self, mode: DeviceMode) -> None:
+    def set_device_mode(self, mode: DeviceMode) -> bool:
         pass
 
     class ConnectionException(Exception):

@@ -1,9 +1,15 @@
+from enum import Enum
 from typing import List, Tuple
 
 from server.devices.ICom import ICom
 from .types import EBaseType, EBatteryType, ESolarType, ELoadType, EGridType, EPower
 from dataclasses import replace
-from dataclasses import dataclass
+
+
+
+class ESystemState(Enum):
+    SELF_CONSUMPTION = "self-consumption"
+    STOP = "stop"
 
 
 class ESystemTemplate:
@@ -18,11 +24,25 @@ class ESystemTemplate:
     _load_sn_list: List[str]
     _grid_sn_list: List[str]
 
+    _state: ESystemState
+
     def __init__(self):
         self._battery_sn_list = []
         self._solar_sn_list = []
         self._load_sn_list = []
         self._grid_sn_list = []
+        self._state = ESystemState.STOP
+
+    @property
+    def state(self) -> ESystemState:
+        return self._state
+    
+    def set_state(self, state: ESystemState):
+        self._state = state
+
+    def sn_list(self) -> List[str]:
+        # return a list of unique serial numbers
+        return [sn for sn in set(self._battery_sn_list + self._solar_sn_list + self._load_sn_list + self._grid_sn_list)]
 
     @property
     def battery_sn_list(self) -> List[str]:
@@ -150,3 +170,6 @@ class ESystem:
         new_battery_power = -self.get_solar_power().value - self.get_load_power().value
         new_battery = replace(self.batteries[0], power=EPower(value=new_battery_power))
         return ESystem(self.template, self.solar + self.load + self.grid + [new_battery])
+
+    def get_esystem_data(self) -> List[EBaseType]:
+        return list(self.batteries) + list(self.solar) + list(self.load) + list(self.grid)  # explicit list to avoid type errors
