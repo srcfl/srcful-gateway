@@ -44,3 +44,5 @@ venv
 
 /examples
 .cursor/
+
+gateway.db
