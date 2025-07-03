@@ -8,27 +8,27 @@ x-environment: &shared_env
 
 services:
 
-# Reverse proxy service
-traefik:
-  build: ./traefik
-  container_name: eGW-traefik
-  ports:
-    - "80:80"
-    - "8080:8080"
-  restart: always
-  networks:
-    - web-network
-  extra_hosts:
-    - "host.docker.internal:host-gateway"
-
-  # React web client
-  client-web:
-    build: ./client-web
-    container_name: eGW-client-web
+  # Reverse proxy service
+  traefik:
+    build: ./traefik
+    container_name: eGW-traefik
+    ports:
+      - "80:80"
+      - "8080:8080"
     restart: always
     networks:
       - web-network
-    ports:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    # React web client
+    client-web:
+      build: ./client-web
+      container_name: eGW-client-web
+      restart: always
+      networks:
+        - web-network
+      ports:
       - "5005:80"  # Temporary direct access for testing
 
   web:
