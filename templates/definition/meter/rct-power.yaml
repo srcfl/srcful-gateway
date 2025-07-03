@@ -1,0 +1,46 @@
+template: rct-power
+products:
+  - brand: RCT
+    description:
+      generic: Power
+capabilities: ["battery-control"]
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: host
+  - name: capacity
+    advanced: true
+  # battery control
+  - name: minsoc
+    type: int
+    default: 7
+    advanced: true
+  - name: maxsoc
+    type: int
+    default: 97
+    advanced: true
+  - name: cache
+    advanced: true
+    default: 30s
+  - name: maxchargepower
+  - name: externalpower
+    type: bool
+    description:
+      de: Externe Leistung
+      en: External power
+    help:
+      de: Externe Leistung aller an S0 angeschlossenen Geräte abfragen
+      en: Query external power of all devices connected to S0
+    advanced: true
+    usages: ["pv"]
+render: |
+  type: rct
+  uri: {{ .host }}
+  usage: {{ .usage }}
+  cache: {{ .cache }}
+  capacity: {{ .capacity }} # kWh
+  minsoc: {{ .minsoc }}
+  maxsoc: {{ .maxsoc }}
+  maxchargepower: {{ .maxchargepower }}
+  externalpower: {{ .externalpower }}

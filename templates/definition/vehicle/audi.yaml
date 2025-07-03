@@ -1,0 +1,11 @@
+template: audi
+covers: ["etron"]
+products:
+  - brand: Audi
+params:
+  - preset: vehicle-base
+  - name: vin
+    example: WAUZZZ...
+render: |
+  type: etron
+  {{ include "vehicle-base" . }}

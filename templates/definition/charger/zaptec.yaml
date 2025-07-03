@@ -1,0 +1,26 @@
+template: zaptec
+products:
+  - brand: Zaptec
+    description:
+      generic: Go
+  - brand: Zaptec
+    description:
+      generic: Go 2
+  - brand: Zaptec
+    description:
+      generic: Pro
+capabilities: ["rfid"]
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: id
+    help:
+      de: Wallbox ID
+      en: Charger ID
+  - name: user
+  - name: password
+render: |
+  type: zaptec
+  id: {{ .id }}
+  user: {{ .user }}
+  password: '{{ .password }}'

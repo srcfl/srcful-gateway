@@ -1,0 +1,29 @@
+template: pracht-alpha
+products:
+  - brand: Pracht
+    description:
+      generic: Alpha XT
+  - brand: Pracht
+    description:
+      generic: XT+
+  - brand: Pracht
+    description:
+      generic: Mono XT
+  - brand: Pracht
+    description:
+      generic: PNI
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    comset: 8N1
+    id: 1
+  - name: connector
+  - name: timeout
+render: |
+  type: pracht-alpha
+  {{- include "modbus" . }}
+  connector: {{ .connector }}
+  timeout: {{ .timeout }}

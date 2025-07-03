@@ -1,0 +1,10 @@
+template: nissan
+products:
+  - brand: Nissan
+    description:
+      generic: Leaf
+params:
+  - preset: vehicle-base
+render: |
+  type: nissan
+  {{ include "vehicle-base" . }}

@@ -1,0 +1,9 @@
+template: evsewifi
+products:
+  - description:
+      generic: EVSE-WiFi
+params:
+  - name: host
+render: |
+  type: evsewifi
+  uri: http://{{ .host }}

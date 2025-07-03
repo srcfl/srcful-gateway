@@ -1,0 +1,22 @@
+template: eastron-sdm220_230
+products:
+  - brand: Eastron
+    description:
+      generic: SDM220/230
+  - brand: Weidmüller
+    description:
+      generic: EM110-RTU-2P
+  - brand: Weidmüller
+    description:
+      generic: EM111-RTU-2P
+params:
+  - name: usage
+    choice: ["grid", "charge"]
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: mbmd
+  {{- include "modbus" . }}
+  model: sdm220
+  power: Power
+  energy: Import

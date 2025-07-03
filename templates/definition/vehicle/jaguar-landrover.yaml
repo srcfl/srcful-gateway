@@ -1,0 +1,10 @@
+template: jaguar-landrover
+deprecated: true
+products:
+  - brand: Jaguar
+  - brand: Land Rover
+params:
+  - preset: vehicle-base
+render: |
+  type: jaguar
+  {{ include "vehicle-base" . }}

@@ -1,0 +1,9 @@
+template: porsche
+deprecated: true
+products:
+  - brand: Porsche
+params:
+  - preset: vehicle-base
+render: |
+  type: porsche
+  {{ include "vehicle-base" . }}

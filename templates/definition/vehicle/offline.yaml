@@ -1,0 +1,18 @@
+template: offline
+products:
+  - description:
+      en: Generic vehicle (without API)
+      de: Generisches Fahrzeug (ohne API)
+requirements:
+  description:
+    de:
+group: generic
+params:
+  - preset: vehicle-common
+render: |
+  type: custom
+  features: ["offline"]
+  {{- include "vehicle-common" . }}
+  soc:
+    source: const
+    value: 0

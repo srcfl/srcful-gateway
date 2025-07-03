@@ -1,0 +1,10 @@
+template: carwings
+products:
+  - brand: Nissan
+    description:
+      generic: Leaf (pre 2019)
+params:
+  - preset: vehicle-base
+render: |
+  type: carwings
+  {{ include "vehicle-base" . }}
