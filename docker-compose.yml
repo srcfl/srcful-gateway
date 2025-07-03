@@ -97,8 +97,21 @@ services:
     depends_on:
       - gateway-rs
 
+  # BEGIN: EVCC solar-charging service ---------------------------------------
+  evcc:
+    build: ./evcc
+    container_name: eGW-evcc
+    restart: always
+    network_mode: host
+    volumes:
+      - evcc-config:/etc/evcc
+      - evcc-data:/root/.evcc
+  # END: EVCC solar-charging service -----------------------------------------
+
 volumes:
   srcful-data:
+  evcc-data:
+  evcc-config:
 
 networks:
   web-network:

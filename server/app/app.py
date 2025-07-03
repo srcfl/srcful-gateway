@@ -6,6 +6,7 @@ from server.crypto.crypto_state import CryptoState
 from server.network.network_utils import NetworkUtils
 from server.tasks.checkForWebRequestTask import CheckForWebRequest
 from server.tasks.saveStateTask import SaveStatePerpetualTask
+from server.tasks.evccHarvestTask import EvccHarvestTask
 import server.web.server
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.tasks.scanWiFiTask import ScanWiFiTask
@@ -95,6 +96,9 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))
 
     scheduler.add_task(DiscoverHostsTask(bb.time_ms() + 1000, bb))
+
+    # Add evcc harvest task with 60-second startup delay
+    scheduler.add_task(EvccHarvestTask(bb.time_ms() + 20000, bb))
 
     try:
         scheduler.main_loop()
