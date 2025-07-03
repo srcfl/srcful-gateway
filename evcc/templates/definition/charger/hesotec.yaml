@@ -1,0 +1,16 @@
+template: hesotec
+products:
+  - brand: Hesotec
+    description:
+      generic: eSat
+  - brand: Hesotec
+    description:
+      generic: eBox
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: modbus
+    choice: ["tcpip"]
+render: |
+  type: hesotec
+  {{- include "modbus" . }}

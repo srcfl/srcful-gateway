@@ -1,0 +1,13 @@
+template: mystrom
+products:
+  - brand: myStrom
+    description:
+      generic: Switch
+group: switchsockets
+params:
+  - name: host
+  - preset: switchsocket
+render: |
+  type: mystrom
+  uri: http://{{ .host }}
+  {{ include "switchsocket" . }}

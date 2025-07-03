@@ -1,0 +1,231 @@
+network:
+  # schema is the HTTP schema
+  # setting to `https` does not enable https, it only changes the way URLs are generated
+  schema: http
+  # host is the hostname or IP address
+  # if the host name contains a `.local` suffix, the name will be announced on MDNS
+  # docker: MDNS announcements don't work. host must be set to the docker host's name.
+  host: evcc.local
+  # port is the listening port for UI and api
+  # evcc will listen on all available interfaces
+  port: 7070
+
+interval: 30s # control cycle interval. Interval <30s can lead to unexpected behavior, see https://docs.evcc.io/docs/reference/configuration/interval
+
+# database configuration for persisting charge sessions and settings
+# database:
+#   type: sqlite
+#   dsn: <path-to-db-file>
+
+# sponsor token enables optional features (request at https://sponsor.evcc.io)
+# sponsortoken:
+
+# telemetry enables aggregated statistics
+#
+# Telemetry allows collecting usage data (grid and green energy, charge power).
+# Data is aggregated, no individual charging sessions are tracked. The collected,
+# anonymous data can be retrieved using https://api.evcc.io.
+#
+# See https://github.com/evcc-io/evcc/pull/4343 or details.
+#
+# For time being, this is only available to sponsors, hence data is associated with
+# the sponsor token's identity.
+#
+# telemetry: true
+
+# log settings
+log: info
+levels:
+  site: debug
+  lp-1: debug
+  lp-2: debug
+  cache: error
+  db: error
+
+# modbus proxy for allowing external programs to reuse the evcc modbus connection
+# each entry will start a proxy instance at the given port speaking Modbus TCP and
+# relaying to the given modbus downstream device (either TCP or RTU, RS485 or TCP)
+modbusproxy:
+  #  - port: 5200
+  #    uri: solar-edge:502
+  #    # rtu: true
+  #    # readonly: true # use `deny` to raise modbus errors
+
+# meter definitions
+# name can be freely chosen and is used as reference when assigning meters to site and loadpoints
+# for documentation see https://docs.evcc.io/docs/devices/meters
+meters:
+  - name: grid
+    type: mbmd
+    model: sdm # SDM630
+    uri: rs485.fritz.box:23
+    rtu: true # rs485 device connected using ethernet adapter
+    id: 2
+    power: Power # default value, optionally override
+    energy: Sum # default value, optionally override
+  - name: pv
+    type: ...
+  - name: battery
+    type: ...
+  - name: charge
+    type: ...
+  - name: aux
+    type: ...
+
+# charger definitions
+# name can be freely chosen and is used as reference when assigning charger to vehicle
+# for documentation see https://docs.evcc.io/docs/devices/chargers
+chargers:
+  - name: wallbe
+    type: wallbe # Wallbe charger
+    uri: 192.168.0.8:502 # ModBus address
+  - name: keba
+    type: ...
+
+# vehicle definitions
+# name can be freely chosen and is used as reference when assigning vehicle to loadpoint
+# for documentation see https://docs.evcc.io/docs/devices/vehicles
+vehicles:
+  - name: car1
+    type: renault
+    title: Zoe
+    capacity: 60 # kWh
+    user: myuser # user
+    password: mypassword # password
+    vin: WREN...
+    onIdentify: # set defaults when vehicle is identified
+      mode: pv # enable PV-charging when vehicle is identified
+
+# site describes the EVU connection, PV and home battery
+site:
+  title: Home # display name for UI
+  meters:
+    grid: grid # grid meter
+    pv:
+      - pv # list of pv inverters/ meters
+    battery:
+      - battery # list of battery meters
+    aux:
+      - aux # list of auxiliary meters for adjusting grid operating point
+  residualPower: 0 # additional household usage margin
+
+# loadpoint describes the charger, charge meter and connected vehicle
+loadpoints:
+  - title: Garage # display name for UI
+    charger: wallbe # charger
+    meter: charge # external charge meter (if charger has no meter included). NOT grid or pv meter.
+    mode: "off" # default charge mode to apply when vehicle is disconnected; use "off" to disable by default if charger is publicly available
+
+    # remaining settings are experts-only and best left at default values
+    priority: 0 # relative priority for concurrent charging in PV mode with multiple loadpoints (higher values have higher priority)
+    soc:
+      # polling defines usage of the vehicle APIs
+      # Modifying the default settings it NOT recommended. It MAY deplete your vehicle's battery
+      # or lead to vehicle manufacturer banning you from API use. USE AT YOUR OWN RISK.
+      poll:
+        # poll mode defines under which condition the vehicle API is called:
+        #   charging: update vehicle ONLY when charging (this is the recommended default)
+        #   connected: update vehicle when connected (not only charging), interval defines how often
+        #   always: always update vehicle regardless of connection state, interval defines how often (only supported for single vehicle)
+        mode: charging
+        # poll interval defines how often the vehicle API may be polled if NOT charging
+        interval: 60m
+      estimate: true # set false to disable interpolating between api updates (not recommended)
+    enable: # pv mode enable behavior
+      delay: 1m # threshold must be exceeded for this long
+      threshold: 0 # grid power threshold (in Watts, negative=export). If zero, export must exceed minimum charge power to enable
+    disable: # pv mode disable behavior
+      delay: 3m # threshold must be exceeded for this long
+      threshold: 0 # maximum import power (W)
+
+# tariffs are the fixed or variable tariffs
+tariffs:
+  currency: EUR # three letter ISO-4217 currency code (default EUR)
+  grid:
+    # either static grid price (or price zones)
+    type: fixed
+    price: 0.294 # EUR/kWh
+    zones:
+      - days: Mon-Fri
+        hours: 2-5
+        price: 0.2 # EUR/kWh
+      - days: Sat,Sun
+        price: 0.15 # EUR/kWh
+    # see: https://docs.evcc.io/en/docs/devices/tariffs
+  feedin:
+    # rate for feeding excess (pv) energy to the grid
+    type: fixed
+    price: 0.08 # EUR/kWh
+    # see: https://docs.evcc.io/en/docs/devices/tariffs
+  co2:
+    # co2 tariff provides co2 intensity forecast and is for co2-optimized target charging if no variable grid tariff is specified
+    # type: template
+    # template: grünstromindex # GrünStromIndex (Germany only)
+    # zip: <zip>
+    # see: https://docs.evcc.io/en/docs/tariffs#co-forecast
+  solar:
+    # solar "tariff" provides pv generation forecast
+    # - type: template
+    #   template: solcast
+    #   site: <site>
+    #   see: https://docs.evcc.io/en/docs/tariffs#pv-forecast
+
+# mqtt message broker
+mqtt:
+  # broker: localhost:1883
+  # topic: evcc # root topic for publishing, set empty to disable
+  # user:
+  # password:
+
+# influx database
+influx:
+  # url: http://localhost:8086
+  # database: evcc
+  # user:
+  # password:
+
+# eebus credentials
+eebus:
+  # uri: # :4712
+  # interfaces: # limit eebus to specific network interfaces
+  # - en0
+  # certificate: # local signed certificate, required, can be generated via `evcc eebus-cert`
+  #   public: # public key
+  #   private: # private key
+
+# push messages
+messaging:
+  events:
+    start: # charge start event
+      title: Charge started
+      msg: Started charging in "${mode}" mode
+    stop: # charge stop event
+      title: Charge finished
+      msg: Finished charging ${chargedEnergy:%.1fk}kWh in ${chargeDuration}.
+    connect: # vehicle connect event
+      title: Car connected
+      msg: "Car connected at ${pvPower:%.1fk}kW PV"
+    disconnect: # vehicle connected event
+      title: Car disconnected
+      msg: Car disconnected after ${connectedDuration}
+    soc: # vehicle soc update event
+      title: Soc updated
+      msg: Battery charged to ${vehicleSoc:%.0f}%
+    guest: # vehicle could not be identified
+      title: Unknown vehicle
+      msg: Unknown vehicle, guest connected?
+  services:
+  # - type: pushover
+  #   app: # app id
+  #   recipients:
+  #   - # list of recipient ids
+  # - type: telegram
+  #   token: # bot id
+  #   chats:
+  #   - # list of chat ids
+  # - type: email
+  #   uri: smtp://<user>:<password>@<host>:<port>/?fromAddress=<from>&toAddresses=<to>
+  # - type: ntfy
+  #   uri: https://<host>/<topics>
+  #   priority: <priority>
+  #   tags: <tags>

@@ -1,0 +1,52 @@
+{
+	"start_url": "../",
+	"name": "evcc",
+	"short_name": "evcc",
+	"theme_color": "#18191a",
+	"background_color": "#18191a",
+	"display": "standalone",
+	"icons": [
+		{
+			"src": "android-chrome-192x192.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "android-chrome-192x192-maskable.png",
+			"sizes": "192x192",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "android-chrome-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "android-chrome-512x512-maskable.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "android-chrome.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any"
+		},
+		{
+			"src": "android-chrome-maskable.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose:": "maskable"
+		},
+		{
+			"src": "android-chrome-monochrome.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose:": "monochrome"
+		}
+	]
+}

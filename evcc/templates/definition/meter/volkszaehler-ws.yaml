@@ -1,0 +1,24 @@
+template: volkszaehler-ws
+products:
+  - brand: Volkszähler
+    description:
+      generic: WebSocket API
+requirements:
+  evcc: ["skiptest"]
+group: generic
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: host
+  - name: port
+    default: 8082
+  - name: uuid
+    required: true
+render: |
+  type: custom
+  power: # power reading
+    source: ws # use websocket plugin
+    uri: ws://{{ .host }}:{{ .port }}/socket
+    jq: .data | select(.uuid=="{{ unquote .uuid }}") .tuples[0][1] # parse response json
+    timeout: 30s
+    scale: 1

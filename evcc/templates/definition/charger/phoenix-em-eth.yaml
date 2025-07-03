@@ -1,0 +1,12 @@
+template: phoenix-em-eth
+products:
+  - brand: Phoenix Contact
+    description:
+      generic: EM-CP-PP-ETH
+params:
+  - name: modbus
+    choice: ["tcpip"]
+    id: 180
+render: |
+  type: phoenix-em-eth
+  {{- include "modbus" . }}

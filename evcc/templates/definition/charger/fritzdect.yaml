@@ -1,0 +1,23 @@
+template: fritzdect
+products:
+  - brand: AVM
+    description:
+      generic: FritzDECT
+group: switchsockets
+params:
+  - name: uri
+    default: https://fritz.box
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: ain
+    required: true
+  - preset: switchsocket
+render: |
+  type: fritzdect
+  uri: {{ .uri }}
+  user: {{ .user }}
+  password: {{ .password }}
+  ain: {{ .ain }} # switch actor identification number without blanks (see AIN number on switch sticker)
+  {{ include "switchsocket" . }}

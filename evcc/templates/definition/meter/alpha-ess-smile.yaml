@@ -1,0 +1,212 @@
+template: alpha-ess-smile
+products:
+  - brand: Alpha ESS
+    description:
+      generic: Storion SMILE
+capabilities: ["battery-control"]
+requirements:
+  description:
+    de: |
+      Um die aktive Ladesteuerung zu nutzen muss einmalig über das Webinterface oder App Zeiten für das Netzladen definiert werden. (Einstellungen->Funktionseinstellungen->Netzladen/Entladen) Hier sollte ein durchgehender Zeitraum (z.B: Ladezeit 1 00:00-23:00,   Ladezeit 2 23:00-00:00) eingetragen werden. Den Schalter "Netzladen" aber deaktivieren. Die eigentliche Steuerung erfolgt über evcc. Der Entladestopp wird über eine geplante Netzladung mit einem Ziel-SoC von 10% realisiert. Alternativ können die Zeiten auch über Modbus konfiguriert werden. Dafür die Register `2134,2142,2135,2136,2144,2137,2175` auf die Werte `0,0,23,0,23,0,0,0` setzen.
+    en: |
+      To use active battery control, times for grid charging must be defined once via the web interface or app. (Settings->Function settings->Grid charging/discharging) A continuous time period should be entered here (e.g.: Charging time 1 00:00-23:00, Charging time 2 23:00-00:00). However, deactivate the "Grid charging" switch. The actual control takes place via evcc. Discharge stop is realized via a scheduled grid charge with a target SoC of 10%. Alternatively, it can also be configured via Modbus. To do this, set the registers `2134,2142,2135,2136,2144,2137,2175` to the values `0,0,23,0,23,0,0,0,0`.
+params:
+  - name: usage
+    choice: ["grid", "pv", "battery"]
+    allinone: true
+  - name: modbus
+    choice: ["rs485", "tcpip"]
+    baudrate: 9600
+    id: 85
+  - name: capacity
+    advanced: true
+  - name: minsoc
+    default: 20
+    type: int
+    advanced: true
+  - name: maxsoc
+    default: 95
+    type: int
+    advanced: true
+  - name: maxacpower
+render: |
+  type: custom
+  {{- if eq .usage "grid" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 33 # 0x21 Total Active power (Grid Meter)
+      type: holding
+      decode: int32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 18 # 0x12 Total energy consumed from grid (Grid)
+      type: holding
+      decode: uint32
+    scale: 0.01
+  currents:
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 23 # 0x17 Current of A phase
+      type: holding
+      decode: int16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 24 # 0x18 Current of B phase
+      type: holding
+      decode: int16
+    scale: 0.1
+  - source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 25 # 0x19 Current of C phase
+      type: holding
+      decode: int16
+    scale: 0.1
+  {{- end }}
+  {{- if eq .usage "pv" }}
+  power:
+    source: calc
+    add:
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 161 # 0xA1 Total Active power (PV Meter)
+        type: holding
+        decode: int32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1055 # 0x41f PV1 power
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1059 # 0x423 PV2 power
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1063 # 0x427 PV3 power
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1067 # 0x42b PV4 power
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1071 # 0x42f PV5 power
+        type: holding
+        decode: uint32
+    - source: modbus
+      {{- include "modbus" . | indent 4 }}
+      register:
+        address: 1075 # 0x433 PV6 power
+        type: holding
+        decode: uint32
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 144 # 0x90 Total energy feed to Grid (PV)
+      type: holding
+      decode: uint32
+    scale: 0.01
+  maxacpower: {{ .maxacpower }}
+  {{- end }}
+  {{- if eq .usage "battery" }}
+  power:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 294 # 0x126 Battery Power
+      type: holding
+      decode: int16
+  energy:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 290 # 0x122 Battery discharge energy
+      type: holding
+      decode: uint32
+    scale: 0.1
+  soc:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 258 # 0x102 Battery SOC
+      type: holding
+      decode: uint16
+    scale: 0.1
+  batterymode:
+    source: switch
+    switch:
+    - case: 1 # normal 
+      set:
+        source: const
+        value: 0
+        set:
+          source: modbus
+          {{- include "modbus" . | indent 8 }}
+          register:
+            address: 2127 # 0x84F Time period control flag
+            type: writemultiple
+            decode: uint16
+    - case: 2 # hold -> Enable grid charging with 10% (default) target soc -> will not start charging but will prevent uncharging of battery 
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+                address: 2127 # 0x84F Time period control flag
+                type: writemultiple
+                decode: uint16
+        - source: const
+          value: {{ .minsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2133 # 0x855 Charge Cut Soc
+              type: writemultiple
+              decode: uint16
+    - case: 3 # charge -> Enable grid charging with 100% target soc (will be stopped by evcc)
+      set:
+        source: sequence
+        set:
+        - source: const
+          value: 1
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+                  address: 2127 # 0x84F Time period control flag
+                  type: writemultiple
+                  decode: uint16
+        - source: const
+          value: {{ .maxsoc }}
+          set:
+            source: modbus
+            {{- include "modbus" . | indent 10 }}
+            register:
+              address: 2133 # 0x855 Charge Cut Soc
+              type: writemultiple
+              decode: uint16
+  capacity: {{ .capacity }} # kWh
+  {{- end }}
