@@ -1,0 +1,22 @@
+template: discovergy
+products:
+  - description:
+      generic: Discovergy
+params:
+  - name: usage
+    choice: ["grid", "pv"]
+  - name: user
+    required: true
+  - name: password
+    required: true
+  - name: meter
+    required: true
+    example: 1ESY1161229886
+render: |
+  type: discovergy
+  user: {{ .user }}
+  password: {{ .password }} # password
+  meter: {{ .meter }}
+  {{- if eq .usage "pv" }}
+  scale: -1
+  {{- end }}

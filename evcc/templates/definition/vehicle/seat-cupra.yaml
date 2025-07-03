@@ -1,0 +1,12 @@
+template: cupra
+products:
+  - brand: Seat
+    description:
+      generic: CupraConnect Gen4 (Born, Formentor, Tavascan)
+params:
+  - preset: vehicle-base
+  - preset: vehicle-features
+render: |
+  type: cupra
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}

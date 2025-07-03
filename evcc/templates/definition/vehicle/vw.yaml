@@ -1,0 +1,22 @@
+template: vw
+covers: ["id"]
+products:
+  - brand: Volkswagen
+    description:
+      generic: We Connect ID
+requirements:
+  description:
+    de: e-Golf, e-Up, ID Familie
+    en: e-Golf, e-Up, ID family
+params:
+  - preset: vehicle-base
+  - name: vin
+    example: WVWZZZ...
+  - name: timeout
+    default: 10s
+  - preset: vehicle-features
+render: |
+  type: vw
+  {{ include "vehicle-base" . }}
+  {{ include "vehicle-features" . }}
+  timeout: {{ .timeout }}

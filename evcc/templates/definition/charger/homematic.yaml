@@ -1,0 +1,77 @@
+template: homematic
+products:
+  - brand: Homematic IP
+group: switchsockets
+params:
+  - name: host
+  - name: port
+    default: 2010
+    description:
+      en: XML-RPC server port number
+      de: XML-RPC-Server Port-Nummer
+    example: BidCos-Wired=2000, BidCos-RF=2001, HmIP=2010
+  - name: device
+    description:
+      de: Geräteadresse/Seriennummer
+      en: Device address/Serial number
+    required: true
+    mask: false
+    example: "0001EE89AAD848"
+    help:
+      en: Homematic device id like shown in the CCU web user interface.
+      de: Homematic Geräte Id, wie im CCU Webfrontend angezeigt.
+  - name: user
+    required: false
+  - name: password
+    required: false
+    mask: true
+  - name: meterchannel
+    default: 6
+    type: int
+    required: true
+    advanced: true
+    description:
+      en: Meter channel number
+      de: Kanalnummer des Power-Meters
+    help:
+      en: Homematic meter channel number like shown in the CCU web user interface.
+      de: Kanalnummer des Messwertkanals, wie im CCU Webfrontend angezeigt.
+    example: HMIP-PSM=6, HMIP-FSM+HMIP-FSM16=5, HM=2
+  - name: switchchannel
+    default: 3
+    type: int
+    required: true
+    advanced: true
+    description:
+      en: Switch/Actor channel number
+      de: Kanalnummer der schaltbaren Steckdose
+    help:
+      en: Homematic switch actor channel number like shown in the CCU web user interface.
+      de: Kanalnummer der schaltbaren Steckdose, wie im CCU Webfrontend angezeigt.
+    example: HMIP-PSM=3, HMIP-FSM+HMIP-FSM16=2, HM=1
+  - name: cache
+    advanced: true
+    default: 1s
+    description:
+      en: XML-RPC API cache duration
+      de: XML-RPC API Cache Zeitraum
+    help:
+      en: In case of duty cycle problems try a cache setting of 30s.
+      de: Bei Problemen mit dem Duty Cycle setze den Cache auf bspw 30s.
+  - preset: switchsocket
+render: |
+  type: homematic
+  uri: {{ .host }}:{{ .port }}
+  device: {{ .device }}
+  {{- if .user }}
+  user: {{ .user }}
+  {{- end }}
+  {{- if .password }}
+  password: {{ .password }}
+  {{- end }}
+  meterchannel: {{ .meterchannel }}
+  switchchannel: {{ .switchchannel }}
+  {{ include "switchsocket" . }}
+  {{- if .cache }}
+  cache: {{ .cache }}
+  {{- end }}

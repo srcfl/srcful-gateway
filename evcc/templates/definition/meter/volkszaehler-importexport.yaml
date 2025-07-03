@@ -1,0 +1,41 @@
+template: volkszaehler-importexport
+products:
+  - brand: Volkszähler
+    description:
+      generic: HTTP API, Import & Export
+group: generic
+params:
+  - name: usage
+    choice: ["grid"]
+  - name: url
+    description:
+      generic: Middleware URL
+    example: http://zaehler.network.local:8080/api/data
+  - name: importuuid
+    description:
+      generic: Import UUID
+    required: true
+  - name: exportuuid
+    description:
+      generic: Export UUID
+    required: true
+render: |
+  type: custom
+  power:
+    source: calc # use calc plugin
+    add:
+    - source: http # import channel
+      {{- if .host }}
+      uri: http://{{ .host }}:{{ .port }}/api/data/{{ unquote .importuuid }}.json?from=now
+      {{ else }}
+      uri: {{ trimSuffix "/" .url }}/{{ unquote .importuuid }}.json?from=now
+      {{- end }}
+      jq: .data.tuples[0][1] # parse response json
+    - source: http # export channel
+      {{- if .host }}
+      uri: http://{{ .host }}:{{ .port }}/api/data/{{ unquote .exportuuid }}.json?from=now
+      {{ else }}
+      uri: {{ trimSuffix "/" .url }}/{{ unquote .exportuuid }}.json?from=now
+      {{- end }}
+      jq: .data.tuples[0][1] # parse response json
+      scale: -1 # export must result in negative values

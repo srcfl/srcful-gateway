@@ -1,0 +1,347 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "EVCC configuration schema",
+  "type": "object",
+  "properties": {
+    "network": {
+      "type": "object",
+      "description": "Network",
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        }
+      }
+    },
+    "interval": {
+      "$ref": "#/definitions/duration"
+    },
+    "log": {
+      "description": "Global log level",
+      "$ref": "#/definitions/loglevel"
+    },
+    "levels": {
+      "type": "object",
+      "description": "Log levels per area",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "sponsortoken": {
+      "type": "string"
+    },
+    "plant": {
+      "type": "string"
+    },
+    "telemetry": {
+      "type": "boolean"
+    },
+    "database": {
+      "type": "object",
+      "description": "Database",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "dsn": {
+          "type": "string"
+        }
+      }
+    },
+    "tariffs": {
+      "type": "object",
+      "description": "Tariffs",
+      "properties": {
+        "currency": {
+          "type": "string"
+        },
+        "grid": {
+          "description": "Grid tariff",
+          "$ref": "#/definitions/typedObject"
+        },
+        "feedin": {
+          "description": "Feed-in tariff",
+          "$ref": "#/definitions/typedObject"
+        },
+        "planner": {
+          "description": "Planner tariff",
+          "$ref": "#/definitions/typedObject"
+        }
+      }
+    },
+    "chargers": {
+      "type": "array",
+      "description": "List of chargers",
+      "items": {
+        "$ref": "#/definitions/namedObject"
+      }
+    },
+    "meters": {
+      "type": "array",
+      "description": "List of meters",
+      "items": {
+        "$ref": "#/definitions/namedObject"
+      }
+    },
+    "vehicles": {
+      "type": "array",
+      "description": "List of vehicles",
+      "items": {
+        "$ref": "#/definitions/namedObject",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "capacity": {
+            "type": "number"
+          },
+          "phases": {
+            "type": "integer"
+          },
+          "identifiers": {
+            "type": "array"
+          },
+          "user": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "VIN": {
+            "type": "string"
+          },
+          "cache": {
+            "$ref": "#/definitions/duration"
+          },
+          "onIdentify": {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "$ref": "#/definitions/mode"
+              },
+              "priority": {
+                "type": "integer"
+              },
+              "minCurrent": {
+                "type": "integer"
+              },
+              "maxCurrent": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "site": {
+      "type": "object",
+      "required": [
+        "meters"
+      ],
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "meters": {
+          "type": "object",
+          "properties": {
+            "grid": {
+              "type": "string"
+            },
+            "pv": {
+              "description": "PV inverter/meter (1 or more)",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "battery": {
+              "description": "Home battery (1 or more)",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "aux": {
+              "description": "Auxiliary meters (0 or more)",
+              "type": [
+                "string",
+                "array"
+              ],
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        },
+        "residualPower": {
+          "type": "number"
+        },
+        "maxGridSupplyWhileBatteryCharging": {
+          "type": "number"
+        }
+      }
+    },
+    "loadpoints": {
+      "type": "array",
+      "description": "List of loadpoints",
+      "items": {
+        "type": "object",
+        "required": [
+          "charger"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "mode": {
+            "$ref": "#/definitions/mode"
+          },
+          "charger": {
+            "type": "string"
+          },
+          "meter": {
+            "type": "string"
+          },
+          "minCurrent": {
+            "type": "integer"
+          },
+          "maxCurrent": {
+            "type": "integer"
+          },
+          "phases": {
+            "type": "integer"
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "vehicle": {
+            "type": "string"
+          },
+          "soc": {
+            "type": "object",
+            "properties": {
+              "poll": {
+                "type": "object",
+                "properties": {
+                  "mode": {
+                    "$ref": "#/definitions/pollMode"
+                  },
+                  "interval": {
+                    "$ref": "#/definitions/duration"
+                  }
+                }
+              },
+              "estimate": {
+                "type": "boolean"
+              }
+            }
+          },
+          "guardDuration": {
+            "$ref": "#/definitions/duration"
+          },
+          "enable": {
+            "type": "object",
+            "properties": {
+              "delay": {
+                "$ref": "#/definitions/duration"
+              },
+              "threshold": {
+                "type": "integer"
+              }
+            }
+          },
+          "disable": {
+            "type": "object",
+            "properties": {
+              "delay": {
+                "$ref": "#/definitions/duration"
+              },
+              "threshold": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "duration": {
+      "type": "string",
+      "pattern": "\\d[msh]$"
+    },
+    "namedObject": {
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "template": {
+          "type": "string"
+        }
+      }
+    },
+    "typedObject": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "loglevel": {
+      "enum": [
+        "trace",
+        "debug",
+        "info",
+        "error",
+        "fatal"
+      ]
+    },
+    "mode": {
+      "enum": [
+        "off",
+        "now",
+        "pv",
+        "minpv"
+      ]
+    },
+    "pollMode": {
+      "enum": [
+        "always",
+        "charging",
+        "connected"
+      ]
+    }
+  }
+}

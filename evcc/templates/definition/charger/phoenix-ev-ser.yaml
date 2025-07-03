@@ -1,0 +1,11 @@
+template: phoenix-ev-ser
+products:
+  - brand: Phoenix Contact
+    description:
+      generic: EV-SER
+params:
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: phoenix-ev-ser
+  {{- include "modbus" . }}

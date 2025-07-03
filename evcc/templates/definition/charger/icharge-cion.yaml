@@ -1,0 +1,41 @@
+template: ichargecion
+products:
+  - brand: Schrack
+    description:
+      generic: i-CHARGE CION
+  - brand: Smartfox
+    description:
+      generic: Pro Charger
+params:
+  - name: modbus
+    choice: ["rs485"]
+render: |
+  type: custom
+  status:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual register configuration
+        address: 139 # CP-Status
+        type: holding
+        decode: uint16
+  enabled:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual register configuration
+      address: 100 # Zustand
+      type: holding
+      decode: uint16
+  enable:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual register configuration
+      address: 100 # ein / aus
+      type: writesingle
+      decode: uint16
+  maxcurrent:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register: # manual register configuration
+      address: 101 # Strom max
+      type: writesingle
+      decode: uint16

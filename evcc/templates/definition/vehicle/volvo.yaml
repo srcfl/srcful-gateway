@@ -1,0 +1,12 @@
+template: volvo
+deprecated: true
+products:
+  - brand: Volvo
+    description:
+      de: veraltet
+      en: legacy
+params:
+  - preset: vehicle-base
+render: |
+  type: volvo
+  {{ include "vehicle-base" . }}

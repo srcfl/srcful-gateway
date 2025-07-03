@@ -1,0 +1,10 @@
+template: aiways
+products:
+  - brand: Aiways
+params:
+  - preset: vehicle-base
+  - name: vin
+    required: true
+render: |
+  type: aiways
+  {{ include "vehicle-base" . }}

@@ -1,0 +1,21 @@
+template: hardybarth-salia
+products:
+  - brand: Hardy Barth
+    description:
+      generic: cPH2
+  - brand: Hardy Barth
+    description:
+      generic: cPμ2
+  - brand: echarge
+    description:
+      generic: cPH2
+  - brand: echarge
+    description:
+      generic: cPμ2
+requirements:
+  evcc: ["sponsorship"]
+params:
+  - name: host
+render: |
+  type: hardybarth-salia
+  uri: http://{{ .host }}
