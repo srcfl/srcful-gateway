@@ -15,6 +15,7 @@ import (
 // Register contains the ModBus register configuration
 type Register struct {
 	Address  uint16 // Length  uint16
+	Count    uint16 // Count of registers to read
 	Type     string
 	Decode   string // TODO deprecated, use Encoding
 	Encoding string
@@ -42,6 +43,13 @@ func (r Register) encoding() string {
 }
 
 func (r Register) Length() (uint16, error) {
+
+	// If Count is explicitly set, use it
+	if r.Count > 0 {
+		return r.Count, nil
+	}
+	
+	// Otherwise, calculate from encoding
 	enc := r.encoding()
 	switch {
 	case strings.Contains(enc, "8") || strings.Contains(enc, "16"):

@@ -27,6 +27,14 @@ params:
 render: |
   type: custom
   {{- if eq .usage "grid" }}
+  serialnumber:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4989 # Serial number, 10 registers
+      type: input
+      decode: bytes
+      count: 10
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -92,6 +100,14 @@ render: |
       scale: 0.1
   {{- end }}
   {{- if eq .usage "pv" }}
+  serialnumber:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4989 # Serial number, 10 registers
+      type: input
+      decode: bytes
+      count: 10
   power:
     source: modbus
     {{- include "modbus" . | indent 2 }}
@@ -111,6 +127,14 @@ render: |
   maxacpower: {{ .maxacpower }} # W
   {{- end }}
   {{- if eq .usage "battery" }}
+  serialnumber:
+    source: modbus
+    {{- include "modbus" . | indent 2 }}
+    register:
+      address: 4989 # Serial number, 10 registers
+      type: input
+      decode: bytes
+      count: 10
   power:
     source: go # handling old and new firmware
     script: |

@@ -57,6 +57,7 @@ type measurement struct {
 	Capacity      *float64  `json:"capacity,omitempty"`
 	Soc           *float64  `json:"soc,omitempty"`
 	Controllable  *bool     `json:"controllable,omitempty"`
+	SerialNumber  string   `json:"serialNumber,omitempty"`
 }
 
 var _ site.API = (*Site)(nil)
@@ -509,12 +510,24 @@ func (site *Site) collectMeters(key string, meters []config.Device[api.Meter]) [
 			}
 		}
 
+		// serial number
+		var serialNumber string
+		if m, ok := meter.(api.SerialNumberProvider); ok {
+			serialNumber, err = m.SerialNumber()
+			if err != nil {
+				site.log.DEBUG.Printf("%s %d serial number: %v", key, i+1, err)
+			} else {
+				site.log.DEBUG.Printf("%s %d serial number: %s", key, i+1, serialNumber)
+			}
+		}
+
 		props := deviceProperties(dev)
 		mm[i] = measurement{
 			Title:  props.Title,
 			Icon:   props.Icon,
 			Power:  power,
 			Energy: energy,
+			SerialNumber: serialNumber,
 		}
 
 		wg.Done()
@@ -753,6 +766,16 @@ func (site *Site) updateGridMeter() error {
 			mm.Energy = f
 		} else {
 			site.log.ERROR.Printf("grid energy: %v", err)
+		}
+	}
+
+	// grid serial number
+	if serialMeter, ok := site.gridMeter.(api.SerialNumberProvider); ok {
+		if serialNumber, err := serialMeter.SerialNumber(); err == nil {
+			mm.SerialNumber = serialNumber
+			site.log.DEBUG.Printf("grid serial number: %s", serialNumber)
+		} else {
+			site.log.DEBUG.Printf("grid serial number: %v", err)
 		}
 	}
 
