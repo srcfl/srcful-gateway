@@ -1,5 +1,5 @@
 import json
-from server.network import wifi
+from server.network.network_utils import NetworkUtils
 from server.tasks.initializeTask import InitializeTask
 
 from ..handler import PostHandler
@@ -31,7 +31,7 @@ class Handler(PostHandler):
             dry_run = not ("dry_run" not in data.data or not data.data["dry_run"])
 
             t = InitializeTask(0, {}, data.data["wallet"], dry_run)
-            if wifi.is_connected(): # this is actually if the network is available
+            if NetworkUtils.has_internet_access():
                 t.execute(0)
                 if t.got_error is True:
                     return 500, json.dumps({"status": "error"})
@@ -39,6 +39,6 @@ class Handler(PostHandler):
             else:
                 id_and_wallet, sign, _ = t.get_id_and_wallet()
                 return 200, json.dumps({"idAndWallet": id_and_wallet, "signature": sign})
-            
+
         else:
             return 400, json.dumps({"status": "error", "message": "Invalid JSON or missing wallet"})

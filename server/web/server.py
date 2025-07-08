@@ -43,9 +43,9 @@ class Endpoints:
             # New slimmed supported devices endpoint
             "device/supported/supported": handler.get.supported_devices.SupportedDevicesHandler(),
 
-            "network": handler.get.network.NetworkHandler(),
-            "network/scan": handler.get.network_scan.NetworkScanHandler(),
+            "network": handler.get.network.AddressHandler(),
             "network/address": handler.get.network.AddressHandler(),
+            "network/scan": handler.get.network_scan.NetworkScanHandler(),
 
             "wifi": handler.get.wifi.Handler(),
             "wifi/scan": handler.get.wifi.ScanHandler(),

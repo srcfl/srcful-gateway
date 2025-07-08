@@ -8,7 +8,6 @@ from server.tasks.checkForWebRequestTask import CheckForWebRequest
 from server.tasks.saveStateTask import SaveStatePerpetualTask
 import server.web.server
 from server.tasks.openDeviceTask import OpenDeviceTask
-from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.getSettingsTask import GetSettingsTask
@@ -92,7 +91,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
 
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
-    scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))
 
     scheduler.add_task(DiscoverHostsTask(bb.time_ms() + 1000, bb))
 

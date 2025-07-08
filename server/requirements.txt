@@ -11,3 +11,4 @@ websocket-client == 1.8.0
 paho-mqtt == 2.1.0
 zeroconf==0.135.0
 furl==2.1.3
+nmcli==1.5.0

@@ -16,6 +16,7 @@ from server.app.settings import Settings, ChangeSource
 from server.devices.ICom import ICom
 from server.network.network_utils import HostInfo
 from server.storage.gateway_storage import DeviceStorage
+from server.network.network_utils import NetworkUtils
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -63,7 +64,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         return self._device_storage
 
     def get_version(self) -> str:
-        return "0.22.9"
+        return "0.22.11"
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
@@ -170,14 +171,10 @@ class BlackBoard(ISystemTime, ITaskSource):
 
     def network_state(self) -> dict:
         try:
-            from server.network.scan import WifiScanner
-            s = WifiScanner()
-            ssids = s.get_ssids()
+            ssids = NetworkUtils.get_wifi_ssids()
+            ip = NetworkUtils.get_ip_address()
 
-            from server.web.handler.get.network import AddressHandler
-            address = AddressHandler().get(self.rest_server_port)
-
-            return {"wifi": {"ssids": ssids, "connected": s.get_connected_ssid()}, "address": address}
+            return {"wifi": {"ssids": ssids, "connected": NetworkUtils.get_connected_wifi_ssid()}, "ip": ip}
         except Exception as e:
             logger.error(e)
             return {"error": str(e)}

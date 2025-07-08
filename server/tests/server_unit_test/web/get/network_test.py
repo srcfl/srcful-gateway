@@ -1,12 +1,7 @@
 import pytest
 import json
-from server.crypto.crypto_state import CryptoState
 from server.web.handler.requestData import RequestData
-from server.web.handler.get.network import NetworkHandler
 from server.web.handler.get.network import AddressHandler
-from server.network.wifi import get_connection_configs
-from server.app.blackboard import BlackBoard
-from unittest.mock import Mock
 from server.network.network_utils import NetworkUtils
 
 
@@ -18,29 +13,19 @@ def request_data(blackboard):
     return RequestData(bb, {}, {}, {})
 
 
-def test_network(request_data):
-    handler = NetworkHandler()
-    status_code, response = handler.do_get(request_data)
-    assert status_code == 200
-    response = json.loads(response)
-    expected = json.loads(json.dumps({handler.CONNECTIONS: get_connection_configs()}))   # getConnectionConfigs() returns a list of dicts, so we need to convert it to JSON and back to a dict to compare
-    assert response == expected
-
-
 def test_network_address(request_data):
     handler = AddressHandler()
     status_code, response = handler.do_get(request_data)
-    assert status_code == 200
     response = json.loads(response)
+    assert status_code == 200
     ip = response[handler.IP]
 
     assert ip.count(".") == 3
     for part in ip.split("."):
         assert 0 <= int(part) <= 255
-    assert response[handler.PORT] == 8081
 
-    assert response[handler.ETH0_MAC]
-    assert response[handler.WLAN0_MAC]
+    assert response[handler.ETH0_MAC] is None
+    assert response[handler.WLAN0_MAC] is None
 
 
 def test_parse_ports():

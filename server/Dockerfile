@@ -25,7 +25,7 @@ ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket
 
 # Install all system dependencies in one layer
 RUN apk update && \
-    apk add --no-cache make gcc musl-dev linux-headers cmake libffi-dev curl jq dbus dbus-dev glib-dev dbus-glib
+    apk add --no-cache make gcc musl-dev linux-headers cmake libffi-dev curl jq dbus dbus-dev glib-dev dbus-glib networkmanager networkmanager-cli
 
 # Install Python dependencies
 RUN pip install --upgrade pip && \
