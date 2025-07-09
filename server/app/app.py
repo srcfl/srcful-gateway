@@ -19,6 +19,7 @@ from server.app.blackboard import BlackBoard
 from server.tasks.discoverHostsTask import DiscoverHostsTask
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.devices.IComFactory import IComFactory
+from server.tasks.save_device_configuration_task import SaveDeviceConfigurationTask
 
 
 logger = logging.getLogger(__name__)
@@ -96,6 +97,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
 
     scheduler.add_task(DiscoverHostsTask(bb.time_ms() + 1000, bb))
+
+    scheduler.add_task(SaveDeviceConfigurationTask(bb.time_ms() + 1000 * 10, bb))
 
     try:
         scheduler.main_loop()
