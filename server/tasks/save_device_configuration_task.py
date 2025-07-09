@@ -14,7 +14,7 @@ class SaveDeviceConfigurationTask(ConfigurationMutationTask):
     def _on_200(self, reply):
         super()._on_200(reply)
         logger.info("Device configurations saved to backend: %s", self.bb.settings.devices.connections)
-        self.time = self.bb.time_ms() + 1000 * 10  # Run again after 10 seconds
+        self.time = self.bb.time_ms() + 1000 * 60 * 60 * 6  # Run again after 6 hours
         return self
 
     def _on_error(self, reply):
