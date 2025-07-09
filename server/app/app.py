@@ -1,4 +1,5 @@
 import sys
+import os
 import logging
 from server.app.backend_settings_saver import BackendSettingsSaver
 from server.app.task_scheduler import TaskScheduler
@@ -19,8 +20,10 @@ from server.tasks.discoverHostsTask import DiscoverHostsTask
 from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.devices.IComFactory import IComFactory
 
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
+os.environ['LC_ALL'] = 'C.UTF-8'
+os.environ['LANG'] = 'C.UTF-8'
 
 # Constants
 MAX_WORKERS = 4

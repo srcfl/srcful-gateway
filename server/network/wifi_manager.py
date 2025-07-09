@@ -3,6 +3,7 @@ import subprocess
 import socket
 import logging
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -13,7 +14,7 @@ class WiFiManager:
         try:
             nmcli.disable_use_sudo()
             aps = nmcli.device.wifi(rescan=True)
-            return [ap.ssid for ap in aps]
+            return list(set(ap.ssid for ap in aps if ap.ssid))
         except Exception as e:
             print(f"Error scanning WiFi networks: {e}")
             return []

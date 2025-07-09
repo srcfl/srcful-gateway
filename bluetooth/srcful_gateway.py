@@ -1,5 +1,5 @@
 # This file include helper functions for the srcful gateway
-import constants 
+import constants
 import requests
 import time
 import logging
@@ -18,9 +18,9 @@ class SrcfulGateway:
         # keep attempting to scan and get wifi info until it succeeds
         while True:
             try:
-                self.scan_wifi() # Initial scan upon object creation
-                self._fetch_network_info() # Fetch network info
-                self._fetch_swarm_id() # Fetch swarm id
+                self.scan_wifi()  # Initial scan upon object creation
+                self._fetch_network_info()  # Fetch network info
+                self._fetch_swarm_id()  # Fetch swarm id
                 break
             except Exception as e:
                 logger.error(f"Error initializing srcful gateway: {e}")
@@ -35,7 +35,7 @@ class SrcfulGateway:
                 # We should probably remove the hardcoded values
                 self.eth_mac = network_json['eth0_mac']
                 self.wifi_mac = network_json['wlan0_mac']
-                
+
                 try:
                     self.eth_ip = network_json['interfaces']['eth0']
                 except:
@@ -45,14 +45,14 @@ class SrcfulGateway:
                     self.wifi_ip = network_json['interfaces']['wlan0']
                 except:
                     self.wifi_ip = "n/a"
-                    logger.warning("Could not get wifi ipp")
-                    
+                    logger.warning("Could not get wifi ip")
+
                 logger.warning("Srcful Gateway initialized")
         except Exception as e:
             raise Exception(f"Error getting network info {e}")
-        
+
         logger.info("Network info retrieved")
-    
+
     def get_eth_ip(self) -> str:
         return self.eth_ip
 
@@ -67,7 +67,7 @@ class SrcfulGateway:
 
     def get_swarm_id(self) -> str:
         return self.swarm_id
-    
+
     def _fetch_swarm_id(self) -> None:
         try:
             response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/api/crypto", timeout=constants.SRCFUL_GW_API_REQUEST_TIMEOUT)
@@ -77,21 +77,21 @@ class SrcfulGateway:
             else:
                 logger.warning("Could not get swarm id")
                 self.swarm_id = "n/a"
-            
+
         except Exception as e:
             raise Exception(f"Error getting swarm id {e}")
-    
+
     def scan_wifi(self) -> None:
         try:
             requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/api/wifi/scan", timeout=constants.SRCFUL_GW_API_REQUEST_TIMEOUT)
         except Exception as e:
             raise Exception(f"Error scanning wifi {e}")
-        
+
         logger.info("Wifi scanned")
-    
+
     def get_wifi_ssids(self) -> list:
         try:
-            response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/api/wifi" , timeout=constants.SRCFUL_GW_API_REQUEST_TIMEOUT)
+            response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/api/wifi", timeout=constants.SRCFUL_GW_API_REQUEST_TIMEOUT)
             if response.status_code == 200:
                 return response.json()['ssids']
             else:
@@ -99,35 +99,32 @@ class SrcfulGateway:
         except Exception as e:
             raise Exception(f"Error getting wifi ssids {e}")
 
-    def get_connected_wifi_ssid(self) -> str:
+    def get_connected_wifi_ssid(self) -> str | None:
         response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/api/network", timeout=constants.SRCFUL_GW_API_REQUEST_TIMEOUT)
         if response.status_code == 200:
-            for connection in response.json()['connections']:
-                if "wireless" in connection['connection']['type']:
-                    return connection['connection']['id']
+            network_data = response.json()
+            return network_data.get('wifi_ssid', None)
         else:
             raise Exception(f"Error getting connected wifi ssid {response.status_code}")
 
     def get_local_ip(self) -> str:
         return self.wifi_ip
-    
-    def is_wifi_connected(self, connections, ssid) -> bool:
-        for connection in connections:
-            if connection['connection']['id'] == ssid:
-                return True
-        return False
-    
+
+    def is_wifi_connected(self, network_data, ssid) -> bool:
+        return network_data.get('wifi_connected', False) and network_data.get('wifi_ssid') == ssid
+
     def check_wifi_connection(self, wifi_ssid, update_status_callback, stop_event) -> None:
         while not stop_event.is_set():
             try:
                 response = requests.get(f"{constants.SRCFUL_GW_API_ENDPOINT}/api/network", timeout=constants.SRCFUL_GW_API_REQUEST_TIMEOUT)
-                connections = response.json()['connections']
-                if response.status_code == 200 and self.is_wifi_connected(connections, wifi_ssid):
-                    update_status_callback(constants.WIFI_CONNECTED)
-                    return
+                if response.status_code == 200:
+                    network_data = response.json()
+                    if self.is_wifi_connected(network_data, wifi_ssid):
+                        update_status_callback(constants.WIFI_CONNECTED)
+                        return
             except requests.RequestException:
                 raise Exception(f"Error checking wifi connection {response.status_code}")
-            
+
             time.sleep(3)
 
     def connect_wifi(self, value, update_status_callback) -> None:
@@ -141,27 +138,27 @@ class SrcfulGateway:
 
         if response.status_code == 200 and response.json()['status'] == "ok":
             update_status_callback(constants.WIFI_CONNECTING)
-        
+
             stop_event = threading.Event()
             check_thread = threading.Thread(target=self.check_wifi_connection, args=(wifi_connect_details.service, update_status_callback, stop_event))
             check_thread.start()
-            
+
             # Wait for a maximum of 60 seconds
             check_thread.join(timeout=60)
-            
+
             if check_thread.is_alive():
                 stop_event.set()
                 update_status_callback(constants.WIFI_ERROR)
 
         else:
             update_status_callback(constants.WIFI_ERROR)
-        
+
     def is_egwttp_request(self, data) -> bool:
         return egwttp.is_request(data)
-    
+
     def parse_egwttp_request(self, data) -> tuple[dict, str]:
         return egwttp.parse_request(data)
-    
+
     def handle_response(self, path: str, method: str, reply: requests.Response, offset: int):
         egwttp_response = egwttp.construct_response(path, method, reply.text, offset)
         logger.debug("Reply: %s", egwttp_response)
