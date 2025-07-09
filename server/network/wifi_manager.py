@@ -79,7 +79,14 @@ class WiFiManager:
                 elif 'inet ' in line and not '127.' in line:
                     ip = line.split('inet ')[1].split('/')[0].strip()
                     interfaces[iface] = ip
-            return interfaces
+
+            # Filter to only return eth0 and wlan0 interfaces
+            filtered_interfaces = {}
+            for iface in ['eth0', 'wlan0']:
+                if iface in interfaces:
+                    filtered_interfaces[iface] = interfaces[iface]
+
+            return filtered_interfaces
         except:
             return {}
 
