@@ -21,10 +21,10 @@ from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.devices.IComFactory import IComFactory
 from server.tasks.save_device_configuration_task import SaveDeviceConfigurationTask
 
-
 logger = logging.getLogger(__name__)
-os.environ['LC_ALL'] = 'C.UTF-8'
-os.environ['LANG'] = 'C.UTF-8'
+
+os.environ['LC_ALL'] = 'en_US.UTF-8'
+os.environ['LANG'] = 'en_US.UTF-8'
 
 # Constants
 MAX_WORKERS = 4

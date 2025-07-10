@@ -6,6 +6,7 @@ from ..requestData import RequestData
 
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class Handler(PostHandler):
@@ -43,7 +44,6 @@ class Handler(PostHandler):
 
             if NetworkUtils.connect_to_wifi(ssid, psk, timeout):
                 return 200, json.dumps({"status": "Successfully connected to WiFi"})
-            # Upstream/temporary failure
             return 503, json.dumps({"status": "error",
                                     "message": "Failed to connect to WiFi"})
         except Exception:

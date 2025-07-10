@@ -88,6 +88,10 @@ class Settings(Observable):
         return "settings"
 
     @property
+    def DEVICES_SUBKEY(self):
+        return "devices"
+
+    @property
     def SETTINGS(self):
         return "settings"
 

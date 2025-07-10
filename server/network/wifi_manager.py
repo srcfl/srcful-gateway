@@ -16,17 +16,17 @@ class WiFiManager:
             aps = nmcli.device.wifi(rescan=True)
             return list(set(ap.ssid for ap in aps if ap.ssid))
         except Exception as e:
-            print(f"Error scanning WiFi networks: {e}")
+            logger.error(f"Error scanning WiFi networks: {e}")
             return []
 
     @staticmethod
     def connect(ssid: str, psk: str, timeout: int) -> bool:
         try:
             nmcli.device.wifi_connect(ssid=ssid, password=psk, wait=timeout)
-            print(f"Successfully connected to {ssid}")
+            logger.info(f"Successfully connected to {ssid}")
             return True
         except Exception as e:
-            print(f"Error connecting to {ssid}: {e}")
+            logger.error(f"Error connecting to {ssid}: {e}")
             return False
 
     @staticmethod
@@ -42,13 +42,13 @@ class WiFiManager:
 
             if wifi_device:
                 nmcli.device.disconnect(wifi_device)
-                print(f"Successfully disconnected from WiFi")
+                logger.info(f"Successfully disconnected from WiFi")
                 return True
             else:
-                print("No active WiFi connection found")
+                logger.info("No active WiFi connection found")
                 return False
         except Exception as e:
-            print(f"Error disconnecting from WiFi: {e}")
+            logger.info(f"Error disconnecting from WiFi: {e}")
             return False
 
     @staticmethod

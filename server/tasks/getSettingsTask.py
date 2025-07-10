@@ -92,3 +92,21 @@ class GetSettingsTask(SrcfulAPICallTask):
     def _on_200(self, reply: requests.Response) -> Union[List[ITask], ITask, None]:
         json_data = reply.json()
         return handle_settings(self.bb, json_data["data"]["gatewayConfiguration"]["configuration"])
+
+
+class GetDeviceConfigurationsTask(SrcfulAPICallTask):
+    def __init__(self, event_time: int, bb: BlackBoard):
+        super().__init__(event_time, bb)
+        self.post_url = bb.settings.api.gql_endpoint
+
+    def _json(self):
+        with crypto.Chip() as chip:
+            query = create_query_json(chip, self.bb.settings.DEVICES_SUBKEY)
+        return query
+
+    def _on_error(self, reply: requests.Response) -> Union[int, Tuple[int, Union[List[ITask], ITask, None]]]:
+        return 0
+
+    def _on_200(self, reply: requests.Response) -> Union[List[ITask], ITask, None]:
+        json_data = reply.json()
+        return handle_settings(self.bb, json_data["data"]["gatewayConfiguration"]["configuration"])
