@@ -129,7 +129,7 @@ class WiFiManager:
     def get_wifi_ssid():
         try:
             devices = nmcli.device()
-            logger.info(f"Devices: {devices}")
+            logger.debug(f"Devices: {devices}")
 
             for device in devices:
                 logger.info(f"Device: {device}")
