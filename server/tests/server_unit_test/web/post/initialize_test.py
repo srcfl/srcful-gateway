@@ -29,7 +29,7 @@ def test_initialize(request_data):
 
 
 def test_intialize_no_internet(request_data):
-    with patch("server.network.wifi.is_connected", return_value=False):
+    with patch("server.network.network_utils.NetworkUtils.has_internet_access", return_value=False):
         with patch("server.crypto.crypto.HardwareCrypto.atcab_init", return_value=crypto.ATCA_SUCCESS):
             with patch("server.crypto.crypto.HardwareCrypto.atcab_read_serial_number", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):
                 with patch("server.crypto.crypto.HardwareCrypto.atcab_sign", return_value=(crypto.ATCA_SUCCESS, b'123456789012')):

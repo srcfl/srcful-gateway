@@ -1,14 +1,12 @@
 import json
 import logging
-
-from server.network.wifi import WiFiHandler
-from server.tasks.openWiFiConTask import OpenWiFiConTask
-
+from server.network.network_utils import NetworkUtils
 from ..handler import PostHandler
 from ..requestData import RequestData
 
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class Handler(PostHandler):
@@ -20,6 +18,9 @@ class Handler(PostHandler):
                 "ssid": "string, ssid of the wifi",
                 "psk": "string, password of the wifi",
             },
+            "optional": {
+                "timeout": "int, timeout in seconds to wait for the connection to be established",
+            },
             "returns": {
                 "status": "string, ok or error",
                 "message": "string, error message",
@@ -30,13 +31,22 @@ class Handler(PostHandler):
         return json.dumps(self.schema())
 
     def do_post(self, data: RequestData) -> tuple[int, str]:
-        if "ssid" in data.data and "psk" in data.data:
-            try:
-                log.info("Opening WiFi connection to %s", data.data["ssid"])
-                wificon = WiFiHandler(data.data["ssid"], data.data["psk"])
-                data.bb.add_task(OpenWiFiConTask(data.bb.time_ms() + 500, data.bb, wificon))
-                return 200, json.dumps({"status": "ok"})
-            except Exception as e:
-                return 500, json.dumps({"status": "error", "message": str(e)})
-        else:
-            return 400, json.dumps({"status": "bad request"})
+        try:
+            ssid: str = data.data.get("ssid")
+            psk: str = data.data.get("psk")
+            timeout: int = data.data.get("timeout", 10)
+
+            if not ssid or not psk:
+                return 422, json.dumps({"status": "error",
+                                        "message": "ssid and psk are required"})
+
+            log.info(f"Connecting to WiFi {ssid} with timeout {timeout}")
+
+            if NetworkUtils.connect_to_wifi(ssid, psk, timeout):
+                return 200, json.dumps({"status": "Successfully connected to WiFi"})
+            return 503, json.dumps({"status": "error",
+                                    "message": "Failed to connect to WiFi"})
+        except Exception:
+            log.exception("Unexpected error while configuring WiFi")
+            return 500, json.dumps({"status": "error",
+                                    "message": "Internal server error"})

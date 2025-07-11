@@ -1,25 +1,26 @@
 import json
 
-from server.network.wifi import WiFiHandler
-
+from server.network.network_utils import NetworkUtils
 from ..handler import DeleteHandler
 from ..requestData import RequestData
 import json
 
+
 class Handler(DeleteHandler):
     def schema(self) -> dict:
         return self.create_schema(
-            "Delete all wifi networks",
+            "Disconnect from WiFi",
             returns={
-                "status": "success or error message",
+                "status": "Success or Error message",
+                "message": "Success or Error message",
             },
         )
-    
+
     def do_delete(self, data: RequestData):
         try:
-            s = WiFiHandler("ssid", "psk")
-            s.delete_connections()
-        except Exception as e:
-            return 500, json.dumps({"status": "error", "message": str(e)})
-        
-        return 404, json.dumps({"device not found: ": id})
+            if NetworkUtils.disconnect_from_wifi():
+                return 200, json.dumps({"status": "Success", "message": "Disconnected from WiFi"})
+            else:
+                return 500, json.dumps({"status": "Error", "message": "Failed to disconnect from WiFi"})
+        except Exception:
+            return 500, json.dumps({"status": "Error", "message": "Failed to disconnect from WiFi"})

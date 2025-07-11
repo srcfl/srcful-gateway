@@ -80,6 +80,7 @@ class GetSettingsTask(SrcfulAPICallTask):
         super().__init__(event_time, bb)
         self.settings = None
         self.post_url = bb.settings.api.gql_endpoint
+        logger.info("GetSettingsTask created, will request settings from %s", self.post_url)
 
     def _json(self):
         with crypto.Chip() as chip:

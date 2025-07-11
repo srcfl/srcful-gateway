@@ -1,4 +1,5 @@
 import sys
+import os
 import logging
 from server.app.backend_settings_saver import BackendSettingsSaver
 from server.app.task_scheduler import TaskScheduler
@@ -9,7 +10,6 @@ from server.tasks.saveStateTask import SaveStatePerpetualTask
 from server.tasks.evccHarvestTask import EvccHarvestTask
 import server.web.server
 from server.tasks.openDeviceTask import OpenDeviceTask
-from server.tasks.scanWiFiTask import ScanWiFiTask
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.harvestFactory import HarvestFactory
 from server.tasks.getSettingsTask import GetSettingsTask
@@ -18,11 +18,13 @@ from server.web.socket.control.control_task_subscription import ControlSubscript
 from server.app.settings_device_listener import SettingsDeviceListener
 from server.app.blackboard import BlackBoard
 from server.tasks.discoverHostsTask import DiscoverHostsTask
-from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
+from server.app.settings import ChangeSource
 from server.devices.IComFactory import IComFactory
 
 logger = logging.getLogger(__name__)
 
+os.environ['LC_ALL'] = 'en_US.UTF-8'
+os.environ['LANG'] = 'en_US.UTF-8'
 
 # Constants
 MAX_WORKERS = 4
@@ -72,18 +74,20 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
     # Check if there are any connections in the database and start perpetual tasks for each connection
     connections = bb.device_storage.get_connections()
-    if connections is not None:
+
+    if len(connections) > 0:
         logger.info("Found %d connections in the database", len(connections))
         for connection in connections:
-            logger.info("Connection: %s", connection)
+            logger.info("Adding the following connection to the settings: %s", connection)
+
             try:
-                com = IComFactory.create_com(connection)
-                bb.add_task(DevicePerpetualTask(bb.time_ms(), bb, com))
+                icom = IComFactory.create_com(connection)
+                bb.settings.devices.add_connection(icom, ChangeSource.LOCAL)
             except Exception as e:
                 logger.error("Error creating ICom object for connection: %s", e)
     else:
         # No connections, check for connections in the cloud
-        logger.info("No connections found in the database, checking for connections in the cloud")
+        logger.info("No connections found in the database, checking for connections in the cloud when the settings are loaded later in the GetSettingsTask")
         pass
 
     # put some initial tasks in the queue
@@ -93,7 +97,6 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
         scheduler.add_task(OpenDeviceTask(bb.time_ms(), bb, inverter))
 
     scheduler.add_task(CheckForWebRequest(bb.time_ms() + 1000, bb, web_server))
-    scheduler.add_task(ScanWiFiTask(bb.time_ms() + 10000, bb))
 
     scheduler.add_task(DiscoverHostsTask(bb.time_ms() + 1000, bb))
 

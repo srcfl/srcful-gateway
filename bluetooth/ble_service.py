@@ -15,7 +15,7 @@ import macAddr
 
 # change root logger level to debug
 # Configure the root logger
-logging.basicConfig(level=logging.INFO, 
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     stream=sys.stdout)
 logger = logging.getLogger(__name__)
@@ -60,17 +60,18 @@ else:
 trigger: asyncio.Event = asyncio.Event()
 gateway = None
 
+
 async def run(gpio_button_pin: int = -1):
     global SERVER
     global gateway
     trigger.clear()
-    
+
     logger.info("Initializing server...")
-    
+
     # Instantiate the server
     SERVER = BlessServer(name=SERVICE_NAME, name_overwrite=True)
     logger.warning("Server instantiated")
-    
+
     logger.warning("Adding new service...")
     await SERVER.add_new_service(constants.SERVICE_UUID)
     logger.debug(f"Added service {constants.SERVICE_UUID}")
@@ -78,15 +79,15 @@ async def run(gpio_button_pin: int = -1):
     logger.warning("Initializing Gateway...")
     gateway = Gateway(SERVER)
     logger.warning("Gateway initialized")
-    
+
     logger.warning("Initializing gateway...")
     await gateway.init_gateway()
     logger.warning("Gateway initialized")
 
     SERVER.read_request_func = gateway.handle_read_request
-    SERVER.write_request_func = gateway.handle_write_request # lambda characteristic, value: asyncio.create_task(gateway.handle_write_request(characteristic, value))
+    SERVER.write_request_func = gateway.handle_write_request  # lambda characteristic, value: asyncio.create_task(gateway.handle_write_request(characteristic, value))
     logger.warning("Request handlers set")
-    
+
     logger.warning("Starting server...")
     try:
         logger.warning("Calling SERVER.start()...")
@@ -153,9 +154,8 @@ if __name__ == "__main__":
 
     args = args.parse_args()
     logger.warning("BLE service called with arguments: %s", args)
-    
+
     API_URL = "http://" + args.api_url
     SERVICE_NAME = args.service_name
-
 
     asyncio.run(run(args.gpio_button_pin))

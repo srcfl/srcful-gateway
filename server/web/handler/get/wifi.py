@@ -1,8 +1,7 @@
 import json
 import logging
 
-from server.network.scan import WifiScanner
-from server.tasks.scanWiFiTask import ScanWiFiTask
+from server.network.network_utils import NetworkUtils
 
 from ..handler import GetHandler
 from ..requestData import RequestData
@@ -22,7 +21,7 @@ class Handler(GetHandler):
 
     def do_get(self, data: RequestData):
         try:
-            network_state = data.bb.network_state()    
+            network_state = data.bb.network_state()
             return 200, json.dumps(network_state['wifi'])
         except Exception as e:
             logger.error(e)
@@ -33,15 +32,17 @@ class ScanHandler(GetHandler):
     def schema(self):
         return {
             "type": "get",
-            "description": "Initiates a new scan of available wifi networks. Returns immediately and the scan results will be available after 5 to 10 seconds. The scan results can be retrieved with the GET /wifi endpoint.",
-            "returns": {"status": "scan initiated"},
+            "description": "Scan for available wifi networks and return the list of SSIDs",
+            "returns": {"ssids": "list of SSID strings ['ssid1', 'ssid2', ...]"},
         }
 
     def do_get(self, data: RequestData):
         try:
-            task = ScanWiFiTask(event_time=data.bb.time_ms() + 100, bb=data.bb)
-            data.bb.add_task(task)
-            return 200, json.dumps({"status": "scan initiated"})
+            res = NetworkUtils.get_wifi_ssids()
+            if res:
+                return 200, json.dumps({"ssids": res})
+            else:
+                return 500, json.dumps({"error": "Failed to initiate scan"})
         except Exception as e:
             logger.error(e)
             return 400, json.dumps({"error": str(e)})

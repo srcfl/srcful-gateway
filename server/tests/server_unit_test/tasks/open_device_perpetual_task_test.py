@@ -44,7 +44,9 @@ def test_execute_inverter_added(bb: BlackBoard):
     inverter.connect = Mock(return_value=True)
     inverter.is_open = Mock(return_value=True)
 
-    connections = bb.device_storage.get_connections()
+    bb.settings.devices.add_connection(inverter, ChangeSource.LOCAL)
+
+    assert inverter not in bb.devices.lst
 
     task = DevicePerpetualTask(0, bb, inverter)
     ret = task.execute(0)

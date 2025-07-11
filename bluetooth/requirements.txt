@@ -4,3 +4,4 @@ dbus-next==0.2.3
 gpio4==0.1.6
 protobuf==5.27.1
 base58==2.1.1
+bleak==0.22.3 # Pin to this version to avoid breaking changes (https://github.com/kevincar/bless/issues/150)

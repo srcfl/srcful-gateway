@@ -9,7 +9,7 @@ def get():
             return "FF:FF:FF:FF:FF:FF"
     else:
         import uuid
-        return ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff) for ele in range(0,8*6,8)][::-1])
+        return ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff) for ele in range(0, 8*6, 8)][::-1])
 
 
 def get_wifi_mac():

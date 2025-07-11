@@ -44,3 +44,4 @@ venv
 
 /examples
 .cursor/
+*.db

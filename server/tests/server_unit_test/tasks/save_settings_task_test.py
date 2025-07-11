@@ -1,5 +1,4 @@
 import pytest
-
 from server.crypto.crypto_state import CryptoState
 from server.tasks.saveSettingsTask import SaveSettingsTask
 from unittest.mock import Mock, patch

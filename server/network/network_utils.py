@@ -3,25 +3,15 @@ import logging
 from typing import Optional, Tuple, List, Dict, Any
 import socket
 import ipaddress
-import subprocess
 from furl import furl
 from concurrent.futures import ThreadPoolExecutor
 from server.network.mdns.mdns_advertiser import MDNSAdvertiser
 from server.crypto.crypto_state import CryptoState
+from server.network.wifi_manager import WiFiManager
 
-try:
-    import dbus
-except Exception:
-    pass
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-try:
-    import dbus
-except ImportError:
-    logger.info("dbus not found - possibly on non linux platform")
-    logger.info("wifi provisioning will not work")
 
 
 @dataclass
@@ -76,53 +66,6 @@ class NetworkUtils:
             return "0.0.0.0"
 
     @staticmethod
-    def get_dns_servers() -> List[str]:
-        """Get DNS servers from NetworkManager via D-Bus."""
-        try:
-            bus = dbus.SystemBus()
-            nm = bus.get_object('org.freedesktop.NetworkManager', '/org/freedesktop/NetworkManager')
-
-            # Get all devices
-            try:
-                devices = nm.GetDevices(dbus_interface='org.freedesktop.NetworkManager')
-            except dbus.exceptions.DBusException as e:
-                logger.warning("Failed to get network devices: %s", str(e))
-                return []
-
-            for d in devices:
-                try:
-                    device = bus.get_object('org.freedesktop.NetworkManager', d)
-                    device_props = dbus.Interface(device, 'org.freedesktop.DBus.Properties')
-
-                    # Check if device is active
-                    state = device_props.Get('org.freedesktop.NetworkManager.Device', 'State')
-                    if state != 100:  # 100 = activated
-                        continue
-
-                    # Get IP4Config
-                    ip4_config_path = device_props.Get('org.freedesktop.NetworkManager.Device', 'Ip4Config')
-                    if ip4_config_path == '/':
-                        continue
-
-                    ip4_config = bus.get_object('org.freedesktop.NetworkManager', ip4_config_path)
-                    ip4_props = dbus.Interface(ip4_config, 'org.freedesktop.DBus.Properties')
-
-                    # Get nameservers
-                    nameservers = ip4_props.Get('org.freedesktop.NetworkManager.IP4Config', 'NameserverData')
-                    if nameservers:
-                        dns_servers = [ns['address'] for ns in nameservers]
-                        logger.info("Found DNS servers: %s", dns_servers)
-                        return dns_servers
-                except dbus.exceptions.DBusException as e:
-                    logger.warning("Failed to get DNS info from device %s: %s", d, str(e))
-                    continue
-
-            return []
-        except Exception as e:
-            logger.warning("Failed to get DNS servers from NetworkManager: %s", str(e))
-            return []
-
-    @staticmethod
     def update_resolv_conf(dns_servers: List[str]) -> bool:
         """Update resolv.conf with DNS servers."""
         if not dns_servers:
@@ -143,41 +86,17 @@ class NetworkUtils:
             return False
 
     @staticmethod
-    def verify_network_connectivity() -> bool:
+    def has_internet_access() -> bool:
         """Verify network connectivity by checking DNS resolution."""
         try:
-            # Get and set DNS configuration from NetworkManager
-            dns_servers = NetworkUtils.get_dns_servers()
-            if dns_servers:
-                NetworkUtils.update_resolv_conf(dns_servers)
-            else:
-                logger.warning("No DNS servers found from NetworkManager")
-
-            # Try DNS resolution
-            logger.debug("Testing network connectivity...")
-            # Try to ping Google's IP to test connectivity
-            result = subprocess.run(
-                ["ping", "-c", "5", "74.125.200.139"],
-                check=False,
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-
-            # Print the ping results to console for debugging
-            logger.debug("\n=== PING TEST RESULTS ===")
-            logger.debug(result.stdout)
-            logger.debug("=== END PING TEST ===\n")
-
-            if result.returncode == 0:
-                logger.debug("Network connectivity test successful")
+            # Test internet connectivity by connecting to Google DNS
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(3)
+                s.connect(("8.8.8.8", 53))
+                logger.info("Internet access verified")
                 return True
-            else:
-                logger.warning("Network connectivity test failed")
-                return False
-
-        except Exception as e:
-            logger.warning("Network connectivity check failed: %s", str(e))
+        except:
+            logger.warning("No internet access")
             return False
 
     @staticmethod
@@ -492,17 +411,12 @@ class NetworkUtils:
         logger = logging.getLogger(__name__)
 
         for attempt in range(max_attempts):
-            dns_servers = cls.get_dns_servers()
-            if dns_servers:
-                logger.info(f"DNS servers resolved: {dns_servers}")
-                return cls.start_mdns_advertisement(port, properties)
-
-            logger.debug(f"DNS servers not resolved (attempt {attempt+1}/{max_attempts})")
+            logger.info(f"Attempt {attempt+1}/{max_attempts} to start mDNS advertisement")
+            res = cls.start_mdns_advertisement(port, properties)
+            if res:
+                return True
             time.sleep(wait_seconds)
-
-        logger.warning(f"Failed to resolve DNS servers after {max_attempts} attempts")
-        # Try to start mDNS anyway as a fallback
-        return cls.start_mdns_advertisement(port, properties)
+        return False
 
     @classmethod
     def discover_blixt_devices(cls, scan_duration: int = 5) -> List[Dict[str, str]]:
@@ -540,3 +454,46 @@ class NetworkUtils:
                 logger.info(f"Found blixt device: {hostname} at {result.address}")
 
         return devices
+
+    # WiFi stuff
+    @staticmethod
+    def get_wifi_ssids() -> list[str]:
+        """Get the list of available WiFi SSIDs."""
+        return [ap for ap in WiFiManager.scan_networks()]
+
+    @staticmethod
+    def connect_to_wifi(ssid: str, psk: str, timeout: int) -> bool:
+        """Connect to a WiFi network.
+
+        Args:
+            ssid: The SSID of the WiFi network
+            psk: The password of the WiFi network
+            timeout: The timeout in seconds to wait for the connection
+        """
+        return WiFiManager.connect(ssid, psk, timeout)
+
+    @staticmethod
+    def disconnect_from_wifi() -> bool:
+        """Disconnect from a WiFi network."""
+        return WiFiManager.disconnect()
+
+    @staticmethod
+    def get_connected_wifi_ssid() -> str:
+        """Get the SSID of the connected WiFi network."""
+        return WiFiManager.get_wifi_ssid()
+
+    @staticmethod
+    def get_network_interfaces() -> dict:
+        return WiFiManager.get_network_interfaces()
+
+    @staticmethod
+    def get_network_devices() -> dict:
+        return WiFiManager.get_network_devices()
+
+    @staticmethod
+    def get_eth0_mac() -> str:
+        return WiFiManager.get_mac_address('eth0')
+
+    @staticmethod
+    def get_wlan0_mac() -> str:
+        return WiFiManager.get_mac_address('wlan0')

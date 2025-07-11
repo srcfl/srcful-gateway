@@ -4,7 +4,6 @@ from server.crypto.crypto_state import CryptoState
 from server.web.handler.post.wifi import Handler
 from server.web.handler.requestData import RequestData
 from server.app.blackboard import BlackBoard
-from server.tasks.openWiFiConTask import OpenWiFiConTask
 import json
 import queue
 
@@ -24,13 +23,8 @@ def test_doPost(bb: BlackBoard):
 
     status_code, response = handler.do_post(request_data)
 
-    tasks = request_data.bb.purge_tasks()
-    assert len(tasks) == 1
-    task = tasks[0]
-    assert isinstance(task, OpenWiFiConTask)
-
-    assert status_code == 200
-    assert json.loads(response) == {"status": "ok"}
+    assert status_code == 503
+    assert json.loads(response) == {"status": "error", "message": "Failed to connect to WiFi"}
 
 
 def test_doPost_bad_data(bb):
@@ -45,5 +39,5 @@ def test_doPost_bad_data(bb):
 
     status_code, response = handler.do_post(request_data)
 
-    assert status_code == 400
+    assert status_code == 422
     assert tasks.qsize() == 0

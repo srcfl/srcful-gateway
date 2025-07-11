@@ -15,14 +15,6 @@ class DevicePerpetualTask(Task):
         self.device: ICom = device
         # self.old_device: Optional[ICom] = None
 
-    def in_storage(self, device: ICom):
-        connections = self.bb.device_storage.get_connections()
-        for connection in connections:
-            settings_device = IComFactory.create_com(connection)
-            if settings_device.get_SN() == device.get_SN():
-                return True
-        return False
-
     def in_settings(self, device: ICom):
         for settings in self.bb.settings.devices.connections:
             settings_device = IComFactory.create_com(settings)
@@ -47,8 +39,8 @@ class DevicePerpetualTask(Task):
             logger.info("Device is already open, skipping")
             return None
 
-        # If the device is not in the storage list it has probably been closed so lets not do anything
-        if not self.in_storage(self.device) and not self.in_settings(self.device):  # To-Do: remove the second part (not self.in_settings(self.device)) of the and once we release 0.22.7
+        # If the device is not in the settings list it has probably been closed so lets not do anything
+        if not self.in_settings(self.device):
             logger.info("Device is not in settings, skipping")
             return None
 

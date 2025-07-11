@@ -1,11 +1,9 @@
-import pytest
-from server.crypto.crypto_state import CryptoState
 from server.devices.inverters.ModbusTCP import ModbusTCP
 from server.tasks.openDeviceTask import OpenDeviceTask
 from server.app.blackboard import BlackBoard
 import server.tests.config_defaults as cfg
 
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock
 
 
 def test_execute_invertert_added(bb: BlackBoard):
