@@ -22,6 +22,14 @@ class DevicePerpetualTask(Task):
                 return True
         return False
 
+    def in_storage(self, device: ICom):
+        connections = self.bb.device_storage.get_connections()
+        for connection in connections:
+            settings_device = IComFactory.create_com(connection)
+            if settings_device.get_SN() == device.get_SN():
+                return True
+        return False
+
     def execute(self, event_time):
         logger.info("*************************************************************")
         logger.info("******************** DevicePerpetualTask ********************")
@@ -40,8 +48,8 @@ class DevicePerpetualTask(Task):
             return None
 
         # If the device is not in the settings list it has probably been closed so lets not do anything
-        if not self.in_settings(self.device):
-            logger.info("Device is not in settings, skipping")
+        if not self.in_settings(self.device) and not self.in_storage(self.device):
+            logger.info("Device is not in settings or storage, skipping")
             return None
 
         try:
