@@ -54,7 +54,6 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._chip_death_count = 0
         self._settings = Settings()
         self._settings.harvest.add_endpoint("https://mainnet.srcful.dev/gw/data/", ChangeSource.LOCAL)
-        self._settings.harvest.add_endpoint("https://parser.srcful.dev:8000/jwt", ChangeSource.LOCAL)
         self._crypto_state = crypto_state
         self._available_devices = []
         self._available_hosts = []
