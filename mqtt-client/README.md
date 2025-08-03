@@ -1,10 +1,12 @@
 # MQTT Client for Srcful Gateway
 
-This container provides an MQTT client that connects to an MQTT broker using TLS authentication. It subscribes to modbus requests on the `iamcat/modbus/request` topic, publishes modbus responses to the `iamcat/modbus/response` topic, and publishes gateway state to the `iamcat/state` topic every 5 seconds.
+This container provides an MQTT client that connects to an MQTT broker using TLS and JWT authentication. It automatically retrieves the gateway's serialNumber from `/api/crypto` and creates JWT tokens via `/api/jwt/create` for secure authentication. It subscribes to modbus requests on the `iamcat/modbus/request` topic, publishes modbus responses to the `iamcat/modbus/response` topic, and publishes gateway state to the `iamcat/state` topic every 5 seconds.
 
 ## Features
 
 - **TLS/SSL Connection**: Secure connection using the provided root CA certificate
+- **JWT Authentication**: Automatic JWT token generation using gateway's crypto chip
+- **Dynamic Credentials**: Uses serialNumber as username and JWT as password
 - **Modbus Request Subscription**: Listens for modbus commands on `iamcat/modbus/request` topic
 - **Modbus HTTP Bridge**: Converts MQTT modbus commands to HTTP requests to web container
 - **Modbus Response Publishing**: Publishes modbus responses to `iamcat/modbus/response` topic
@@ -20,9 +22,20 @@ The MQTT client is configured through the `mqtt.env` file located in the `mqtt-c
 
 - `MQTT_BROKER_HOST`: The hostname/IP of your MQTT broker
 - `MQTT_BROKER_PORT`: The port for secure MQTT connection (typically 8883)
-- `MQTT_USERNAME`: Your MQTT username
-- `MQTT_PASSWORD`: Your MQTT password
-- `MQTT_ROOT_CA`: The root CA certificate content for TLS verification
+- `WEB_CONTAINER_HOST`: The web container host for API calls (typically localhost)
+- `WEB_CONTAINER_PORT`: The web container port for API calls (typically 5000)
+
+### Optional Environment Variables
+
+- `MQTT_ROOT_CA`: Custom root CA certificate for TLS verification (usually not needed for EMQX Cloud)
+
+### Authentication
+
+The client uses JWT authentication automatically:
+
+1. Retrieves the gateway's `serialNumber` from `/api/crypto`
+2. Creates a JWT token via `/api/jwt/create` with 5-minute expiration
+3. Uses `serialNumber` as username and JWT as password for MQTT connection
 
 ### Setup Configuration
 
@@ -38,9 +51,10 @@ The MQTT client is configured through the `mqtt.env` file located in the `mqtt-c
    ```env
    MQTT_BROKER_HOST=my-broker.example.com
    MQTT_BROKER_PORT=8883
-   MQTT_USERNAME=my-username
-   MQTT_PASSWORD=my-secure-password
-   # MQTT_ROOT_CA is already set with the DigiCert Global Root CA
+   WEB_CONTAINER_HOST=localhost
+   WEB_CONTAINER_PORT=5000
+   # Authentication handled automatically via JWT tokens
+   # MQTT_ROOT_CA is optional for custom certificates
    ```
 
    **Important**: If you need to replace the certificate, format it as a single line with `\n` escape sequences:

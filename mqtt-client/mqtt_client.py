@@ -4,7 +4,8 @@ MQTT Client for Srcful Gateway
 - Subscribes to iamcat/modbus/request topic for modbus commands
 - Publishes modbus responses to iamcat/modbus/response topic  
 - Publishes gateway state to iamcat/state topic every 5 seconds
-- Uses TLS connection with certificate authentication
+- Uses TLS connection with JWT authentication (client_id as username, JWT as password)
+- Automatically retrieves serialNumber from /api/crypto and creates JWT via /api/jwt/create
 - Bridges MQTT modbus commands to HTTP requests to web container
 """
 
@@ -15,7 +16,7 @@ import time
 import logging
 import signal
 import sys
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Dict, Any
 import paho.mqtt.client as mqtt
 import requests
@@ -43,8 +44,6 @@ class SrcfulMQTTClient:
         # MQTT connection parameters from environment
         self.broker_host = os.getenv('MQTT_BROKER_HOST', 'localhost')
         self.broker_port = int(os.getenv('MQTT_BROKER_PORT', '8883'))
-        self.username = os.getenv('MQTT_USERNAME')
-        self.password = os.getenv('MQTT_PASSWORD')
 
         # Web container configuration
         self.web_host = os.getenv('WEB_CONTAINER_HOST', 'web')
@@ -130,6 +129,95 @@ class SrcfulMQTTClient:
     def on_log(self, client, userdata, level, buf):
         """Callback for MQTT client logging"""
         logger.debug(f"MQTT Log: {buf}")
+
+    def get_crypto_info(self) -> Dict[str, Any]:
+        """Get crypto information from web container API"""
+        try:
+            url = f"{self.web_base_url}/api/crypto"
+            logger.debug(f"Fetching crypto info from: {url}")
+
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+
+            crypto_info = response.json()
+            logger.info(f"Retrieved crypto info: {crypto_info.get('serialNumber', 'N/A')}")
+            return crypto_info
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to get crypto info: {e}")
+            raise e
+        except Exception as e:
+            logger.error(f"Error parsing crypto info: {e}")
+            raise e
+
+    def create_jwt_token(self, client_id: str) -> str:
+        """Create JWT token using web container API"""
+        try:
+            # Prepare JWT payload
+            now = datetime.now(timezone.utc)
+            payload = {
+                'sub': client_id,  # Subject (serialNumber)
+                'iat': now.isoformat(),  # Issued at
+                'exp': (now + timedelta(minutes=5)).isoformat()  # Expires in 5 minutes
+            }
+
+            # Prepare headers
+            headers = {
+                'alg': 'ES256',
+                'typ': 'JWT'
+            }
+
+            # Create JWT request
+            jwt_request = {
+                'barn': payload,
+                'headers': headers,
+                'expires_in': 5
+            }
+
+            url = f"{self.web_base_url}/api/jwt/create"
+            logger.debug(f"Creating JWT token at: {url}")
+
+            response = requests.post(url, json=jwt_request, timeout=10)
+            response.raise_for_status()
+
+            jwt_response = response.json()
+            jwt_token = jwt_response.get('jwt')
+
+            if not jwt_token:
+                raise ValueError("No JWT token in response")
+
+            logger.info("JWT token created successfully")
+            return jwt_token
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to create JWT token: {e}")
+            raise e
+        except Exception as e:
+            logger.error(f"Error creating JWT token: {e}")
+            raise e
+
+    def setup_jwt_authentication(self):
+        """Set up JWT-based authentication for MQTT"""
+        try:
+            # Get crypto info to retrieve serialNumber (client_id)
+            crypto_info = self.get_crypto_info()
+            client_id = crypto_info.get('serialNumber')
+
+            if not client_id:
+                raise ValueError("No serialNumber found in crypto info")
+
+            # Create JWT token
+            jwt_token = self.create_jwt_token(client_id)
+
+            # Set MQTT authentication
+            self.client.username_pw_set(client_id, jwt_token)
+            logger.info(f"JWT authentication configured for client: {client_id}")
+
+            return client_id, jwt_token
+
+        except Exception as e:
+            logger.error(f"Failed to setup JWT authentication: {e}")
+            raise e
 
     def handle_modbus_request(self, payload: str):
         """Handle modbus request messages"""
@@ -333,9 +421,9 @@ class SrcfulMQTTClient:
     def connect(self):
         """Connect to MQTT broker"""
         try:
-            if self.username and self.password:
-                self.client.username_pw_set(self.username, self.password)
-                logger.info("MQTT credentials configured")
+            # Setup JWT-based authentication
+            client_id, jwt_token = self.setup_jwt_authentication()
+            logger.info(f"JWT authentication configured for client: {client_id}")
 
             self.client.connect(self.broker_host, self.broker_port, 60)
             return True

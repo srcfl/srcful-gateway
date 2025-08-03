@@ -71,6 +71,7 @@ class Endpoints:
             "echo": handler.post.echo.Handler(),
             "settings": handler.post.settings.Handler(),
             "crypto/sign": handler.post.crypto_sign.Handler(),
+            "jwt/create": handler.post.jwt_create.Handler(),
             "system/reboot": handler.post.reboot.Handler(),
             "system/ble/stop": handler.post.ble_stop.Handler(),
             # "device/{device_sn}/mode/{mode}": handler.post.device_mode.Handler(),
