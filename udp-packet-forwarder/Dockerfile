@@ -8,7 +8,7 @@ FROM balenalib/${IMAGE}-debian:buster-build as builder
 ARG ARCH
 
 # Install required development packages
-RUN install_packages libftdi-dev libusb-dev
+RUN apt-get update && install_packages libftdi-dev libusb-dev
 
 # Switch to working directory for our app
 WORKDIR /app
