@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
 MQTT Client for Srcful Gateway
-- Subscribes to iamcat/control topic for modbus commands
-- Publishes modbus responses to iamcat/data topic  
+- Subscribes to iamcat/modbus/request topic for modbus commands
+- Publishes modbus responses to iamcat/modbus/response topic  
 - Publishes gateway state to iamcat/state topic every 5 seconds
 - Uses TLS connection with certificate authentication
-- Bridges MQTT commands to HTTP requests to web container
+- Bridges MQTT modbus commands to HTTP requests to web container
 """
 
 import os
@@ -52,7 +52,6 @@ class SrcfulMQTTClient:
         self.web_base_url = f"http://{self.web_host}:{self.web_port}"
 
         # Topics
-        self.control_topic = 'iamcat/control'
         self.modbus_request_topic = 'iamcat/modbus/request'
         self.modbus_response_topic = 'iamcat/modbus/response'
         self.state_topic = 'iamcat/state'
@@ -102,9 +101,7 @@ class SrcfulMQTTClient:
         """Callback for when the client receives a CONNACK response from the server"""
         if rc == 0:
             logger.info("Connected to MQTT broker successfully")
-            # Subscribe to control and modbus request topics
-            client.subscribe(self.control_topic)
-            logger.info(f"Subscribed to {self.control_topic}")
+            # Subscribe to modbus request topic
             client.subscribe(self.modbus_request_topic)
             logger.info(f"Subscribed to {self.modbus_request_topic}")
         else:
@@ -124,9 +121,7 @@ class SrcfulMQTTClient:
             payload = msg.payload.decode('utf-8')
             logger.info(f"Received message on {topic}: {payload}")
 
-            if topic == self.control_topic:
-                self.handle_control_message(payload)
-            elif topic == self.modbus_request_topic:
+            if topic == self.modbus_request_topic:
                 self.handle_modbus_request(payload)
 
         except Exception as e:
@@ -135,28 +130,6 @@ class SrcfulMQTTClient:
     def on_log(self, client, userdata, level, buf):
         """Callback for MQTT client logging"""
         logger.debug(f"MQTT Log: {buf}")
-
-    def handle_control_message(self, payload: str):
-        """Handle general control messages (non-modbus commands)"""
-        try:
-            control_data = json.loads(payload)
-            logger.info(f"Processing control command: {control_data}")
-
-            # Handle general control commands
-            command = control_data.get('command')
-            if command == 'start_harvest':
-                self.start_harvest_simulation()
-            elif command == 'stop_harvest':
-                self.stop_harvest_simulation()
-            elif command == 'get_status':
-                self.publish_status()
-            else:
-                logger.warning(f"Unknown command: {command}")
-
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON in control message: {e}")
-        except Exception as e:
-            logger.error(f"Error handling control message: {e}")
 
     def handle_modbus_request(self, payload: str):
         """Handle modbus request messages"""
@@ -305,40 +278,6 @@ class SrcfulMQTTClient:
         except Exception as e:
             logger.error(f"Error publishing modbus response: {e}")
 
-    def start_harvest_simulation(self):
-        """Start simulating harvest data publication"""
-        logger.info("Starting harvest data simulation")
-        # This would be replaced with actual harvest data collection logic
-
-    def stop_harvest_simulation(self):
-        """Stop harvest data simulation"""
-        logger.info("Stopping harvest data simulation")
-
-    def publish_harvest_data(self, data: Dict[str, Any]):
-        """Publish harvest data to /data topic"""
-        try:
-            payload = json.dumps(data)
-            result = self.client.publish(self.data_topic, payload, qos=1)
-
-            if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logger.info(f"Published harvest data: {payload}")
-            else:
-                logger.error(f"Failed to publish harvest data, error code: {result.rc}")
-
-        except Exception as e:
-            logger.error(f"Error publishing harvest data: {e}")
-
-    def publish_status(self):
-        """Publish current status to /data topic"""
-        status_data = {
-            "timestamp": datetime.utcnow().isoformat(),
-            "type": "status",
-            "status": "online",
-            "uptime": time.time(),
-            "version": "1.0.0"
-        }
-        self.publish_harvest_data(status_data)
-
     def fetch_gateway_state(self) -> Dict[str, Any]:
         """Fetch gateway state from web container API"""
         try:
@@ -416,9 +355,8 @@ class SrcfulMQTTClient:
         # Start the loop in a separate thread
         self.client.loop_start()
 
-        # Publish initial status
-        time.sleep(2)  # Wait for connection to establish
-        self.publish_status()
+        # Wait for connection to establish
+        time.sleep(2)
 
         # Main loop - publish gateway state periodically
         try:

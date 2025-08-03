@@ -39,28 +39,6 @@ def create_test_client():
     return client
 
 
-def send_command(command_type):
-    """Send a command to the /control topic"""
-    client = create_test_client()
-
-    broker_host = os.getenv('MQTT_BROKER_HOST', 'localhost')
-    broker_port = int(os.getenv('MQTT_BROKER_PORT', '8883'))
-
-    try:
-        client.connect(broker_host, broker_port, 60)
-
-        command = {"command": command_type}
-        payload = json.dumps(command)
-
-        client.publish('iamcat/control', payload, qos=1)
-        print(f"Sent command: {payload}")
-
-        client.disconnect()
-
-    except Exception as e:
-        print(f"Error sending command: {e}")
-
-
 def send_modbus_command(command_data):
     """Send a modbus command to the modbus request topic"""
     client = create_test_client()
@@ -83,24 +61,15 @@ def send_modbus_command(command_data):
 
 
 if __name__ == "__main__":
-    print("MQTT Test Commands")
-    print("1. start_harvest")
-    print("2. stop_harvest")
-    print("3. get_status")
-    print("4. modbus_read (function code 3)")
-    print("5. modbus_read (function code 4)")
-    print("6. modbus_write (function code 16)")
+    print("MQTT Modbus Test Commands")
+    print("1. modbus_read (function code 3)")
+    print("2. modbus_read (function code 4)")
+    print("3. modbus_write (function code 16)")
 
-    choice = input("Enter command number (1-6): ")
-
-    commands = {
-        '1': 'start_harvest',
-        '2': 'stop_harvest',
-        '3': 'get_status'
-    }
+    choice = input("Enter command number (1-3): ")
 
     modbus_examples = {
-        '4': {
+        '1': {
             "function_code": 3,
             "device_id": "A2332407312",
             "address": 10056,
@@ -109,7 +78,7 @@ if __name__ == "__main__":
             "endianess": "big",
             "scale_factor": 1
         },
-        '5': {
+        '2': {
             "function_code": 4,
             "device_id": "A2332407312",
             "address": 10056,
@@ -118,7 +87,7 @@ if __name__ == "__main__":
             "endianess": "big",
             "scale_factor": 1
         },
-        '6': {
+        '3': {
             "function_code": 16,
             "device_id": "A2332407312",
             "address": 33207,
@@ -127,10 +96,7 @@ if __name__ == "__main__":
         }
     }
 
-    if choice in commands:
-        command = {"command": commands[choice]}
-        send_command(commands[choice])
-    elif choice in modbus_examples:
+    if choice in modbus_examples:
         send_modbus_command(modbus_examples[choice])
     else:
         print("Invalid choice")

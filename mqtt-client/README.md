@@ -1,11 +1,10 @@
 # MQTT Client for Srcful Gateway
 
-This container provides an MQTT client that connects to an MQTT broker using TLS authentication. It subscribes to control commands on the `iamcat/control` topic, modbus requests on the `iamcat/modbus/request` topic, publishes modbus responses to the `iamcat/modbus/response` topic, and publishes gateway state to the `iamcat/state` topic.
+This container provides an MQTT client that connects to an MQTT broker using TLS authentication. It subscribes to modbus requests on the `iamcat/modbus/request` topic, publishes modbus responses to the `iamcat/modbus/response` topic, and publishes gateway state to the `iamcat/state` topic every 5 seconds.
 
 ## Features
 
 - **TLS/SSL Connection**: Secure connection using the provided root CA certificate
-- **Control Topic Subscription**: Listens for general commands on `iamcat/control` topic
 - **Modbus Request Subscription**: Listens for modbus commands on `iamcat/modbus/request` topic
 - **Modbus HTTP Bridge**: Converts MQTT modbus commands to HTTP requests to web container
 - **Modbus Response Publishing**: Publishes modbus responses to `iamcat/modbus/response` topic
@@ -57,34 +56,6 @@ The MQTT client is configured through the `mqtt.env` file located in the `mqtt-c
 - The `.gitignore` file is configured to exclude `*.env` files from git
 
 ## Topics
-
-### Control Topic: `iamcat/control`
-
-Send JSON commands to control general gateway behavior:
-
-#### Start Harvest Simulation
-
-```json
-{
-  "command": "start_harvest"
-}
-```
-
-#### Stop Harvest Simulation
-
-```json
-{
-  "command": "stop_harvest"
-}
-```
-
-#### Get Status
-
-```json
-{
-  "command": "get_status"
-}
-```
 
 ### Modbus Request Topic: `iamcat/modbus/request`
 
