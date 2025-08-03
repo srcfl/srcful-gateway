@@ -23,8 +23,11 @@ import requests
 from dotenv import load_dotenv
 
 # Configure logging
+# DEBUG: Detailed information for debugging (URLs, payloads, detailed responses)
+# INFO: Essential flow information (connections, operations, success/failure)
+# WARNING/ERROR: Issues and failures
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,  # Set to INFO for production
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -118,7 +121,8 @@ class SrcfulMQTTClient:
         try:
             topic = msg.topic
             payload = msg.payload.decode('utf-8')
-            logger.info(f"Received message on {topic}: {payload}")
+            logger.info(f"Received message on {topic}")
+            logger.debug(f"Message payload: {payload}")
 
             if topic == self.modbus_request_topic:
                 self.handle_modbus_request(payload)
@@ -140,7 +144,7 @@ class SrcfulMQTTClient:
             response.raise_for_status()
 
             crypto_info = response.json()
-            logger.info(f"Retrieved crypto info: {crypto_info.get('serialNumber', 'N/A')}")
+            logger.info(f"Retrieved serialNumber: {crypto_info.get('serialNumber', 'N/A')}")
             return crypto_info
 
         except requests.exceptions.RequestException as e:
@@ -176,6 +180,7 @@ class SrcfulMQTTClient:
 
             url = f"{self.web_base_url}/api/jwt/create"
             logger.debug(f"Creating JWT token at: {url}")
+            logger.debug(f"JWT Request payload: {json.dumps(jwt_request, indent=2)}")
 
             response = requests.post(url, json=jwt_request, timeout=10)
             response.raise_for_status()
@@ -187,6 +192,7 @@ class SrcfulMQTTClient:
                 raise ValueError("No JWT token in response")
 
             logger.info("JWT token created successfully")
+            logger.debug(f"JWT Token (for debugging): {jwt_token}")
             return jwt_token
 
         except requests.exceptions.RequestException as e:
@@ -212,6 +218,8 @@ class SrcfulMQTTClient:
             # Set MQTT authentication
             self.client.username_pw_set(client_id, jwt_token)
             logger.info(f"JWT authentication configured for client: {client_id}")
+            logger.debug(f"MQTT Username: {client_id}")
+            logger.debug(f"MQTT Password (JWT): {jwt_token}")
 
             return client_id, jwt_token
 
@@ -223,7 +231,8 @@ class SrcfulMQTTClient:
         """Handle modbus request messages"""
         try:
             modbus_data = json.loads(payload)
-            logger.info(f"Processing modbus request: {modbus_data}")
+            logger.info("Processing modbus request")
+            logger.debug(f"Modbus request data: {modbus_data}")
 
             # Check for function_code to validate it's a modbus command
             function_code = modbus_data.get('function_code')
@@ -289,13 +298,15 @@ class SrcfulMQTTClient:
                 'scale_factor': scale_factor
             }
 
-            logger.info(f"Making modbus read request: {url} with params: {params}")
+            logger.info(f"Making modbus read request for device {device_id}")
+            logger.debug(f"Modbus read URL: {url} with params: {params}")
 
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
 
             result = response.json()
-            logger.info(f"Modbus read response: {result}")
+            logger.info("Modbus read completed successfully")
+            logger.debug(f"Modbus read response: {result}")
             return result
 
         except requests.exceptions.RequestException as e:
@@ -329,13 +340,15 @@ class SrcfulMQTTClient:
                 'type': data_type
             }
 
-            logger.info(f"Making modbus write request: {url} with params: {params}")
+            logger.info(f"Making modbus write request for device {device_id}")
+            logger.debug(f"Modbus write URL: {url} with params: {params}")
 
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
 
             result = response.json()
-            logger.info(f"Modbus write response: {result}")
+            logger.info("Modbus write completed successfully")
+            logger.debug(f"Modbus write response: {result}")
             return result
 
         except requests.exceptions.RequestException as e:
@@ -359,7 +372,8 @@ class SrcfulMQTTClient:
             result = self.client.publish(self.modbus_response_topic, payload, qos=1)
 
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logger.info(f"Published modbus response: {payload}")
+                logger.info("Published modbus response successfully")
+                logger.debug(f"Modbus response payload: {payload}")
             else:
                 logger.error(f"Failed to publish modbus response, error code: {result.rc}")
 
@@ -411,7 +425,8 @@ class SrcfulMQTTClient:
             result = self.client.publish(self.state_topic, payload, qos=1)
 
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logger.info(f"Published gateway state: {payload}")
+                logger.info("Published gateway state successfully")
+                logger.debug(f"Gateway state payload: {payload}")
             else:
                 logger.error(f"Failed to publish gateway state, error code: {result.rc}")
 
@@ -423,7 +438,6 @@ class SrcfulMQTTClient:
         try:
             # Setup JWT-based authentication
             client_id, jwt_token = self.setup_jwt_authentication()
-            logger.info(f"JWT authentication configured for client: {client_id}")
 
             self.client.connect(self.broker_host, self.broker_port, 60)
             return True
