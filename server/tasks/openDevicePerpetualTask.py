@@ -4,6 +4,8 @@ from server.devices.IComFactory import IComFactory
 from .task import Task
 from server.devices.ICom import ICom
 from server.network.network_utils import NetworkUtils
+from server.diagnostics.solarman_logger import get_diagnostic_logger
+from server.devices.inverters.ModbusSolarman import ModbusSolarman
 
 
 logger = logging.getLogger(__name__)
@@ -14,6 +16,7 @@ class DevicePerpetualTask(Task):
         super().__init__(event_time, bb)
         self.device: ICom = device
         # self.old_device: Optional[ICom] = None
+        self.diagnostic_logger = get_diagnostic_logger()
 
     def in_settings(self, device: ICom):
         for settings in self.bb.settings.devices.connections:
@@ -69,6 +72,13 @@ class DevicePerpetualTask(Task):
                 return None
 
             else:
+                # Log connection failure with ping test for solarman devices
+                if isinstance(self.device, ModbusSolarman):
+                    self.diagnostic_logger.log_connection_failure(
+                        self.device,
+                        "Initial connection failed",
+                        f"Device config: {self.device.get_config()}"
+                    )
 
                 tmp_device = self.device.find_device()  # find the device on the network this is the same device but the method of connection (e.g. ip can be different)
 
@@ -82,11 +92,29 @@ class DevicePerpetualTask(Task):
                     message = f"Failed to find {self.device.get_name()} ({self.device.get_SN()}), rescanning again in 5 minutes..."
                     logger.info(message)
                     self.bb.add_error(message)
+
+                    # Log device not found with ping test for solarman devices
+                    if isinstance(self.device, ModbusSolarman):
+                        self.diagnostic_logger.log_connection_failure(
+                            self.device,
+                            "Device not found on network",
+                            f"Rescanning in 5 minutes. Config: {self.device.get_config()}"
+                        )
+
                     self.time = event_time + 60000 * 5
 
             return self
 
         except Exception as e:
             logger.exception("Exception opening a device: %s", e)
+
+            # Log exception with ping test for solarman devices
+            if isinstance(self.device, ModbusSolarman):
+                self.diagnostic_logger.log_connection_failure(
+                    self.device,
+                    f"Exception during connection: {type(e).__name__}",
+                    f"Exception details: {str(e)}"
+                )
+
             self.time = event_time + 10000
             return self
