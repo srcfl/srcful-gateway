@@ -16,7 +16,7 @@ logger.setLevel(level=logging.DEBUG)
 
 class Harvest:
     def __init__(self):
-        self.backoff_time = 1000  # start with a 1000ms backoff
+        self.backoff_time = 5000  # start with a 5000ms backoff (5 seconds)
         self.harvest_count = 0
         self.total_harvest_time_ms = 0
         self.last_stats_time = 0  # Track when we last logged statistics
@@ -26,7 +26,7 @@ class Harvest:
     def harvest(self, event_time: int, device: ICom, bb: BlackBoard) -> tuple[int, dict]:
 
         start_time = event_time
-        elapsed_time_ms = 1000
+        elapsed_time_ms = 5000
 
         # Check if we should log statistics (every 5 minutes)
         if self.last_stats_time == 0:
@@ -58,8 +58,8 @@ class Harvest:
             # To-Do: Solarmanv5 can raise ConnectionResetError, so handle it!
             raise ICom.ConnectionException("Error harvesting from device", device, e)
 
-        # If we're reading faster than every 1000ms, we subtract the elapsed time of
-        # the current harvest from the backoff time to keep polling at a constant rate of every 1000ms
+        # If we're reading faster than every 5000ms, we subtract the elapsed time of
+        # the current harvest from the backoff time to keep polling at a constant rate of every 5000ms
         if elapsed_time_ms < self.backoff_time:
             next_time = bb.time_ms() + self.backoff_time - elapsed_time_ms
         else:
