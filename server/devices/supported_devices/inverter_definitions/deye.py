@@ -42,23 +42,28 @@ deye_profile = {
         {
             RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
             RegistersKey.START_REGISTER: 0,
+            RegistersKey.NUM_OF_REGISTERS: 59,
+        },
+        {
+            RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+            RegistersKey.START_REGISTER: 60,
             RegistersKey.NUM_OF_REGISTERS: 125,
         },
         {
             RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-            RegistersKey.START_REGISTER: 125,
+            RegistersKey.START_REGISTER: 185,
             RegistersKey.NUM_OF_REGISTERS: 125,
         },
-        # {
-        #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-        #     RegistersKey.START_REGISTER: 250,
-        #     RegistersKey.NUM_OF_REGISTERS: 125,
-        # },
-        # {
-        #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-        #     RegistersKey.START_REGISTER: 375,
-        #     RegistersKey.NUM_OF_REGISTERS: 125,
-        # },
+        {
+            RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+            RegistersKey.START_REGISTER: 310,
+            RegistersKey.NUM_OF_REGISTERS: 125,
+        },
+        {
+            RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
+            RegistersKey.START_REGISTER: 435,
+            RegistersKey.NUM_OF_REGISTERS: 64,
+        },
         {
             RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
             RegistersKey.START_REGISTER: 500,
@@ -69,11 +74,6 @@ deye_profile = {
             RegistersKey.START_REGISTER: 625,
             RegistersKey.NUM_OF_REGISTERS: 125,
         },
-        # {
-        #     RegistersKey.FUNCTION_CODE: FunctionCodeKey.READ_HOLDING_REGISTERS,
-        #     RegistersKey.START_REGISTER: 750,
-        #     RegistersKey.NUM_OF_REGISTERS: 51,
-        # },
     ],
     ProfileKey.REGISTERS: [
         {
