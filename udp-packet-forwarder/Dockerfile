@@ -4,11 +4,11 @@ ARG TAG
 ARG BUILD_DATE
 
 # Builder image
-FROM balenalib/${IMAGE}-debian:buster-build as builder
+FROM balenalib/${IMAGE}-debian:bullseye-build as builder
 ARG ARCH
 
 # Install required development packages
-RUN install_packages libftdi-dev libusb-dev
+RUN apt-get update && install_packages libftdi-dev libusb-dev
 
 # Switch to working directory for our app
 WORKDIR /app
@@ -19,7 +19,7 @@ RUN chmod +x build
 RUN ARCH=${ARCH} ./build
 
 # Runner image
-FROM balenalib/${IMAGE}-debian:buster-run as runner
+FROM balenalib/${IMAGE}-debian:bullseye-run as runner
 ARG ARCH
 ARG TAG
 ARG BUILD_DATE

@@ -43,3 +43,6 @@ venv
 .venv
 
 /examples
+.cursor/
+.pytest_cache/
+gateway.db
