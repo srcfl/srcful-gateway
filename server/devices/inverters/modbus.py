@@ -45,13 +45,17 @@ class Modbus(Device, ABC):
         return "sn"
 
     def __init__(self, **kwargs) -> None:
-        super().__init__()
+        # Only call super().__init__() if we don't have _mode attribute yet
+        # This handles multiple inheritance scenarios where Device.__init__ was already called
+        # Rework this!! 
+        if not hasattr(self, '_mode'):
+            super().__init__()
         
         if "address" in kwargs:
             kwargs[self.SLAVE_ID] = kwargs.pop("address")
         if "type" in kwargs:
             kwargs[self.DEVICE_TYPE] = kwargs.pop("type")
-
+            
         self.sn = kwargs.get(self.SN, None)
         self.slave_id = kwargs.get(self.SLAVE_ID, None)
         self.device_type = kwargs.get(self.DEVICE_TYPE, None)

@@ -89,8 +89,6 @@ class ModbusTCP(Modbus, TCPDevice):
 
     # init but with kwargs
     def __init__(self, **kwargs) -> None:
-        Modbus.__init__(self, **kwargs)
-
         # check if old keys are provided
         if "host" in kwargs:
             kwargs[self.ip_key()] = kwargs.pop("host")
@@ -98,7 +96,10 @@ class ModbusTCP(Modbus, TCPDevice):
         # get the kwargs, and default if not provided
         ip = kwargs.get(self.ip_key(), None)
         port = kwargs.get(self.port_key(), None)
+        
         TCPDevice.__init__(self, ip, port)
+        
+        Modbus.__init__(self, **kwargs)
 
         self.mac = kwargs.get(self.mac_key(), NetworkUtils.INVALID_MAC)
         self.client = None
