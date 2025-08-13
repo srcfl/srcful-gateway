@@ -17,7 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY mqtt_client.py .
-COPY mqtt.env .
 
 # Create non-root user for security
 RUN groupadd -r mqttuser && useradd -r -g mqttuser mqttuser

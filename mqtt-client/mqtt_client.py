@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """
 MQTT Client for Srcful Gateway
-- Subscribes to iamcat/modbus/request topic for modbus commands
-- Publishes modbus responses to iamcat/modbus/response topic  
-- Publishes gateway state to iamcat/state topic every 5 seconds
-- Uses TLS connection with JWT authentication (client_id as username, JWT as password)
-- Automatically retrieves serialNumber from /api/crypto and creates JWT via /api/jwt/create
-- Bridges MQTT modbus commands to HTTP requests to web container
+
+Uses JWT authentication with:
+- deviceid: serialNumber (from /api/crypto)
+- username: serialNumber (from /api/crypto) 
+- password: JWT token (from /api/jwt/create)
+
+- Publishes gateway state to device/{deviceid}/state topic every minute
+- Uses TLS connection with JWT authentication
+- Fetches state data from /api/state endpoint
 """
 
 import os
@@ -20,7 +23,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, Any
 import paho.mqtt.client as mqtt
 import requests
-from dotenv import load_dotenv
+import uuid
 
 # Configure logging
 # DEBUG: Detailed information for debugging (URLs, payloads, detailed responses)
@@ -36,9 +39,6 @@ logger = logging.getLogger(__name__)
 class SrcfulMQTTClient:
     def __init__(self):
         """Initialize MQTT client with TLS configuration"""
-        # Load environment variables from mqtt.env file
-        load_dotenv('mqtt.env')
-
         self.client = mqtt.Client()
         self.setup_tls()
         self.setup_callbacks()
@@ -53,10 +53,11 @@ class SrcfulMQTTClient:
         self.web_port = os.getenv('WEB_CONTAINER_PORT', '5000')
         self.web_base_url = f"http://{self.web_host}:{self.web_port}"
 
-        # Topics
-        self.modbus_request_topic = 'iamcat/modbus/request'
-        self.modbus_response_topic = 'iamcat/modbus/response'
-        self.state_topic = 'iamcat/state'
+        # Device ID will be set during authentication
+        self.device_id = None
+        
+        # State topic (will be set once device_id is known)
+        self.state_topic = None
 
         logger.info(f"Initialized MQTT client for broker {self.broker_host}:{self.broker_port}")
 
@@ -103,9 +104,7 @@ class SrcfulMQTTClient:
         """Callback for when the client receives a CONNACK response from the server"""
         if rc == 0:
             logger.info("Connected to MQTT broker successfully")
-            # Subscribe to modbus request topic
-            client.subscribe(self.modbus_request_topic)
-            logger.info(f"Subscribed to {self.modbus_request_topic}")
+            logger.info(f"Device state will be published to: {self.state_topic}")
         else:
             logger.error(f"Failed to connect to MQTT broker, return code {rc}")
 
@@ -123,9 +122,6 @@ class SrcfulMQTTClient:
             payload = msg.payload.decode('utf-8')
             logger.info(f"Received message on {topic}")
             logger.debug(f"Message payload: {payload}")
-
-            if topic == self.modbus_request_topic:
-                self.handle_modbus_request(payload)
 
         except Exception as e:
             logger.error(f"Error processing message: {e}")
@@ -154,27 +150,36 @@ class SrcfulMQTTClient:
             logger.error(f"Error parsing crypto info: {e}")
             raise e
 
-    def create_jwt_token(self, client_id: str) -> str:
+    def create_jwt_token(self) -> str:
         """Create JWT token using web container API"""
         try:
+            # Get crypto info to get serialNumber for JWT subject
+            crypto_info = self.get_crypto_info()
+            serial_number = crypto_info.get('serialNumber')
+            
+            if not serial_number:
+                raise ValueError("No serialNumber found in crypto info")
+
             # Prepare JWT payload
             now = datetime.now(timezone.utc)
             payload = {
-                'sub': client_id,  # Subject (serialNumber)
                 'iat': now.isoformat(),  # Issued at
-                'exp': (now + timedelta(minutes=5)).isoformat()  # Expires in 5 minutes
+                'exp': (now + timedelta(minutes=5)).isoformat(),  # Expires in 5 minutes
+                'jti': str(uuid.uuid4())  # JWT ID (using a new UUID)
             }
 
             # Prepare headers
             headers = {
                 'alg': 'ES256',
-                'typ': 'JWT'
+                'typ': 'JWT',
+                'opr': 'production',
+                'device': serial_number
             }
 
             # Create JWT request
             jwt_request = {
-                'barn': payload,
                 'headers': headers,
+                'barn': payload,
                 'expires_in': 5
             }
 
@@ -203,182 +208,32 @@ class SrcfulMQTTClient:
             raise e
 
     def setup_jwt_authentication(self):
-        """Set up JWT-based authentication for MQTT"""
+        """Set up JWT authentication for MQTT"""
         try:
-            # Get crypto info to retrieve serialNumber (client_id)
+            # Get crypto info to retrieve serialNumber
             crypto_info = self.get_crypto_info()
-            client_id = crypto_info.get('serialNumber')
-
-            if not client_id:
+            serial_number = crypto_info.get('serialNumber')
+            
+            if not serial_number:
                 raise ValueError("No serialNumber found in crypto info")
-
+            
             # Create JWT token
-            jwt_token = self.create_jwt_token(client_id)
-
-            # Set MQTT authentication
-            self.client.username_pw_set(client_id, jwt_token)
-            logger.info(f"JWT authentication configured for client: {client_id}")
-            logger.debug(f"MQTT Username: {client_id}")
-            logger.debug(f"MQTT Password (JWT): {jwt_token}")
-
-            return client_id, jwt_token
-
+            jwt_token = self.create_jwt_token()
+            
+            # Set MQTT credentials: deviceid and username are serialNumber, password is JWT
+            self.client_id = serial_number
+            self.device_id = serial_number
+            
+            # Set the state topic using device_id
+            self.state_topic = f"device/{self.device_id}/state"
+            
+            self.client.username_pw_set(serial_number, jwt_token)
+            
+            logger.info(f"JWT authentication set up for client: {serial_number}")
+            
         except Exception as e:
-            logger.error(f"Failed to setup JWT authentication: {e}")
+            logger.error(f"Failed to set up JWT authentication: {e}")
             raise e
-
-    def handle_modbus_request(self, payload: str):
-        """Handle modbus request messages"""
-        try:
-            modbus_data = json.loads(payload)
-            logger.info("Processing modbus request")
-            logger.debug(f"Modbus request data: {modbus_data}")
-
-            # Check for function_code to validate it's a modbus command
-            function_code = modbus_data.get('function_code')
-            if function_code:
-                self.handle_modbus_operation(modbus_data)
-            else:
-                logger.warning(f"Modbus request missing function_code: {modbus_data}")
-
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON in modbus request: {e}")
-        except Exception as e:
-            logger.error(f"Error handling modbus request: {e}")
-
-    def handle_modbus_operation(self, control_data: Dict[str, Any]):
-        """Handle modbus read/write operations"""
-        try:
-            function_code = control_data.get('function_code')
-            device_id = control_data.get('device_id')
-            address = control_data.get('address')
-
-            if not all([function_code, device_id, address]):
-                logger.error("Missing required modbus parameters: function_code, device_id, address")
-                return
-
-            if function_code in [3, 4]:
-                # Read operations (function codes 3 and 4)
-                response = self.modbus_read(control_data)
-            elif function_code == 16:
-                # Write operation (function code 16)
-                response = self.modbus_write(control_data)
-            else:
-                logger.warning(f"Unsupported function code: {function_code}")
-                return
-
-            # Publish the response to data topic
-            if response:
-                self.publish_modbus_response(response, control_data)
-
-        except Exception as e:
-            logger.error(f"Error handling modbus operation: {e}")
-
-    def modbus_read(self, control_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform modbus read operation"""
-        try:
-            # Extract parameters for read operation
-            device_id = control_data.get('device_id')
-            function_code = control_data.get('function_code')
-            address = control_data.get('address')
-            size = control_data.get('size', 1)
-            data_type = control_data.get('type', 'U16')
-            endianess = control_data.get('endianess', 'big')
-            scale_factor = control_data.get('scale_factor', 1)
-
-            # Build URL for read operation
-            url = f"{self.web_base_url}/api/inverter/modbus"
-            params = {
-                'device_id': device_id,
-                'function_code': function_code,
-                'address': address,
-                'size': size,
-                'type': data_type,
-                'endianess': endianess,
-                'scale_factor': scale_factor
-            }
-
-            logger.info(f"Making modbus read request for device {device_id}")
-            logger.debug(f"Modbus read URL: {url} with params: {params}")
-
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
-
-            result = response.json()
-            logger.info("Modbus read completed successfully")
-            logger.debug(f"Modbus read response: {result}")
-            return result
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"HTTP request failed for modbus read: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Error performing modbus read: {e}")
-            return None
-
-    def modbus_write(self, control_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Perform modbus write operation"""
-        try:
-            # Extract parameters for write operation
-            device_id = control_data.get('device_id')
-            address = control_data.get('address')
-            function_code = control_data.get('function_code')
-            values = control_data.get('values')
-            data_type = control_data.get('type', 'U16')
-
-            if values is None:
-                logger.error("Missing 'values' parameter for write operation")
-                return None
-
-            # Build URL for write operation
-            url = f"{self.web_base_url}/api/inverter/modbus"
-            params = {
-                'device_id': device_id,
-                'address': address,
-                'function_code': function_code,
-                'values': values,
-                'type': data_type
-            }
-
-            logger.info(f"Making modbus write request for device {device_id}")
-            logger.debug(f"Modbus write URL: {url} with params: {params}")
-
-            response = requests.get(url, params=params, timeout=10)
-            response.raise_for_status()
-
-            result = response.json()
-            logger.info("Modbus write completed successfully")
-            logger.debug(f"Modbus write response: {result}")
-            return result
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"HTTP request failed for modbus write: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Error performing modbus write: {e}")
-            return None
-
-    def publish_modbus_response(self, response: Dict[str, Any], original_request: Dict[str, Any]):
-        """Publish modbus operation response to modbus response topic"""
-        try:
-            response_data = {
-                "timestamp": datetime.utcnow().isoformat(),
-                "type": "modbus_response",
-                "request": original_request,
-                "response": response
-            }
-
-            payload = json.dumps(response_data)
-            result = self.client.publish(self.modbus_response_topic, payload, qos=1)
-
-            if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logger.info("Published modbus response successfully")
-                logger.debug(f"Modbus response payload: {payload}")
-            else:
-                logger.error(f"Failed to publish modbus response, error code: {result.rc}")
-
-        except Exception as e:
-            logger.error(f"Error publishing modbus response: {e}")
 
     def fetch_gateway_state(self) -> Dict[str, Any]:
         """Fetch gateway state from web container API"""
@@ -436,8 +291,8 @@ class SrcfulMQTTClient:
     def connect(self):
         """Connect to MQTT broker"""
         try:
-            # Setup JWT-based authentication
-            client_id, jwt_token = self.setup_jwt_authentication()
+            # Setup JWT authentication
+            self.setup_jwt_authentication()
 
             self.client.connect(self.broker_host, self.broker_port, 60)
             return True
@@ -460,15 +315,15 @@ class SrcfulMQTTClient:
         # Wait for connection to establish
         time.sleep(2)
 
-        # Main loop - publish gateway state periodically
+        # Main loop - publish gateway state every minute
         try:
             while self.running:
-                # Fetch and publish gateway state every 5 seconds
+                # Fetch and publish gateway state every 60 seconds
                 state_data = self.fetch_gateway_state()
                 self.publish_state(state_data)
 
-                # Wait for 5 seconds or until interrupted
-                for _ in range(5):
+                # Wait for 60 seconds or until interrupted
+                for _ in range(60):
                     if not self.running:
                         break
                     time.sleep(1)

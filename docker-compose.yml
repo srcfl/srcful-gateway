@@ -72,8 +72,11 @@ services:
     container_name: eGW-mqtt-client
     restart: always
     network_mode: host
-    env_file:
-      - ./mqtt-client/mqtt.env
+    environment:
+      - WEB_CONTAINER_HOST=localhost
+      - WEB_CONTAINER_PORT=5000
+      - MQTT_BROKER_HOST=your-mqtt-broker.com
+      - MQTT_BROKER_PORT=8883
     depends_on:
       - web
 
