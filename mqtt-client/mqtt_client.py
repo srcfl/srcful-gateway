@@ -30,7 +30,7 @@ import uuid
 # INFO: Essential flow information (connections, operations, success/failure)
 # WARNING/ERROR: Issues and failures
 logging.basicConfig(
-    level=logging.DEBUG,  # Set to INFO for production
+    level=logging.INFO,  # Set to INFO for production
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)

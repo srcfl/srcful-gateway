@@ -3,8 +3,8 @@
 version: "2.4"
 
 x-environment: &shared_env
-  - REST_SERVICE_PORT: 80 # should correspond to the port in the web service below
-  - REST_SERVICE_PORT_INTERNAL: 80 # should correspond to the port in the web service below
+  - REST_SERVICE_PORT: 5000 # should correspond to the port in the web service below
+  - REST_SERVICE_PORT_INTERNAL: 5000 # should correspond to the port in the web service below
 
 services:
 
@@ -38,12 +38,9 @@ services:
       - 5000:5000
     restart: always
     network_mode: host
+    privileged: true
     environment:
       <<: *shared_env
-      REST_SERVICE_PORT: 5000
-      REST_SERVICE_PORT_INTERNAL: 5000
-    devices:
-      - /dev/i2c-1
     labels:
       io.balena.features.dbus: 1 # needed for the wifi provisioning calls
       io.balena.features.supervisor-api: 1 # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
@@ -70,7 +67,7 @@ services:
   mqtt-client:
     build: ./mqtt-client
     container_name: eGW-mqtt-client
-    restart: always
+    restart: no
     network_mode: host
     environment:
       - WEB_CONTAINER_HOST=localhost
@@ -90,26 +87,26 @@ services:
     environment:
       - GATEWAY_SETTINGS=/app/settings.toml
 
-# packet-forwarder:
-#   build: ./udp-packet-forwarder
-#   restart: always
-#   privileged: true # set this to true or define the required devices to share with the container under the `devices` tag below
-#   network_mode: host # required to read host interface MAC instead of virtual one, you don't need this if you set the GATEWAY_EUI manually
-#
-#   environment:
-#     MODEL: "RAK7248"
-#     USE_LIBGPIOD: 1
-#     RESET_GPIO: 25
-#     HAS_GPS: 0
-#
-#     # Set GPS_DEV to a dummy value to prevent the packet forwarder from trying to initialize the GPS
-#     GPS_DEV: /dev/null
-#
-#     # Helium settings
-#     SERVER_HOST: 127.0.0.1
-#     SERVER_PORT: 1680
-#   depends_on:
-#     - gateway-rs
+  packet-forwarder:
+    build: ./udp-packet-forwarder
+    restart: always
+    privileged: true # set this to true or define the required devices to share with the container under the `devices` tag below
+    network_mode: host # required to read host interface MAC instead of virtual one, you don't need this if you set the GATEWAY_EUI manually
+
+    environment:
+      MODEL: "RAK7248"
+      USE_LIBGPIOD: 1
+      RESET_GPIO: 25
+      HAS_GPS: 0
+
+      # Set GPS_DEV to a dummy value to prevent the packet forwarder from trying to initialize the GPS
+      GPS_DEV: /dev/null
+
+      # Helium settings
+      SERVER_HOST: 127.0.0.1
+      SERVER_PORT: 1680
+    depends_on:
+      - gateway-rs
 
 volumes:
   srcful-data:

@@ -45,3 +45,4 @@ venv
 /examples
 .cursor/
 *.db
+.pytest_cache/
