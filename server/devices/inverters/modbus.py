@@ -45,6 +45,8 @@ class Modbus(Device, ABC):
         return "sn"
 
     def __init__(self, **kwargs) -> None:
+        super().__init__()
+        
         if "address" in kwargs:
             kwargs[self.SLAVE_ID] = kwargs.pop("address")
         if "type" in kwargs:

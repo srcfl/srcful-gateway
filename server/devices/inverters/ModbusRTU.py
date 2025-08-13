@@ -105,7 +105,7 @@ class ModbusRTU(Modbus):
         }
 
     def __init__(self, **kwargs) -> None:
-        Modbus.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         self.port = kwargs.get(self.port_key(), None)
         self.baudrate = kwargs.get(self.baud_rate_key(), None)
