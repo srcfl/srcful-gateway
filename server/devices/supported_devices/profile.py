@@ -29,6 +29,21 @@ class DeviceProfile(BaseProfile):
         self.keywords: List[str] = profile_data[ProfileKey.KEYWORDS]
         self.always_include: List[int] = profile_data[ProfileKey.ALWAYS_INCLUDE]
 
+    def get_decoded_data(self, raw_register_values: dict) -> dict:
+        """Return decoded, normalized device data.
+
+        Default stub returns an empty dict. Concrete profiles should override
+        this to translate vendor-specific registers into the common DER data
+        model (see server.devices.common.data_model.DERData).
+
+        Args:
+            raw_register_values: Mapping of register address (int or str) to raw value(s).
+
+        Returns:
+            dict: A dictionary following the DERData schema (may be partial).
+        """
+        return {}
+
 
 class RegisterInterval:
     """Register interval class. Used to define register intervals and function codes for Modbus and Solarman V5 profiles."""
@@ -109,3 +124,5 @@ class ModbusProfile(DeviceProfile):
 
     def get_registers(self) -> List[RegisterInterval]:
         return self.registers
+
+    

@@ -1,9 +1,10 @@
 from server.devices.ICom import ICom
-from server.devices.TCPDevice import TCPDevice
+from server.devices.TCPDevice import TCPDevice 
 import server.devices.inverters as inverter
 from server.devices.inverters.ModbusSolarman import ModbusSolarman
 from server.devices.inverters.ModbusSunspec import ModbusSunspec
 from server.devices.inverters.ModbusTCP import ModbusTCP
+from server.devices.inverters.ModbusRTU import ModbusRTU
 import server.devices.p1meters as p1meter
 from server.network.network_utils import NetworkUtils
 
@@ -15,6 +16,30 @@ TCP_ARGS = {
     TCPDevice.port_key(): 502,
     ModbusTCP.device_type_key(): "solaredge",
     ModbusTCP.slave_id_key(): 4,
+}
+
+
+"""
+{
+  "connection": "RTU",
+  "port": "/dev/ttyACM0", 
+  "baudrate": 38400, 
+  "bytesize": 8, 
+  "parity": "N", 
+  "stopbits": 1, 
+  "type": "sdm630", 
+  "slave_id": 2
+}
+"""
+RTU_ARGS = {
+    ICom.connection_key(): "RTU",
+    ModbusRTU.baud_rate_key(): 9600,
+    ModbusRTU.bytesize_key(): 8,
+    ModbusRTU.parity_key(): "N",
+    ModbusRTU.stopbits_key(): 1,
+    ModbusRTU.device_type_key(): "sdm630",
+    ModbusRTU.slave_id_key(): 1,
+    
 }
 
 SOLARMAN_ARGS = {
@@ -61,6 +86,7 @@ P1_HOMEWIZARD_ARGS = {
 
 # Config snapshots after device creation
 TCP_CONFIG = {**TCP_ARGS, "sn": None}
+RTU_CONFIG = {**RTU_ARGS, "sn": None}
 SOLARMAN_CONFIG = {**SOLARMAN_ARGS, "sn": None}
 SUNSPEC_CONFIG = {**SUNSPEC_ARGS, "sn": None}
 P1_TELNET_CONFIG = {**P1_TELNET_ARGS, "meter_serial_number": "abc5qwerty"}
@@ -68,6 +94,7 @@ ENPHASE_CONFIG = {**ENPHASE_ARGS, "sn": None}
 
 class_config_map = {
     inverter.ModbusTCP: TCP_ARGS,
+    inverter.ModbusRTU: RTU_ARGS,
     inverter.ModbusSolarman: SOLARMAN_ARGS,
     inverter.ModbusSunspec: SUNSPEC_ARGS,
     inverter.Enphase: ENPHASE_ARGS,

@@ -1,4 +1,5 @@
 from typing import Optional
+from server.devices.Device import Device
 from server.devices.profile_keys import FunctionCodeKey
 from .modbus import Modbus
 from ..ICom import ICom, HarvestDataType
@@ -93,8 +94,9 @@ class ModbusRTU(Modbus):
         return []
 
     @staticmethod
-    def get_config_schema():
+    def get_config_schema() -> dict:
         return {
+            **Device.get_config_schema(ModbusRTU.CONNECTION),
             ModbusRTU.baud_rate_key(): "string - baudrate of the device",
             ModbusRTU.bytesize_key(): "string - bytesize of the device",
             ModbusRTU.port_key(): "int - port of the device",
