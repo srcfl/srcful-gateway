@@ -214,3 +214,6 @@ class Modbus(Device, ABC):
         logger.info("SN: %s", value)
 
         return str(value)
+    
+    def get_decoded_data(self, payload: dict | str) -> dict:
+        return self.profile.get_decoded_data(payload) if self.profile else {}

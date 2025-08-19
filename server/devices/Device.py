@@ -79,3 +79,6 @@ class Device(ICom, ABC):
     @staticmethod
     def get_config_schema(connection: str):
         return {ICom.CONNECTION_KEY: f"string - the connection type, for this object use: {connection}"}
+    
+    def get_decoded_data(self, payload: dict | str) -> dict:
+        return {}

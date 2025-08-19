@@ -238,3 +238,6 @@ class ModbusSunspec(TCPDevice):
 
     def get_SN(self) -> str:
         return self.sn
+
+    def get_decoded_data(self, payload: dict | str) -> dict:
+        return {}

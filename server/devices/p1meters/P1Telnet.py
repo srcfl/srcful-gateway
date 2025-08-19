@@ -220,3 +220,6 @@ class P1Telnet(TCPDevice):
     def get_backoff_time_ms(self, harvest_time_ms: int, previous_backoff_time_ms: int) -> int:
         # p1 meters typically send data every 10 seconds
         return 10 * 1000
+    
+    def get_decoded_data(self, payload: dict | str) -> dict:
+        return {}

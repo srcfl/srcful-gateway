@@ -124,5 +124,8 @@ class ModbusProfile(DeviceProfile):
 
     def get_registers(self) -> List[RegisterInterval]:
         return self.registers
+    
+    def get_decoded_data(payload: dict) -> dict:
+        return {}
 
     

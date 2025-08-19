@@ -41,7 +41,9 @@ class Harvest:
             try:
                 device_sn = device.get_SN()
                 device_id = bb.crypto_state().serial_number.hex()
-                
+
+                decoded_harvest = device.get_decoded_data(harvest)
+
                 # Simple POST to MQTT container
                 data = {
                     "topic": f"sourceful/device/{device_id}/harvest",
@@ -49,6 +51,7 @@ class Harvest:
                         "type": "harvest",
                         "device_sn": device_sn,
                         "harvest_data": harvest,
+                        "decoded_harvest": decoded_harvest,
                         "metadata": {
                             "harvest_count": self.harvest_count,
                             "elapsed_time_ms": elapsed_time_ms,

@@ -280,3 +280,6 @@ class Enphase(TCPDevice):
 
     def get_SN(self) -> str:
         return self.iq_gw_serial
+    
+    def get_decoded_data(self, payload: dict | str) -> dict:
+        return {}

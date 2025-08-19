@@ -138,3 +138,6 @@ class P1Jemac(TCPDevice):
         config = self.get_config()
         config[self.IP] = host.ip
         return P1Jemac(**config)
+    
+    def get_decoded_data(self, payload: dict | str) -> dict:
+        return {}

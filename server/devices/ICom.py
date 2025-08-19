@@ -121,3 +121,7 @@ class ICom(ABC):
     @abstractmethod
     def get_SN(self) -> str:
         pass
+    
+    @abstractmethod
+    def get_decoded_data(self, payload: dict | str) -> dict:
+        pass
