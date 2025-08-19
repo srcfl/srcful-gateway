@@ -83,13 +83,16 @@ class PVData:
     inverter_temperature: Optional[Value] = None
     total_pv_generation: Optional[Value] = None  # Always positive (cumulative generation)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
         """Convert to dictionary format for serialization."""
         result = {}
         for field_name, field_value in self.__dict__.items():
             if field_value is not None:
                 if isinstance(field_value, Value):
-                    result[field_name] = field_value.to_dict()
+                    if verbose:
+                        result[field_name] = field_value.to_dict()
+                    else:
+                        result[field_name] = field_value.value
                 else:
                     result[field_name] = field_value
         return result
@@ -108,13 +111,16 @@ class BatteryData:
     total_charge_energy: Optional[Value] = None  # Always positive (cumulative charging)
     total_discharge_energy: Optional[Value] = None  # Always positive (cumulative discharging)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
         """Convert to dictionary format for serialization."""
         result = {}
         for field_name, field_value in self.__dict__.items():
             if field_value is not None:
                 if isinstance(field_value, Value):
-                    result[field_name] = field_value.to_dict()
+                    if verbose:
+                        result[field_name] = field_value.to_dict()
+                    else:
+                        result[field_name] = field_value.value
                 else:
                     result[field_name] = field_value
         return result
@@ -132,19 +138,22 @@ class MeterData:
     meter_l1_voltage: Optional[Value] = None
     meter_l2_voltage: Optional[Value] = None
     meter_l3_voltage: Optional[Value] = None
-    meter_active_power_a: Optional[Value] = None  # Positive when importing, negative when exporting
-    meter_active_power_b: Optional[Value] = None  # Positive when importing, negative when exporting
-    meter_active_power_c: Optional[Value] = None  # Positive when importing, negative when exporting
+    meter_l1_active_power: Optional[Value] = None  # Positive when importing, negative when exporting
+    meter_l2_active_power: Optional[Value] = None  # Positive when importing, negative when exporting
+    meter_l3_active_power: Optional[Value] = None  # Positive when importing, negative when exporting
     total_import_energy: Optional[Value] = None  # Always positive (cumulative import)
     total_export_energy: Optional[Value] = None  # Always positive (cumulative export)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
         """Convert to dictionary format for serialization."""
         result = {}
         for field_name, field_value in self.__dict__.items():
             if field_value is not None:
                 if isinstance(field_value, Value):
-                    result[field_name] = field_value.to_dict()
+                    if verbose:
+                        result[field_name] = field_value.to_dict()
+                    else:
+                        result[field_name] = field_value.value
                 else:
                     result[field_name] = field_value
         return result

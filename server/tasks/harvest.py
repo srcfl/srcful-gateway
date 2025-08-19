@@ -37,7 +37,7 @@ def publish_to_mqtt(timestamp: int, device_id: str, device_sn: str, der_data: DE
     # Publish to individual channel data to separate MQTT topics
     ders: List[PVData | BatteryData | MeterData] = der_data.get_ders()
     for der in ders:
-        for channel, value in der.to_dict().items():
+        for channel, value in der.to_dict(verbose=False).items():
             data = {
                 "topic": f"sourceful/{device_id}/{der.name}/{device_sn}/{channel}",
                 "payload": value
