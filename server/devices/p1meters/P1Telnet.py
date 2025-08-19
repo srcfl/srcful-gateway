@@ -9,6 +9,7 @@ from server.devices.p1meters.p1_scanner import scan_for_p1_device
 from server.network.network_utils import HostInfo
 from ..ICom import HarvestDataType, ICom
 import time
+from server.devices.supported_devices.data_models import DERData
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -221,5 +222,5 @@ class P1Telnet(TCPDevice):
         # p1 meters typically send data every 10 seconds
         return 10 * 1000
     
-    def get_decoded_data(self, payload: dict | str) -> dict:
+    def dict_to_ders(self, payload: dict | str) -> DERData:
         return {}

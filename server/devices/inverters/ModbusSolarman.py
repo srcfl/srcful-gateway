@@ -14,6 +14,7 @@ from server.devices.profile_keys import FunctionCodeKey
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
+logging.getLogger('pysolarmanv5').setLevel(logging.INFO)
 
 class ModbusSolarman(ModbusTCP):
     """

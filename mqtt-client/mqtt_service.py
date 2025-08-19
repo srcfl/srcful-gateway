@@ -260,7 +260,7 @@ def publish():
         data = request.get_json()
         
         # Log incoming request body for debugging
-        logger.info(f"Incoming POST request body: {json.dumps(data, indent=2) if data else 'None'}")
+        logger.debug(f"Incoming POST request body: {json.dumps(data, indent=2) if data else 'None'}")
         
         if not data:
             return jsonify({"error": "No data provided"}), 400
@@ -274,13 +274,10 @@ def publish():
         
         # Use topic and payload as provided by server
         topic = data['topic']
-        payload = {
-            "timestamp": datetime.utcnow().isoformat(),
-            **data['payload']
-        }
+        payload = data['payload']
         
         # Log what we're publishing for debugging
-        logger.info(f"Publishing to topic '{topic}': {json.dumps(payload, indent=2)}")
+        logger.debug(f"Publishing to topic '{topic}': {json.dumps(payload, indent=2)}")
         
         # Publish to MQTT
         success = mqtt_client.publish(topic, payload)

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from server.devices.ICom import ICom, DeviceMode
+from server.devices.supported_devices.data_models import DERData
 
 
 class Device(ICom, ABC):
@@ -80,5 +81,5 @@ class Device(ICom, ABC):
     def get_config_schema(connection: str):
         return {ICom.CONNECTION_KEY: f"string - the connection type, for this object use: {connection}"}
     
-    def get_decoded_data(self, payload: dict | str) -> dict:
-        return {}
+    def dict_to_ders(self, payload: dict | str) -> DERData:
+        return DERData()

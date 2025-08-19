@@ -10,6 +10,7 @@ from typing import List, Optional
 from server.network.network_utils import HostInfo, NetworkUtils
 import urllib3
 import time
+from server.devices.supported_devices.data_models import DERData
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -281,5 +282,5 @@ class Enphase(TCPDevice):
     def get_SN(self) -> str:
         return self.iq_gw_serial
     
-    def get_decoded_data(self, payload: dict | str) -> dict:
+    def dict_to_ders(self, payload: dict | str) -> DERData:
         return {}

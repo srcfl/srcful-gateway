@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from enum import Enum
-
+from server.devices.supported_devices.data_models import DERData
 
 class HarvestDataType(Enum):
     MODBUS_REGISTERS = "modbus_registers"
@@ -123,5 +123,5 @@ class ICom(ABC):
         pass
     
     @abstractmethod
-    def get_decoded_data(self, payload: dict | str) -> dict:
+    def dict_to_ders(self, payload: dict | str) -> DERData:
         pass

@@ -6,6 +6,7 @@ from server.devices.p1meters.common import P1_METER_CLIENT_NAME
 from server.devices.p1meters.p1_scanner import scan_for_p1_device
 import logging
 from server.network.network_utils import HostInfo
+from server.devices.supported_devices.data_models import DERData
 
 logger = logging.getLogger(__name__)
 
@@ -176,5 +177,5 @@ class P1HomeWizard(TCPDevice):
         config[self.IP] = host.ip
         return P1HomeWizard(**config)
     
-    def get_decoded_data(self, payload: dict | str) -> dict:
+    def dict_to_ders(self, payload: dict | str) -> DERData:
         return {}

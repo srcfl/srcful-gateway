@@ -6,6 +6,7 @@ from server.devices.inverters.common import INVERTER_CLIENT_NAME
 from ..ICom import ICom, HarvestDataType
 import logging
 from server.network.network_utils import HostInfo, NetworkUtils
+from server.devices.supported_devices.data_models import DERData
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -239,5 +240,5 @@ class ModbusSunspec(TCPDevice):
     def get_SN(self) -> str:
         return self.sn
 
-    def get_decoded_data(self, payload: dict | str) -> dict:
+    def dict_to_ders(self, payload: dict | str) -> DERData:
         return {}

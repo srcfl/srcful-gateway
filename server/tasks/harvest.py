@@ -1,18 +1,48 @@
 
 import logging
 import requests
-from typing import List, Union
-from server.tasks.itask import ITask
-from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.app.blackboard import BlackBoard
-from .task import Task
-from .harvestTransport import ITransportFactory
 from server.devices.ICom import ICom
-# get c´rypto 
-from server.crypto.crypto_state import CryptoState
+from server.devices.supported_devices.data_models import DERData, PVData, BatteryData, MeterData, Value
+from typing import List
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.DEBUG)
+
+def post_to_mqtt_service(data, device_sn):
+    response = requests.post(
+        "http://localhost:8090/publish",
+        json=data,
+        timeout=2,
+        headers={'Content-Type': 'application/json'}
+    )
+    
+    if response.status_code == 200:
+        logger.debug(f"Published harvest data to MQTT for device {device_sn}")
+    else:
+        logger.warning(f"Failed to publish harvest data: {response.status_code}")
+
+def publish_to_mqtt(timestamp: int, device_id: str, device_sn: str, der_data: DERData):
+    data = {
+        "topic": f"sourceful/{device_id}/harvest",
+        "payload": {
+            "timestamp": timestamp,
+            "device_sn": device_sn,
+            "channels": der_data.to_dict()
+        }
+    }
+
+    post_to_mqtt_service(data, device_sn)
+
+    # Publish to individual channel data to separate MQTT topics
+    ders: List[PVData | BatteryData | MeterData] = der_data.get_ders()
+    for der in ders:
+        for channel, value in der.to_dict().items():
+            data = {
+                "topic": f"sourceful/{device_id}/{der.name}/{device_sn}/{channel}",
+                "payload": value
+            }
+            post_to_mqtt_service(data, device_sn)
 
 
 class Harvest:
@@ -42,37 +72,11 @@ class Harvest:
                 device_sn = device.get_SN()
                 device_id = bb.crypto_state().serial_number.hex()
 
-                decoded_harvest = device.get_decoded_data(harvest)
+                decoded_harvest = device.dict_to_ders(harvest)
 
                 # Simple POST to MQTT container
-                data = {
-                    "topic": f"sourceful/device/{device_id}/harvest",
-                    "payload": {
-                        "type": "harvest",
-                        "device_sn": device_sn,
-                        "harvest_data": harvest,
-                        "decoded_harvest": decoded_harvest,
-                        "metadata": {
-                            "harvest_count": self.harvest_count,
-                            "elapsed_time_ms": elapsed_time_ms,
-                            "backoff_time_ms": self.backoff_time,
-                            "total_harvest_time_ms": self.total_harvest_time_ms
-                        }
-                    }
-                }
-                
-                response = requests.post(
-                    "http://localhost:8090/publish",  # Changed from 8080 to 8090
-                    json=data,
-                    timeout=2,
-                    headers={'Content-Type': 'application/json'}
-                )
-                
-                if response.status_code == 200:
-                    logger.debug(f"Published harvest data to MQTT for device {device_sn}")
-                else:
-                    logger.warning(f"Failed to publish harvest data: {response.status_code}")
-                    
+                publish_to_mqtt(end_time, device_id, device_sn, decoded_harvest)
+
             except Exception as mqtt_error:
                 # Don't fail the harvest if MQTT publishing fails
                 logger.error(f"Error publishing harvest data to MQTT: {mqtt_error}")

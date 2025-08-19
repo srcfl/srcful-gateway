@@ -9,7 +9,7 @@ from ..supported_devices.profiles import ModbusDeviceProfiles, ModbusProfile
 from server.devices.profile_keys import FunctionCodeKey
 from server.devices.supported_devices.profile import RegisterInterval
 import threading
-
+from server.devices.supported_devices.data_models import DERData
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -215,5 +215,5 @@ class Modbus(Device, ABC):
 
         return str(value)
     
-    def get_decoded_data(self, payload: dict | str) -> dict:
-        return self.profile.get_decoded_data(payload) if self.profile else {}
+    def dict_to_ders(self, payload: dict | str) -> DERData:
+        return self.profile.dict_to_ders(payload) if self.profile else DERData()

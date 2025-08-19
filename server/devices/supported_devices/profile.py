@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 from ..profile_keys import ProfileKey, RegistersKey, EndiannessKey, FunctionCodeKey, DataTypeKey
 from ..common.types import ModbusDevice
-
+from server.devices.supported_devices.data_models import DERData
 
 class BaseProfile(ABC):
 
@@ -28,21 +28,6 @@ class DeviceProfile(BaseProfile):
         self.description: str = profile_data[ProfileKey.DESCRIPTION]
         self.keywords: List[str] = profile_data[ProfileKey.KEYWORDS]
         self.always_include: List[int] = profile_data[ProfileKey.ALWAYS_INCLUDE]
-
-    def get_decoded_data(self, raw_register_values: dict) -> dict:
-        """Return decoded, normalized device data.
-
-        Default stub returns an empty dict. Concrete profiles should override
-        this to translate vendor-specific registers into the common DER data
-        model (see server.devices.common.data_model.DERData).
-
-        Args:
-            raw_register_values: Mapping of register address (int or str) to raw value(s).
-
-        Returns:
-            dict: A dictionary following the DERData schema (may be partial).
-        """
-        return {}
 
 
 class RegisterInterval:
@@ -125,7 +110,7 @@ class ModbusProfile(DeviceProfile):
     def get_registers(self) -> List[RegisterInterval]:
         return self.registers
     
-    def get_decoded_data(payload: dict) -> dict:
-        return {}
+    def dict_to_ders(payload: dict) -> DERData:
+        return DERData()
 
     
