@@ -2,9 +2,9 @@
 """
 Simple MQTT Service with Flask API
 
-Self-initializing MQTT service that:
+Basic MQTT service that:
 1. Gets its own device credentials from the web container
-2. Connects to MQTT broker automatically
+2. Connects to MQTT broker
 3. Provides HTTP API for publishing data
 """
 
@@ -19,6 +19,8 @@ import time
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any, Optional
 import uuid
+import queue
+from concurrent.futures import ThreadPoolExecutor
 
 from flask import Flask, request, jsonify
 import paho.mqtt.client as mqtt
@@ -26,24 +28,67 @@ import requests
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Set specific log levels for external libraries to reduce noise
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('requests').setLevel(logging.WARNING)
+logging.getLogger('werkzeug').setLevel(logging.INFO)
 
 # Global MQTT client and Flask app
 mqtt_client = None
 app = Flask(__name__)
 
 
-class SelfInitializingMQTTClient:
+class SimpleMQTTClient:
     def __init__(self):
         self.client = None
         self.device_id = None
         self.connected = False
         self.broker_host = os.getenv('MQTT_BROKER_HOST', 'mqtt.srcful.dev')
         self.broker_port = int(os.getenv('MQTT_BROKER_PORT', '8883'))
+        self._publish_count = 0
+        self._publish_errors = 0
         
+        # JWT token management
+        self._jwt_token = None
+        self._jwt_expires_at = None
+        self._serial_number = None
+        
+    def on_connect(self, client, userdata, flags, rc):
+        """Called when the broker responds to our connection request."""
+        if rc == 0:
+            logger.info(f"Connected to MQTT broker at {self.broker_host}:{self.broker_port}")
+            self.connected = True
+        else:
+            logger.error(f"Failed to connect to MQTT broker, return code {rc}")
+            self.connected = False
+
+    def on_disconnect(self, client, userdata, rc):
+        """Called when the client disconnects from the broker."""
+        logger.warning(f"Disconnected from MQTT broker with result code {rc}")
+        self.connected = False
+
+    def on_publish(self, client, userdata, mid):
+        """Called when a message that was to be sent using the publish() call has completed transmission to the broker."""
+        logger.debug(f"Message {mid} published successfully")
+        self._publish_count += 1
+
+    def on_log(self, client, userdata, level, buf):
+        """Called when the client has log information."""
+        log_levels = {
+            mqtt.MQTT_LOG_DEBUG: logger.debug,
+            mqtt.MQTT_LOG_INFO: logger.info,
+            mqtt.MQTT_LOG_NOTICE: logger.info,
+            mqtt.MQTT_LOG_WARNING: logger.warning,
+            mqtt.MQTT_LOG_ERR: logger.error
+        }
+        log_func = log_levels.get(level, logger.info)
+        log_func(f"MQTT: {buf}")
+
     def get_crypto_info(self) -> Dict[str, Any]:
         """Get crypto information from web container"""
         try:
@@ -51,18 +96,16 @@ class SelfInitializingMQTTClient:
             web_port = os.getenv('WEB_CONTAINER_PORT', '5000')
             url = f"http://{web_host}:{web_port}/api/crypto"
             
+            logger.debug(f"Requesting crypto info from: {url}")
+            
             response = requests.get(url, timeout=10)
             response.raise_for_status()
             
             crypto_info = response.json()
+            logger.info(f"Serial number: {crypto_info.get('serialNumber', 'NOT_FOUND')}")
+            
             return crypto_info
             
-        except requests.exceptions.ConnectionError as e:
-            logger.error(f"Failed to connect to web container: {e}")
-            raise
-        except requests.exceptions.Timeout as e:
-            logger.error(f"Timeout connecting to web container: {e}")
-            raise
         except Exception as e:
             logger.error(f"Failed to get crypto info: {e}")
             raise
@@ -82,15 +125,10 @@ class SelfInitializingMQTTClient:
             
             if not wallet:
                 raise ValueError("No wallet found in owner info")
-                
+            
+            logger.info(f"Got wallet address: {wallet}")
             return wallet
             
-        except requests.exceptions.ConnectionError as e:
-            logger.error(f"Failed to connect to web container for owner info: {e}")
-            raise
-        except requests.exceptions.Timeout as e:
-            logger.error(f"Timeout connecting to web container for owner info: {e}")
-            raise
         except Exception as e:
             logger.error(f"Failed to get owner wallet: {e}")
             raise
@@ -103,6 +141,8 @@ class SelfInitializingMQTTClient:
             
             # Prepare JWT payload
             now = datetime.now(timezone.utc)
+            expires_at = now + timedelta(hours=23)  # Refresh 1 hour before expiry
+            
             payload = {
                 'iat': now.isoformat(),
                 'exp': (now + timedelta(hours=24)).isoformat(),  # 24 hour expiry
@@ -123,6 +163,7 @@ class SelfInitializingMQTTClient:
             }
             
             url = f"http://{web_host}:{web_port}/api/jwt/create"
+            
             response = requests.post(url, json=jwt_request, timeout=10)
             response.raise_for_status()
             
@@ -131,19 +172,19 @@ class SelfInitializingMQTTClient:
             
             if not jwt_token:
                 raise ValueError("No JWT token in response")
-                
+            
+            # Store token and expiry for refresh logic
+            self._jwt_token = jwt_token
+            self._jwt_expires_at = expires_at
+            self._serial_number = serial_number
+            
+            logger.info(f"JWT token created successfully, expires at: {expires_at.isoformat()}")
             return jwt_token
             
-        except requests.exceptions.ConnectionError as e:
-            logger.error(f"Failed to connect to web container for JWT: {e}")
-            raise
-        except requests.exceptions.HTTPError as e:
-            logger.error(f"HTTP error creating JWT: {e.response.status_code}")
-            raise
         except Exception as e:
             logger.error(f"Failed to create JWT token: {e}")
             raise
-        
+
     def setup_tls(self):
         """Configure TLS settings"""
         try:
@@ -166,214 +207,190 @@ class SelfInitializingMQTTClient:
         except Exception as e:
             logger.error(f"Failed to setup TLS: {e}")
             raise
-    
-    def on_connect(self, client, userdata, flags, rc):
-        """Callback for connection"""
-        if rc == 0:
-            logger.info("MQTT connected successfully")
-            self.connected = True
-        else:
-            logger.error(f"MQTT connection failed with code {rc}")
-            # Decode return codes
-            rc_meanings = {
-                1: "Connection refused - incorrect protocol version",
-                2: "Connection refused - invalid client identifier", 
-                3: "Connection refused - server unavailable",
-                4: "Connection refused - bad username or password",
-                5: "Connection refused - not authorised"
-            }
-            meaning = rc_meanings.get(rc, f"Unknown error code {rc}")
-            logger.error(f"MQTT Error: {meaning}")
-            self.connected = False
-    
-    def on_disconnect(self, client, userdata, rc):
-        """Callback for disconnection"""
-        logger.warning(f"MQTT disconnected (rc={rc})")
-        self.connected = False
-    
-    def initialize_and_connect(self, max_retries: int = 5, retry_delay: int = 5) -> bool:
-        """Initialize MQTT connection with device credentials"""
-        for attempt in range(max_retries):
-            try:
-                # Get device credentials
-                crypto_info = self.get_crypto_info()
-                serial_number = crypto_info.get('serialNumber')
-                
-                if not serial_number:
-                    raise ValueError("No serialNumber found in crypto info")
-                
-                # Get owner wallet address to use as client ID
-                wallet_address = self.get_owner_wallet()
-                
-                # Create JWT token
-                jwt_token = self.create_jwt_token(serial_number)
-                
-                # Initialize MQTT client with wallet address as client ID
-                self.device_id = wallet_address
-                self.client = mqtt.Client(client_id=wallet_address)
-                self.client.username_pw_set(serial_number, jwt_token)
-                self.client.on_connect = self.on_connect
-                self.client.on_disconnect = self.on_disconnect
-                
-                # Setup TLS
-                self.setup_tls()
-                
-                # Connect to broker
-                self.client.connect(self.broker_host, self.broker_port, 60)
-                self.client.loop_start()
-                
-                # Wait a moment to see if connection succeeds
-                time.sleep(3)  # Increased wait time
-                
-                if self.connected:
-                    logger.info(f"MQTT initialized for device {serial_number} with wallet {wallet_address}")
-                    return True
-                else:
-                    logger.warning(f"MQTT connection failed, attempt {attempt + 1}/{max_retries}")
-                    
-            except Exception as e:
-                logger.error(f"MQTT initialization error (attempt {attempt + 1}/{max_retries}): {e}")
-            
-            if attempt < max_retries - 1:
-                time.sleep(retry_delay)
-        
-        logger.error("MQTT initialization failed after all retries")
-        return False
-    
-    def publish(self, topic: str, payload: Dict[str, Any]) -> bool:
-        """Publish message to MQTT"""
-        if not self.client or not self.connected:
-            logger.error("MQTT client not connected")
-            return False
-            
+
+    def connect(self) -> bool:
+        """Connect to MQTT broker with device credentials."""
         try:
-            message = json.dumps(payload)
-            result = self.client.publish(topic, message, qos=1)
+            logger.info(f"Starting MQTT connection to {self.broker_host}:{self.broker_port}")
             
-            if result.rc == mqtt.MQTT_ERR_SUCCESS:
+            # Get device credentials
+            crypto_info = self.get_crypto_info()
+            serial_number = crypto_info.get('serialNumber')
+            
+            if not serial_number:
+                raise ValueError("No serialNumber found in crypto info")
+            
+            # Get owner wallet address to use as client ID
+            wallet_address = self.get_owner_wallet()
+            
+            # Create JWT token
+            jwt_token = self.create_jwt_token(serial_number)
+            
+            # Initialize MQTT client with wallet address as client ID
+            self.device_id = wallet_address
+            self.client = mqtt.Client(client_id=wallet_address)
+            self.client.username_pw_set(serial_number, jwt_token)
+            
+            # Set callbacks
+            self.client.on_connect = self.on_connect
+            self.client.on_disconnect = self.on_disconnect
+            self.client.on_publish = self.on_publish
+            self.client.on_log = self.on_log
+
+            # Setup TLS
+            self.setup_tls()
+
+            # Connect to broker
+            logger.info(f"Connecting to MQTT broker {self.broker_host}:{self.broker_port}...")
+            self.client.connect(self.broker_host, self.broker_port, 60)
+            self.client.loop_start()
+            
+            # Wait for connection
+            timeout = 30
+            start_time = time.time()
+            while not self.connected and (time.time() - start_time) < timeout:
+                time.sleep(0.1)
+            
+            if self.connected:
+                logger.info("Successfully connected to MQTT broker")
                 return True
             else:
-                logger.error(f"Failed to publish to {topic}, error code: {result.rc}")
+                logger.error("Connection timeout")
                 return False
                 
         except Exception as e:
-            logger.error(f"Error publishing to MQTT: {e}")
+            logger.error(f"Failed to connect to MQTT broker: {e}")
             return False
-    
+
+    def publish(self, topic: str, payload: Dict[str, Any], qos: int = 0) -> bool:
+        """Publish a message to the MQTT broker."""
+        if not self.connected or not self.client:
+            logger.error("Cannot publish: not connected to MQTT broker")
+            self._publish_errors += 1
+            return False
+
+        try:
+            message_json = json.dumps(payload)
+            result = self.client.publish(topic, message_json, qos=qos)
+            
+            if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                logger.debug(f"Published to {topic}: {message_json}")
+                self._publish_count += 1
+                return True
+            else:
+                logger.error(f"Failed to publish to {topic}, error code: {result.rc}")
+                self._publish_errors += 1
+                return False
+                
+        except Exception as e:
+            logger.error(f"Exception while publishing to {topic}: {e}")
+            self._publish_errors += 1
+            return False
+
     def disconnect(self):
-        """Disconnect from MQTT broker"""
+        """Disconnect from MQTT broker."""
         if self.client:
             self.client.loop_stop()
             self.client.disconnect()
             self.connected = False
+            logger.info("Disconnected from MQTT broker")
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get client statistics."""
+        return {
+            'connected': self.connected,
+            'device_id': self.device_id,
+            'broker': f"{self.broker_host}:{self.broker_port}",
+            'publish_count': self._publish_count,
+            'publish_errors': self._publish_errors,
+            'success_rate': (self._publish_count / (self._publish_count + self._publish_errors)) * 100 if (self._publish_count + self._publish_errors) > 0 else 0
+        }
 
 
-# Flask Routes
-
-@app.route('/health', methods=['GET'])
-def health():
-    """Health check endpoint"""
-    global mqtt_client
-    return jsonify({
-        "status": "healthy",
-        "mqtt_connected": mqtt_client.connected if mqtt_client else False,
-        "device_id": mqtt_client.device_id if mqtt_client else None,
-        "wallet_address": mqtt_client.device_id if mqtt_client else None,  # wallet is stored as device_id
-        "timestamp": datetime.utcnow().isoformat()
-    })
-
-
+# Flask API endpoints
 @app.route('/publish', methods=['POST'])
-def publish():
-    """Publish data to MQTT topic"""
-    global mqtt_client
-    
+def publish_message():
+    """Publish a message via HTTP POST."""
     try:
         data = request.get_json()
-        
-        # Log incoming request body for debugging
-        logger.debug(f"Incoming POST request body: {json.dumps(data, indent=2) if data else 'None'}")
-        
         if not data:
-            return jsonify({"error": "No data provided"}), 400
-        
+            return jsonify({'error': 'No JSON data provided'}), 400
+
         # Validate required fields
         if 'topic' not in data or 'payload' not in data:
-            return jsonify({"error": "Missing required fields: topic, payload"}), 400
-        
-        if not mqtt_client or not mqtt_client.connected:
-            return jsonify({"error": "MQTT client not connected"}), 503
-        
+            return jsonify({'error': 'Missing required fields: topic, payload'}), 400
+
         # Use topic and payload as provided by server
         topic = f"sourceful/{mqtt_client.device_id}/{data['topic']}"
         payload = data['payload']
-        
-        # Log what we're publishing for debugging
-        logger.debug(f"Publishing to topic '{topic}': {json.dumps(payload, indent=2)}")
-        
-        # Publish to MQTT
-        success = mqtt_client.publish(topic, payload)
+        qos = data.get('qos', 0)
+
+        if not mqtt_client or not mqtt_client.connected:
+            return jsonify({'error': 'MQTT client not connected'}), 503
+
+        success = mqtt_client.publish(topic, payload, qos)
         
         if success:
-            return jsonify({
-                "status": "success",
-                "message": "Data published successfully",
-                "topic": topic
-            })
+            return jsonify({'status': 'published', 'topic': topic})
         else:
-            return jsonify({"error": "Failed to publish to MQTT"}), 500
-            
+            return jsonify({'error': 'Failed to publish message'}), 500
+
     except Exception as e:
         logger.error(f"Error in publish endpoint: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({'error': str(e)}), 500
 
 
-def initialize_mqtt_in_background():
-    """Initialize MQTT in a separate thread"""
-    global mqtt_client
-    
-    mqtt_client = SelfInitializingMQTTClient()
-    
-    # Try to initialize with retries
-    success = mqtt_client.initialize_and_connect()
-    
-    if not success:
-        logger.error("MQTT initialization failed - service will run without MQTT connection")
-        # Don't exit - keep the HTTP API running even if MQTT fails
+@app.route('/status', methods=['GET'])
+def get_status():
+    """Get MQTT client status."""
+    if mqtt_client:
+        return jsonify(mqtt_client.get_stats())
+    else:
+        return jsonify({'error': 'MQTT client not initialized'}), 503
+
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint."""
+    return jsonify({'status': 'healthy', 'timestamp': datetime.now(timezone.utc).isoformat()})
 
 
 def signal_handler(signum, frame):
-    """Handle shutdown signals"""
+    """Handle shutdown signals."""
     logger.info(f"Received signal {signum}, shutting down...")
-    global mqtt_client
     if mqtt_client:
         mqtt_client.disconnect()
     sys.exit(0)
 
 
 def main():
-    """Main entry point"""
-    # Setup signal handlers
+    """Main function to start the MQTT service."""
+    global mqtt_client
+    
+    # Set up signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
-    # Configuration
-    host = os.getenv('API_HOST', '0.0.0.0')
-    port = int(os.getenv('API_PORT', '8090'))  # Changed from 8080 to avoid conflict with Traefik
-    debug = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    logger.info("Starting Simple MQTT Service")
     
-    logger.info(f"Starting MQTT Service on {host}:{port}")
+    # Initialize MQTT client
+    mqtt_client = SimpleMQTTClient()
     
-    # Start MQTT initialization in background
-    mqtt_thread = threading.Thread(target=initialize_mqtt_in_background, daemon=True)
-    mqtt_thread.start()
+    # Connect to MQTT broker
+    if not mqtt_client.connect():
+        logger.error("Failed to connect to MQTT broker, exiting")
+        sys.exit(1)
+    
+    # Start Flask app
+    port = int(os.getenv('PORT', 8090))
+    logger.info(f"Starting Flask app on port {port}")
     
     try:
-        app.run(host=host, port=port, debug=debug, threaded=True)
+        app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
     except Exception as e:
         logger.error(f"Failed to start Flask app: {e}")
         sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

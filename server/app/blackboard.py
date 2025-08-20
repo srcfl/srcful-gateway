@@ -64,7 +64,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         return self._device_storage
 
     def get_version(self) -> str:
-        return "0.23.1"
+        return "0.23.3"
 
     def add_task(self, task: ITask):
         self._tasks.append(task)
