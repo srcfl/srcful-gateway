@@ -21,3 +21,4 @@ from . import network_scan
 from . import system
 from . import mdns_scan
 from . import connections
+from . import owner

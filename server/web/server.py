@@ -21,6 +21,8 @@ class Endpoints:
             "crypto": handler.get.crypto.Handler(),
             "crypto/revive": handler.get.crypto.ReviveHandler(),
 
+            "owner": handler.get.owner.Handler(),
+
             "hello": handler.get.hello.Handler(),
             "name": handler.get.name.Handler(),
             "logger": handler.get.logger.Handler(),

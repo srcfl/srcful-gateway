@@ -67,6 +67,34 @@ class SelfInitializingMQTTClient:
             logger.error(f"Failed to get crypto info: {e}")
             raise
 
+    def get_owner_wallet(self) -> str:
+        """Get owner wallet address from web container"""
+        try:
+            web_host = os.getenv('WEB_CONTAINER_HOST', 'localhost')
+            web_port = os.getenv('WEB_CONTAINER_PORT', '5000')
+            url = f"http://{web_host}:{web_port}/api/owner"
+            
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            
+            owner_info = response.json()
+            wallet = owner_info.get('wallet')
+            
+            if not wallet:
+                raise ValueError("No wallet found in owner info")
+                
+            return wallet
+            
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Failed to connect to web container for owner info: {e}")
+            raise
+        except requests.exceptions.Timeout as e:
+            logger.error(f"Timeout connecting to web container for owner info: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Failed to get owner wallet: {e}")
+            raise
+
     def create_jwt_token(self, serial_number: str) -> str:
         """Create JWT token for MQTT authentication"""
         try:
@@ -174,12 +202,15 @@ class SelfInitializingMQTTClient:
                 if not serial_number:
                     raise ValueError("No serialNumber found in crypto info")
                 
+                # Get owner wallet address to use as client ID
+                wallet_address = self.get_owner_wallet()
+                
                 # Create JWT token
                 jwt_token = self.create_jwt_token(serial_number)
                 
-                # Initialize MQTT client
-                self.device_id = serial_number
-                self.client = mqtt.Client(client_id=serial_number)
+                # Initialize MQTT client with wallet address as client ID
+                self.device_id = wallet_address
+                self.client = mqtt.Client(client_id=wallet_address)
                 self.client.username_pw_set(serial_number, jwt_token)
                 self.client.on_connect = self.on_connect
                 self.client.on_disconnect = self.on_disconnect
@@ -195,7 +226,7 @@ class SelfInitializingMQTTClient:
                 time.sleep(3)  # Increased wait time
                 
                 if self.connected:
-                    logger.info(f"MQTT initialized for device {serial_number}")
+                    logger.info(f"MQTT initialized for device {serial_number} with wallet {wallet_address}")
                     return True
                 else:
                     logger.warning(f"MQTT connection failed, attempt {attempt + 1}/{max_retries}")
@@ -247,6 +278,7 @@ def health():
         "status": "healthy",
         "mqtt_connected": mqtt_client.connected if mqtt_client else False,
         "device_id": mqtt_client.device_id if mqtt_client else None,
+        "wallet_address": mqtt_client.device_id if mqtt_client else None,  # wallet is stored as device_id
         "timestamp": datetime.utcnow().isoformat()
     })
 
@@ -273,7 +305,7 @@ def publish():
             return jsonify({"error": "MQTT client not connected"}), 503
         
         # Use topic and payload as provided by server
-        topic = data['topic']
+        topic = f"sourceful/{mqtt_client.device_id}/{data['topic']}"
         payload = data['payload']
         
         # Log what we're publishing for debugging

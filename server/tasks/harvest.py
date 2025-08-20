@@ -23,26 +23,15 @@ def post_to_mqtt_service(data, device_sn):
         logger.warning(f"Failed to publish harvest data: {response.status_code}")
 
 def publish_to_mqtt(timestamp: int, device_id: str, device_sn: str, der_data: DERData):
-    data = {
-        "topic": f"sourceful/{device_id}/harvest",
-        "payload": {
-            "timestamp": timestamp,
-            "device_sn": device_sn,
-            "channels": der_data.to_dict()
-        }
-    }
-
-    post_to_mqtt_service(data, device_sn)
-
     # Publish to individual channel data to separate MQTT topics
     ders: List[PVData | BatteryData | MeterData] = der_data.get_ders()
     for der in ders:
-        for channel, value in der.to_dict(verbose=False).items():
-            data = {
-                "topic": f"sourceful/{device_id}/{der.name}/{device_sn}/{channel}",
-                "payload": value
-            }
-            post_to_mqtt_service(data, device_sn)
+        data = {
+            "topic": f"{der.name}/{device_sn}",
+            "payload": {"timestamp": timestamp, **der.to_dict()}
+        }
+        post_to_mqtt_service(data, device_sn)
+            
 
 
 class Harvest:
