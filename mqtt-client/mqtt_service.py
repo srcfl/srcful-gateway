@@ -14,13 +14,10 @@ import json
 import logging
 import signal
 import sys
-import threading
 import time
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import uuid
-import queue
-from concurrent.futures import ThreadPoolExecutor
 
 from flask import Flask, request, jsonify
 import paho.mqtt.client as mqtt

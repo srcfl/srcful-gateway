@@ -1,10 +1,10 @@
-
 import logging
 import requests
 from server.app.blackboard import BlackBoard
 from server.devices.ICom import ICom
 from server.devices.supported_devices.data_models import DERData, PVData, BatteryData, MeterData, Value
 from typing import List
+import time
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.DEBUG)
@@ -31,6 +31,7 @@ def publish_to_mqtt(timestamp: int, device_id: str, device_sn: str, der_data: DE
             "payload": {"ts": timestamp, **der.to_dict(verbose=False)}
         }
         post_to_mqtt_service(data, device_sn)
+        time.sleep(0.1)  # Sleep to avoid overwhelming the MQTT broker
             
 
 
