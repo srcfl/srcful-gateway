@@ -10,7 +10,10 @@ from ...profile import ModbusProfile
 from ....common.types import ModbusDevice
 from ....registerValue import RegisterValue
 from .definitions_slim import deye_profile as slim_deye_profile
-from ...data_models import DERData, PVData, BatteryData, MeterData, Value, Unit, MPPTData, PhaseData
+from ...data_models import (
+    DERData, PVData, BatteryData, MeterData, MPPTData, PhaseData, 
+    TotalEnergyData, EnergyData, SoCData, NominalData, TemperatureData, UptimeData
+)
 import logging
 
 
@@ -59,139 +62,166 @@ class DeyeProfile(ModbusProfile):
         def scale_power(val: float) -> float:
             return val * (10 if is_high_voltage else 1)
 
-        def make_value(val: float, unit: Unit, name: str) -> Value:
-            return Value(value=val, unit=unit, name=name)
-
         # Create data objects
+        import time
+        timestamp = int(time.time() * 1000)  # Current timestamp in milliseconds
+        
         pv = PVData()
+        pv.ts = timestamp
         battery = BatteryData()
+        battery.ts = timestamp
         meter = MeterData()
+        meter.ts = timestamp
 
         # === PV SECTION - Simple direct assignment ===
         val = decode(20)
         if val is not None:
-            pv.rated_power = make_value(val, Unit.W, "Rated Power")
+            pv.active_power = val
             
         # PV Power (sum of pv1-4)
         pv_power_vals = [decode(addr) for addr in [672, 673, 674, 675]]
         if any(v is not None for v in pv_power_vals):
             total = sum(v for v in pv_power_vals if v is not None) * -1
-            pv.power = make_value(scale_power(total), Unit.W, "PV Power")
+            pv.W = scale_power(total)
 
         # MPPT1
         mppt1_voltage = decode(676)
         mppt1_current = decode(677)
         if mppt1_voltage is not None or mppt1_current is not None:
-            pv.mppt1 = MPPTData()
+            pv.MPPT1 = MPPTData()
             if mppt1_voltage is not None:
-                pv.mppt1.voltage = make_value(mppt1_voltage, Unit.V, "MPPT1 Voltage")
+                pv.MPPT1.V = mppt1_voltage
             if mppt1_current is not None:
-                pv.mppt1.current = make_value(mppt1_current * -1, Unit.A, "MPPT1 Current")
+                pv.MPPT1.A = mppt1_current * -1
         
         # MPPT2
         mppt2_voltage = decode(678)
         mppt2_current = decode(679)
         if mppt2_voltage is not None or mppt2_current is not None:
-            pv.mppt2 = MPPTData()
+            pv.MPPT2 = MPPTData()
             if mppt2_voltage is not None:
-                pv.mppt2.voltage = make_value(mppt2_voltage, Unit.V, "MPPT2 Voltage")
+                pv.MPPT2.V = mppt2_voltage
             if mppt2_current is not None:
-                pv.mppt2.current = make_value(mppt2_current * -1, Unit.A, "MPPT2 Current")
+                pv.MPPT2.A = mppt2_current * -1
         
         val = decode(541)
         if val is not None:
-            pv.inverter_temperature = make_value(val, Unit.C, "Inverter Temperature")
+            pv.heatsink_tmp = TemperatureData()
+            pv.heatsink_tmp.C = val
         
         val = decode(534)
         if val is not None:
-            pv.total_pv_generation = make_value(val * 1000, Unit.Wh, "Total PV Generation")
+            if pv.total is None:
+                pv.total = TotalEnergyData()
+            if pv.total.export is None:
+                pv.total.export = EnergyData()
+            pv.total.export.Wh = val * 1000
 
         # === BATTERY SECTION - Simple direct assignment ===
         val = decode(590)
         if val is not None:
-            battery.power = make_value(scale_power(val) * -1, Unit.W, "Battery Power")
+            battery.W = scale_power(val) * -1
         
         val = decode(591)
         if val is not None:
-            battery.current = make_value(val * -1, Unit.A, "Battery Current")
+            battery.A = val * -1
         
         val = decode(587)
         if val is not None:
-            battery.voltage = make_value(scale_voltage(val), Unit.V, "Battery Voltage")
+            battery.V = scale_voltage(val)
         
         val = decode(588)
         if val is not None:
-            battery.soc = make_value(val, Unit.PERCENT, "Battery SOC")
+            battery.SoC = SoCData()
+            battery.SoC.nom = NominalData()
+            battery.SoC.nom.fract = val / 100.0  # Convert percentage to fraction
         
         val = decode(516)
         if val is not None:
-            battery.total_charge_energy = make_value(val * 1000, Unit.Wh, "Total Charge Energy")
+            if battery.total is None:
+                battery.total = TotalEnergyData()
+            if battery.total.import_ is None:
+                battery.total.import_ = EnergyData()
+            battery.total.import_.Wh = val * 1000
         
         val = decode(518)
         if val is not None:
-            battery.total_discharge_energy = make_value(val * 1000, Unit.Wh, "Total Discharge Energy")
+            if battery.total is None:
+                battery.total = TotalEnergyData()
+            if battery.total.export is None:
+                battery.total.export = EnergyData()
+            battery.total.export.Wh = val * 1000
         
         # Battery temperature (special calculation)
         temp_raw = decode(217)
         if temp_raw is not None:
             temp = (temp_raw - 1000.0) / 10.0
-            battery.battery_temperature = make_value(temp, Unit.C, "Battery Temperature")
+            battery.Tmp = TemperatureData()
+            battery.Tmp.C = temp
 
         # === METER SECTION - Simple direct assignment ===
         val = decode(619)
         if val is not None:
-            meter.active_power = make_value(val, Unit.W, "Active Power")
+            meter.W = val
         
         val = decode(609)
         if val is not None:
-            meter.frequency = make_value(val, Unit.Hz, "Grid Frequency")
+            meter.Hz = val
         
         val = decode(522)
         if val is not None:
-            meter.total_import_energy = make_value(val * 1000, Unit.Wh, "Total Import Energy")
+            if meter.total is None:
+                meter.total = TotalEnergyData()
+            if meter.total.import_ is None:
+                meter.total.import_ = EnergyData()
+            meter.total.import_.Wh = val * 1000
         
         val = decode(524)
         if val is not None:
-            meter.total_export_energy = make_value(val * 1000, Unit.Wh, "Total Export Energy")
+            if meter.total is None:
+                meter.total = TotalEnergyData()
+            if meter.total.export is None:
+                meter.total.export = EnergyData()
+            meter.total.export.Wh = val * 1000
         
         # L1 phase
         l1_voltage = decode(598)
         l1_current = decode(610)
         l1_power = decode(616)
         if l1_voltage is not None or l1_current is not None or l1_power is not None:
-            meter.l1 = PhaseData()
+            meter.L1 = PhaseData()
             if l1_voltage is not None:
-                meter.l1.voltage = make_value(l1_voltage, Unit.V, "L1 Voltage")
+                meter.L1.V = l1_voltage
             if l1_current is not None:
-                meter.l1.current = make_value(l1_current * -1, Unit.A, "L1 Current")
+                meter.L1.A = l1_current * -1
             if l1_power is not None:
-                meter.l1.active_power = make_value(l1_power, Unit.W, "L1 Active Power")
+                meter.L1.W = l1_power
         
         # L2 phase
         l2_voltage = decode(599)
         l2_current = decode(611)
         l2_power = decode(617)
         if l2_voltage is not None or l2_current is not None or l2_power is not None:
-            meter.l2 = PhaseData()
+            meter.L2 = PhaseData()
             if l2_voltage is not None:
-                meter.l2.voltage = make_value(l2_voltage, Unit.V, "L2 Voltage")
+                meter.L2.V = l2_voltage
             if l2_current is not None:
-                meter.l2.current = make_value(l2_current * -1, Unit.A, "L2 Current")
+                meter.L2.A = l2_current * -1
             if l2_power is not None:
-                meter.l2.active_power = make_value(l2_power, Unit.W, "L2 Active Power")
+                meter.L2.W = l2_power
         
         # L3 phase
         l3_voltage = decode(600)
         l3_current = decode(612)
         l3_power = decode(618)
         if l3_voltage is not None or l3_current is not None or l3_power is not None:
-            meter.l3 = PhaseData()
+            meter.L3 = PhaseData()
             if l3_voltage is not None:
-                meter.l3.voltage = make_value(l3_voltage, Unit.V, "L3 Voltage")
+                meter.L3.V = l3_voltage
             if l3_current is not None:
-                meter.l3.current = make_value(l3_current * -1, Unit.A, "L3 Current")
+                meter.L3.A = l3_current * -1
             if l3_power is not None:
-                meter.l3.active_power = make_value(l3_power, Unit.W, "L3 Active Power")
+                meter.L3.W = l3_power
 
         # Build result with only populated sections
         result = DERData()

@@ -1,14 +1,13 @@
 # Data Models
 
-The Srcful Gateway uses standardized data models to represent energy system measurements from distributed energy resources (DER). These models ensure consistent data structure across different device types and manufacturers.
+The Srcful Gateway uses nested data models to represent energy system measurements from distributed energy resources (DER). The structure provides clean JSON output with direct numeric values and organized nested objects.
 
-## Core Components
+## Core Structure
 
-### Value
-A measurement value containing three components:
-- **value**: Numeric measurement
-- **unit**: Standardized unit (W, kW, V, A, Hz, °C, %, kWh)
-- **name**: Descriptive field name
+### Timestamp
+All data objects include:
+- **ts**: Timestamp in milliseconds
+- **type**: Object type ("PV", "Battery", "Meter")
 
 ### DERData
 Root data structure containing up to three subsystems:
@@ -18,66 +17,169 @@ Root data structure containing up to three subsystems:
 
 ## PV Data Model
 
-Represents photovoltaic solar generation systems.
+```json
+{
+  "ts": 1755701251122,
+  "type": "PV",
+  "W": -1500,
+  "active_power": 3000,
+  "MPPT1": {
+    "V": 400,
+    "A": -3.75
+  },
+  "MPPT2": {
+    "V": 380,
+    "A": -3.68
+  },
+  "heatsink_tmp": {
+    "C": 45
+  },
+  "total": {
+    "export": {
+      "Wh": 15000
+    }
+  }
+}
+```
 
-| Field | Unit | Description | Sign Convention |
-|-------|------|-------------|-----------------|
-| `power` | W/kW | Current power output | Always negative (generation) |
-| `rated_power` | W/kW | Maximum rated capacity | Positive |
-| `mppt1_voltage` | V | MPPT1 DC voltage | Positive |
-| `mppt1_current` | A | MPPT1 DC current | Always negative (generation) |
-| `mppt2_voltage` | V | MPPT2 DC voltage | Positive |
-| `mppt2_current` | A | MPPT2 DC current | Always negative (generation) |
-| `inverter_temperature` | °C | Inverter temperature | Positive |
-| `total_pv_generation` | kWh | Cumulative energy generated | Always positive |
+| Field | Unit | Description |
+|-------|------|-------------|
+| `W` | W | Active Power (negative for generation) |
+| `active_power` | W | Maximum Power Rating |
+| `MPPT1/2.V` | V | DC Voltage per MPPT |
+| `MPPT1/2.A` | A | DC Current per MPPT (negative) |
+| `heatsink_tmp.C` | °C | Inverter Temperature |
+| `total.export.Wh` | Wh | Total Energy Generated |
 
 ## Battery Data Model
 
-Represents energy storage systems.
+```json
+{
+  "ts": 1755701251122,
+  "type": "Battery",
+  "W": 500,
+  "A": 10.5,
+  "V": 48.2,
+  "SoC": {
+    "nom": {
+      "fract": 0.75
+    }
+  },
+  "Tmp": {
+    "C": 25
+  },
+  "total": {
+    "import": {
+      "Wh": 8000
+    },
+    "export": {
+      "Wh": 7200
+    },
+    "uptime": {
+      "s": 123456
+    }
+  }
+}
+```
 
-| Field | Unit | Description | Sign Convention |
-|-------|------|-------------|-----------------|
-| `power` | W/kW | Charging/discharging power | Positive (charging), Negative (discharging) |
-| `current` | A | Battery current | Positive (charging), Negative (discharging) |
-| `voltage` | V | Battery voltage | Positive |
-| `soc` | % | State of charge | 0-100% |
-| `battery_temperature` | °C | Battery temperature | Positive |
-| `total_charge_energy` | kWh | Cumulative energy charged | Always positive |
-| `total_discharge_energy` | kWh | Cumulative energy discharged | Always positive |
+| Field | Unit | Description |
+|-------|------|-------------|
+| `W` | W | Active Power (+ charge, - discharge) |
+| `A` | A | Current (+ charge, - discharge) |
+| `V` | V | Voltage |
+| `SoC.nom.fract` | fraction | State of Charge (0.0-1.0) |
+| `Tmp.C` | °C | Battery Temperature |
+| `total.import.Wh` | Wh | Total Energy Charged |
+| `total.export.Wh` | Wh | Total Energy Discharged |
+| `total.uptime.s` | seconds | System Uptime |
 
 ## Meter Data Model
 
-Represents grid connection meters with three-phase support.
+```json
+{
+  "ts": 1755701251122,
+  "type": "Meter",
+  "W": 1200,
+  "Hz": 50.0,
+  "L1": {
+    "V": 230,
+    "A": 5.2,
+    "W": 400
+  },
+  "L2": {
+    "V": 229,
+    "A": 5.1,
+    "W": 380
+  },
+  "L3": {
+    "V": 231,
+    "A": 5.3,
+    "W": 420
+  },
+  "total": {
+    "import": {
+      "Wh": 25000
+    },
+    "export": {
+      "Wh": 18000
+    }
+  }
+}
+```
 
-| Field | Unit | Description | Sign Convention |
-|-------|------|-------------|-----------------|
-| `active_power` | W/kW | Total active power | Positive (import), Negative (export) |
-| `frequency` | Hz | Grid frequency | Positive |
-| `l1_current` | A | Phase 1 current | Positive (import), Negative (export) |
-| `l2_current` | A | Phase 2 current | Positive (import), Negative (export) |
-| `l3_current` | A | Phase 3 current | Positive (import), Negative (export) |
-| `l1_voltage` | V | Phase 1 voltage | Positive |
-| `l2_voltage` | V | Phase 2 voltage | Positive |
-| `l3_voltage` | V | Phase 3 voltage | Positive |
-| `l1_active_power` | W/kW | Phase 1 active power | Positive (import), Negative (export) |
-| `l2_active_power` | W/kW | Phase 2 active power | Positive (import), Negative (export) |
-| `l3_active_power` | W/kW | Phase 3 active power | Positive (import), Negative (export) |
-| `total_import_energy` | kWh | Cumulative energy imported | Always positive |
-| `total_export_energy` | kWh | Cumulative energy exported | Always positive |
+| Field | Unit | Description |
+|-------|------|-------------|
+| `W` | W | Total Active Power (+ import, - export) |
+| `Hz` | Hz | Grid Frequency |
+| `L1/L2/L3.V` | V | Phase Voltage |
+| `L1/L2/L3.A` | A | Phase Current |
+| `L1/L2/L3.W` | W | Phase Power |
+| `total.import.Wh` | Wh | Total Energy Imported |
+| `total.export.Wh` | Wh | Total Energy Exported |
 
 ## Sign Conventions
 
-The data models follow consistent sign conventions:
+- **Generation**: Negative power (PV: `W < 0`)
+- **Charging**: Positive power/current (Battery: `W > 0`, `A > 0`)
+- **Discharging**: Negative power/current (Battery: `W < 0`, `A < 0`)
+- **Import**: Positive power (Meter: `W > 0`)
+- **Export**: Negative power (Meter: `W < 0`)
+- **Energy Totals**: Always positive values in `total.import.Wh` and `total.export.Wh`
 
-- **Generation**: Negative values (PV power, PV current)
-- **Consumption/Import**: Positive values (meter import, battery charging)
-- **Export/Discharge**: Negative values (meter export, battery discharge)
-- **Cumulative Energy**: Always positive (total generation, charge, discharge, import, export)
+## Units
 
-## Data Serialization
+All measurements use base SI units:
+- Power: W (watts)
+- Energy: Wh (watt-hours)
+- Voltage: V (volts)
+- Current: A (amperes)
+- Frequency: Hz (hertz)
+- Temperature: °C (Celsius)
+- State of Charge: fraction (0.0 = empty, 1.0 = full)
+- Time: s (seconds), ms (milliseconds for timestamps)
 
-All data models support dictionary serialization with two modes:
-- **Verbose**: Includes value, unit, and name for each measurement
-- **Compact**: Returns only numeric values
+Example serialized PV data:
+```json
+{
+  "pv": {
+    "ts": 1755701251122,
+    "type": "PV",
+    "W": -5000.0,
+    "active_power": 6000.0,
+    "heatsink_tmp": {
+      "C": 45.0
+    },
+    "MPPT1": {
+      "V": 380.0,
+      "A": -12.5
+    },
+    "total": {
+      "export": {
+        "Wh": 25000
+      }
+    }
+  }
+}
+```
 
-This standardized approach ensures consistent data interpretation across the Srcful ecosystem.
+This standardized approach ensures consistent data interpretation across the Srcful ecosystem while maintaining compatibility with SunSpec specifications.

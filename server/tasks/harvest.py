@@ -27,8 +27,8 @@ def publish_to_mqtt(timestamp: int, device_id: str, device_sn: str, der_data: DE
     ders: List[PVData | BatteryData | MeterData] = der_data.get_ders()
     for der in ders:
         data = {
-            "topic": f"{der.name}/{device_sn}",
-            "payload": {"timestamp": timestamp, **der.to_dict()}
+            "topic": f"{der.type}/{device_sn}",
+            "payload": {"ts": timestamp, **der.to_dict(verbose=False)}
         }
         post_to_mqtt_service(data, device_sn)
             
