@@ -187,6 +187,7 @@ class TemperatureData:
 class PVData:
     """Photovoltaic system data following SunSpec naming."""
     type: str = "PV"
+    make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     ts: Optional[int] = None  # Timestamp
     W: Optional[float] = None  # Active Power (always negative for generation)
     active_power: Optional[float] = None  # Active Power Max Rating (from model 702)
@@ -216,6 +217,7 @@ class PVData:
 class BatteryData:
     """Battery system data following SunSpec naming."""
     type: str = "Battery"
+    make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     ts: Optional[int] = None  # Timestamp
     W: Optional[float] = None  # Active Power (positive charging, negative discharging)
     A: Optional[float] = None  # Current (positive charging, negative discharging)
@@ -244,6 +246,7 @@ class BatteryData:
 class MeterData:
     """Meter system data following SunSpec naming."""
     type: str = "Meter"
+    make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     ts: Optional[int] = None  # Timestamp
     W: Optional[float] = None  # Total Active Power (positive importing, negative exporting)
     Hz: Optional[float] = None  # Frequency

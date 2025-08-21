@@ -44,6 +44,7 @@ class SimpleMQTTClient:
     def __init__(self):
         self.client = None
         self.device_id = None
+        self.wallet = None
         self.connected = False
         self.broker_host = os.getenv('MQTT_BROKER_HOST', 'mqtt.srcful.dev')
         self.broker_port = int(os.getenv('MQTT_BROKER_PORT', '8883'))
@@ -234,9 +235,10 @@ class SimpleMQTTClient:
             jwt_token = self.create_jwt_token(serial_number)
             
             # Initialize MQTT client with wallet address as client ID
-            self.device_id = wallet_address
-            self.client = mqtt.Client(client_id=wallet_address)
-            self.client.username_pw_set(serial_number, jwt_token)
+            self.device_id = serial_number
+            self.wallet = wallet_address
+            self.client = mqtt.Client(client_id=serial_number)
+            self.client.username_pw_set(wallet_address, jwt_token)
             
             # Set callbacks
             self.client.on_connect = self.on_connect
@@ -328,7 +330,7 @@ def publish_message():
             return jsonify({'error': 'Missing required fields: topic, payload'}), 400
 
         # Use topic and payload as provided by server
-        topic = f"sourceful/{mqtt_client.device_id}/{data['topic']}"
+        topic = f"sourceful/{mqtt_client.wallet}/{data['topic']}"
         payload = data['payload']
         qos = data.get('qos', 0)
 

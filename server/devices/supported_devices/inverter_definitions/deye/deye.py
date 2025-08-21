@@ -17,6 +17,9 @@ from ...data_models import (
 import logging
 
 
+# Constants
+MANUFACTURER = "Deye"
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
@@ -68,10 +71,13 @@ class DeyeProfile(ModbusProfile):
         
         pv = PVData()
         pv.ts = timestamp
+        pv.make = MANUFACTURER  # Set manufacturer
         battery = BatteryData()
         battery.ts = timestamp
+        battery.make = MANUFACTURER  # Set manufacturer
         meter = MeterData()
         meter.ts = timestamp
+        meter.make = MANUFACTURER  # Set manufacturer
 
         # === PV SECTION - Simple direct assignment ===
         val = decode(20)
