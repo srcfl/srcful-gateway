@@ -8,6 +8,7 @@ The Srcful Gateway uses nested data models to represent energy system measuremen
 All data objects include:
 - **ts**: Timestamp in milliseconds
 - **type**: Object type ("PV", "Battery", "Meter")
+- **make**: Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
 
 ### DERData
 Root data structure containing up to three subsystems:
@@ -21,6 +22,7 @@ Root data structure containing up to three subsystems:
 {
   "ts": 1755701251122,
   "type": "PV",
+  "make": "Deye",
   "W": -1500,
   "active_power": 3000,
   "MPPT1": {
@@ -44,6 +46,7 @@ Root data structure containing up to three subsystems:
 
 | Field | Unit | Description |
 |-------|------|-------------|
+| `make` | - | Manufacturer/brand name |
 | `W` | W | Active Power (negative for generation) |
 | `active_power` | W | Maximum Power Rating |
 | `MPPT1/2.V` | V | DC Voltage per MPPT |
@@ -57,6 +60,7 @@ Root data structure containing up to three subsystems:
 {
   "ts": 1755701251122,
   "type": "Battery",
+  "make": "Deye",
   "W": 500,
   "A": 10.5,
   "V": 48.2,
@@ -84,6 +88,7 @@ Root data structure containing up to three subsystems:
 
 | Field | Unit | Description |
 |-------|------|-------------|
+| `make` | - | Manufacturer/brand name |
 | `W` | W | Active Power (+ charge, - discharge) |
 | `A` | A | Current (+ charge, - discharge) |
 | `V` | V | Voltage |
@@ -99,6 +104,7 @@ Root data structure containing up to three subsystems:
 {
   "ts": 1755701251122,
   "type": "Meter",
+  "make": "Deye",
   "W": 1200,
   "Hz": 50.0,
   "L1": {
@@ -129,6 +135,7 @@ Root data structure containing up to three subsystems:
 
 | Field | Unit | Description |
 |-------|------|-------------|
+| `make` | - | Manufacturer/brand name |
 | `W` | W | Total Active Power (+ import, - export) |
 | `Hz` | Hz | Grid Frequency |
 | `L1/L2/L3.V` | V | Phase Voltage |
@@ -164,6 +171,7 @@ Example serialized PV data:
   "pv": {
     "ts": 1755701251122,
     "type": "PV",
+    "make": "Deye",
     "W": -5000.0,
     "active_power": 6000.0,
     "heatsink_tmp": {

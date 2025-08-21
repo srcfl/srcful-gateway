@@ -190,7 +190,7 @@ class PVData:
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     ts: Optional[int] = None  # Timestamp
     W: Optional[float] = None  # Active Power (always negative for generation)
-    active_power: Optional[float] = None  # Active Power Max Rating (from model 702)
+    rated_power: Optional[float] = None  # Active Power Max Rating (from model 702)
     HV_LV: Optional[float] = None  # High/Low voltage indicator
     MPPT1: Optional[MPPTData] = None  # MPPT 1 data
     MPPT2: Optional[MPPTData] = None  # MPPT 2 data
