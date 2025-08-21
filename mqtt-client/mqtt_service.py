@@ -55,6 +55,9 @@ class SimpleMQTTClient:
         self._jwt_expires_at = None
         self._serial_number = None
         
+        # Cache for wallet address
+        self._cached_wallet = None
+        
     def on_connect(self, client, userdata, flags, rc):
         """Called when the broker responds to our connection request."""
         if rc == 0:
@@ -108,7 +111,12 @@ class SimpleMQTTClient:
             raise
 
     def get_owner_wallet(self) -> str:
-        """Get owner wallet address from web container"""
+        """Get owner wallet address from web container (cached)"""
+        # Return cached wallet if available
+        if self._cached_wallet:
+            logger.debug(f"Using cached wallet address: {self._cached_wallet}")
+            return self._cached_wallet
+            
         try:
             web_host = os.getenv('WEB_CONTAINER_HOST', 'localhost')
             web_port = os.getenv('WEB_CONTAINER_PORT', '5000')
@@ -123,7 +131,9 @@ class SimpleMQTTClient:
             if not wallet:
                 raise ValueError("No wallet found in owner info")
             
-            logger.info(f"Got wallet address: {wallet}")
+            # Cache the wallet address
+            self._cached_wallet = wallet
+            logger.info(f"Got and cached wallet address: {wallet}")
             return wallet
             
         except Exception as e:
