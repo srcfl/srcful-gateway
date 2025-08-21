@@ -2,6 +2,7 @@ import logging
 import requests
 from server.app.blackboard import BlackBoard
 from server.devices.ICom import ICom
+from server.devices.Device import Device
 from server.devices.supported_devices.data_models import DERData, PVData, BatteryData, MeterData, Value
 from typing import List
 import time
@@ -30,21 +31,20 @@ def publish_to_mqtt(timestamp: int, device_id: str, device_sn: str, der_data: DE
             "topic": f"{der.type}/{device_sn}",
             "payload": {"ts": timestamp, **der.to_dict(verbose=False)}
         }
-        post_to_mqtt_service(data, device_sn)
-        time.sleep(0.1)  # Sleep to avoid overwhelming the MQTT broker
+        post_to_mqtt_service(data, device_sn) 
             
 
 
 class Harvest:
     def __init__(self):
-        self.backoff_time = 1000  # start with a 1000ms backoff
+        self.backoff_time = None  # Will be set in the harvest method from the device
         self.harvest_count = 0
         self.total_harvest_time_ms = 0
 
     def harvest(self, event_time:int, device: ICom, bb: BlackBoard) -> tuple[int, dict]:
 
         start_time = event_time
-        elapsed_time_ms = 1000
+        elapsed_time_ms = 0
 
         try:
             harvest = device.read_harvest_data(force_verbose=self.harvest_count % 10 == 0)
@@ -52,6 +52,10 @@ class Harvest:
             end_time = bb.time_ms()
 
             elapsed_time_ms = end_time - start_time
+            # Initialize backoff_time on first harvest if not set
+            if self.backoff_time is None:
+                self.backoff_time = device.DEFAULT_HARVEST_INTERVAL_MS
+            
             self.backoff_time = device.get_backoff_time_ms(elapsed_time_ms, self.backoff_time)
             logger.debug("Harvest from [%s] took %s ms. Data points: %s", device.get_SN(), elapsed_time_ms, len(harvest))
 
@@ -75,8 +79,8 @@ class Harvest:
             # To-Do: Solarmanv5 can raise ConnectionResetError, so handle it!
             raise ICom.ConnectionException("Error harvesting from device", device, e)
 
-        # If we're reading faster than every 1000ms, we subtract the elapsed time of
-        # the current harvest from the backoff time to keep polling at a constant rate of every 1000ms
+        # If we're reading faster than the default harvest interval, we subtract the elapsed time of
+        # the current harvest from the backoff time to keep polling at a constant rate
         if elapsed_time_ms < self.backoff_time:
             next_time = bb.time_ms() + self.backoff_time - elapsed_time_ms
         else:

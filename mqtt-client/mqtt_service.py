@@ -16,7 +16,8 @@ import signal
 import sys
 import time
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Any
+from typing import Dict, Any, List
+from collections import deque
 import uuid
 
 from flask import Flask, request, jsonify
@@ -59,6 +60,50 @@ class SimpleMQTTClient:
         # Cache for wallet address
         self._cached_wallet = None
         
+        # Topic-specific publish tracking for last 60 seconds
+        self._topic_publishes = {}  # topic -> deque of timestamps
+        
+    def _clean_old_topic_records(self):
+        """Remove publish records older than 10 minutes for all topics."""
+        cutoff_time = time.time() - 600  # 10 minutes
+        for topic in list(self._topic_publishes.keys()):
+            topic_queue = self._topic_publishes[topic]
+            # Remove old timestamps
+            while topic_queue and topic_queue[0] < cutoff_time:
+                topic_queue.popleft()
+            # Remove empty queues to keep memory clean
+            if not topic_queue:
+                del self._topic_publishes[topic]
+
+    def _record_topic_publish(self, topic: str):
+        """Record a successful publish to a topic."""
+        current_time = time.time()
+        if topic not in self._topic_publishes:
+            self._topic_publishes[topic] = deque()
+        self._topic_publishes[topic].append(current_time)
+        # Clean old records periodically
+        self._clean_old_topic_records()
+
+    def _get_topic_publish_counts(self) -> Dict[str, Dict[str, int]]:
+        """Get publish counts for each topic in different time windows."""
+        self._clean_old_topic_records()
+        current_time = time.time()
+        
+        result = {}
+        for topic, timestamps in self._topic_publishes.items():
+            # Count messages in different time windows
+            count_60s = sum(1 for ts in timestamps if current_time - ts <= 60)
+            count_5m = sum(1 for ts in timestamps if current_time - ts <= 300)  # 5 minutes
+            count_10m = sum(1 for ts in timestamps if current_time - ts <= 600)  # 10 minutes
+            
+            result[topic] = {
+                '60s': count_60s,
+                '5m': count_5m,
+                '10m': count_10m
+            }
+        
+        return result
+
     def on_connect(self, client, userdata, flags, rc):
         """Called when the broker responds to our connection request."""
         if rc == 0:
@@ -285,6 +330,8 @@ class SimpleMQTTClient:
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
                 logger.debug(f"Published to {topic}: {message_json}")
                 self._publish_count += 1
+                # Record the topic-specific publish
+                self._record_topic_publish(topic)
                 return True
             else:
                 logger.error(f"Failed to publish to {topic}, error code: {result.rc}")
@@ -312,7 +359,8 @@ class SimpleMQTTClient:
             'broker': f"{self.broker_host}:{self.broker_port}",
             'publish_count': self._publish_count,
             'publish_errors': self._publish_errors,
-            'success_rate': (self._publish_count / (self._publish_count + self._publish_errors)) * 100 if (self._publish_count + self._publish_errors) > 0 else 0
+            'success_rate': (self._publish_count / (self._publish_count + self._publish_errors)) * 100 if (self._publish_count + self._publish_errors) > 0 else 0,
+            'topic_publish_counts': self._get_topic_publish_counts()
         }
 
 

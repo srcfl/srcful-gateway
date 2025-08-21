@@ -120,7 +120,7 @@ class SungrowProfile(ModbusProfile):
         # === BATTERY SECTION ===
         val = decode(13021)
         if val is not None:
-            battery.W = val
+            battery.W = val * -1
             
         val = decode(13020)
         if val is not None:

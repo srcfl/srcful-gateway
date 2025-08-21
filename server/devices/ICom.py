@@ -28,6 +28,9 @@ class ICom(ABC):
 
     # HarvestDataType Enum
     data_type = HarvestDataType.UNDEFINED
+    
+    # Default polling interval - can be overridden by implementations
+    DEFAULT_HARVEST_INTERVAL_MS = 950
 
     CONNECTION_KEY = "connection"
     CONNECTION_IX = 0
