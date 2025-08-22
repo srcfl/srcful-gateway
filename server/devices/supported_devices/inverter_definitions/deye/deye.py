@@ -75,7 +75,7 @@ class DeyeProfile(ModbusProfile):
         # === PV SECTION - Simple direct assignment ===
         val = decode(20)
         if val is not None:
-            pv.rated_power = val
+            pv.rating = val
             
         # PV Power (sum of pv1-4)
         pv_power_vals = [decode(addr) for addr in [672, 673, 674, 675]]
@@ -105,8 +105,8 @@ class DeyeProfile(ModbusProfile):
         
         val = decode(541)
         if val is not None:
-            pv.heatsink_tmp = TemperatureData()
-            pv.heatsink_tmp.C = val
+            pv.heatsink = TemperatureData()
+            pv.heatsink.C = val
         
         val = decode(534)
         if val is not None:
@@ -155,8 +155,8 @@ class DeyeProfile(ModbusProfile):
         temp_raw = decode(217)
         if temp_raw is not None:
             temp = (temp_raw - 1000.0) / 10.0
-            battery.Tmp = TemperatureData()
-            battery.Tmp.C = temp
+            battery.heatsink = TemperatureData()
+            battery.heatsink.C = temp
 
         # === METER SECTION - Simple direct assignment ===
         val = decode(619)

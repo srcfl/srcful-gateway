@@ -67,7 +67,7 @@ class HuaweiProfile(ModbusProfile):
         
         val = decode(30073)
         if val is not None:
-            pv.rated_power = val * 1000
+            pv.rating = val * 1000
         
         val = decode(32064)
         if val is not None:
@@ -95,8 +95,8 @@ class HuaweiProfile(ModbusProfile):
             
         val = decode(32087)
         if val is not None:
-            pv.heatsink_tmp = TemperatureData()
-            pv.heatsink_tmp.C = val
+            pv.heatsink = TemperatureData()
+            pv.heatsink.C = val
             
             
         val = decode(13002)

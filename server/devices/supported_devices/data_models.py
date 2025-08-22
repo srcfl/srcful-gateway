@@ -188,14 +188,14 @@ class PVData:
     """Photovoltaic system data following SunSpec naming."""
     type: str = "PV"
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
-    ts: Optional[int] = None  # Timestamp
-    reading_duration_ms: Optional[int] = None  # Reading duration in milliseconds
+    timestamp: Optional[int] = None  # Timestamp
+    delta: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Active Power (always negative for generation)
-    rated_power: Optional[float] = None  # Active Power Max Rating (from model 702)
+    rating: Optional[float] = None  # Active Power Max Rating (from model 702)
     HV_LV: Optional[float] = None  # High/Low voltage indicator
     MPPT1: Optional[MPPTData] = None  # MPPT 1 data
     MPPT2: Optional[MPPTData] = None  # MPPT 2 data
-    heatsink_tmp: Optional[TemperatureData] = None  # Heat Sink Temperature (inverter temperature)
+    heatsink: Optional[TemperatureData] = None  # Heat Sink Temperature (inverter temperature)
     total: Optional[TotalEnergyData] = None  # Total energy data
 
     def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
@@ -219,13 +219,13 @@ class BatteryData:
     """Battery system data following SunSpec naming."""
     type: str = "Battery"
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
-    ts: Optional[int] = None  # Timestamp
-    reading_duration_ms: Optional[int] = None  # Reading duration in milliseconds
+    timestamp: Optional[int] = None  # Timestamp
+    delta: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Active Power (positive charging, negative discharging)
     A: Optional[float] = None  # Current (positive charging, negative discharging)
     V: Optional[float] = None  # Voltage
     SoC: Optional[SoCData] = None  # State of Charge
-    Tmp: Optional[TemperatureData] = None  # Battery Temperature
+    heatsink: Optional[TemperatureData] = None  # Battery Temperature
     total: Optional[TotalEnergyData] = None  # Total energy data
 
     def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
@@ -249,8 +249,8 @@ class MeterData:
     """Meter system data following SunSpec naming."""
     type: str = "Meter"
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
-    ts: Optional[int] = None  # Timestamp
-    reading_duration_ms: Optional[int] = None  # Reading duration in milliseconds
+    timestamp: Optional[int] = None  # Timestamp
+    delta: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Total Active Power (positive importing, negative exporting)
     Hz: Optional[float] = None  # Frequency
     L1: Optional[PhaseData] = None  # Phase L1 data

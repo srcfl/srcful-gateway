@@ -71,7 +71,7 @@ class SungrowProfile(ModbusProfile):
         
         val = decode(5000)
         if val is not None:
-            pv.rated_power = val * 1000
+            pv.rating = val * 1000
         
         val = decode(5016)
         if val is not None:
@@ -99,8 +99,8 @@ class SungrowProfile(ModbusProfile):
             
         val = decode(5007)
         if val is not None:
-            pv.heatsink_tmp = TemperatureData()
-            pv.heatsink_tmp.C = val
+            pv.heatsink = TemperatureData()
+            pv.heatsink.C = val
             
             
         val = decode(13002)
@@ -126,8 +126,8 @@ class SungrowProfile(ModbusProfile):
 
         val = decode(13024)
         if val is not None:
-            battery.Tmp = TemperatureData()
-            battery.Tmp.C = val
+            battery.heatsink = TemperatureData()
+            battery.heatsink.C = val
 
         val = decode(13022)
         if val is not None:

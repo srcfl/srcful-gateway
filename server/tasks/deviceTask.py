@@ -120,14 +120,14 @@ class DeviceTask(Task):
                         decoded_harvest = self.device.dict_to_ders(harvest)
                         
                         if decoded_harvest.pv:
-                            decoded_harvest.pv.ts = start_time
-                            decoded_harvest.pv.reading_duration_ms = end_time - start_time
+                            decoded_harvest.pv.timestamp = start_time
+                            decoded_harvest.pv.delta = end_time - start_time
                         if decoded_harvest.battery:
-                            decoded_harvest.battery.ts = start_time
-                            decoded_harvest.battery.reading_duration_ms = end_time - start_time
+                            decoded_harvest.battery.timestamp = start_time
+                            decoded_harvest.battery.delta = end_time - start_time
                         if decoded_harvest.meter:
-                            decoded_harvest.meter.ts = start_time
-                            decoded_harvest.meter.reading_duration_ms = end_time - start_time
+                            decoded_harvest.meter.timestamp = start_time
+                            decoded_harvest.meter.delta = end_time - start_time
                         
                         # Simple POST to MQTT container
                         publish_to_mqtt(self.bb.time_ms(), device_id, device_sn, decoded_harvest)

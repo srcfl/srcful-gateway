@@ -1,6 +1,6 @@
 # Data Models
 
-The Srcful Gateway uses nested data models to represent energy system measurements from distributed energy resources (DER). The structure provides clean JSON output with direct numeric values and organized nested objects.
+The structure provides clean JSON output with direct numeric values and organized nested objects.
 
 ## Core Structure
 
@@ -8,10 +8,10 @@ The Srcful Gateway uses nested data models to represent energy system measuremen
 
 All data objects include:
 
-- **ts**: Timestamp in milliseconds
+- **timestamp**: Timestamp in milliseconds
 - **type**: Object type ("PV", "Battery", "Meter")
 - **make**: Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
-- **reading_duration_ms**: Elapsed time to perform the reading (milliseconds)
+- **delta**: Elapsed time to perform the reading (milliseconds)
 
 ### DERData
 
@@ -25,12 +25,12 @@ Root data structure containing up to three subsystems:
 
 ```json
 {
-  "ts": 1755701251122,
+  "timestamp": 1755701251122,
   "type": "PV",
   "make": "Deye",
-  "reading_duration_ms": 42,
+  "delta": 42,
   "W": -1500,
-  "active_power": 3000,
+  "rating": 3000,
   "MPPT1": {
     "V": 400,
     "A": -3.75
@@ -39,7 +39,7 @@ Root data structure containing up to three subsystems:
     "V": 380,
     "A": -3.68
   },
-  "heatsink_tmp": {
+  "heatsink": {
     "C": 45
   },
   "total": {
@@ -50,27 +50,29 @@ Root data structure containing up to three subsystems:
 }
 ```
 
-| Field                 | Unit         | Description                            |
-| --------------------- | ------------ | -------------------------------------- |
-| `ts`                  | milliseconds | Timestamp of reading start             |
-| `type`                | -            | Object type ("PV")                     |
-| `make`                | -            | Manufacturer/brand name                |
-| `reading_duration_ms` | milliseconds | Time taken to complete the reading     |
-| `W`                   | W            | Active Power (negative for generation) |
-| `active_power`        | W            | Maximum Power Rating                   |
-| `MPPT1/2.V`           | V            | DC Voltage per MPPT                    |
-| `MPPT1/2.A`           | A            | DC Current per MPPT (negative)         |
-| `heatsink_tmp.C`      | °C           | Inverter Temperature                   |
-| `total.export.Wh`     | Wh           | Total Energy Generated                 |
+| Field             | Unit         | Description                            |
+| ----------------- | ------------ | -------------------------------------- |
+| `timestamp`       | milliseconds | Timestamp of reading start             |
+| `type`            | -            | Object type ("PV")                     |
+| `make`            | -            | Manufacturer/brand name                |
+| `delta`           | milliseconds | Time taken to complete the reading     |
+| `W`               | W            | Active Power (negative for generation) |
+| `rating`          | W            | Power rating                           |
+| `MPPT1.V`         | V            | MPPT1 Voltage                          |
+| `MPPT1.A`         | A            | MPPT1 Current                          |
+| `MPPT2.V`         | V            | MPPT2 Voltage                          |
+| `MPPT2.A`         | A            | MPPT2 Current                          |
+| `heatsink.C`      | °C           | Inverter Temperature                   |
+| `total.export.Wh` | Wh           | Total Energy Generated                 |
 
 ## Battery Data Model
 
 ```json
 {
-  "ts": 1755701251122,
+  "timestamp": 1755701251122,
   "type": "Battery",
   "make": "Deye",
-  "reading_duration_ms": 38,
+  "delta": 38,
   "W": 500,
   "A": 10.5,
   "V": 48.2,
@@ -79,7 +81,7 @@ Root data structure containing up to three subsystems:
       "fract": 0.75
     }
   },
-  "Tmp": {
+  "temperature": {
     "C": 25
   },
   "total": {
@@ -93,28 +95,28 @@ Root data structure containing up to three subsystems:
 }
 ```
 
-| Field                 | Unit         | Description                          |
-| --------------------- | ------------ | ------------------------------------ |
-| `ts`                  | milliseconds | Timestamp of reading start           |
-| `type`                | -            | Object type ("Battery")              |
-| `make`                | -            | Manufacturer/brand name              |
-| `reading_duration_ms` | milliseconds | Time taken to complete the reading   |
-| `W`                   | W            | Active Power (+ charge, - discharge) |
-| `A`                   | A            | Current (+ charge, - discharge)      |
-| `V`                   | V            | Voltage                              |
-| `SoC.nom.fract`       | fraction     | State of Charge (0.0-1.0)            |
-| `Tmp.C`               | °C           | Battery Temperature                  |
-| `total.import.Wh`     | Wh           | Total Energy Charged                 |
-| `total.export.Wh`     | Wh           | Total Energy Discharged              |
+| Field             | Unit         | Description                          |
+| ----------------- | ------------ | ------------------------------------ |
+| `timestamp`       | milliseconds | Timestamp of reading start           |
+| `type`            | -            | Object type ("Battery")              |
+| `make`            | -            | Manufacturer/brand name              |
+| `delta`           | milliseconds | Time taken to complete the reading   |
+| `W`               | W            | Active Power (+ charge, - discharge) |
+| `A`               | A            | Current (+ charge, - discharge)      |
+| `V`               | V            | Voltage                              |
+| `SoC.nom.fract`   | fraction     | State of Charge (0.0-1.0)            |
+| `temperature.C`   | °C           | Battery Temperature                  |
+| `total.import.Wh` | Wh           | Total Energy Charged                 |
+| `total.export.Wh` | Wh           | Total Energy Discharged              |
 
 ## Meter Data Model
 
 ```json
 {
-  "ts": 1755701251122,
+  "timestamp": 1755701251122,
   "type": "Meter",
   "make": "Deye",
-  "reading_duration_ms": 35,
+  "delta": 35,
   "W": 1200,
   "Hz": 50.0,
   "L1": {
@@ -143,19 +145,25 @@ Root data structure containing up to three subsystems:
 }
 ```
 
-| Field                 | Unit         | Description                             |
-| --------------------- | ------------ | --------------------------------------- |
-| `ts`                  | milliseconds | Timestamp of reading start              |
-| `type`                | -            | Object type ("Meter")                   |
-| `make`                | -            | Manufacturer/brand name                 |
-| `reading_duration_ms` | milliseconds | Time taken to complete the reading      |
-| `W`                   | W            | Total Active Power (+ import, - export) |
-| `Hz`                  | Hz           | Grid Frequency                          |
-| `L1/L2/L3.V`          | V            | Phase Voltage                           |
-| `L1/L2/L3.A`          | A            | Phase Current                           |
-| `L1/L2/L3.W`          | W            | Phase Power                             |
-| `total.import.Wh`     | Wh           | Total Energy Imported                   |
-| `total.export.Wh`     | Wh           | Total Energy Exported                   |
+| Field             | Unit         | Description                             |
+| ----------------- | ------------ | --------------------------------------- |
+| `timestamp`       | milliseconds | Timestamp of reading start              |
+| `type`            | -            | Object type ("Meter")                   |
+| `make`            | -            | Manufacturer/brand name                 |
+| `delta`           | milliseconds | Time taken to complete the reading      |
+| `W`               | W            | Total Active Power (+ import, - export) |
+| `Hz`              | Hz           | Grid Frequency                          |
+| `L1.V`            | V            | L1 Phase Voltage                        |
+| `L1.A`            | A            | L1 Phase Current                        |
+| `L1.W`            | W            | L1 Phase Power                          |
+| `L2.V`            | V            | L2 Phase Voltage                        |
+| `L2.A`            | A            | L2 Phase Current                        |
+| `L2.W`            | W            | L2 Phase Power                          |
+| `L3.V`            | V            | L3 Phase Voltage                        |
+| `L3.A`            | A            | L3 Phase Current                        |
+| `L3.W`            | W            | L3 Phase Power                          |
+| `total.import.Wh` | Wh           | Total Energy Imported                   |
+| `total.export.Wh` | Wh           | Total Energy Exported                   |
 
 ## Sign Conventions
 
@@ -184,12 +192,12 @@ Example serialized PV data:
 ```json
 {
   "pv": {
-    "ts": 1755701251122,
+    "timestamp": 1755701251122,
     "type": "PV",
     "make": "Deye",
     "W": -5000.0,
-    "active_power": 6000.0,
-    "heatsink_tmp": {
+    "rating": 6000.0,
+    "heatsink": {
       "C": 45.0
     },
     "MPPT1": {
@@ -204,5 +212,3 @@ Example serialized PV data:
   }
 }
 ```
-
-This standardized approach ensures consistent data interpretation across the Srcful ecosystem while maintaining compatibility with SunSpec specifications.
