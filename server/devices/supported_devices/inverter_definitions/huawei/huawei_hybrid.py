@@ -270,7 +270,7 @@ huawei_profile = {
     ProfileKey.NAME: "huawei_hybrid",
     ProfileKey.MAKER: "Huawei",
     ProfileKey.VERSION: "V1.1b3",
-    ProfileKey.VERBOSE_ALWAYS: False,
+    ProfileKey.VERBOSE_ALWAYS: True,
     ProfileKey.DISPLAY_NAME: "Huawei Hybrid",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
     ProfileKey.DESCRIPTION: "Huawei Hybrid inverter profile...",

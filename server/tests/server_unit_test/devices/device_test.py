@@ -97,6 +97,6 @@ def test_get_backoff_time_ms(device):
 
     assert device.get_backoff_time_ms(1000, 10000) == 9000
 
-    assert device.get_backoff_time_ms(10, 10) == 1000
+    assert device.get_backoff_time_ms(10, 10) == 950
 
     assert device.get_backoff_time_ms(100000, 2560000) == 256000

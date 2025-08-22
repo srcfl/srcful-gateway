@@ -8,9 +8,35 @@ from server.app.blackboard import BlackBoard
 from .task import Task
 from .harvestTransport import ITransportFactory
 from server.devices.ICom import DeviceMode, ICom
+from server.devices.supported_devices.data_models import DERData, PVData, BatteryData, MeterData, Value
+import requests
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.DEBUG)
+
+def post_to_mqtt_service(data, device_sn):
+    response = requests.post(
+        "http://localhost:8090/publish",
+        json=data,
+        timeout=2,
+        headers={'Content-Type': 'application/json'}
+    )
+    
+    if response.status_code == 200:
+        logger.debug(f"Published harvest data to MQTT for device {device_sn}")
+    else:
+        logger.warning(f"Failed to publish harvest data: {response.status_code}")
+
+def publish_to_mqtt(timestamp: int, device_id: str, device_sn: str, der_data: DERData):
+    # Publish to individual channel data to separate MQTT topics
+    ders: List[PVData | BatteryData | MeterData] = der_data.get_ders()
+    for der in ders:
+        data = {
+            "topic": f"{der.type}/{device_sn}",
+            "payload": {"ts": timestamp, **der.to_dict(verbose=False)}
+        }
+        post_to_mqtt_service(data, device_sn) 
 
 
 class DeviceTask(Task):
@@ -83,6 +109,20 @@ class DeviceTask(Task):
                 if harvest:
                     self.harvest_count += 1
                     self.barn[self.bb.time_ms()] = harvest
+                    
+                    # Publish harvest data to MQTT (non-blocking)
+                    try:
+                        device_sn = self.device.get_SN()
+                        device_id = self.bb.crypto_state().serial_number.hex()
+
+                        decoded_harvest = self.device.dict_to_ders(harvest)
+
+                        # Simple POST to MQTT container
+                        publish_to_mqtt(self.bb.time_ms(), device_id, device_sn, decoded_harvest)
+
+                    except Exception as mqtt_error:
+                        # Don't fail the harvest if MQTT publishing fails
+                        logger.error(f"Error publishing harvest data to MQTT: {mqtt_error}")
 
             elif self.device.get_device_mode() == DeviceMode.CONTROL:
                 # self.controller.execute(event_time)

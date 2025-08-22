@@ -10,10 +10,9 @@ from ...profile import ModbusProfile
 from .definitions import huawei_profile as full_huawei_profile
 from ....common.types import ModbusDevice
 from ....registerValue import RegisterValue
-from huawei_hybrid import HuaweiHybridProfile
+from .huawei_hybrid import HuaweiHybridProfile
 from ...data_models import (
-    DERData, PVData, BatteryData, MeterData, MPPTData, PhaseData, 
-    TotalEnergyData, EnergyData, SoCData, NominalData, TemperatureData, UptimeData
+    DERData, PVData, MPPTData, TotalEnergyData, EnergyData, TemperatureData
 )
 import logging
 
@@ -126,7 +125,7 @@ huawei_profile = {
     ProfileKey.NAME: "huawei",
     ProfileKey.MAKER: "Huawei",
     ProfileKey.VERSION: "V1.1b3",
-    ProfileKey.VERBOSE_ALWAYS: False,
+    ProfileKey.VERBOSE_ALWAYS: True,
     ProfileKey.DISPLAY_NAME: "Huawei",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
     ProfileKey.DESCRIPTION: "Another inverter profile...",

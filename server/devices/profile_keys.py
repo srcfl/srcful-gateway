@@ -50,6 +50,8 @@ class DataTypeKey(str, Enum):
     U64 = 'U64'    # Unsigned 64-bit integer
     I64 = 'I64'    # Signed 64-bit integer
     STR = 'STR'    # String
+    MLD = 'MLD'    # Modbus Long Data (multiple registers)
+    BYTES = 'BYTES'  # Raw bytes
 
 
 class EndiannessKey(str, Enum):
