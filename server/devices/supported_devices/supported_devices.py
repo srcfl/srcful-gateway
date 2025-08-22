@@ -1,8 +1,8 @@
 from .profile import ModbusProfile
 
 # Inverter definitions
-from .inverter_definitions.huawei import HuaweiProfile
-from .inverter_definitions.huawei_hybrid import HuaweiHybridProfile
+from .inverter_definitions.huawei.huawei import HuaweiProfile
+from .inverter_definitions.huawei.huawei_hybrid import HuaweiHybridProfile
 from .inverter_definitions.solaredge import SolarEdgeProfile
 from .inverter_definitions.solaredge_us import SolarEdgeUsProfile
 from .inverter_definitions.sungrow.sungrow import SungrowProfile
