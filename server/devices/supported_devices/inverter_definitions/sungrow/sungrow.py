@@ -209,7 +209,7 @@ class SungrowProfile(ModbusProfile):
         if val is not None:
             meter.Hz = val
         
-        val = decode(522)
+        val = decode(13037)
         if val is not None:
             if meter.total is None:
                 meter.total = TotalEnergyData()
