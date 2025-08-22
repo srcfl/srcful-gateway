@@ -52,7 +52,6 @@ class MPPTData:
         """Check if this MPPT has any data."""
         return self.V is None and self.A is None
 
-
 @dataclass
 class PhaseData:
     """Single phase electrical measurements following SunSpec naming."""
