@@ -104,7 +104,9 @@ class DeviceTask(Task):
         next_event_time = event_time + 250
         try:
             if self.device.get_device_mode() == DeviceMode.READ:
+                start_time = self.bb.time_ms()
                 next_event_time, harvest = self.harvester.harvest(event_time, self.device, self.bb)
+                end_time = self.bb.time_ms()
 
                 if harvest:
                     self.harvest_count += 1
@@ -116,7 +118,17 @@ class DeviceTask(Task):
                         device_id = self.bb.crypto_state().serial_number.hex()
 
                         decoded_harvest = self.device.dict_to_ders(harvest)
-
+                        
+                        if decoded_harvest.pv:
+                            decoded_harvest.pv.ts = start_time
+                            decoded_harvest.pv.reading_duration_ms = end_time - start_time
+                        if decoded_harvest.battery:
+                            decoded_harvest.battery.ts = start_time
+                            decoded_harvest.battery.reading_duration_ms = end_time - start_time
+                        if decoded_harvest.meter:
+                            decoded_harvest.meter.ts = start_time
+                            decoded_harvest.meter.reading_duration_ms = end_time - start_time
+                        
                         # Simple POST to MQTT container
                         publish_to_mqtt(self.bb.time_ms(), device_id, device_sn, decoded_harvest)
 

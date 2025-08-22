@@ -59,15 +59,9 @@ class HuaweiProfile(ModbusProfile):
                                entry[RegistersKey.ENDIANNESS])
             _, value = rv._interpret_value(raw)
             return value
-
-        # Create data objects
-        import time
-        timestamp = int(time.time() * 1000)  # Current timestamp in milliseconds
         
         pv = PVData()
-        pv.ts = timestamp
         pv.make = MANUFACTURER
-        
 
         # === PV SECTION ===
         

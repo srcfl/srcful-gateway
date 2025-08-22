@@ -189,6 +189,7 @@ class PVData:
     type: str = "PV"
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     ts: Optional[int] = None  # Timestamp
+    reading_duration_ms: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Active Power (always negative for generation)
     rated_power: Optional[float] = None  # Active Power Max Rating (from model 702)
     HV_LV: Optional[float] = None  # High/Low voltage indicator
@@ -219,6 +220,7 @@ class BatteryData:
     type: str = "Battery"
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     ts: Optional[int] = None  # Timestamp
+    reading_duration_ms: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Active Power (positive charging, negative discharging)
     A: Optional[float] = None  # Current (positive charging, negative discharging)
     V: Optional[float] = None  # Voltage
@@ -248,6 +250,7 @@ class MeterData:
     type: str = "Meter"
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     ts: Optional[int] = None  # Timestamp
+    reading_duration_ms: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Total Active Power (positive importing, negative exporting)
     Hz: Optional[float] = None  # Frequency
     L1: Optional[PhaseData] = None  # Phase L1 data

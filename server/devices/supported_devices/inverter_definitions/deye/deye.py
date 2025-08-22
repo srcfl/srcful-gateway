@@ -65,18 +65,11 @@ class DeyeProfile(ModbusProfile):
         def scale_power(val: float) -> float:
             return val * (10 if is_high_voltage else 1)
 
-        # Create data objects
-        import time
-        timestamp = int(time.time() * 1000)  # Current timestamp in milliseconds
-        
         pv = PVData()
-        pv.ts = timestamp
         pv.make = MANUFACTURER  # Set manufacturer
         battery = BatteryData()
-        battery.ts = timestamp
         battery.make = MANUFACTURER  # Set manufacturer
         meter = MeterData()
-        meter.ts = timestamp
         meter.make = MANUFACTURER  # Set manufacturer
 
         # === PV SECTION - Simple direct assignment ===
