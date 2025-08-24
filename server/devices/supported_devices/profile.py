@@ -3,7 +3,7 @@ from typing import List
 from ..profile_keys import ProfileKey, RegistersKey, EndiannessKey, FunctionCodeKey, DataTypeKey
 from ..common.types import ModbusDevice
 from server.devices.supported_devices.data_models import DERData
-from registerValue import RegisterValue
+from ..registerValue import RegisterValue
 
 
 class BaseProfile(ABC):

@@ -216,4 +216,12 @@ class Modbus(Device, ABC):
         return str(value)
     
     def dict_to_ders(self, payload: dict | str) -> DERData:
-        return self.profile.dict_to_ders(payload) if self.profile else DERData()
+        der_data: DERData = self.profile.dict_to_ders(payload)
+        
+        if not der_data:
+            return DERData()
+        
+        der_data.format = HarvestDataType.JSON.value
+        der_data.version = self.profile.version
+        
+        return der_data 

@@ -33,7 +33,7 @@ def publish_to_mqtt(device_sn: str, der_data: DERData):
     ders: List[PVData | BatteryData | MeterData] = der_data.get_ders()
     for der in ders:
         data = {
-            "topic": f"{der.type}/{device_sn}",
+            "topic": f"{der.type}/{device_sn}/{der_data.format}/{der_data.version}",
             "payload": der.to_dict(verbose=False)
         }
         post_to_mqtt_service(data, device_sn) 
@@ -117,20 +117,20 @@ class DeviceTask(Task):
                         device_sn = self.device.get_SN()
                         # device_id = self.bb.crypto_state().serial_number.hex()
 
-                        decoded_harvest = self.device.dict_to_ders(harvest)
+                        der_data = self.device.dict_to_ders(harvest)
                         
-                        if decoded_harvest.pv:
-                            decoded_harvest.pv.timestamp = start_time
-                            decoded_harvest.pv.delta = end_time - start_time
-                        if decoded_harvest.battery:
-                            decoded_harvest.battery.timestamp = start_time
-                            decoded_harvest.battery.delta = end_time - start_time
-                        if decoded_harvest.meter:
-                            decoded_harvest.meter.timestamp = start_time
-                            decoded_harvest.meter.delta = end_time - start_time
+                        if der_data.pv:
+                            der_data.pv.timestamp = start_time
+                            der_data.pv.delta = end_time - start_time
+                        if der_data.battery:
+                            der_data.battery.timestamp = start_time
+                            der_data.battery.delta = end_time - start_time
+                        if der_data.meter:
+                            der_data.meter.timestamp = start_time
+                            der_data.meter.delta = end_time - start_time
                         
                         # Simple POST to MQTT container
-                        publish_to_mqtt(device_sn, decoded_harvest)
+                        publish_to_mqtt(device_sn, der_data)
 
                     except Exception as mqtt_error:
                         # Don't fail the harvest if MQTT publishing fails

@@ -132,12 +132,17 @@ class MeterData:
 @dataclass
 class DERData:
     """Complete Distributed Energy Resource data model."""
-    pv: Optional[PVData] = None
-    battery: Optional[BatteryData] = None
-    meter: Optional[MeterData] = None
+
+    def __init__(self, pv: Optional[PVData] = None, battery: Optional[BatteryData] = None, meter: Optional[MeterData] = None):
+        self.pv = pv
+        self.battery = battery
+        self.meter = meter
+        self.version = "v0"
+        self.format = "unknown"
+
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary format for serialization."""
+        """Convert to dictionary format for serialization, including version and format."""
         result = {}
         if self.pv is not None:
             result["pv"] = self.pv.to_dict()
@@ -145,6 +150,8 @@ class DERData:
             result["battery"] = self.battery.to_dict()
         if self.meter is not None:
             result["meter"] = self.meter.to_dict()
+        result["version"] = self.version
+        result["format"] = self.format
         return result
     
     def get_ders(self) -> List[PVData | BatteryData | MeterData]:
