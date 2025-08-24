@@ -3,6 +3,8 @@ from typing import List
 from ..profile_keys import ProfileKey, RegistersKey, EndiannessKey, FunctionCodeKey, DataTypeKey
 from ..common.types import ModbusDevice
 from server.devices.supported_devices.data_models import DERData
+from registerValue import RegisterValue
+
 
 class BaseProfile(ABC):
 
@@ -55,6 +57,32 @@ class RegisterInterval:
 
 
 class ModbusProfile(DeviceProfile):
+    def create_decoder(self, raw_register_values: dict, register_defs: list):
+        """
+        Returns a decode(addr) function that decodes the value at a given register address using the provided register definitions.
+        """
+        reg_defs = {entry[RegistersKey.START_REGISTER]: entry for entry in register_defs}
+        def decode(addr: int):
+            entry = reg_defs.get(addr)
+            if not entry:
+                return None
+            size = entry[RegistersKey.NUM_OF_REGISTERS]
+            try:
+                regs = [raw_register_values[addr + i] for i in range(size)]
+            except KeyError:
+                return None
+            raw = bytearray()
+            for r in regs:
+                raw.extend(int(r).to_bytes(2, "big", signed=False))
+            rv = RegisterValue(addr,
+                               size,
+                               entry[RegistersKey.FUNCTION_CODE],
+                               entry[RegistersKey.DATA_TYPE],
+                               entry[RegistersKey.SCALE_FACTOR],
+                               entry[RegistersKey.ENDIANNESS])
+            _, value = rv._interpret_value(raw)
+            return value
+        return decode
     """Modbus profile class. Used to define register intervals for Modbus profiles."""
 
     def __init__(self, profile_data: dict):

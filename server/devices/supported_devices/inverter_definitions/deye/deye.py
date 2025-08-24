@@ -32,29 +32,8 @@ class DeyeProfile(ModbusProfile):
         if not raw_register_values:
             return DERData()
 
-        reg_defs = {entry[RegistersKey.START_REGISTER]: entry for entry in slim_deye_profile[ProfileKey.REGISTERS]}
+        decode = self.create_decoder(raw_register_values, slim_deye_profile[ProfileKey.REGISTERS])
         is_high_voltage = raw_register_values.get(0) == 6
-
-        def decode(addr: int) -> float | int | None:
-            entry = reg_defs.get(addr)
-            if not entry:
-                return None
-            size = entry[RegistersKey.NUM_OF_REGISTERS]
-            try:
-                regs = [raw_register_values[addr + i] for i in range(size)]
-            except KeyError:
-                return None
-            raw = bytearray()
-            for r in regs:
-                raw.extend(int(r).to_bytes(2, "big", signed=False))
-            rv = RegisterValue(addr,
-                               size,
-                               entry[RegistersKey.FUNCTION_CODE],
-                               entry[RegistersKey.DATA_TYPE],
-                               entry[RegistersKey.SCALE_FACTOR],
-                               entry[RegistersKey.ENDIANNESS])
-            _, value = rv._interpret_value(raw)
-            return value
 
         def scale_voltage(val: float) -> float:
             return val * (0.1 if is_high_voltage else 0.01)
@@ -73,7 +52,7 @@ class DeyeProfile(ModbusProfile):
         val = decode(20)
         if val is not None:
             pv.rating = val
-            
+
         # PV Power (sum of pv1-4)
         pv_power_vals = [decode(addr) for addr in [672, 673, 674, 675]]
         if any(v is not None for v in pv_power_vals):
@@ -87,7 +66,7 @@ class DeyeProfile(ModbusProfile):
             pv.mppt1_V = mppt1_voltage
         if mppt1_current is not None:
             pv.mppt1_A = mppt1_current * -1
-        
+
         # MPPT2 - flattened
         mppt2_voltage = decode(678)
         mppt2_current = decode(679)
@@ -95,12 +74,12 @@ class DeyeProfile(ModbusProfile):
             pv.mppt2_V = mppt2_voltage
         if mppt2_current is not None:
             pv.mppt2_A = mppt2_current * -1
-        
+
         # Heatsink temperature - flattened
         val = decode(541)
         if val is not None:
             pv.heatsink_C = val
-        
+
         # Total export energy - flattened
         val = decode(534)
         if val is not None:
@@ -110,29 +89,29 @@ class DeyeProfile(ModbusProfile):
         val = decode(590)
         if val is not None:
             battery.W = scale_power(val) * -1
-        
+
         val = decode(591)
         if val is not None:
             battery.A = val * -1
-        
+
         val = decode(587)
         if val is not None:
             battery.V = scale_voltage(val)
-        
+
         # State of Charge - flattened
         val = decode(588)
         if val is not None:
             battery.SoC_nom_fract = val / 100.0  # Convert percentage to fraction
-        
+
         # Battery energy totals - flattened
         val = decode(516)
         if val is not None:
             battery.total_import_Wh = val * 1000
-        
+
         val = decode(518)
         if val is not None:
             battery.total_export_Wh = val * 1000
-        
+
         # Battery temperature (special calculation) - flattened
         temp_raw = decode(217)
         if temp_raw is not None:
@@ -143,20 +122,20 @@ class DeyeProfile(ModbusProfile):
         val = decode(619)
         if val is not None:
             meter.W = val
-        
+
         val = decode(609)
         if val is not None:
             meter.Hz = val
-        
+
         # Meter energy totals - flattened
         val = decode(522)
         if val is not None:
             meter.total_import_Wh = val * 1000
-        
+
         val = decode(524)
         if val is not None:
             meter.total_export_Wh = val * 1000
-        
+
         # L1 phase - flattened
         l1_voltage = decode(598)
         l1_current = decode(610)
@@ -167,7 +146,7 @@ class DeyeProfile(ModbusProfile):
             meter.L1_A = l1_current * -1
         if l1_power is not None:
             meter.L1_W = l1_power
-        
+
         # L2 phase - flattened
         l2_voltage = decode(599)
         l2_current = decode(611)
@@ -178,7 +157,7 @@ class DeyeProfile(ModbusProfile):
             meter.L2_A = l2_current * -1
         if l2_power is not None:
             meter.L2_W = l2_power
-        
+
         # L3 phase - flattened
         l3_voltage = decode(600)
         l3_current = decode(612)
@@ -205,7 +184,7 @@ class DeyeProfile(ModbusProfile):
 deye_profile = {
     ProfileKey.NAME: "deye",
     ProfileKey.MAKER: "Deye",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: True,
     ProfileKey.DISPLAY_NAME: "Deye",
     ProfileKey.PROTOCOL: ProtocolKey.SOLARMAN,

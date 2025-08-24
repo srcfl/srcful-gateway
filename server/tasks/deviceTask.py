@@ -7,7 +7,7 @@ from server.tasks.openDevicePerpetualTask import DevicePerpetualTask
 from server.app.blackboard import BlackBoard
 from .task import Task
 from .harvestTransport import ITransportFactory
-from server.devices.ICom import DeviceMode, ICom
+from server.devices.ICom import DeviceMode, ICom, HarvestDataType
 from server.devices.supported_devices.data_models import DERData, PVData, BatteryData, MeterData, Value
 import requests
 
@@ -28,7 +28,7 @@ def post_to_mqtt_service(data, device_sn):
     else:
         logger.warning(f"Failed to publish harvest data: {response.status_code}")
 
-def publish_to_mqtt(timestamp: int, device_id: str, device_sn: str, der_data: DERData):
+def publish_to_mqtt(device_sn: str, der_data: DERData):
     # Publish to individual channel data to separate MQTT topics
     ders: List[PVData | BatteryData | MeterData] = der_data.get_ders()
     for der in ders:
@@ -115,7 +115,7 @@ class DeviceTask(Task):
                     # Publish harvest data to MQTT (non-blocking)
                     try:
                         device_sn = self.device.get_SN()
-                        device_id = self.bb.crypto_state().serial_number.hex()
+                        # device_id = self.bb.crypto_state().serial_number.hex()
 
                         decoded_harvest = self.device.dict_to_ders(harvest)
                         
@@ -130,7 +130,7 @@ class DeviceTask(Task):
                             decoded_harvest.meter.delta = end_time - start_time
                         
                         # Simple POST to MQTT container
-                        publish_to_mqtt(self.bb.time_ms(), device_id, device_sn, decoded_harvest)
+                        publish_to_mqtt(device_sn, decoded_harvest)
 
                     except Exception as mqtt_error:
                         # Don't fail the harvest if MQTT publishing fails

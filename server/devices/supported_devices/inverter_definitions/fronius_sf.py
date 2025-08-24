@@ -21,7 +21,7 @@ class FroniusSFProfile(ModbusProfile):
 fronius_sf_profile = {
     ProfileKey.NAME: "fronius_sf",
     ProfileKey.MAKER: "Fronius",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: False,
     ProfileKey.DISPLAY_NAME: "Fronius SF",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,

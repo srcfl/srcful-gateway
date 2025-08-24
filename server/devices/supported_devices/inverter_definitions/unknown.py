@@ -21,7 +21,7 @@ class UnknownProfile(ModbusProfile):
 unknown_profile = {
     ProfileKey.NAME: "unknown",
     ProfileKey.MAKER: "Unknown",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: False,
     ProfileKey.DISPLAY_NAME: "Unknown",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,

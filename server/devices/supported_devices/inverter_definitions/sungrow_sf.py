@@ -21,7 +21,7 @@ class SungrowSFProfile(ModbusProfile):
 sungrow_sf_profile = {
     ProfileKey.NAME: "sungrow_sf",
     ProfileKey.MAKER: "Sungrow",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: False,
     ProfileKey.DISPLAY_NAME: "Sungrow SF",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,

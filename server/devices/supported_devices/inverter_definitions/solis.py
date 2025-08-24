@@ -21,7 +21,7 @@ class SolisProfile(ModbusProfile):
 solis_profile = {
     ProfileKey.NAME: "solis",
     ProfileKey.MAKER: "Solis",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: False,
     ProfileKey.DISPLAY_NAME: "Solis",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,

@@ -35,42 +35,20 @@ class HuaweiProfile(ModbusProfile):
         if not raw_register_values:
             return DERData()
 
-        reg_defs = {entry[RegistersKey.START_REGISTER]: entry for entry in full_huawei_profile[ProfileKey.REGISTERS]}
+        decode = self.create_decoder(raw_register_values, full_huawei_profile[ProfileKey.REGISTERS])
 
-        def decode(addr: int) -> float | int | None:
-            entry = reg_defs.get(addr)
-            if not entry:
-                return None
-            size = entry[RegistersKey.NUM_OF_REGISTERS]
-            try:
-                regs = [raw_register_values[addr + i] for i in range(size)]
-            except KeyError:
-                return None
-            raw = bytearray()
-            for r in regs:
-                raw.extend(int(r).to_bytes(2, "big", signed=False))
-            rv = RegisterValue(addr,
-                               size,
-                               entry[RegistersKey.FUNCTION_CODE],
-                               entry[RegistersKey.DATA_TYPE],
-                               entry[RegistersKey.SCALE_FACTOR],
-                               entry[RegistersKey.ENDIANNESS])
-            _, value = rv._interpret_value(raw)
-            return value
-        
         pv = PVData()
         pv.make = MANUFACTURER
 
         # === PV SECTION ===
-        
         val = decode(30073)
         if val is not None:
             pv.rating = val * 1000
-        
+
         val = decode(32064)
         if val is not None:
             pv.W = val * -1  # Negative for generation
-            
+
         # MPPT1 - flattened
         mppt1_voltage = decode(32016)
         mppt1_current = decode(32017)
@@ -78,21 +56,21 @@ class HuaweiProfile(ModbusProfile):
             pv.mppt1_V = mppt1_voltage
         if mppt1_current is not None:
             pv.mppt1_A = mppt1_current
-        
+
         # MPPT2 - flattened
         mppt2_voltage = decode(32018)
         mppt2_current = decode(32019)
         if mppt2_voltage is not None:
-            pv.mppt2_V = mppt2_voltage 
+            pv.mppt2_V = mppt2_voltage
         if mppt2_current is not None:
             pv.mppt2_A = mppt2_current
-            
+
         # Heatsink temperature - flattened
         val = decode(32087)
         if val is not None:
             pv.heatsink_C = val
-            
-        # Total export energy - flattened    
+
+        # Total export energy - flattened
         val = decode(13002)
         if val is not None:
             pv.total_export_Wh = val
@@ -108,7 +86,7 @@ class HuaweiProfile(ModbusProfile):
 huawei_profile = {
     ProfileKey.NAME: "huawei",
     ProfileKey.MAKER: "Huawei",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: True,
     ProfileKey.DISPLAY_NAME: "Huawei",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,

@@ -21,7 +21,7 @@ class SofarProfile(ModbusProfile):
 sofar_profile = {
     ProfileKey.NAME: "sofar",
     ProfileKey.MAKER: "Sofar",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: False,
     ProfileKey.DISPLAY_NAME: "Sofar",
     ProfileKey.PROTOCOL: ProtocolKey.SOLARMAN,

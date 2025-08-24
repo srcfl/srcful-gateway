@@ -21,7 +21,7 @@ class FerroampProfile(ModbusProfile):
 ferroamp_profile = {
     ProfileKey.NAME: "ferroamp",
     ProfileKey.MAKER: "Ferroamp",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: False,
     ProfileKey.DISPLAY_NAME: "Ferroamp",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,

@@ -32,48 +32,26 @@ class SungrowProfile(ModbusProfile):
         if not raw_register_values:
             return DERData()
 
-        reg_defs = {entry[RegistersKey.START_REGISTER]: entry for entry in full_sungrow_profile[ProfileKey.REGISTERS]}
+        decode = self.create_decoder(raw_register_values, full_sungrow_profile[ProfileKey.REGISTERS])
 
-        def decode(addr: int) -> float | int | None:
-            entry = reg_defs.get(addr)
-            if not entry:
-                return None
-            size = entry[RegistersKey.NUM_OF_REGISTERS]
-            try:
-                regs = [raw_register_values[addr + i] for i in range(size)]
-            except KeyError:
-                return None
-            raw = bytearray()
-            for r in regs:
-                raw.extend(int(r).to_bytes(2, "big", signed=False))
-            rv = RegisterValue(addr,
-                               size,
-                               entry[RegistersKey.FUNCTION_CODE],
-                               entry[RegistersKey.DATA_TYPE],
-                               entry[RegistersKey.SCALE_FACTOR],
-                               entry[RegistersKey.ENDIANNESS])
-            _, value = rv._interpret_value(raw)
-            return value
-        
         pv = PVData()
         pv.make = MANUFACTURER
-        
+
         battery = BatteryData()
         battery.make = MANUFACTURER
-        
+
         meter = MeterData()
         meter.make = MANUFACTURER
 
         # === PV SECTION ===
-        
         val = decode(5000)
         if val is not None:
             pv.rating = val * 1000
-        
+
         val = decode(5016)
         if val is not None:
             pv.W = val * -1  # Negative for generation
-            
+
         # MPPT1 - flattened
         mppt1_voltage = decode(5010)
         mppt1_current = decode(5011)
@@ -81,34 +59,34 @@ class SungrowProfile(ModbusProfile):
             pv.mppt1_V = mppt1_voltage
         if mppt1_current is not None:
             pv.mppt1_A = mppt1_current
-        
+
         # MPPT2 - flattened
         mppt2_voltage = decode(5012)
         mppt2_current = decode(5013)
         if mppt2_voltage is not None:
-            pv.mppt2_V = mppt2_voltage 
+            pv.mppt2_V = mppt2_voltage
         if mppt2_current is not None:
             pv.mppt2_A = mppt2_current
-            
+
         # Heatsink temperature - flattened
         val = decode(5007)
         if val is not None:
             pv.heatsink_C = val
-            
+
         # Total export energy - flattened
         val = decode(13002)
         if val is not None:
             pv.total_export_Wh = val
- 
+
         # === BATTERY SECTION - Flattened structure ===
         val = decode(13021)
         if val is not None:
             battery.W = val * -1
-            
+
         val = decode(13020)
         if val is not None:
             battery.A = val
-        
+
         val = decode(13019)
         if val is not None:
             battery.V = val
@@ -122,18 +100,17 @@ class SungrowProfile(ModbusProfile):
         val = decode(13022)
         if val is not None:
             battery.SoC_nom_fract = val / 100.0  # Convert percentage to fraction
-            
+
         # Battery energy totals - flattened
         val = decode(13026)
         if val is not None:
             battery.total_import_Wh = val * 1000
-            
+
         val = decode(13040)
         if val is not None:
             battery.total_import_Wh = val * 1000
 
         # === METER SECTION - Flattened structure ===
-        
         # L1 phase - flattened
         l1_voltage = decode(5018)
         l1_current = decode(13030)
@@ -144,7 +121,7 @@ class SungrowProfile(ModbusProfile):
             meter.L1_A = l1_current * -1
         if l1_power is not None:
             meter.L1_W = l1_power
-        
+
         # L2 phase - flattened
         l2_voltage = decode(5019)
         l2_current = decode(13031)
@@ -155,7 +132,7 @@ class SungrowProfile(ModbusProfile):
             meter.L2_A = l2_current * -1
         if l2_power is not None:
             meter.L2_W = l2_power
-        
+
         # L3 phase - flattened
         l3_voltage = decode(5020)
         l3_current = decode(13032)
@@ -166,21 +143,21 @@ class SungrowProfile(ModbusProfile):
             meter.L3_A = l3_current * -1
         if l3_power is not None:
             meter.L3_W = l3_power
-            
-        # Meter totals - flattened        
+
+        # Meter totals - flattened
         val = decode(13033)
         if val is not None:
             meter.W = val * -1
-        
+
         val = decode(5035)
         if val is not None:
             meter.Hz = val
-        
+
         # Meter energy totals - flattened
         val = decode(13037)
         if val is not None:
             meter.total_import_Wh = val * 1000
-        
+
         val = decode(13046)
         if val is not None:
             meter.total_export_Wh = val * 1000
@@ -201,7 +178,7 @@ class SungrowProfile(ModbusProfile):
 sungrow_profile = {
     ProfileKey.NAME: "sungrow",
     ProfileKey.MAKER: "Sungrow",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: True,
     ProfileKey.DISPLAY_NAME: "Sungrow",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,

@@ -10,6 +10,8 @@ class HarvestDataType(Enum):
     REST_API = "rest_api_json"
     UNDEFINED = "undefined"
 
+    JSON = "json"
+
 
 class DER_TYPE(Enum):
     PV = "pv"

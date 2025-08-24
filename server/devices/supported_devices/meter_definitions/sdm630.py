@@ -21,7 +21,7 @@ class Sdm630Profile(ModbusProfile):
 sdm630_profile = {
     ProfileKey.NAME: "sdm630",
     ProfileKey.MAKER: "Eastron",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: False,
     ProfileKey.DISPLAY_NAME: "SDM630",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,

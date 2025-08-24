@@ -21,7 +21,7 @@ class Lqt40sProfile(ModbusProfile):
 lqt40s_profile = {
     ProfileKey.NAME: "lqt40s",
     ProfileKey.MAKER: "LQT",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: False,
     ProfileKey.DISPLAY_NAME: "LQT40S",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,

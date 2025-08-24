@@ -21,7 +21,7 @@ class SolaxProfile(ModbusProfile):
 solax_profile = {
     ProfileKey.NAME: "Solax",
     ProfileKey.MAKER: "Solax",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: False,
     ProfileKey.DISPLAY_NAME: "Solax",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,

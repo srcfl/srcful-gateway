@@ -21,7 +21,7 @@ class SolisHybridProfile(ModbusProfile):
 solis_hybrid_profile = {
     ProfileKey.NAME: "solis_hybrid",
     ProfileKey.MAKER: "Solis",
-    ProfileKey.VERSION: "V1.1b3",
+    ProfileKey.VERSION: "v1",
     ProfileKey.VERBOSE_ALWAYS: False,
     ProfileKey.DISPLAY_NAME: "Solis Hybrid",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
