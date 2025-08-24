@@ -1,5 +1,23 @@
 # Data Models
 
+## MQTT Topic Structure
+
+Harvested data is published to MQTT topics using the following structure:
+
+sourceful/<wallet>/<type>/<device_sn>/<format>/<version>
+
+Where:
+
+- `sourceful/<wallet>`: Root topic, with `<wallet>` set by the MQTT client
+- `<type>`: Data type (e.g., PV, Battery, Meter)
+- `<device_sn>`: Device serial number
+- `<format>`: Data format (e.g., json, protobuf, binary)
+- `<version>`: Data model version (e.g., v1)
+
+Example topic:
+
+sourceful/0xABCDEF1234567890/PV/ABC123/json/v1
+
 The structure provides clean JSON output with direct numeric values and organized flattened fields using snake_case naming conventions while preserving proper unit casing.
 
 ## Core Structure
