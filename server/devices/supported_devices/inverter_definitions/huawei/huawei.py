@@ -11,9 +11,7 @@ from .definitions import huawei_profile as full_huawei_profile
 from ....common.types import ModbusDevice
 from ....registerValue import RegisterValue
 from .huawei_hybrid import HuaweiHybridProfile
-from ...data_models import (
-    DERData, PVData, MPPTData, TotalEnergyData, EnergyData, TemperatureData
-)
+from ...data_models import DERData, PVData
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -73,39 +71,31 @@ class HuaweiProfile(ModbusProfile):
         if val is not None:
             pv.W = val * -1  # Negative for generation
             
-        # MPPT1
+        # MPPT1 - flattened
         mppt1_voltage = decode(32016)
         mppt1_current = decode(32017)
-        if mppt1_voltage is not None or mppt1_current is not None:
-            pv.MPPT1 = MPPTData()
-            if mppt1_voltage is not None:
-                pv.MPPT1.V = mppt1_voltage
-            if mppt1_current is not None:
-                pv.MPPT1.A = mppt1_current
+        if mppt1_voltage is not None:
+            pv.mppt1_V = mppt1_voltage
+        if mppt1_current is not None:
+            pv.mppt1_A = mppt1_current
         
-        # MPPT2
+        # MPPT2 - flattened
         mppt2_voltage = decode(32018)
         mppt2_current = decode(32019)
-        if mppt2_voltage is not None or mppt2_current is not None:
-            pv.MPPT2 = MPPTData()
-            if mppt2_voltage is not None:
-                pv.MPPT2.V = mppt2_voltage 
-            if mppt2_current is not None:
-                pv.MPPT2.A = mppt2_current
+        if mppt2_voltage is not None:
+            pv.mppt2_V = mppt2_voltage 
+        if mppt2_current is not None:
+            pv.mppt2_A = mppt2_current
             
+        # Heatsink temperature - flattened
         val = decode(32087)
         if val is not None:
-            pv.heatsink = TemperatureData()
-            pv.heatsink.C = val
+            pv.heatsink_C = val
             
-            
+        # Total export energy - flattened    
         val = decode(13002)
         if val is not None:
-            if pv.total is None:
-                pv.total = TotalEnergyData()
-            if pv.total.export is None:
-                pv.total.export = EnergyData()
-            pv.total.export.Wh = val
+            pv.total_export_Wh = val
 
         # Build result with only populated sections
         result = DERData()

@@ -10,10 +10,7 @@ from ...profile import ModbusProfile
 from .definitions import sungrow_profile as full_sungrow_profile
 from ....common.types import ModbusDevice
 from ....registerValue import RegisterValue
-from ...data_models import (
-    DERData, PVData, BatteryData, MeterData, MPPTData, PhaseData, 
-    TotalEnergyData, EnergyData, SoCData, NominalData, TemperatureData, UptimeData
-)
+from ...data_models import DERData, PVData, BatteryData, MeterData
 import logging
 
 
@@ -77,41 +74,33 @@ class SungrowProfile(ModbusProfile):
         if val is not None:
             pv.W = val * -1  # Negative for generation
             
-        # MPPT1
+        # MPPT1 - flattened
         mppt1_voltage = decode(5010)
         mppt1_current = decode(5011)
-        if mppt1_voltage is not None or mppt1_current is not None:
-            pv.MPPT1 = MPPTData()
-            if mppt1_voltage is not None:
-                pv.MPPT1.V = mppt1_voltage
-            if mppt1_current is not None:
-                pv.MPPT1.A = mppt1_current
+        if mppt1_voltage is not None:
+            pv.mppt1_V = mppt1_voltage
+        if mppt1_current is not None:
+            pv.mppt1_A = mppt1_current
         
-        # MPPT2
+        # MPPT2 - flattened
         mppt2_voltage = decode(5012)
         mppt2_current = decode(5013)
-        if mppt2_voltage is not None or mppt2_current is not None:
-            pv.MPPT2 = MPPTData()
-            if mppt2_voltage is not None:
-                pv.MPPT2.V = mppt2_voltage 
-            if mppt2_current is not None:
-                pv.MPPT2.A = mppt2_current
+        if mppt2_voltage is not None:
+            pv.mppt2_V = mppt2_voltage 
+        if mppt2_current is not None:
+            pv.mppt2_A = mppt2_current
             
+        # Heatsink temperature - flattened
         val = decode(5007)
         if val is not None:
-            pv.heatsink = TemperatureData()
-            pv.heatsink.C = val
+            pv.heatsink_C = val
             
-            
+        # Total export energy - flattened
         val = decode(13002)
         if val is not None:
-            if pv.total is None:
-                pv.total = TotalEnergyData()
-            if pv.total.export is None:
-                pv.total.export = EnergyData()
-            pv.total.export.Wh = val
+            pv.total_export_Wh = val
  
-        # === BATTERY SECTION ===
+        # === BATTERY SECTION - Flattened structure ===
         val = decode(13021)
         if val is not None:
             battery.W = val * -1
@@ -124,76 +113,61 @@ class SungrowProfile(ModbusProfile):
         if val is not None:
             battery.V = val
 
+        # Battery temperature - flattened
         val = decode(13024)
         if val is not None:
-            battery.heatsink = TemperatureData()
-            battery.heatsink.C = val
+            battery.heatsink_C = val
 
+        # State of Charge - flattened
         val = decode(13022)
         if val is not None:
-            battery.SoC = SoCData()
-            battery.SoC.nom = NominalData()
-            battery.SoC.nom.fract = val / 100.0  # Convert percentage to fraction
+            battery.SoC_nom_fract = val / 100.0  # Convert percentage to fraction
             
+        # Battery energy totals - flattened
         val = decode(13026)
         if val is not None:
-            if battery.total is None:
-                battery.total = TotalEnergyData()
-            if battery.total.import_ is None:
-                battery.total.import_ = EnergyData()
-            battery.total.import_.Wh = val * 1000
+            battery.total_import_Wh = val * 1000
             
         val = decode(13040)
         if val is not None:
-            if battery.total is None:
-                battery.total = TotalEnergyData()
-            if battery.total.import_ is None:
-                battery.total.import_ = EnergyData()
-            battery.total.import_.Wh = val * 1000
-        
+            battery.total_import_Wh = val * 1000
 
-        # === METER SECTION ===
+        # === METER SECTION - Flattened structure ===
         
-        # L1 phase
+        # L1 phase - flattened
         l1_voltage = decode(5018)
         l1_current = decode(13030)
         l1_power = decode(5602)
-        if l1_voltage is not None or l1_current is not None or l1_power is not None:
-            meter.L1 = PhaseData()
-            if l1_voltage is not None:
-                meter.L1.V = l1_voltage
-            if l1_current is not None:
-                meter.L1.A = l1_current * -1
-            if l1_power is not None:
-                meter.L1.W = l1_power
+        if l1_voltage is not None:
+            meter.L1_V = l1_voltage
+        if l1_current is not None:
+            meter.L1_A = l1_current * -1
+        if l1_power is not None:
+            meter.L1_W = l1_power
         
-        # L2 phase
+        # L2 phase - flattened
         l2_voltage = decode(5019)
         l2_current = decode(13031)
         l2_power = decode(5604)
-        if l2_voltage is not None or l2_current is not None or l2_power is not None:
-            meter.L2 = PhaseData()
-            if l2_voltage is not None:
-                meter.L2.V = l2_voltage
-            if l2_current is not None:
-                meter.L2.A = l2_current * -1
-            if l2_power is not None:
-                meter.L2.W = l2_power
+        if l2_voltage is not None:
+            meter.L2_V = l2_voltage
+        if l2_current is not None:
+            meter.L2_A = l2_current * -1
+        if l2_power is not None:
+            meter.L2_W = l2_power
         
-        # L3 phase
+        # L3 phase - flattened
         l3_voltage = decode(5020)
         l3_current = decode(13032)
         l3_power = decode(5606)
-        if l3_voltage is not None or l3_current is not None or l3_power is not None:
-            meter.L3 = PhaseData()
-            if l3_voltage is not None:
-                meter.L3.V = l3_voltage
-            if l3_current is not None:
-                meter.L3.A = l3_current * -1
-            if l3_power is not None:
-                meter.L3.W = l3_power
+        if l3_voltage is not None:
+            meter.L3_V = l3_voltage
+        if l3_current is not None:
+            meter.L3_A = l3_current * -1
+        if l3_power is not None:
+            meter.L3_W = l3_power
             
-            
+        # Meter totals - flattened        
         val = decode(13033)
         if val is not None:
             meter.W = val * -1
@@ -202,21 +176,14 @@ class SungrowProfile(ModbusProfile):
         if val is not None:
             meter.Hz = val
         
+        # Meter energy totals - flattened
         val = decode(13037)
         if val is not None:
-            if meter.total is None:
-                meter.total = TotalEnergyData()
-            if meter.total.import_ is None:
-                meter.total.import_ = EnergyData()
-            meter.total.import_.Wh = val * 1000
+            meter.total_import_Wh = val * 1000
         
         val = decode(13046)
         if val is not None:
-            if meter.total is None:
-                meter.total = TotalEnergyData()
-            if meter.total.export is None:
-                meter.total.export = EnergyData()
-            meter.total.export.Wh = val * 1000
+            meter.total_export_Wh = val * 1000
 
 
         # Build result with only populated sections
