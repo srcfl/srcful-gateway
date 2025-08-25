@@ -42,7 +42,7 @@ services:
     environment:
       <<: *shared_env
       MQTT_SERVICE_HOST: localhost
-      MQTT_SERVICE_PORT: 8080
+      MQTT_SERVICE_PORT: 8090
     labels:
       io.balena.features.dbus: 1 # needed for the wifi provisioning calls
       io.balena.features.supervisor-api: 1 # needed to get the ip of the device when running on balena os in server/balena_get_host_ip.sh
@@ -69,7 +69,7 @@ services:
   mqtt-client:
     build: ./mqtt-client
     container_name: eGW-mqtt-service
-    restart: no
+    restart: always
     network_mode: host
     ports:
       - "8090:8090"  # HTTP API for server container (changed from 8080 to avoid Traefik conflict)

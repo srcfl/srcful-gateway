@@ -41,11 +41,11 @@ class HuaweiProfile(ModbusProfile):
         pv.make = MANUFACTURER
 
         # === PV SECTION ===
-        val = decode(30073)
+        val = decode(32000)
         if val is not None:
             pv.rating = val * 1000
 
-        val = decode(32064)
+        val = decode(32016)
         if val is not None:
             pv.W = val * -1  # Negative for generation
 
@@ -71,7 +71,7 @@ class HuaweiProfile(ModbusProfile):
             pv.heatsink_C = val
 
         # Total export energy - flattened
-        val = decode(13002)
+        val = decode(32106)
         if val is not None:
             pv.total_export_Wh = val
 

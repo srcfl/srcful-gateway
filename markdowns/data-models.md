@@ -2,7 +2,6 @@
 
 ## MQTT Topic Structure
 
-
 Harvested data is published to MQTT topics using the following structure:
 
 ```

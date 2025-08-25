@@ -22,7 +22,7 @@ The following tables have 4 fields in common:
 | PV - MPPT2.V             | V    | MPPT2 Voltage                 | 32018  | 5012    | 678     |
 | PV - MPPT2.A             | A    | MPPT2 Current                 | 32019  | 5013    | 679     |
 | PV - heatsink_tmp.C      | °C   | Heatsink Temperature          | 32087  | 5007    | 541     |
-| PV - total.export.Wh     | Wh   | Total Energy Generated        | 13002  | 13002   | 534     |
+| PV - total.export.Wh     | Wh   | Total Energy Generated        | 32106  | 13002   | 534     |
 
 ### Battery Register Table
 
@@ -36,7 +36,7 @@ The following tables have 4 fields in common:
 | Battery - A                   | A        | Battery Current               | 37021  | 13020   | 591  |
 | Battery - V                   | V        | Battery Voltage               | 37003  | 13019   | 587  |
 | Battery - SoC.nom.fract       | fraction | State of Charge               | 37004  | 13022   | 588  |
-| Battery - Tmp.C               | °C       | Battery Temperature           | 37024  | 13024   | 217  |
+| Battery - Tmp.C               | °C       | Battery Temperature           | 37022  | 13024   | 217  |
 | Battery - total.import.Wh     | Wh       | Total Energy Charged          | 37066  | 13026   | 516  |
 | Battery - total.export.Wh     | Wh       | Total Energy Discharged       | 37068  | 13040   | 518  |
 
@@ -48,8 +48,8 @@ The following tables have 4 fields in common:
 | Meter - make                | str  | Manufacturer/brand            | -      | -       | -    |
 | Meter - ts                  | int  | Timestamp (ms)                | -      | -       | -    |
 | Meter - reading_duration_ms | int  | Elapsed time for reading (ms) | -      | -       | -    |
-| Meter - W                   | W    | Meter Active Power            | 32085  | 5035    | 619  |
-| Meter - Hz                  | Hz   | Grid Frequency                | 32085  | 5035    | 609  |
+| Meter - W                   | W    | Meter Active Power            | 37113  | 5035    | 619  |
+| Meter - Hz                  | Hz   | Grid Frequency                | 37118  | 5035    | 609  |
 | Meter - L1.V                | V    | L1 Phase Voltage              | 37101  | 5018    | 598  |
 | Meter - L1.A                | A    | L1 Phase Current              | 37107  | 13030   | 610  |
 | Meter - L1.W                | W    | L1 Phase Power                | 37132  | 5602    | 616  |
@@ -59,5 +59,5 @@ The following tables have 4 fields in common:
 | Meter - L3.V                | V    | L3 Phase Voltage              | 37105  | 5020    | 600  |
 | Meter - L3.A                | A    | L3 Phase Current              | 37111  | 13032   | 612  |
 | Meter - L3.W                | W    | L3 Phase Power                | 37136  | 5606    | 618  |
-| Meter - total.import.Wh     | Wh   | Total Energy Imported         | 37113  | 13033   | 522  |
-| Meter - total.export.Wh     | Wh   | Total Energy Exported         | 37118  | 13033   | 524  |
+| Meter - total.import.Wh     | Wh   | Total Energy Imported         | 37121  | 13033   | 522  |
+| Meter - total.export.Wh     | Wh   | Total Energy Exported         | 37119  | 13033   | 524  |

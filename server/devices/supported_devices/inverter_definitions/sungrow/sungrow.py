@@ -154,11 +154,11 @@ class SungrowProfile(ModbusProfile):
             meter.Hz = val
 
         # Meter energy totals - flattened
-        val = decode(13037)
+        val = decode(13036)
         if val is not None:
             meter.total_import_Wh = val * 1000
 
-        val = decode(13046)
+        val = decode(13045)
         if val is not None:
             meter.total_export_Wh = val * 1000
 
