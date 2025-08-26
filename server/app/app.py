@@ -1,7 +1,7 @@
 import sys
 import os
 import logging
-import requests
+from datetime import datetime
 from server.app.backend_settings_saver import BackendSettingsSaver
 from server.app.task_scheduler import TaskScheduler
 from server.crypto.crypto_state import CryptoState
@@ -20,17 +20,30 @@ from server.app.blackboard import BlackBoard
 from server.tasks.discoverHostsTask import DiscoverHostsTask
 from server.app.settings import ChangeSource
 from server.devices.IComFactory import IComFactory
-from server.app.mqtt_service import MQTTService
 from server.tasks.initializeMqttTask import InitializeMqttTask
 
 logger = logging.getLogger(__name__)
+
+# ============================================================================
+# STARTUP TIMEZONE INFO
+# ============================================================================
+def log_timezone_info():
+    """Log timezone and current time at startup"""
+    import time as time_module
+    timezone_name = time_module.tzname[0] if time_module.tzname else "Unknown"
+    current_time = datetime.now()
+    
+    logger.info(f"System timezone: {timezone_name}")
+    logger.info(f"Current time at startup: {current_time.strftime('%Y-%m-%d %H:%M:%S UTC')}")
+
+# Log timezone info at startup
+log_timezone_info()
 
 os.environ['LC_ALL'] = 'en_US.UTF-8'
 os.environ['LANG'] = 'en_US.UTF-8'
 
 # Constants
 MAX_WORKERS = 4
-# CONTROL_SUBSCRIPTION_URL = "wss://devnet.srcful.dev/ems/subscribe"
 INITIAL_SETTINGS_DELAY = 500  # milliseconds
 SAVE_STATE_DELAY = 10000  # milliseconds (10 seconds)
 CHECK_WEB_REQUEST_DELAY = 1000  # milliseconds

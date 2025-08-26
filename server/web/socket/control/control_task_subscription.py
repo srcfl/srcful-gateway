@@ -145,7 +145,7 @@ class ControlSubscription(ControlDeviceTaskListener):
             )
 
     def _create_signature(self) -> tuple[str, str, str]:
-        timestamp: str = datetime.now(UTC).strftime(DATE_TIME_FORMAT)
+        timestamp: str = datetime.now().strftime(DATE_TIME_FORMAT)
         crypto_sn: str = self.crypto_state.serial_number.hex()
         data_to_sign: str = f"{crypto_sn}:{timestamp}"
 
@@ -317,12 +317,13 @@ class ControlSubscription(ControlDeviceTaskListener):
         
         logger.info(f"Scheduling control task for device {der.get_name()} at {control_message.execute_at} (in {execute_at_ms - time_now_ms} ms) with commands: {control_message.commands}")
 
-        # task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
+        
+        task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
 
-        # task.register_listener(self)
+        task.register_listener(self)
 
-        # self.task_registry.add_task(task)
-        # self.bb.add_task(task)
+        self.task_registry.add_task(task)
+        self.bb.add_task(task)
 
     def handle_ems_control_schedule_cancel(self, data: dict):
         base_message: BaseMessage = BaseMessage(data)
