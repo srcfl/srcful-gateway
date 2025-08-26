@@ -17,6 +17,8 @@ from server.devices.ICom import ICom
 from server.network.network_utils import HostInfo
 from server.storage.gateway_storage import DeviceStorage
 from server.network.network_utils import NetworkUtils
+from server.app.mqtt_service import MQTTService
+    
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -43,6 +45,7 @@ class BlackBoard(ISystemTime, ITaskSource):
     _available_hosts: list[HostInfo]
     _tasks: list[ITask]
     _device_storage: DeviceStorage
+    _mqtt_service: MQTTService
 
     def __init__(self, crypto_state: CryptoState):
         self._tasks = []
@@ -58,10 +61,19 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._available_devices = []
         self._available_hosts = []
         self._device_storage = DeviceStorage()
+        self._mqtt_service = None # This is set from app.py
 
     @property
     def device_storage(self) -> DeviceStorage:
         return self._device_storage
+
+    @property
+    def mqtt_service(self) -> MQTTService:
+        return self._mqtt_service
+    
+    def set_mqtt_service(self, mqtt_service: MQTTService):
+        """Set the MQTT service instance."""
+        self._mqtt_service = mqtt_service
 
     def get_version(self) -> str:
         return "0.23.4"

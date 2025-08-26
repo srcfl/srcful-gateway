@@ -1,6 +1,7 @@
 import sys
 import os
 import logging
+import requests
 from server.app.backend_settings_saver import BackendSettingsSaver
 from server.app.task_scheduler import TaskScheduler
 from server.crypto.crypto_state import CryptoState
@@ -19,6 +20,8 @@ from server.app.blackboard import BlackBoard
 from server.tasks.discoverHostsTask import DiscoverHostsTask
 from server.app.settings import ChangeSource
 from server.devices.IComFactory import IComFactory
+from server.app.mqtt_service import MQTTService
+from server.tasks.initializeMqttTask import InitializeMqttTask
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +103,9 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     scheduler.add_task(DiscoverHostsTask(bb.time_ms() + 1000, bb))
 
     # scheduler.add_task(SaveDeviceConfigurationTask(bb.time_ms() + 1000 * 10, bb))
+    
+    # Initialize MQTT service after web server is ready (5 second delay)
+    scheduler.add_task(InitializeMqttTask(bb.time_ms() + 5000, bb, web_host))
 
     try:
         scheduler.main_loop()
@@ -114,6 +120,12 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
 
         bb.devices.lst.clear()
         web_server.close()
+        
+        # Stop MQTT service
+        if bb.mqtt_service:
+            bb.mqtt_service.stop()
+            logger.info("MQTT service stopped")
+            
         graphql_client.stop()
         graphql_client.join()
 

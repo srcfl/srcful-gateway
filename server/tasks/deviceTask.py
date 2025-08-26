@@ -9,34 +9,24 @@ from .task import Task
 from .harvestTransport import ITransportFactory
 from server.devices.ICom import DeviceMode, ICom, HarvestDataType
 from server.devices.supported_devices.data_models import DERData, PVData, BatteryData, MeterData, Value
-import requests
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.DEBUG)
 
-def post_to_mqtt_service(data, device_sn):
-    response = requests.post(
-        "http://localhost:8090/publish",
-        json=data,
-        timeout=2,
-        headers={'Content-Type': 'application/json'}
-    )
+def publish_to_mqtt(device_sn: str, der_data: DERData, bb: BlackBoard):
+    """Publish harvest data directly to MQTT service via blackboard."""
+    if not bb.mqtt_service or not bb.mqtt_service.connected:
+        logger.warning("MQTT service not available or not connected")
+        return
+        
+    # Use the MQTT service's built-in harvest data publishing method
+    success = bb.mqtt_service.publish_harvest_data(device_sn, der_data)
     
-    if response.status_code == 200:
+    if success:
         logger.debug(f"Published harvest data to MQTT for device {device_sn}")
     else:
-        logger.warning(f"Failed to publish harvest data: {response.status_code}")
-
-def publish_to_mqtt(device_sn: str, der_data: DERData):
-    # Publish to individual channel data to separate MQTT topics
-    ders: List[PVData | BatteryData | MeterData] = der_data.get_ders()
-    for der in ders:
-        data = {
-            "topic": f"{der.type}/{device_sn}/{der_data.format}/{der_data.version}",
-            "payload": der.to_dict(verbose=False)
-        }
-        post_to_mqtt_service(data, device_sn) 
+        logger.warning(f"Failed to publish harvest data for device {device_sn}") 
 
 
 class DeviceTask(Task):
@@ -126,8 +116,8 @@ class DeviceTask(Task):
                     der_data.meter.timestamp = start_time
                     der_data.meter.delta = end_time - start_time
                 
-                # Simple POST to MQTT container
-                publish_to_mqtt(device_sn, der_data)
+                # Publish directly to MQTT service via blackboard
+                publish_to_mqtt(device_sn, der_data, self.bb)
 
             except Exception as mqtt_error:
                 # Don't fail the harvest if MQTT publishing fails

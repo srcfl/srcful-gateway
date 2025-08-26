@@ -123,6 +123,24 @@ class SimpleMQTTClient:
         logger.debug(f"Message {mid} published successfully")
         self._publish_count += 1
 
+    def on_message(self, client, userdata, msg):
+        """Called when a message has been received on a topic that the client subscribes to."""
+        try:
+            topic = msg.topic
+            payload = msg.payload.decode('utf-8')
+            logger.info(f"Received message on topic '{topic}'")
+            logger.info(f"Client was {client} and userdata was: {userdata}")
+
+            # Try to parse as JSON and pretty print
+            try:
+                json_data = json.loads(payload)
+                logger.info(f"JSON payload: {json.dumps(json_data, indent=2)}")
+            except json.JSONDecodeError:
+                logger.info(f"Raw payload: {payload}")
+                
+        except Exception as e:
+            logger.error(f"Error processing received message: {e}")
+
     def on_log(self, client, userdata, level, buf):
         """Called when the client has log information."""
         log_levels = {
@@ -289,6 +307,7 @@ class SimpleMQTTClient:
             self.client.on_connect = self.on_connect
             self.client.on_disconnect = self.on_disconnect
             self.client.on_publish = self.on_publish
+            self.client.on_message = self.on_message
             self.client.on_log = self.on_log
 
             # Setup TLS
@@ -307,6 +326,14 @@ class SimpleMQTTClient:
             
             if self.connected:
                 logger.info("Successfully connected to MQTT broker")
+                
+                # Subscribe to commands topic after successful connection
+                commands_topic = f"sourceful/{self.wallet}/device/commands"
+                if self.subscribe(commands_topic):
+                    logger.info(f"Subscribed to commands topic: {commands_topic}")
+                else:
+                    logger.warning(f"Failed to subscribe to commands topic: {commands_topic}")
+                
                 return True
             else:
                 logger.error("Connection timeout")
@@ -341,6 +368,26 @@ class SimpleMQTTClient:
         except Exception as e:
             logger.error(f"Exception while publishing to {topic}: {e}")
             self._publish_errors += 1
+            return False
+
+    def subscribe(self, topic: str, qos: int = 0) -> bool:
+        """Subscribe to a topic."""
+        if not self.connected or not self.client:
+            logger.error("Cannot subscribe: not connected to MQTT broker")
+            return False
+
+        try:
+            result, mid = self.client.subscribe(topic, qos=qos)
+            
+            if result == mqtt.MQTT_ERR_SUCCESS:
+                logger.info(f"Successfully subscribed to topic: {topic}")
+                return True
+            else:
+                logger.error(f"Failed to subscribe to {topic}, error code: {result}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Exception while subscribing to {topic}: {e}")
             return False
 
     def disconnect(self):
@@ -394,6 +441,36 @@ def publish_message():
 
     except Exception as e:
         logger.error(f"Error in publish endpoint: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/subscribe', methods=['POST'])
+def subscribe_topic():
+    """Subscribe to a topic via HTTP POST."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No JSON data provided'}), 400
+
+        # Validate required fields
+        if 'topic' not in data:
+            return jsonify({'error': 'Missing required field: topic'}), 400
+
+        topic = data['topic']
+        qos = data.get('qos', 0)
+
+        if not mqtt_client or not mqtt_client.connected:
+            return jsonify({'error': 'MQTT client not connected'}), 503
+
+        success = mqtt_client.subscribe(topic, qos)
+        
+        if success:
+            return jsonify({'status': 'subscribed', 'topic': topic})
+        else:
+            return jsonify({'error': 'Failed to subscribe to topic'}), 500
+
+    except Exception as e:
+        logger.error(f"Error in subscribe endpoint: {e}")
         return jsonify({'error': str(e)}), 500
 
 
