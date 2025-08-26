@@ -66,8 +66,8 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
     graphql_client = GraphQLSubscriptionClient(bb, bb.settings.api.ws_endpoint)
     graphql_client.start()
 
-    # control_client = ControlSubscription(bb, CONTROL_SUBSCRIPTION_URL)
-    # control_client.start()
+    control_client = ControlSubscription(bb)
+    control_client.start()
 
     bb.settings.add_listener(BackendSettingsSaver(bb).on_change)
     bb.settings.devices.add_listener(SettingsDeviceListener(bb).on_change)
@@ -128,6 +128,9 @@ def main(server_host: tuple[str, int], web_host: tuple[str, int], inverter: Modb
             
         graphql_client.stop()
         graphql_client.join()
+
+        control_client.stop()
+        control_client.join()
 
         # Stop mDNS advertisement
         NetworkUtils.stop_mdns_advertisement()

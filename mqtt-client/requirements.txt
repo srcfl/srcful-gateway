@@ -1,5 +1,0 @@
-# MQTT Client Dependencies
-paho-mqtt==1.6.1
-python-dotenv==1.0.0
-requests==2.32.3
-flask==3.0.3
