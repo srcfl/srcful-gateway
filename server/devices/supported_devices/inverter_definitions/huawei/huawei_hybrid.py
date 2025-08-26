@@ -120,7 +120,7 @@ class HuaweiHybridProfile(ModbusProfile):
         if l1_current is not None:
             meter.L1_A = l1_current * -1
         if l1_power is not None:
-            meter.L1_W = l1_power
+            meter.L1_W = l1_power * -1
 
         # L2 phase - flattened
         l2_voltage = decode(37103)
@@ -131,7 +131,7 @@ class HuaweiHybridProfile(ModbusProfile):
         if l2_current is not None:
             meter.L2_A = l2_current * -1
         if l2_power is not None:
-            meter.L2_W = l2_power
+            meter.L2_W = l2_power * -1
 
         # L3 phase - flattened
         l3_voltage = decode(37105)
@@ -142,7 +142,7 @@ class HuaweiHybridProfile(ModbusProfile):
         if l3_current is not None:
             meter.L3_A = l3_current * -1
         if l3_power is not None:
-            meter.L3_W = l3_power
+            meter.L3_W = l3_power * -1
 
         # Meter totals - flattened
         val = decode(37113)
