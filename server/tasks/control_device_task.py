@@ -1,7 +1,7 @@
 import logging
 from server.app.blackboard import BlackBoard
 from .task import Task
-from server.web.socket.control.control_messages.modbus_message import ModbusMessage
+from server.control.control_messages.modbus_message import ModbusMessage
 from typing import List
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

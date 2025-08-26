@@ -1,9 +1,9 @@
-from server.web.socket.control.control_task_subscription import ControlSubscription
-from server.web.socket.control.control_messages.control_message import ControlMessage
+from server.control.control_task_subscription import ControlSubscription
+from server.control.control_messages.control_message import ControlMessage
 from server.app.blackboard import BlackBoard
 from unittest.mock import Mock
 import pytest
-from server.web.socket.control.control_messages.types import PayloadType, ControlMessageType
+from server.control.control_messages.types import PayloadType, ControlMessageType
 from server.devices.profile_keys import RegistersKey, DataTypeKey, EndiannessKey
 
 
@@ -60,10 +60,10 @@ def read_message():
 
 
 def test_validate_message_signature(control_message):
-    control_subscription_obj = ControlSubscription(Mock(spec=BlackBoard), "ws://example.com")
+    control_subscription_obj = ControlSubscription(Mock(spec=BlackBoard))
     assert control_subscription_obj._verify_message_signature(control_message)
 
 
 def test_handle_device_data_request(read_message):
-    control_subscription_obj = ControlSubscription(Mock(spec=BlackBoard), "ws://example.com")
+    control_subscription_obj = ControlSubscription(Mock(spec=BlackBoard))
     control_subscription_obj.handle_ems_data_request(read_message)

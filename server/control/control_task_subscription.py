@@ -3,15 +3,15 @@ from datetime import datetime, UTC
 import json
 from server.app.blackboard import BlackBoard
 from server.crypto.crypto_state import CryptoState
-from server.web.socket.control.control_messages.base_message import BaseMessage
-from server.web.socket.control.control_messages.control_message import ControlMessage
-from server.web.socket.control.control_messages.read_message import ReadMessage
-from server.web.socket.control.control_messages.auth_challenge_message import AuthChallengeMessage
-from server.web.socket.control.control_messages.types import ControlMessageType, PayloadType
+from server.control.control_messages.base_message import BaseMessage
+from server.control.control_messages.control_message import ControlMessage
+from server.control.control_messages.read_message import ReadMessage
+from server.control.control_messages.auth_challenge_message import AuthChallengeMessage
+from server.control.control_messages.types import ControlMessageType, PayloadType
 from server.crypto import crypto
 from cryptography.hazmat.primitives import hashes
 from server.tasks.control_device_task import ControlDeviceTask, ControlDeviceTaskListener
-from server.web.socket.control.control_task_registry import TaskExecutionRegistry
+from server.control.control_task_registry import TaskExecutionRegistry
 
 
 DATE_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'

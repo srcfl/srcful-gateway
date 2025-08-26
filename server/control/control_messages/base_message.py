@@ -1,4 +1,4 @@
-from server.web.socket.control.control_messages.types import PayloadType
+from server.control.control_messages.types import PayloadType
 
 
 class BaseMessage:

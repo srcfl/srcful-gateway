@@ -1,15 +1,15 @@
-from server.web.socket.control.control_task_registry import TaskExecutionRegistry
-from server.web.socket.control.control_messages.base_message import BaseMessage
-from server.web.socket.control.control_messages.control_message import ControlMessage
+from server.control.control_task_registry import TaskExecutionRegistry
+from server.control.control_messages.base_message import BaseMessage
+from server.control.control_messages.control_message import ControlMessage
 from server.tasks.control_device_task import ControlDeviceTask
-from server.tests.server_unit_test.web.socket.control.message_structure_test import ems_control_schedule_message
+from server.tests.server_unit_test.control.message_structure_test import ems_control_schedule_message
 from server.app.blackboard import BlackBoard
 from unittest.mock import Mock
 from server.crypto.crypto_state import CryptoState
 import pytest
 import server.tests.config_defaults as cfg
 from server.devices.ICom import ICom
-from server.web.socket.control.control_messages.types import PayloadType, ControlMessageType
+from server.control.control_messages.types import PayloadType, ControlMessageType
 
 
 message_id = 563

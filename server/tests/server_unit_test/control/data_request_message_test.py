@@ -1,6 +1,6 @@
 from unittest.mock import Mock
-from server.web.socket.control.control_messages.read_message import ReadMessage
-from server.web.socket.control.control_messages.types import ControlMessageType, PayloadType
+from server.control.control_messages.read_message import ReadMessage
+from server.control.control_messages.types import ControlMessageType, PayloadType
 from server.devices.profile_keys import RegistersKey, DataTypeKey, EndiannessKey
 from server.devices.ICom import ICom
 import pytest

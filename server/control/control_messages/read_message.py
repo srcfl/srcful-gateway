@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
-from server.web.socket.control.control_messages.modbus_message import ModbusMessage, ModbusCommand
-from server.web.socket.control.control_messages.types import PayloadType
+from server.control.control_messages.modbus_message import ModbusMessage, ModbusCommand
+from server.control.control_messages.types import PayloadType
 from server.devices.common.types import ModbusDevice
 from server.devices.registerValue import RegisterValue
 from server.devices.profile_keys import RegistersKey

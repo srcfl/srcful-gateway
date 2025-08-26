@@ -5,8 +5,8 @@ from unittest.mock import Mock
 import pytest
 from server.app.blackboard import BlackBoard
 from server.crypto.crypto_state import CryptoState
-from server.web.socket.control.control_messages.control_message import ControlMessage
-from server.tests.server_unit_test.web.socket.control.message_structure_test import ems_control_schedule_message
+from server.control.control_messages.control_message import ControlMessage
+from server.tests.server_unit_test.control.message_structure_test import ems_control_schedule_message
 
 
 @pytest.fixture

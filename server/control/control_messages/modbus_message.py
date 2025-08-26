@@ -1,5 +1,5 @@
-from server.web.socket.control.control_messages.base_message import BaseMessage
-from server.web.socket.control.control_messages.types import PayloadType
+from server.control.control_messages.base_message import BaseMessage
+from server.control.control_messages.types import PayloadType
 from server.devices.common.types import ModbusDevice
 from typing import List
 

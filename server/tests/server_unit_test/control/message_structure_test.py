@@ -1,8 +1,8 @@
-from server.web.socket.control.control_messages.base_message import BaseMessage
-from server.web.socket.control.control_messages.auth_challenge_message import AuthChallengeMessage
-from server.web.socket.control.control_messages.control_message import ControlMessage
-from server.web.socket.control.control_messages.read_message import ReadMessage
-from server.web.socket.control.control_messages.types import PayloadType, ControlMessageType
+from server.control.control_messages.base_message import BaseMessage
+from server.control.control_messages.auth_challenge_message import AuthChallengeMessage
+from server.control.control_messages.control_message import ControlMessage
+from server.control.control_messages.read_message import ReadMessage
+from server.control.control_messages.types import PayloadType, ControlMessageType
 from server.devices.profile_keys import RegistersKey, DataTypeKey, EndiannessKey
 
 ems_authentication_challenge_message = {
