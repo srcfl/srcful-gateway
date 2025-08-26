@@ -18,7 +18,7 @@ Where:
 
 Example topic:
 
-sourceful/0xABCDEF1234567890/PV/ABC123/json/v1
+`sourceful/0xABCDEF1234567890/PV/ABC123/json/v1`
 
 The structure provides clean JSON output with direct numeric values and organized flattened fields using snake_case naming conventions while preserving proper unit casing.
 
@@ -41,6 +41,19 @@ Root data structure containing up to three subsystems:
 - **battery**: Battery storage system data
 - **meter**: Meter data
 
+## Units
+
+All measurements use base SI units:
+
+- Power: W (watts)
+- Energy: Wh (watt-hours)
+- Voltage: V (volts)
+- Current: A (amperes)
+- Frequency: Hz (hertz)
+- Temperature: °C (Celsius)
+- State of Charge: fraction (0.0 = empty, 1.0 = full)
+- Time: s (seconds), ms (milliseconds for timestamps)
+
 ## PV Data Model
 
 ```json
@@ -60,20 +73,20 @@ Root data structure containing up to three subsystems:
 }
 ```
 
-| Field             | Unit         | Description                            |
-| ----------------- | ------------ | -------------------------------------- |
-| `timestamp`       | milliseconds | Timestamp of reading start             |
-| `type`            | -            | Object type ("PV")                     |
-| `make`            | -            | Manufacturer/brand name                |
-| `delta`           | milliseconds | Time taken to complete the reading     |
-| `W`               | W            | Active Power (negative for generation) |
-| `rating`          | W            | Power rating                           |
-| `mppt1_V`         | V            | MPPT1 Voltage                          |
-| `mppt1_A`         | A            | MPPT1 Current                          |
-| `mppt2_V`         | V            | MPPT2 Voltage                          |
-| `mppt2_A`         | A            | MPPT2 Current                          |
-| `heatsink_C`      | °C           | Inverter Temperature                   |
-| `total_export_Wh` | Wh           | Total Energy Generated                 |
+| Field             | Unit         | Data Type | Description                            |
+| ----------------- | ------------ | --------- | -------------------------------------- |
+| `timestamp`       | milliseconds | integer   | Timestamp of reading start             |
+| `type`            | -            | string    | Object type ("PV")                     |
+| `make`            | -            | string    | Manufacturer/brand name                |
+| `delta`           | milliseconds | integer   | Time taken to complete the reading     |
+| `W`               | W            | float     | Active Power (negative for generation) |
+| `rating`          | W            | float     | Power rating                           |
+| `mppt1_V`         | V            | float     | MPPT1 Voltage                          |
+| `mppt1_A`         | A            | float     | MPPT1 Current                          |
+| `mppt2_V`         | V            | float     | MPPT2 Voltage                          |
+| `mppt2_A`         | A            | float     | MPPT2 Current                          |
+| `heatsink_C`      | °C           | float     | Inverter Temperature                   |
+| `total_export_Wh` | Wh           | integer   | Total Energy Generated                 |
 
 ## Battery Data Model
 
@@ -93,19 +106,19 @@ Root data structure containing up to three subsystems:
 }
 ```
 
-| Field             | Unit         | Description                          |
-| ----------------- | ------------ | ------------------------------------ |
-| `timestamp`       | milliseconds | Timestamp of reading start           |
-| `type`            | -            | Object type ("Battery")              |
-| `make`            | -            | Manufacturer/brand name              |
-| `delta`           | milliseconds | Time taken to complete the reading   |
-| `W`               | W            | Active Power (+ charge, - discharge) |
-| `A`               | A            | Current (+ charge, - discharge)      |
-| `V`               | V            | Voltage                              |
-| `SoC_nom_fract`   | fraction     | State of Charge (0.0-1.0)            |
-| `heatsink_C`      | °C           | Battery Temperature                  |
-| `total_import_Wh` | Wh           | Total Energy Charged                 |
-| `total_export_Wh` | Wh           | Total Energy Discharged              |
+| Field             | Unit         | Data Type | Description                          |
+| ----------------- | ------------ | --------- | ------------------------------------ |
+| `timestamp`       | milliseconds | integer   | Timestamp of reading start           |
+| `type`            | -            | string    | Object type ("Battery")              |
+| `make`            | -            | string    | Manufacturer/brand name              |
+| `delta`           | milliseconds | integer   | Time taken to complete the reading   |
+| `W`               | W            | float     | Active Power (+ charge, - discharge) |
+| `A`               | A            | float     | Current (+ charge, - discharge)      |
+| `V`               | V            | float     | Voltage                              |
+| `SoC_nom_fract`   | fraction     | float     | State of Charge (0.0-1.0)            |
+| `heatsink_C`      | °C           | float     | Battery Temperature                  |
+| `total_import_Wh` | Wh           | integer   | Total Energy Charged                 |
+| `total_export_Wh` | Wh           | integer   | Total Energy Discharged              |
 
 ## Meter Data Model
 
@@ -131,25 +144,25 @@ Root data structure containing up to three subsystems:
 }
 ```
 
-| Field             | Unit         | Description                             |
-| ----------------- | ------------ | --------------------------------------- |
-| `timestamp`       | milliseconds | Timestamp of reading start              |
-| `type`            | -            | Object type ("Meter")                   |
-| `make`            | -            | Manufacturer/brand name                 |
-| `delta`           | milliseconds | Time taken to complete the reading      |
-| `W`               | W            | Total Active Power (+ import, - export) |
-| `Hz`              | Hz           | Grid Frequency                          |
-| `L1_V`            | V            | L1 Phase Voltage                        |
-| `L1_A`            | A            | L1 Phase Current                        |
-| `L1_W`            | W            | L1 Phase Power                          |
-| `L2_V`            | V            | L2 Phase Voltage                        |
-| `L2_A`            | A            | L2 Phase Current                        |
-| `L2_W`            | W            | L2 Phase Power                          |
-| `L3_V`            | V            | L3 Phase Voltage                        |
-| `L3_A`            | A            | L3 Phase Current                        |
-| `L3_W`            | W            | L3 Phase Power                          |
-| `total_import_Wh` | Wh           | Total Energy Imported                   |
-| `total_export_Wh` | Wh           | Total Energy Exported                   |
+| Field             | Unit         | Data Type | Description                             |
+| ----------------- | ------------ | --------- | --------------------------------------- |
+| `timestamp`       | milliseconds | integer   | Timestamp of reading start              |
+| `type`            | -            | string    | Object type ("Meter")                   |
+| `make`            | -            | string    | Manufacturer/brand name                 |
+| `delta`           | milliseconds | integer   | Time taken to complete the reading      |
+| `W`               | W            | float     | Total Active Power (+ import, - export) |
+| `Hz`              | Hz           | float     | Grid Frequency                          |
+| `L1_V`            | V            | float     | L1 Phase Voltage                        |
+| `L1_A`            | A            | float     | L1 Phase Current                        |
+| `L1_W`            | W            | float     | L1 Phase Power                          |
+| `L2_V`            | V            | float     | L2 Phase Voltage                        |
+| `L2_A`            | A            | float     | L2 Phase Current                        |
+| `L2_W`            | W            | float     | L2 Phase Power                          |
+| `L3_V`            | V            | float     | L3 Phase Voltage                        |
+| `L3_A`            | A            | float     | L3 Phase Current                        |
+| `L3_W`            | W            | float     | L3 Phase Power                          |
+| `total_import_Wh` | Wh           | integer   | Total Energy Imported                   |
+| `total_export_Wh` | Wh           | integer   | Total Energy Exported                   |
 
 ## Sign Conventions
 
@@ -160,19 +173,6 @@ Root data structure containing up to three subsystems:
 - **Export**: Negative power (Meter: `W < 0`)
 - **Energy Totals**: Always positive values in `total_import_Wh` and `total_export_Wh`
 
-## Units
-
-All measurements use base SI units:
-
-- Power: W (watts)
-- Energy: Wh (watt-hours)
-- Voltage: V (volts)
-- Current: A (amperes)
-- Frequency: Hz (hertz)
-- Temperature: °C (Celsius)
-- State of Charge: fraction (0.0 = empty, 1.0 = full)
-- Time: s (seconds), ms (milliseconds for timestamps)
-
 ## Field Naming Convention
 
 The flattened structure uses snake_case naming while preserving proper unit casing:
@@ -181,148 +181,3 @@ The flattened structure uses snake_case naming while preserving proper unit casi
 - **Hierarchical paths flattened**: `MPPT1.V` → `mppt1_V`, `L1.A` → `L1_A`
 - **Compound fields**: `SoC.nom.fract` → `SoC_nom_fract`
 - **Energy paths**: `total.export.Wh` → `total_export_Wh`
-
-Example serialized PV data:
-
-```json
-{
-  "pv": {
-    "timestamp": 1755701251122,
-    "type": "PV",
-    "make": "Deye",
-    "W": -5000.0,
-    "rating": 6000.0,
-    "heatsink_C": 45.0,
-    "mppt1_V": 380.0,
-    "mppt1_A": -12.5,
-    "total_export_Wh": 25000
-  }
-}
-```
-
-## Battery Data Model
-
-```json
-{
-  "timestamp": 1755701251122,
-  "type": "Battery",
-  "make": "Deye",
-  "delta": 38,
-  "w": 500,
-  "a": 10.5,
-  "v": 48.2,
-  "soc_nom_fract": 0.75,
-  "heatsink_c": 25,
-  "total_import_wh": 8000,
-  "total_export_wh": 7200
-}
-```
-
-| Field             | Unit         | Description                          |
-| ----------------- | ------------ | ------------------------------------ |
-| `timestamp`       | milliseconds | Timestamp of reading start           |
-| `type`            | -            | Object type ("Battery")              |
-| `make`            | -            | Manufacturer/brand name              |
-| `delta`           | milliseconds | Time taken to complete the reading   |
-| `w`               | W            | Active Power (+ charge, - discharge) |
-| `a`               | A            | Current (+ charge, - discharge)      |
-| `v`               | V            | Voltage                              |
-| `soc_nom_fract`   | fraction     | State of Charge (0.0-1.0)            |
-| `heatsink_c`      | °C           | Battery Temperature                  |
-| `total_import_wh` | Wh           | Total Energy Charged                 |
-| `total_export_wh` | Wh           | Total Energy Discharged              |
-
-## Meter Data Model
-
-```json
-{
-  "timestamp": 1755701251122,
-  "type": "Meter",
-  "make": "Deye",
-  "delta": 35,
-  "w": 1200,
-  "hz": 50.0,
-  "l1_v": 230,
-  "l1_a": 5.2,
-  "l1_w": 400,
-  "l2_v": 229,
-  "l2_a": 5.1,
-  "l2_w": 380,
-  "l3_v": 231,
-  "l3_a": 5.3,
-  "l3_w": 420,
-  "total_import_wh": 25000,
-  "total_export_wh": 18000
-}
-```
-
-| Field             | Unit         | Description                             |
-| ----------------- | ------------ | --------------------------------------- |
-| `timestamp`       | milliseconds | Timestamp of reading start              |
-| `type`            | -            | Object type ("Meter")                   |
-| `make`            | -            | Manufacturer/brand name                 |
-| `delta`           | milliseconds | Time taken to complete the reading      |
-| `w`               | W            | Total Active Power (+ import, - export) |
-| `hz`              | Hz           | Grid Frequency                          |
-| `l1_v`            | V            | L1 Phase Voltage                        |
-| `l1_a`            | A            | L1 Phase Current                        |
-| `l1_w`            | W            | L1 Phase Power                          |
-| `l2_v`            | V            | L2 Phase Voltage                        |
-| `l2_a`            | A            | L2 Phase Current                        |
-| `l2_w`            | W            | L2 Phase Power                          |
-| `l3_v`            | V            | L3 Phase Voltage                        |
-| `l3_a`            | A            | L3 Phase Current                        |
-| `l3_w`            | W            | L3 Phase Power                          |
-| `total_import_wh` | Wh           | Total Energy Imported                   |
-| `total_export_wh` | Wh           | Total Energy Exported                   |
-
-## Sign Conventions
-
-- **Generation**: Negative power (PV: `w < 0`)
-- **Charging**: Positive power/current (Battery: `w > 0`, `a > 0`)
-- **Discharging**: Negative power/current (Battery: `w < 0`, `a < 0`)
-- **Import**: Positive power (Meter: `w > 0`)
-- **Export**: Negative power (Meter: `w < 0`)
-- **Energy Totals**: Always positive values in `total_import_wh` and `total_export_wh`
-
-## Units
-
-All measurements use base SI units:
-
-- Power: W (watts)
-- Energy: Wh (watt-hours)
-- Voltage: V (volts)
-- Current: A (amperes)
-- Frequency: Hz (hertz)
-- Temperature: °C (Celsius)
-- State of Charge: fraction (0.0 = empty, 1.0 = full)
-- Time: s (seconds), ms (milliseconds for timestamps)
-
-## Field Naming Convention
-
-All field names use snake_case format, replacing the previous hierarchical structure:
-
-- **MPPT data**: `MPPT1.V` → `mppt1_v`, `MPPT2.A` → `mppt2_a`
-- **Phase data**: `L1.V` → `l1_v`, `L2.W` → `l2_w`, `L3.A` → `l3_a`
-- **Temperature**: `heatsink.C` → `heatsink_c`
-- **State of Charge**: `SoC.nom.fract` → `soc_nom_fract`
-- **Energy totals**: `total.export.Wh` → `total_export_wh`, `total.import.Wh` → `total_import_wh`
-- **Power/Current/Voltage**: `W` → `w`, `A` → `a`, `V` → `v`, `Hz` → `hz`
-
-Example serialized PV data:
-
-```json
-{
-  "pv": {
-    "timestamp": 1755701251122,
-    "type": "PV",
-    "make": "Deye",
-    "w": -5000.0,
-    "rating": 6000.0,
-    "heatsink_c": 45.0,
-    "mppt1_v": 380.0,
-    "mppt1_a": -12.5,
-    "total_export_wh": 25000
-  }
-}
-```
