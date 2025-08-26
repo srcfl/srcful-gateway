@@ -99,42 +99,47 @@ class DeviceTask(Task):
 
             return transports
         return []
+    
+    def _handle_harvest(self, event_time: int):
+        start_time = self.bb.time_ms()
+        next_event_time, harvest = self.harvester.harvest(event_time, self.device, self.bb)
+        end_time = self.bb.time_ms()
+
+        if harvest:
+            self.harvest_count += 1
+            self.barn[self.bb.time_ms()] = harvest
+            
+            # Publish harvest data to MQTT (non-blocking)
+            try:
+                device_sn = self.device.get_SN()
+                # device_id = self.bb.crypto_state().serial_number.hex()
+
+                der_data = self.device.dict_to_ders(harvest)
+                
+                if der_data.pv:
+                    der_data.pv.timestamp = start_time
+                    der_data.pv.delta = end_time - start_time
+                if der_data.battery:
+                    der_data.battery.timestamp = start_time
+                    der_data.battery.delta = end_time - start_time
+                if der_data.meter:
+                    der_data.meter.timestamp = start_time
+                    der_data.meter.delta = end_time - start_time
+                
+                # Simple POST to MQTT container
+                publish_to_mqtt(device_sn, der_data)
+
+            except Exception as mqtt_error:
+                # Don't fail the harvest if MQTT publishing fails
+                logger.error(f"Error publishing harvest data to MQTT: {mqtt_error}")
+                
+        return next_event_time
 
     def _handle_state(self, event_time: int) -> tuple[int, List[ITask]]:
         next_event_time = event_time + 250
         try:
             if self.device.get_device_mode() == DeviceMode.READ:
-                start_time = self.bb.time_ms()
-                next_event_time, harvest = self.harvester.harvest(event_time, self.device, self.bb)
-                end_time = self.bb.time_ms()
-
-                if harvest:
-                    self.harvest_count += 1
-                    self.barn[self.bb.time_ms()] = harvest
-                    
-                    # Publish harvest data to MQTT (non-blocking)
-                    try:
-                        device_sn = self.device.get_SN()
-                        # device_id = self.bb.crypto_state().serial_number.hex()
-
-                        der_data = self.device.dict_to_ders(harvest)
-                        
-                        if der_data.pv:
-                            der_data.pv.timestamp = start_time
-                            der_data.pv.delta = end_time - start_time
-                        if der_data.battery:
-                            der_data.battery.timestamp = start_time
-                            der_data.battery.delta = end_time - start_time
-                        if der_data.meter:
-                            der_data.meter.timestamp = start_time
-                            der_data.meter.delta = end_time - start_time
-                        
-                        # Simple POST to MQTT container
-                        publish_to_mqtt(device_sn, der_data)
-
-                    except Exception as mqtt_error:
-                        # Don't fail the harvest if MQTT publishing fails
-                        logger.error(f"Error publishing harvest data to MQTT: {mqtt_error}")
+                next_event_time = self._handle_harvest(event_time)
 
             elif self.device.get_device_mode() == DeviceMode.CONTROL:
                 # self.controller.execute(event_time)

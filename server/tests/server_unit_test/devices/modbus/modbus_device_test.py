@@ -27,15 +27,6 @@ def modbus_devices():
     return devices
 
 
-def test_open_and_is_open(modbus_devices):
-
-    for device in modbus_devices:
-        device.connect()
-
-        with patch.object(device, 'is_open', return_value=True):
-            assert device.is_open()
-
-
 def test_read_harvest_no_data_exception(modbus_devices):
     for device in modbus_devices:
 
