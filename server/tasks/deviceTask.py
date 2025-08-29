@@ -51,7 +51,9 @@ class DeviceTask(Task):
         self.adjust_time(next_event_time)
 
         elapsed_time_ms = self.bb.time_ms() - event_time
-        transport = self._create_transport(self.bb.time_ms() + elapsed_time_ms * 2, self.bb.settings.harvest.endpoints)
+        transport = self._create_transport(event_time=self.bb.time_ms() + elapsed_time_ms * 2, 
+                                           endpoints=self.bb.settings.harvest.endpoints, 
+                                           force_transport=True) # Bypass the every n seconds 
         if len(transport) > 0:
             return tasks + transport
         return tasks
@@ -131,7 +133,7 @@ class DeviceTask(Task):
         return next_event_time
 
     def _handle_state(self, event_time: int) -> tuple[int, List[ITask]]:
-        next_event_time = event_time + 250
+        next_event_time = event_time + 100
         try:
             if self.device.get_device_mode() == DeviceMode.READ:
                 next_event_time = self._handle_harvest(event_time)
@@ -180,7 +182,7 @@ class DeviceTask(Task):
 
         if not force_transport:
             # check if the lowest time in the barn is more than 10 seconds old
-            force_transport = self.bb.time_ms() - self.last_transport_time >= 1000
+            force_transport = self.bb.time_ms() - self.last_transport_time >= 10000
 
         if (len(self.barn) > 0 and force_transport):
             logger.info("Filling the barn took %s ms for [%s] to endpoint %s", self.total_harvest_time_ms, self.device.get_SN(), endpoints)
@@ -188,7 +190,7 @@ class DeviceTask(Task):
 
                 headers = self._create_transport_headers(self.device)
 
-                transport = self.transport_factory(event_time + 100, self.bb, self.barn, headers)
+                transport = self.transport_factory(event_time + 20, self.bb, self.barn, headers)
                 transport.post_url = endpoint
                 ret.append(transport)
 

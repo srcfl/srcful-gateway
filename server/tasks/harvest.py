@@ -27,7 +27,7 @@ class Harvest:
             if self.backoff_time is None:
                 self.backoff_time = device.DEFAULT_HARVEST_INTERVAL_MS
             
-            self.backoff_time = device.get_backoff_time_ms(elapsed_time_ms, self.backoff_time)
+            # Keep backoff_time fixed at DEFAULT_HARVEST_INTERVAL_MS
             logger.debug("Harvest from [%s] took %s ms. Data points: %s", device.get_SN(), elapsed_time_ms, len(harvest))
 
             self.total_harvest_time_ms += elapsed_time_ms
@@ -41,6 +41,6 @@ class Harvest:
         if elapsed_time_ms < self.backoff_time:
             next_time = bb.time_ms() + self.backoff_time - elapsed_time_ms
         else:
-            next_time = bb.time_ms() + self.backoff_time
+            next_time = bb.time_ms() + 100  # Start next harvest immediately if we're behind schedule
 
         return next_time, harvest    
