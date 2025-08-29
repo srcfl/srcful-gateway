@@ -81,5 +81,8 @@ class Device(ICom, ABC):
     def get_config_schema(connection: str):
         return {ICom.CONNECTION_KEY: f"string - the connection type, for this object use: {connection}"}
     
-    def dict_to_ders(self, payload: dict | str) -> DERData:
+    def harvest_to_ders(self, payload: dict | str) -> DERData:
         return DERData()
+
+    def harvest_to_decoded_dict(self, payload: dict | str) -> dict:
+        return {}

@@ -138,7 +138,10 @@ class ModbusProfile(DeviceProfile):
     def get_registers(self) -> List[RegisterInterval]:
         return self.registers
     
-    def dict_to_ders(payload: dict) -> DERData:
+    def harvest_to_ders(payload: dict) -> DERData:
         return DERData()
+    
+    def harvest_to_decoded_dict(self, payload: dict | str) -> dict:
+        return {}
 
     

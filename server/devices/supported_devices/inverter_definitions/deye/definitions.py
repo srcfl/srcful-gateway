@@ -4412,7 +4412,7 @@ deye_profile = {
             RegistersKey.DATA_TYPE: DataTypeKey.U16,
             RegistersKey.UNIT: "V",
             RegistersKey.DESCRIPTION: "Battery-1 voltage",
-            RegistersKey.SCALE_FACTOR: 0.1,
+            RegistersKey.SCALE_FACTOR: 1,
             RegistersKey.ENDIANNESS: EndiannessKey.BIG,
         },
         {

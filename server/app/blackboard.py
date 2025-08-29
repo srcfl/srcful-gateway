@@ -230,6 +230,10 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._available_hosts = hosts
         self._save_state()
 
+    def add_endpoint(self, endpoint: str):
+        self._settings.harvest.add_endpoint(endpoint, ChangeSource.LOCAL)
+        self._save_state()
+
     @property
     def chip_death_count(self):
         return self._chip_death_count

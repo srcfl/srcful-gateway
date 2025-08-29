@@ -10,6 +10,7 @@ from ...profile import ModbusProfile
 from ....common.types import ModbusDevice
 from ....registerValue import RegisterValue
 from .definitions_slim import deye_profile as slim_deye_profile
+from .definitions import deye_profile as full_deye_profile
 from ...data_models import DERData, PVData, BatteryData, MeterData
 import logging
 
@@ -26,14 +27,35 @@ class DeyeProfile(ModbusProfile):
 
     def profile_is_valid(self, device: ModbusDevice) -> bool:
         return True
+    
+    def harvest_to_decoded_dict(self, raw_register_values: dict) -> dict:
+        decode = self.create_decoder(raw_register_values, full_deye_profile[ProfileKey.REGISTERS])
+        
+        registers = {}
+        
+        inv_output_total_active_power = decode(636)
+        battery_output_power = decode(590)
+        grid_active_power = decode(607)
 
-    def dict_to_ders(self, raw_register_values: dict) -> DERData:
+        # for register in full_deye_profile[ProfileKey.REGISTERS]:
+        #     val = decode(register.get(RegistersKey.START_REGISTER))
+            
+        #     if val is not None:
+        #         registers[register.get(RegistersKey.START_REGISTER)] = {
+        #             "name": register.get(RegistersKey.NAME, ""),
+        #             "value": val,
+        #             "description": register.get(RegistersKey.DESCRIPTION, ""),
+        #         }
+
+        return {"registers": registers}
+
+    def harvest_to_ders(self, raw_register_values: dict) -> DERData:
         """Decode raw register values into three sections: PV, Battery, Meter"""
         if not raw_register_values:
             return DERData()
 
-        decode = self.create_decoder(raw_register_values, slim_deye_profile[ProfileKey.REGISTERS])
-        is_high_voltage = raw_register_values.get(0) == 6
+        decode = self.create_decoder(raw_register_values, full_deye_profile[ProfileKey.REGISTERS])
+        is_high_voltage = decode(0) == 6
 
         def scale_voltage(val: float) -> float:
             return val * (0.1 if is_high_voltage else 0.01)
@@ -139,33 +161,33 @@ class DeyeProfile(ModbusProfile):
         # L1 phase - flattened
         l1_voltage = decode(598)
         l1_current = decode(610)
-        l1_power = decode(616)
+        l1_power = decode(622)
         if l1_voltage is not None:
             meter.L1_V = l1_voltage
         if l1_current is not None:
-            meter.L1_A = l1_current * -1
+            meter.L1_A = l1_current
         if l1_power is not None:
             meter.L1_W = l1_power
 
         # L2 phase - flattened
         l2_voltage = decode(599)
         l2_current = decode(611)
-        l2_power = decode(617)
+        l2_power = decode(623)
         if l2_voltage is not None:
             meter.L2_V = l2_voltage
         if l2_current is not None:
-            meter.L2_A = l2_current * -1
+            meter.L2_A = l2_current
         if l2_power is not None:
             meter.L2_W = l2_power
 
         # L3 phase - flattened
         l3_voltage = decode(600)
         l3_current = decode(612)
-        l3_power = decode(618)
+        l3_power = decode(624)
         if l3_voltage is not None:
             meter.L3_V = l3_voltage
         if l3_current is not None:
-            meter.L3_A = l3_current * -1
+            meter.L3_A = l3_current
         if l3_power is not None:
             meter.L3_W = l3_power
 

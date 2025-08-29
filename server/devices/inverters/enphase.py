@@ -282,5 +282,8 @@ class Enphase(TCPDevice):
     def get_SN(self) -> str:
         return self.iq_gw_serial
     
-    def dict_to_ders(self, payload: dict | str) -> DERData:
+    def harvest_to_ders(self, payload: dict | str) -> DERData:
+        return {}
+
+    def harvest_to_decoded_dict(self, payload: dict | str) -> dict:
         return {}

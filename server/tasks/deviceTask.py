@@ -14,20 +14,6 @@ from server.devices.supported_devices.data_models import DERData, PVData, Batter
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.DEBUG)
 
-def publish_to_mqtt(device_sn: str, der_data: DERData, bb: BlackBoard):
-    """Publish harvest data directly to MQTT service via blackboard."""
-    if not bb.mqtt_service or not bb.mqtt_service.connected:
-        logger.warning("MQTT service not available or not connected")
-        return
-        
-    # Use the MQTT service's built-in harvest data publishing method
-    success = bb.mqtt_service.publish_harvest_data(device_sn, der_data)
-    
-    if success:
-        logger.debug(f"Published harvest data to MQTT for device {device_sn}")
-    else:
-        logger.warning(f"Failed to publish harvest data for device {device_sn}") 
-
 
 class DeviceTask(Task):
     '''Encapsulates basic device state behavior reading or controlling and the transport of harvest data'''
@@ -104,20 +90,35 @@ class DeviceTask(Task):
                 device_sn = self.device.get_SN()
                 # device_id = self.bb.crypto_state().serial_number.hex()
 
-                der_data = self.device.dict_to_ders(harvest)
+                der_data = self.device.harvest_to_ders(harvest)
                 
                 if der_data.pv:
                     der_data.pv.timestamp = start_time
                     der_data.pv.delta = end_time - start_time
+                    topic = f"{der_data.pv.type}/{device_sn}/{der_data.format}/{der_data.version}"
+                    payload = der_data.pv.to_dict(verbose=False)
+                    self.bb.mqtt_service.publish(topic, payload)
+
                 if der_data.battery:
                     der_data.battery.timestamp = start_time
                     der_data.battery.delta = end_time - start_time
+                    topic = f"{der_data.battery.type}/{device_sn}/{der_data.format}/{der_data.version}"
+                    payload = der_data.battery.to_dict(verbose=False)
+                    self.bb.mqtt_service.publish(topic, payload)
+
                 if der_data.meter:
                     der_data.meter.timestamp = start_time
                     der_data.meter.delta = end_time - start_time
+                    topic = f"{der_data.meter.type}/{device_sn}/{der_data.format}/{der_data.version}"
+                    payload = der_data.meter.to_dict(verbose=False)
+                    self.bb.mqtt_service.publish(topic, payload)
+
+                # Temporary stuff - publish full decoded data
+                # all_decoded = self.device.harvest_to_decoded_dict(harvest)
+                # topic = f"decoded/{device_sn}/json/v1"
+                # self.bb.mqtt_service.publish(topic, all_decoded)
                 
-                # Publish directly to MQTT service via blackboard
-                publish_to_mqtt(device_sn, der_data, self.bb)
+                logger.debug(f"Published harvest data for device {device_sn} to MQTT")
 
             except Exception as mqtt_error:
                 # Don't fail the harvest if MQTT publishing fails
@@ -175,7 +176,7 @@ class DeviceTask(Task):
 
         if not force_transport:
             # check if the lowest time in the barn is more than 10 seconds old
-            force_transport = self.bb.time_ms() - self.last_transport_time >= 10000
+            force_transport = self.bb.time_ms() - self.last_transport_time >= 1000
 
         if (len(self.barn) > 0 and force_transport):
             logger.info("Filling the barn took %s ms for [%s] to endpoint %s", self.total_harvest_time_ms, self.device.get_SN(), endpoints)

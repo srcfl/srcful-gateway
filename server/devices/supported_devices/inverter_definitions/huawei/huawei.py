@@ -30,7 +30,7 @@ class HuaweiProfile(ModbusProfile):
         return True
     
     
-    def dict_to_ders(self, raw_register_values: dict) -> DERData:
+    def harvest_to_ders(self, raw_register_values: dict) -> DERData:
         """Decode raw register values into three sections: PV, Battery, Meter"""
         if not raw_register_values:
             return DERData()

@@ -140,5 +140,8 @@ class P1Jemac(TCPDevice):
         config[self.IP] = host.ip
         return P1Jemac(**config)
     
-    def dict_to_ders(self, payload: dict | str) -> DERData:
+    def harvest_to_ders(self, payload: dict | str) -> DERData:
+        return {}
+
+    def harvest_to_decoded_dict(self, payload: dict | str) -> dict:
         return {}

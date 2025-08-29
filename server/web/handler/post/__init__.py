@@ -9,3 +9,4 @@ from . import crypto_sign
 from . import reboot
 from . import ble_stop
 from . import jwt_create
+from . import endpoint

@@ -215,8 +215,8 @@ class Modbus(Device, ABC):
 
         return str(value)
     
-    def dict_to_ders(self, payload: dict | str) -> DERData:
-        der_data: DERData = self.profile.dict_to_ders(payload)
+    def harvest_to_ders(self, payload: dict | str) -> DERData:
+        der_data: DERData = self.profile.harvest_to_ders(payload)
         
         if not der_data:
             return DERData()
@@ -225,3 +225,6 @@ class Modbus(Device, ABC):
         der_data.version = self.profile.version
         
         return der_data 
+    
+    def harvest_to_decoded_dict(self, payload: dict | str) -> dict:
+        return self.profile.harvest_to_decoded_dict(payload)

@@ -67,6 +67,7 @@ class Endpoints:
 
         self.api_post_dict = {
             "device": handler.post.device.Handler(),
+            "endpoint": handler.post.endpoint.Handler(),
             "wifi": handler.post.wifi.Handler(),
             "initialize": handler.post.initialize.Handler(),
             "logger": handler.post.logger.Handler(),

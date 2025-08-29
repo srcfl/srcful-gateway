@@ -128,5 +128,9 @@ class ICom(ABC):
         pass
     
     @abstractmethod
-    def dict_to_ders(self, payload: dict | str) -> DERData:
+    def harvest_to_ders(self, payload: dict | str) -> DERData:
+        pass
+    
+    @abstractmethod
+    def harvest_to_decoded_dict(self, payload: dict | str) -> dict:
         pass

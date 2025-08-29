@@ -37,6 +37,7 @@ class MQTTService:
         self._publish_errors = 0
         self._running = False
         self._thread = None
+        self._root_topic = None
         
         # Topic-specific publish tracking
         self._topic_publishes = {}  # topic -> deque of timestamps
@@ -140,9 +141,11 @@ class MQTTService:
         if rc == 0:
             logger.info(f"Connected to MQTT broker at {self.broker_host}:{self.broker_port}")
             self.connected = True
-            
+
+            self._root_topic = f"sourceful/{self.wallet_address}"
+
             # Subscribe to commands topic after successful connection
-            commands_topic = f"sourceful/{self.wallet_address}/device/commands"
+            commands_topic = f"{self._root_topic}/device/commands"
             self.subscribe(commands_topic)
         else:
             logger.error(f"Failed to connect to MQTT broker, return code {rc}")
@@ -267,7 +270,9 @@ class MQTTService:
             logger.error("Cannot publish: not connected to MQTT broker")
             self._publish_errors += 1
             return False
-
+        
+        topic = f"{self._root_topic}/{topic}"
+        
         try:
             message_json = json.dumps(payload)
             result = self.client.publish(topic, message_json, qos=qos)
@@ -280,6 +285,10 @@ class MQTTService:
                 return True
             else:
                 logger.error(f"Failed to publish to {topic}, error code: {result.rc}")
+                # Error code 4 = MQTT_ERR_NO_CONN (not connected)
+                if result.rc == 4:
+                    logger.info("Detected connection lost, triggering reconnect")
+                    self.connected = False
                 self._publish_errors += 1
                 return False
                 
@@ -287,31 +296,7 @@ class MQTTService:
             logger.error(f"Exception while publishing to {topic}: {e}")
             self._publish_errors += 1
             return False
-
-    def publish_harvest_data(self, device_sn: str, der_data: DERData) -> bool:
-        """Publish harvest data to MQTT topics."""
-        if not self.connected:
-            logger.warning("MQTT not connected, skipping publish")
-            return False
-            
-        try:
-            # Publish to individual channel data to separate MQTT topics
-            ders = der_data.get_ders()
-            for der in ders:
-                topic = f"sourceful/{self.wallet_address}/{der.type}/{device_sn}/{der_data.format}/{der_data.version}"
-                payload = der.to_dict(verbose=False)
-                
-                success = self.publish(topic, payload)
-                if success:
-                    logger.debug(f"Published harvest data to MQTT for device {device_sn}")
-                else:
-                    logger.warning(f"Failed to publish harvest data for device {device_sn}")
-                    
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error publishing harvest data to MQTT: {e}")
-            return False
+        
 
     def subscribe(self, topic: str, qos: int = 0) -> bool:
         """Subscribe to a topic."""
