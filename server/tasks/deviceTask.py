@@ -32,6 +32,7 @@ class DeviceTask(Task):
 
         self.harvester = Harvest()
         # self.controller = Controller(event_time, bb, device)
+        self.last_reading_ms = bb.time_ms()
 
     def execute(self, event_time: int) -> Union[List[ITask], ITask, None]:
 
@@ -119,6 +120,9 @@ class DeviceTask(Task):
                 # self.bb.mqtt_service.publish(topic, all_decoded)
                 
                 logger.debug(f"Published harvest data for device {device_sn} to MQTT")
+                logger.debug(f"Current BB Time: {self.bb.time_ms()}")
+                logger.debug(f"This reading was {self.bb.time_ms() - self.last_reading_ms} ms")
+                self.last_reading_ms = self.bb.time_ms()
 
             except Exception as mqtt_error:
                 # Don't fail the harvest if MQTT publishing fails
