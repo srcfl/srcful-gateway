@@ -1,47 +1,42 @@
 # Data Models
 
-## MQTT Topic Structure
+## Table of Contents
 
-Harvested data is published to MQTT topics using the following structure:
+- [Overview](#overview)
+  - [DERData Structure](#derdata-structure)
+  - [Inheritance Model](#inheritance-model)
+- [Units and Conventions](#units-and-conventions)
+  - [Units](#units)
+  - [Sign Conventions](#sign-conventions)
+  - [Field Naming Convention](#field-naming-convention)
+- [Data Models](#data-models)
+  - [BaseDeviceData](#basedevicedata)
+  - [PV Data Model](#pv-data-model)
+  - [Battery Data Model](#battery-data-model)
+  - [Meter Data Model](#meter-data-model)
+- [MQTT Integration](#mqtt-integration)
+  - [Topic Structure](#topic-structure)
 
-```
-sourceful/<wallet>/<type>/<device_sn>/<format>/<version>
-```
+## Overview
 
-Where:
+### DERData Structure
 
-- `sourceful/<wallet>`: Root topic, with `<wallet>` set by the MQTT client
-- `<type>`: Data type (e.g., PV, Battery, Meter)
-- `<device_sn>`: Device serial number
-- `<format>`: Data format (e.g., json, protobuf, binary)
-- `<version>`: Data model version (e.g., v1)
-
-Example topic:
-
-`sourceful/0xABCDEF1234567890/PV/ABC123/json/v1`
-
-The structure provides clean JSON output with direct numeric values and organized flattened fields using snake_case naming conventions while preserving proper unit casing.
-
-## Core Structure
-
-### Timestamp
-
-All data objects include:
-
-- **timestamp**: Timestamp in milliseconds
-- **type**: Object type ("PV", "Battery", "Meter")
-- **make**: Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
-- **delta**: Elapsed time to perform the reading (milliseconds)
-
-### DERData
-
-Root data structure containing up to three subsystems:
+The root data structure containing up to three subsystems:
 
 - **pv**: Photovoltaic system data
 - **battery**: Battery storage system data
 - **meter**: Meter data
 
-## Units
+### Inheritance Model
+
+- **BaseDeviceData**: Abstract base class containing common fields shared by all device types
+- **PVData**: Inherits from `BaseDeviceData`, adds PV-specific fields
+- **BatteryData**: Inherits from `BaseDeviceData`, adds battery-specific fields
+- **MeterData**: Inherits from `BaseDeviceData`, adds meter-specific fields
+
+## Units and Conventions
+
+### Units
 
 All measurements use base SI units:
 
@@ -54,80 +49,106 @@ All measurements use base SI units:
 - State of Charge: fraction (0.0 = empty, 1.0 = full)
 - Time: s (seconds), ms (milliseconds for timestamps)
 
-## PV Data Model
+### Sign Conventions
+
+- **Generation**: Negative power (PV: `W < 0`)
+- **Charging**: Positive power/current (Battery: `W > 0`, `A > 0`)
+- **Discharging**: Negative power/current (Battery: `W < 0`, `A < 0`)
+- **Import**: Positive power (Meter: `W > 0`)
+- **Export**: Negative power (Meter: `W < 0`)
+- **Energy Totals**: Always positive values in `total_import_Wh`, `total_export_Wh`, `total_charge_Wh`, `total_discharge_Wh`, and `total_generation_Wh`
+
+### Field Naming Convention
+
+The flattened structure uses snake_case naming while preserving proper unit casing:
+
+- **Units preserved**: `W`, `V`, `A`, `Hz`, `C`, `Wh`, `s`
+- **Hierarchical paths flattened**: `MPPT1.V` → `mppt1_V`, `L1.A` → `L1_A`
+- **Compound fields**: `SoC.nom.fract` → `SoC_nom_fract`
+- **Energy paths**: `total.export.Wh` → `total_export_Wh`
+
+## Data Models
+
+### BaseDeviceData
+
+Base class structure with common fields:
 
 ```json
 {
-  "timestamp": 1755701251122,
-  "type": "PV",
+  "type": "Device",
   "make": "Deye",
-  "delta": 42,
+  "timestamp": 1755701251122,
+  "read_time_ms": 42
+}
+```
+
+| Field          | Unit         | Data Type | Description                                   |
+| -------------- | ------------ | --------- | --------------------------------------------- |
+| `type`         | -            | string    | Object type ("PV", "Battery", "Meter")        |
+| `make`         | -            | string    | Manufacturer/brand name (optional)            |
+| `timestamp`    | milliseconds | integer   | Timestamp of reading start (optional)         |
+| `read_time_ms` | milliseconds | integer   | Time taken to complete the reading (optional) |
+
+### PV Data Model
+
+Inherits from `BaseDeviceData` and adds PV-specific fields:
+
+```json
+{
   "W": -1500,
-  "rating": 3000,
+  "rated_power_W": 3000,
   "mppt1_V": 400,
   "mppt1_A": -3.75,
   "mppt2_V": 380,
   "mppt2_A": -3.68,
   "heatsink_C": 45,
-  "total_export_Wh": 15000
+  "total_generation_Wh": 15000
 }
 ```
 
-| Field             | Unit         | Data Type | Description                            |
-| ----------------- | ------------ | --------- | -------------------------------------- |
-| `timestamp`       | milliseconds | integer   | Timestamp of reading start             |
-| `type`            | -            | string    | Object type ("PV")                     |
-| `make`            | -            | string    | Manufacturer/brand name                |
-| `delta`           | milliseconds | integer   | Time taken to complete the reading     |
-| `W`               | W            | float     | Active Power (negative for generation) |
-| `rating`          | W            | float     | Power rating                           |
-| `mppt1_V`         | V            | float     | MPPT1 Voltage                          |
-| `mppt1_A`         | A            | float     | MPPT1 Current                          |
-| `mppt2_V`         | V            | float     | MPPT2 Voltage                          |
-| `mppt2_A`         | A            | float     | MPPT2 Current                          |
-| `heatsink_C`      | °C           | float     | Inverter Temperature                   |
-| `total_export_Wh` | Wh           | integer   | Total Energy Generated                 |
+| Field                 | Unit | Data Type | Description                            |
+| --------------------- | ---- | --------- | -------------------------------------- |
+| `W`                   | W    | float     | Active Power (negative for generation) |
+| `rated_power_W`       | W    | float     | System Rated Power                     |
+| `mppt1_V`             | V    | float     | MPPT1 Voltage                          |
+| `mppt1_A`             | A    | float     | MPPT1 Current                          |
+| `mppt2_V`             | V    | float     | MPPT2 Voltage                          |
+| `mppt2_A`             | A    | float     | MPPT2 Current                          |
+| `heatsink_C`          | °C   | float     | Inverter Temperature                   |
+| `total_generation_Wh` | Wh   | integer   | Total Energy Generated                 |
 
-## Battery Data Model
+### Battery Data Model
+
+Inherits from `BaseDeviceData` and adds battery-specific fields:
 
 ```json
 {
-  "timestamp": 1755701251122,
-  "type": "Battery",
-  "make": "Deye",
-  "delta": 38,
   "W": 500,
   "A": 10.5,
   "V": 48.2,
   "SoC_nom_fract": 0.75,
   "heatsink_C": 25,
-  "total_import_Wh": 8000,
-  "total_export_Wh": 7200
+  "total_charge_Wh": 8000,
+  "total_discharge_Wh": 7200
 }
 ```
 
-| Field             | Unit         | Data Type | Description                          |
-| ----------------- | ------------ | --------- | ------------------------------------ |
-| `timestamp`       | milliseconds | integer   | Timestamp of reading start           |
-| `type`            | -            | string    | Object type ("Battery")              |
-| `make`            | -            | string    | Manufacturer/brand name              |
-| `delta`           | milliseconds | integer   | Time taken to complete the reading   |
-| `W`               | W            | float     | Active Power (+ charge, - discharge) |
-| `A`               | A            | float     | Current (+ charge, - discharge)      |
-| `V`               | V            | float     | Voltage                              |
-| `SoC_nom_fract`   | fraction     | float     | State of Charge (0.0-1.0)            |
-| `heatsink_C`      | °C           | float     | Battery Temperature                  |
-| `total_import_Wh` | Wh           | integer   | Total Energy Charged                 |
-| `total_export_Wh` | Wh           | integer   | Total Energy Discharged              |
+| Field                | Unit     | Data Type | Description                          |
+| -------------------- | -------- | --------- | ------------------------------------ |
+| `W`                  | W        | float     | Active Power (+ charge, - discharge) |
+| `A`                  | A        | float     | Current (+ charge, - discharge)      |
+| `V`                  | V        | float     | Voltage                              |
+| `SoC_nom_fract`      | fraction | float     | State of Charge (0.0-1.0)            |
+| `heatsink_C`         | °C       | float     | Battery Temperature                  |
+| `total_charge_Wh`    | Wh       | integer   | Total Energy Charged                 |
+| `total_discharge_Wh` | Wh       | integer   | Total Energy Discharged              |
 
-## Meter Data Model
+### Meter Data Model
+
+Inherits from `BaseDeviceData` and adds meter-specific fields:
 
 ```json
 {
-  "timestamp": 1755701251122,
-  "type": "Meter",
-  "make": "Deye",
-  "delta": 35,
   "W": 1200,
   "Hz": 50.0,
   "L1_V": 230,
@@ -144,40 +165,38 @@ All measurements use base SI units:
 }
 ```
 
-| Field             | Unit         | Data Type | Description                             |
-| ----------------- | ------------ | --------- | --------------------------------------- |
-| `timestamp`       | milliseconds | integer   | Timestamp of reading start              |
-| `type`            | -            | string    | Object type ("Meter")                   |
-| `make`            | -            | string    | Manufacturer/brand name                 |
-| `delta`           | milliseconds | integer   | Time taken to complete the reading      |
-| `W`               | W            | float     | Total Active Power (+ import, - export) |
-| `Hz`              | Hz           | float     | Grid Frequency                          |
-| `L1_V`            | V            | float     | L1 Phase Voltage                        |
-| `L1_A`            | A            | float     | L1 Phase Current                        |
-| `L1_W`            | W            | float     | L1 Phase Power                          |
-| `L2_V`            | V            | float     | L2 Phase Voltage                        |
-| `L2_A`            | A            | float     | L2 Phase Current                        |
-| `L2_W`            | W            | float     | L2 Phase Power                          |
-| `L3_V`            | V            | float     | L3 Phase Voltage                        |
-| `L3_A`            | A            | float     | L3 Phase Current                        |
-| `L3_W`            | W            | float     | L3 Phase Power                          |
-| `total_import_Wh` | Wh           | integer   | Total Energy Imported                   |
-| `total_export_Wh` | Wh           | integer   | Total Energy Exported                   |
+| Field             | Unit | Data Type | Description                             |
+| ----------------- | ---- | --------- | --------------------------------------- |
+| `W`               | W    | float     | Total Active Power (+ import, - export) |
+| `Hz`              | Hz   | float     | Grid Frequency                          |
+| `L1_V`            | V    | float     | L1 Phase Voltage                        |
+| `L1_A`            | A    | float     | L1 Phase Current                        |
+| `L1_W`            | W    | float     | L1 Phase Power                          |
+| `L2_V`            | V    | float     | L2 Phase Voltage                        |
+| `L2_A`            | A    | float     | L2 Phase Current                        |
+| `L2_W`            | W    | float     | L2 Phase Power                          |
+| `L3_V`            | V    | float     | L3 Phase Voltage                        |
+| `L3_A`            | A    | float     | L3 Phase Current                        |
+| `L3_W`            | W    | float     | L3 Phase Power                          |
+| `total_import_Wh` | Wh   | integer   | Total Energy Imported                   |
+| `total_export_Wh` | Wh   | integer   | Total Energy Exported                   |
 
-## Sign Conventions
+## MQTT Integration
 
-- **Generation**: Negative power (PV: `W < 0`)
-- **Charging**: Positive power/current (Battery: `W > 0`, `A > 0`)
-- **Discharging**: Negative power/current (Battery: `W < 0`, `A < 0`)
-- **Import**: Positive power (Meter: `W > 0`)
-- **Export**: Negative power (Meter: `W < 0`)
-- **Energy Totals**: Always positive values in `total_import_Wh` and `total_export_Wh`
+### Topic Structure
 
-## Field Naming Convention
+Harvested data is published to MQTT topics using the following structure:
 
-The flattened structure uses snake_case naming while preserving proper unit casing:
+```
+sourceful/<wallet>/<type>/<device_sn>/<format>/<version>
+```
 
-- **Units preserved**: `W`, `V`, `A`, `Hz`, `C`, `Wh`, `s`
-- **Hierarchical paths flattened**: `MPPT1.V` → `mppt1_V`, `L1.A` → `L1_A`
-- **Compound fields**: `SoC.nom.fract` → `SoC_nom_fract`
-- **Energy paths**: `total.export.Wh` → `total_export_Wh`
+Where:
+
+- `sourceful/<wallet>`: Root topic, with `<wallet>` set by the MQTT client
+- `<type>`: Data type (e.g., PV, Battery, Meter)
+- `<device_sn>`: Device serial number
+- `<format>`: Data format (e.g., json, protobuf, binary)
+- `<version>`: Data model version (e.g., v1)
+
+Example topic: `sourceful/0xABCDEF1234567890/PV/ABC123/json/v1`

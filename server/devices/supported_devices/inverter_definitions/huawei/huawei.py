@@ -43,7 +43,7 @@ class HuaweiProfile(ModbusProfile):
         # === PV SECTION ===
         val = decode(32000)
         if val is not None:
-            pv.rating = val * 1000
+            pv.rated_power_W = val * 1000
 
         val = decode(32016)
         if val is not None:

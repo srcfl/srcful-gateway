@@ -35,14 +35,28 @@ class Value:
 
 
 @dataclass
-class PVData:
-    """Photovoltaic system data with flattened structure."""
-    type: str = "PV"
+class BaseDeviceData:
+    """Base class for all device data with common fields."""
+    type: str
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     timestamp: Optional[int] = None  # Timestamp
     read_time_ms: Optional[int] = None  # Reading duration in milliseconds
+
+    def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
+        """Convert to dictionary format for serialization."""
+        result = {}
+        for field_name, field_value in self.__dict__.items():
+            if field_value is not None:
+                result[field_name] = field_value
+        return result
+
+
+@dataclass
+class PVData(BaseDeviceData):
+    """Photovoltaic system data with flattened structure."""
+    type: str = "PV"
     W: Optional[float] = None  # Active Power (always negative for generation)
-    rating: Optional[float] = None  # Active Power Max Rating (from model 702)
+    rated_power_W: Optional[float] = None  # Active Power Max Rating (from model 702)
     HV_LV: Optional[float] = None  # High/Low voltage indicator
     
     # MPPT1 data - flattened
@@ -59,22 +73,11 @@ class PVData:
     # Total energy data - flattened
     total_generation_Wh: Optional[float] = None  # Total Energy Generated
 
-    def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
-        """Convert to dictionary format for serialization."""
-        result = {}
-        for field_name, field_value in self.__dict__.items():
-            if field_value is not None:
-                result[field_name] = field_value
-        return result
-
 
 @dataclass
-class BatteryData:
+class BatteryData(BaseDeviceData):
     """Battery system data with flattened structure."""
     type: str = "Battery"
-    make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
-    timestamp: Optional[int] = None  # Timestamp
-    read_time_ms: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Active Power (positive charging, negative discharging)
     A: Optional[float] = None  # Current (positive charging, negative discharging)
     V: Optional[float] = None  # Voltage
@@ -89,22 +92,11 @@ class BatteryData:
     total_discharge_Wh: Optional[float] = None  # Total Energy Discharged
     total_charge_Wh: Optional[float] = None  # Total Energy Charged
 
-    def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
-        """Convert to dictionary format for serialization."""
-        result = {}
-        for field_name, field_value in self.__dict__.items():
-            if field_value is not None:
-                result[field_name] = field_value
-        return result
-
 
 @dataclass
-class MeterData:
+class MeterData(BaseDeviceData):
     """Meter system data with flattened structure."""
     type: str = "Meter"
-    make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
-    timestamp: Optional[int] = None  # Timestamp
-    read_time_ms: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Total Active Power (positive importing, negative exporting)
     Hz: Optional[float] = None  # Frequency
     
@@ -126,14 +118,6 @@ class MeterData:
     # Total energy data - flattened
     total_export_Wh: Optional[float] = None  # Total Energy Exported
     total_import_Wh: Optional[float] = None  # Total Energy Imported
-
-    def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
-        """Convert to dictionary format for serialization."""
-        result = {}
-        for field_name, field_value in self.__dict__.items():
-            if field_value is not None:
-                result[field_name] = field_value
-        return result
 
 
 @dataclass

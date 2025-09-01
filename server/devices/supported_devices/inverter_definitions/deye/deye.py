@@ -73,7 +73,7 @@ class DeyeProfile(ModbusProfile):
         # === PV SECTION - Simple direct assignment ===
         val = decode(20)
         if val is not None:
-            pv.rating = val
+            pv.rated_power_W = val
 
         # PV Power (sum of pv1-4)
         pv_power_vals = [decode(addr) for addr in [672, 673, 674, 675]]

@@ -46,7 +46,7 @@ class SungrowProfile(ModbusProfile):
         # === PV SECTION ===
         val = decode(5000)
         if val is not None:
-            pv.rating = val * 1000
+            pv.rated_power_W = val * 1000
 
         val = decode(5016)
         if val is not None:
