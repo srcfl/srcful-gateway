@@ -40,22 +40,24 @@ class PVData:
     type: str = "PV"
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     timestamp: Optional[int] = None  # Timestamp
-    delta: Optional[int] = None  # Reading duration in milliseconds
+    read_time_ms: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Active Power (always negative for generation)
     rating: Optional[float] = None  # Active Power Max Rating (from model 702)
     HV_LV: Optional[float] = None  # High/Low voltage indicator
+    
     # MPPT1 data - flattened
     mppt1_V: Optional[float] = None  # MPPT1 Voltage (DCV in SunSpec DC model)
     mppt1_A: Optional[float] = None  # MPPT1 Current (DCA in SunSpec DC model)
+    
     # MPPT2 data - flattened
     mppt2_V: Optional[float] = None  # MPPT2 Voltage (DCV in SunSpec DC model)
     mppt2_A: Optional[float] = None  # MPPT2 Current (DCA in SunSpec DC model)
+    
     # Temperature data - flattened
     heatsink_C: Optional[float] = None  # Heat Sink Temperature (inverter temperature)
+    
     # Total energy data - flattened
-    total_export_Wh: Optional[float] = None  # Total Energy Generated
-    total_import_Wh: Optional[float] = None  # Total Energy Imported
-    total_uptime_s: Optional[float] = None  # System uptime
+    total_generation_Wh: Optional[float] = None  # Total Energy Generated
 
     def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
         """Convert to dictionary format for serialization."""
@@ -72,18 +74,20 @@ class BatteryData:
     type: str = "Battery"
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     timestamp: Optional[int] = None  # Timestamp
-    delta: Optional[int] = None  # Reading duration in milliseconds
+    read_time_ms: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Active Power (positive charging, negative discharging)
     A: Optional[float] = None  # Current (positive charging, negative discharging)
     V: Optional[float] = None  # Voltage
+    
     # State of Charge data - flattened
     SoC_nom_fract: Optional[float] = None  # State of Charge as fraction (0.0-1.0)
+    
     # Temperature data - flattened
     heatsink_C: Optional[float] = None  # Battery Temperature
+    
     # Total energy data - flattened
-    total_export_Wh: Optional[float] = None  # Total Energy Discharged
-    total_import_Wh: Optional[float] = None  # Total Energy Charged
-    total_uptime_s: Optional[float] = None  # System uptime
+    total_discharge_Wh: Optional[float] = None  # Total Energy Discharged
+    total_charge_Wh: Optional[float] = None  # Total Energy Charged
 
     def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
         """Convert to dictionary format for serialization."""
@@ -100,25 +104,28 @@ class MeterData:
     type: str = "Meter"
     make: Optional[str] = None  # Manufacturer/brand (e.g., "Deye", "Huawei", "Solis", "SunGrow")
     timestamp: Optional[int] = None  # Timestamp
-    delta: Optional[int] = None  # Reading duration in milliseconds
+    read_time_ms: Optional[int] = None  # Reading duration in milliseconds
     W: Optional[float] = None  # Total Active Power (positive importing, negative exporting)
     Hz: Optional[float] = None  # Frequency
+    
     # L1 phase data - flattened
     L1_V: Optional[float] = None  # L1 Phase Voltage
     L1_A: Optional[float] = None  # L1 Phase Current
     L1_W: Optional[float] = None  # L1 Phase Power
+    
     # L2 phase data - flattened
     L2_V: Optional[float] = None  # L2 Phase Voltage
     L2_A: Optional[float] = None  # L2 Phase Current
     L2_W: Optional[float] = None  # L2 Phase Power
+    
     # L3 phase data - flattened
     L3_V: Optional[float] = None  # L3 Phase Voltage
     L3_A: Optional[float] = None  # L3 Phase Current
     L3_W: Optional[float] = None  # L3 Phase Power
+    
     # Total energy data - flattened
     total_export_Wh: Optional[float] = None  # Total Energy Exported
     total_import_Wh: Optional[float] = None  # Total Energy Imported
-    total_uptime_s: Optional[float] = None  # System uptime
 
     def to_dict(self, verbose: bool = True) -> Dict[str, Any]:
         """Convert to dictionary format for serialization."""

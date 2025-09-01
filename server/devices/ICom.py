@@ -32,7 +32,7 @@ class ICom(ABC):
     data_type = HarvestDataType.UNDEFINED
     
     # Default polling interval - can be overridden by implementations
-    DEFAULT_HARVEST_INTERVAL_MS = 950
+    DEFAULT_HARVEST_INTERVAL_MS = 1000
 
     CONNECTION_KEY = "connection"
     CONNECTION_IX = 0

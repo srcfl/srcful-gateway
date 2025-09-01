@@ -105,7 +105,7 @@ class DeyeProfile(ModbusProfile):
         # Total export energy - flattened
         val = decode(534)
         if val is not None:
-            pv.total_export_Wh = val * 1000
+            pv.total_generation_Wh = val * 1000
 
         # === BATTERY SECTION - Flattened structure ===
         val = decode(590)
@@ -128,11 +128,11 @@ class DeyeProfile(ModbusProfile):
         # Battery energy totals - flattened
         val = decode(516)
         if val is not None:
-            battery.total_import_Wh = val * 1000
+            battery.total_charge_Wh = val * 1000
 
         val = decode(518)
         if val is not None:
-            battery.total_export_Wh = val * 1000
+            battery.total_discharge_Wh = val * 1000
 
         # Battery temperature (special calculation) - flattened
         temp_raw = decode(217)

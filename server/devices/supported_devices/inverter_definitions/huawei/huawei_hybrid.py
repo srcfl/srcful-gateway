@@ -76,7 +76,7 @@ class HuaweiHybridProfile(ModbusProfile):
         # Total export energy - flattened
         val = decode(32106)
         if val is not None:
-            pv.total_export_Wh = val
+            pv.total_generation_Wh = val
 
         # === BATTERY SECTION - Flattened structure ===
         val = decode(37001)
@@ -104,11 +104,11 @@ class HuaweiHybridProfile(ModbusProfile):
         # Battery energy totals - flattened
         val = decode(37066)
         if val is not None:
-            battery.total_import_Wh = val * 1000
+            battery.total_charge_Wh = val * 1000
 
         val = decode(37068)
         if val is not None:
-            battery.total_import_Wh = val * 1000
+            battery.total_charge_Wh = val * 1000
 
         # === METER SECTION - Flattened structure ===
         # L1 phase - flattened

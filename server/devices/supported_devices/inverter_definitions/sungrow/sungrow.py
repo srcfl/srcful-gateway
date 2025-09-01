@@ -76,7 +76,7 @@ class SungrowProfile(ModbusProfile):
         # Total export energy - flattened
         val = decode(13002)
         if val is not None:
-            pv.total_export_Wh = val
+            pv.total_generation_Wh = val
 
         # === BATTERY SECTION - Flattened structure ===
         val = decode(13021)
@@ -104,11 +104,11 @@ class SungrowProfile(ModbusProfile):
         # Battery energy totals - flattened
         val = decode(13026)
         if val is not None:
-            battery.total_import_Wh = val * 1000
+            battery.total_charge_Wh = val * 1000
 
         val = decode(13040)
         if val is not None:
-            battery.total_import_Wh = val * 1000
+            battery.total_charge_Wh = val * 1000
 
         # === METER SECTION - Flattened structure ===
         # L1 phase - flattened
