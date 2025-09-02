@@ -58,15 +58,6 @@ All measurements use base SI units:
 - **Export**: Negative power (Meter: `W < 0`)
 - **Energy Totals**: Always positive values in `total_import_Wh`, `total_export_Wh`, `total_charge_Wh`, `total_discharge_Wh`, and `total_generation_Wh`
 
-### Field Naming Convention
-
-The flattened structure uses snake_case naming while preserving proper unit casing:
-
-- **Units preserved**: `W`, `V`, `A`, `Hz`, `C`, `Wh`, `s`
-- **Hierarchical paths flattened**: `MPPT1.V` → `mppt1_V`, `L1.A` → `L1_A`
-- **Compound fields**: `SoC.nom.fract` → `SoC_nom_fract`
-- **Energy paths**: `total.export.Wh` → `total_export_Wh`
-
 ## Data Models
 
 ### BaseDeviceData
