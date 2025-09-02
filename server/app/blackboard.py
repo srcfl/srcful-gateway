@@ -76,7 +76,7 @@ class BlackBoard(ISystemTime, ITaskSource):
         self._mqtt_service = mqtt_service
 
     def get_version(self) -> str:
-        return "0.23.4"
+        return "0.23.5"
 
     def add_task(self, task: ITask):
         self._tasks.append(task)

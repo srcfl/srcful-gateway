@@ -314,16 +314,15 @@ class ControlSubscription(ControlDeviceTaskListener):
         eta: datetime = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
 
         logger.info(f"ETA: {eta}, or {execute_at_ms - time_now_ms} milliseconds")
-        
         logger.info(f"Scheduling control task for device {der.get_name()} at {control_message.execute_at} (in {execute_at_ms - time_now_ms} ms) with commands: {control_message.commands}")
 
         
-        task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
+        # task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
 
-        task.register_listener(self)
-
-        self.task_registry.add_task(task)
-        self.bb.add_task(task)
+        # task.register_listener(self)
+        
+        # self.task_registry.add_task(task)
+        # self.bb.add_task(task)
 
     def handle_ems_control_schedule_cancel(self, data: dict):
         base_message: BaseMessage = BaseMessage(data)
