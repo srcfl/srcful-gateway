@@ -74,6 +74,8 @@ class DeyeProfile(ModbusProfile):
         val = decode(20)
         if val is not None:
             pv.rated_power_W = val
+            
+        pv.HV_LV = is_high_voltage
 
         # PV Power (sum of pv1-4)
         pv_power_vals = [decode(addr) for addr in [672, 673, 674, 675]]
