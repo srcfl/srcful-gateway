@@ -155,6 +155,11 @@ class MQTTService:
         """Called when the client disconnects from the broker."""
         logger.warning(f"Disconnected from MQTT broker with result code {rc}")
         self.connected = False
+        
+        # For connection lost errors (rc=7), force client cleanup to avoid stale state
+        if rc == 7:
+            logger.info("Connection lost detected, will recreate client on next connection attempt")
+            self._cleanup_client()
 
     def on_publish(self, client, userdata, mid):
         """Called when a message that was to be sent using the publish() call has completed transmission to the broker."""
@@ -200,8 +205,23 @@ class MQTTService:
         log_func = log_levels.get(level, logger.info)
         log_func(f"MQTT: {buf}")
 
+    def _cleanup_client(self):
+        """Clean up the current MQTT client to avoid stale state."""
+        if self.client:
+            try:
+                self.client.loop_stop()
+                self.client.disconnect()
+            except Exception as e:
+                logger.debug(f"Error during client cleanup: {e}")
+            finally:
+                self.client = None
+                self.connected = False
+
     def setup_tls(self):
         """Configure TLS settings"""
+        if not self.client:
+            raise Exception("Cannot setup TLS: MQTT client not initialized")
+            
         try:
             context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
             
@@ -227,6 +247,10 @@ class MQTTService:
         """Connect to MQTT broker with device credentials."""
         try:
             logger.info(f"Starting MQTT connection to {self.broker_host}:{self.broker_port}")
+            
+            # Clean up any existing client to avoid stale state
+            if self.client:
+                self._cleanup_client()
             
             # Initialize MQTT client
             self.client = mqtt.Client(client_id=self.device_serial)
@@ -258,10 +282,12 @@ class MQTTService:
                 return True
             else:
                 logger.error("Connection timeout")
+                self._cleanup_client()  # Clean up on timeout
                 return False
                 
         except Exception as e:
             logger.error(f"Failed to connect to MQTT broker: {e}")
+            self._cleanup_client()  # Clean up on error
             return False
 
     def publish(self, topic: str, payload: Dict[str, Any], qos: int = 0) -> bool:
@@ -334,6 +360,8 @@ class MQTTService:
     def _run(self):
         """Main run loop for MQTT service."""
         retry_delay = 5
+        max_retry_delay = 60
+        
         while self._running:
             try:
                 if not self.connected:
@@ -343,12 +371,15 @@ class MQTTService:
                     else:
                         logger.error(f"Failed to connect, retrying in {retry_delay} seconds...")
                         time.sleep(retry_delay)
-                        retry_delay = min(retry_delay * 2, 60)  # Exponential backoff up to 60s
+                        # Exponential backoff with jitter to avoid thundering herd
+                        retry_delay = min(retry_delay * 1.5, max_retry_delay)
                 else:
                     time.sleep(1)  # Just sleep if connected
                     
             except Exception as e:
                 logger.error(f"Error in MQTT service main loop: {e}")
+                # Clean up on unexpected errors
+                self._cleanup_client()
                 time.sleep(retry_delay)
 
     def stop(self):
@@ -356,10 +387,8 @@ class MQTTService:
         logger.info("Stopping MQTT service")
         self._running = False
         
-        if self.client:
-            self.client.loop_stop()
-            self.client.disconnect()
-            self.connected = False
+        # Clean up the client connection
+        self._cleanup_client()
             
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=5)
