@@ -41,7 +41,7 @@ services:
     privileged: true
     environment:
       <<: *shared_env
-      MQTT_BROKER_HOST: mqtt.srcful.dev
+      MQTT_BROKER_HOST: prod-mqtt-edge-01.srcful.dev
       MQTT_BROKER_PORT: 8883
     labels:
       io.balena.features.dbus: 1 # needed for the wifi provisioning calls

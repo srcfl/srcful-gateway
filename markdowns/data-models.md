@@ -84,7 +84,7 @@ Base class structure with common fields:
 
 | Field          | Unit         | Data Type | Description                                   |
 | -------------- | ------------ | --------- | --------------------------------------------- |
-| `type`         | -            | string    | Object type ("PV", "Battery", "Meter")        |
+| `type`         | -            | string    | Object type ("pv", "battery", "meter")        |
 | `make`         | -            | string    | Manufacturer/brand name (optional)            |
 | `timestamp`    | milliseconds | integer   | Timestamp of reading start (optional)         |
 | `read_time_ms` | milliseconds | integer   | Time taken to complete the reading (optional) |
@@ -194,9 +194,9 @@ sourceful/<wallet>/<type>/<device_sn>/<format>/<version>
 Where:
 
 - `sourceful/<wallet>`: Root topic, with `<wallet>` set by the MQTT client
-- `<type>`: Data type (e.g., PV, Battery, Meter)
+- `<type>`: Data type (e.g., pv, battery, meter)
 - `<device_sn>`: Device serial number
 - `<format>`: Data format (e.g., json, protobuf, binary)
 - `<version>`: Data model version (e.g., v1)
 
-Example topic: `sourceful/0xABCDEF1234567890/PV/ABC123/json/v1`
+Example topic: `sourceful/0xABCDEF1234567890/pv/ABC123/json/v1`

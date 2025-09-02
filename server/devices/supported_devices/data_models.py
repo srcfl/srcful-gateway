@@ -54,7 +54,7 @@ class BaseDeviceData:
 @dataclass
 class PVData(BaseDeviceData):
     """Photovoltaic system data with flattened structure."""
-    type: str = "PV"
+    type: str = "pv"
     W: Optional[float] = None  # Active Power (always negative for generation)
     rated_power_W: Optional[float] = None  # Active Power Max Rating (from model 702)
     HV_LV: Optional[float] = None  # High/Low voltage indicator
@@ -77,7 +77,7 @@ class PVData(BaseDeviceData):
 @dataclass
 class BatteryData(BaseDeviceData):
     """Battery system data with flattened structure."""
-    type: str = "Battery"
+    type: str = "battery"
     W: Optional[float] = None  # Active Power (positive charging, negative discharging)
     A: Optional[float] = None  # Current (positive charging, negative discharging)
     V: Optional[float] = None  # Voltage
@@ -96,7 +96,7 @@ class BatteryData(BaseDeviceData):
 @dataclass
 class MeterData(BaseDeviceData):
     """Meter system data with flattened structure."""
-    type: str = "Meter"
+    type: str = "meter"
     W: Optional[float] = None  # Total Active Power (positive importing, negative exporting)
     Hz: Optional[float] = None  # Frequency
     
