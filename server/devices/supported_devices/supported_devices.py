@@ -6,7 +6,7 @@ from .inverter_definitions.huawei.huawei_hybrid import HuaweiHybridProfile
 from .inverter_definitions.solaredge import SolarEdgeProfile
 from .inverter_definitions.solaredge_us import SolarEdgeUsProfile
 from .inverter_definitions.sungrow.sungrow import SungrowProfile
-from .inverter_definitions.sungrow_sf import SungrowSFProfile
+from .inverter_definitions.sungrow.sungrow_sf import SungrowSFProfile
 from .inverter_definitions.sma import SmaProfile
 from .inverter_definitions.fronius import FroniusProfile
 from .inverter_definitions.fronius_sf import FroniusSFProfile
