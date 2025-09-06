@@ -142,11 +142,11 @@ class MQTTService:
             logger.info(f"Connected to MQTT broker at {self.broker_host}:{self.broker_port}")
             self.connected = True
 
-            self._root_topic = f"sourceful/{self.wallet_address}"
+            # Use client ID as root topic
+            self._root_topic = client._client_id.decode('utf-8') if isinstance(client._client_id, bytes) else client._client_id
 
-            # Subscribe to commands topic after successful connection
-            commands_topic = f"{self._root_topic}/device/commands"
-            self.subscribe(commands_topic)
+            # Note: Topic subscriptions are now handled by specific services (e.g., control_task_subscription)
+            # rather than automatically subscribing here
         else:
             logger.error(f"Failed to connect to MQTT broker, return code {rc}")
             self.connected = False
@@ -296,9 +296,11 @@ class MQTTService:
             logger.error("Cannot publish: not connected to MQTT broker")
             self._publish_errors += 1
             return False
-        
+
         topic = f"{self._root_topic}/{topic}"
         
+        # logger.info(f"Publishing to topic '{topic}' with payload: {json.dumps(payload)}")
+
         try:
             message_json = json.dumps(payload)
             result = self.client.publish(topic, message_json, qos=qos)

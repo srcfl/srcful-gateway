@@ -63,16 +63,35 @@ class ControlSubscription(ControlDeviceTaskListener):
         threading.Thread(target=check_and_register, daemon=True).start()
 
     def _register_mqtt_callback(self):
-        """Register callback for device command messages"""
+        """Register callback for device command messages and subscribe to topic"""
         logger.info("Registering MQTT callback for device commands")
-        commands_topic = f"sourceful/{self.bb.mqtt_service.wallet_address}/device/commands"
-        self.bb.mqtt_service.add_message_callback(commands_topic, self._handle_mqtt_message)
+        
+        # Subscribe to device commands with wildcard for device serial numbers
+        commands_topic = f"{self.bb.mqtt_service._root_topic}/device/commands/+"
+        self.bb.mqtt_service.subscribe(commands_topic)
+        
+        # Register callback to handle messages on this topic pattern
+        # Use the full root topic pattern to be more specific
+        commands_topic_pattern = f"{self.bb.mqtt_service._root_topic}/device/commands/"
+        self.bb.mqtt_service.add_message_callback(commands_topic_pattern, self._handle_mqtt_message)
 
     def _handle_mqtt_message(self, topic: str, message_data: dict):
         """Handle incoming MQTT control message"""
         try:
             logger.info(f"Received control command on topic: {topic}")
             logger.info(f"Message: {json.dumps(message_data, indent=2)}")
+            
+            # Extract device serial number from topic pattern: {root_topic}/device/commands/{device_sn}
+            topic_parts = topic.split('/')
+            if len(topic_parts) >= 4 and topic_parts[-2] == "commands":
+                device_sn = topic_parts[-1]
+                logger.info(f"Extracted device SN from topic: {device_sn}")
+                
+                # Add device_sn to message data if not already present
+                if 'sn' not in message_data.get('payload', {}):
+                    if 'payload' not in message_data:
+                        message_data['payload'] = {}
+                    message_data['payload']['sn'] = device_sn
             
             # Process the message using existing logic
             self.on_message(None, json.dumps(message_data))
@@ -89,8 +108,8 @@ class ControlSubscription(ControlDeviceTaskListener):
         
         # Remove MQTT callback if service is available
         if self.bb.mqtt_service:
-            commands_topic = f"sourceful/{self.bb.mqtt_service.wallet_address}/device/commands"
-            self.bb.mqtt_service.remove_message_callback(commands_topic, self._handle_mqtt_message)
+            commands_topic_pattern = f"{self.bb.mqtt_service._root_topic}/device/commands/"
+            self.bb.mqtt_service.remove_message_callback(commands_topic_pattern, self._handle_mqtt_message)
 
     def join(self):
         """Compatibility method for cleanup"""
@@ -103,8 +122,9 @@ class ControlSubscription(ControlDeviceTaskListener):
             return False
             
         try:
-            # Publish to responses topic for this wallet
-            response_topic = f"sourceful/{self.bb.mqtt_service.wallet_address}/device/responses"
+            # Publish to responses topic using the MQTT service's publish method
+            # This will automatically use the root topic structure
+            response_topic = "device/responses"
             success = self.bb.mqtt_service.publish(response_topic, data)
             
             if success:

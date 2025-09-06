@@ -9,7 +9,7 @@ and creating the MQTT service instance.
 import logging
 import requests
 from server.tasks.task import Task
-from server.app.mqtt_service import MQTTService
+from server.backend.mqtt_service import MQTTService
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)

@@ -17,7 +17,7 @@ from server.devices.ICom import ICom
 from server.network.network_utils import HostInfo
 from server.storage.gateway_storage import DeviceStorage
 from server.network.network_utils import NetworkUtils
-from server.app.mqtt_service import MQTTService
+from server.backend.mqtt_service import MQTTService
     
 
 logger = logging.getLogger(__name__)
