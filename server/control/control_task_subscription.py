@@ -66,26 +66,25 @@ class ControlSubscription(ControlDeviceTaskListener):
         """Register callback for device command messages and subscribe to topic"""
         logger.info("Registering MQTT callback for device commands")
         
-        # Subscribe to device commands with wildcard for device serial numbers
-        commands_topic = f"{self.bb.mqtt_service._root_topic}/device/commands/+"
+        # Subscribe to commands with wildcard for device serial numbers
+        commands_topic = f"{self.bb.mqtt_service._root_topic}/commands/+"
         self.bb.mqtt_service.subscribe(commands_topic)
         
         # Register callback to handle messages on this topic pattern
         # Use the full root topic pattern to be more specific
-        commands_topic_pattern = f"{self.bb.mqtt_service._root_topic}/device/commands/"
+        commands_topic_pattern = f"{self.bb.mqtt_service._root_topic}/commands/"
         self.bb.mqtt_service.add_message_callback(commands_topic_pattern, self._handle_mqtt_message)
 
     def _handle_mqtt_message(self, topic: str, message_data: dict):
         """Handle incoming MQTT control message"""
         try:
-            logger.info(f"Received control command on topic: {topic}")
-            logger.info(f"Message: {json.dumps(message_data, indent=2)}")
+            logger.debug(f"Received control command on topic: {topic}")
             
-            # Extract device serial number from topic pattern: {root_topic}/device/commands/{device_sn}
+            # Extract device serial number from topic pattern: {root_topic}/commands/{device_sn}
             topic_parts = topic.split('/')
-            if len(topic_parts) >= 4 and topic_parts[-2] == "commands":
+            if len(topic_parts) >= 3 and topic_parts[-2] == "commands":
                 device_sn = topic_parts[-1]
-                logger.info(f"Extracted device SN from topic: {device_sn}")
+                logger.debug(f"Extracted device SN from topic: {device_sn}")
                 
                 # Add device_sn to message data if not already present
                 if 'sn' not in message_data.get('payload', {}):
@@ -108,28 +107,31 @@ class ControlSubscription(ControlDeviceTaskListener):
         
         # Remove MQTT callback if service is available
         if self.bb.mqtt_service:
-            commands_topic_pattern = f"{self.bb.mqtt_service._root_topic}/device/commands/"
+            commands_topic_pattern = f"{self.bb.mqtt_service._root_topic}/commands/"
             self.bb.mqtt_service.remove_message_callback(commands_topic_pattern, self._handle_mqtt_message)
 
     def join(self):
         """Compatibility method for cleanup"""
         pass
 
-    def send_message(self, data: dict):
+    def send_message(self, data: dict, target_sn: str | None = None):
         """Send response message via MQTT"""
         if not self.bb.mqtt_service or not self.bb.mqtt_service.connected:
             logger.error("Cannot send message: MQTT service not available or not connected")
             return False
             
         try:
-            # Publish to responses topic using the MQTT service's publish method
-            # This will automatically use the root topic structure
-            response_topic = "device/responses"
+            # Publish to device-specific responses topic if target_sn is provided
+            if target_sn:
+                response_topic = f"responses/{target_sn}"
+            else:
+                response_topic = "responses"
+                
             success = self.bb.mqtt_service.publish(response_topic, data)
             
             if success:
                 logger.info(f"Sent control response via MQTT to topic: {response_topic}")
-                logger.debug(f"Response data: {json.dumps(data, indent=2)}")
+                logger.info(f"Response data: {json.dumps(data, indent=2)}")
             else:
                 logger.error("Failed to publish control response via MQTT")
                 
@@ -177,7 +179,7 @@ class ControlSubscription(ControlDeviceTaskListener):
         return None
 
     # TODO: Write tests for this!
-    def _send_ack(self, message: BaseMessage, type: ControlMessageType):
+    def _send_ack(self, message: BaseMessage, type: ControlMessageType, target_sn: str | None = None):
         """Send ACK response"""
         timestamp, serial_number, signature = self._create_signature()
 
@@ -185,16 +187,16 @@ class ControlSubscription(ControlDeviceTaskListener):
             PayloadType.TYPE: type,
             PayloadType.PAYLOAD: {
                 PayloadType.ID: message.id,
-                PayloadType.SERIAL_NUMBER: serial_number,
+                PayloadType.SERIAL_NUMBER: target_sn if target_sn else "",
                 PayloadType.SIGNATURE: signature,
                 PayloadType.CREATED_AT: timestamp
             }
         }
-        logger.info(f"Sending ACK for message: {message.id}, Type: {message.type}, signature: {message.signature}")
-        self.send_message(ack_data)
+        logger.info(f"Sending ACK for message: {message.id}, Type: {message.type}")
+        self.send_message(ack_data, target_sn)
 
     # TODO: Write tests for this!
-    def _send_nack(self, message: BaseMessage, reason: str):
+    def _send_nack(self, message: BaseMessage, reason: str, target_sn: str | None = None):
         """Send NACK response"""
         timestamp, serial_number, signature = self._create_signature()
 
@@ -208,14 +210,14 @@ class ControlSubscription(ControlDeviceTaskListener):
                 PayloadType.CREATED_AT: timestamp
             }
         }
-        logger.info(f"Sending NACK for message: {message.id}, Type: {message.type}, signature: {message.signature}")
-        self.send_message(nack_data)
+        logger.info(f"Sending NACK for message: {message.id}, Type: {message.type}, reason: {reason}")
+        self.send_message(nack_data, target_sn)
 
     def on_control_device_task_completed(self, task: ControlDeviceTask):
         # Send an ACK or NACK based on whether the task was executed successfully
         if task.is_executed:
             if task.executed_successfully:
-                self._send_ack(task.message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_DONE)
+                self._send_ack(task.message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_DONE, task.message.sn)
                 task.is_acked = True
             else:
                 self._send_nack(task.message, "Task not executed successfully")
@@ -229,9 +231,9 @@ class ControlSubscription(ControlDeviceTaskListener):
         try:
             data = json.loads(message)
 
-            logger.info("#" * 50)
-            logger.info(json.dumps(data, indent=2))
-            logger.info("#" * 50)
+            logger.debug("=" * 50)
+            logger.debug(json.dumps(data, indent=2))
+            logger.debug("=" * 50)
 
             message_object: BaseMessage = BaseMessage(data)
 
@@ -244,15 +246,15 @@ class ControlSubscription(ControlDeviceTaskListener):
             type: str = data.get(PayloadType.TYPE, None)
 
             if type == ControlMessageType.EMS_AUTHENTICATION_SUCCESS:
-                logger.info("Received EMS authentication success")
+                logger.debug("Received EMS authentication success")
                 self.handle_ems_authentication_success(data)
 
             elif type == ControlMessageType.EMS_AUTHENTICATION_ERROR:
-                logger.info("Received EMS authentication error")
+                logger.debug("Received EMS authentication error")
                 self.handle_ems_authentication_error(data)
 
             elif type == ControlMessageType.EMS_AUTHENTICATION_CHALLENGE:
-                logger.info("Received EMS authentication challenge")
+                logger.debug("Received EMS authentication challenge")
                 self.handle_device_authenticate(data)
 
             elif type == ControlMessageType.EMS_CONTROL_SCHEDULE:
@@ -268,7 +270,7 @@ class ControlSubscription(ControlDeviceTaskListener):
                 self.handle_ems_data_request(data)
 
             elif type == ControlMessageType.EMS_PRE_SETUP:
-                logger.info("Received EMS pre setup")
+                logger.debug("Received EMS pre setup")
                 self.handle_ems_pre_setup(data)
 
             else:
@@ -314,14 +316,14 @@ class ControlSubscription(ControlDeviceTaskListener):
         der = self.bb.devices.find_sn(control_message.sn)
 
         if not der:
-            self._send_nack(control_message, "Device not found")
+            self._send_nack(control_message, "Device not found", control_message.sn)
             logger.error(f"Device not found: {control_message.sn}")
             return
 
         # TODO:
         # Perhaps we should not just ACK here, but also make sure the device is open.
         # Who is responsible for this?
-        self._send_ack(control_message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_ACK)
+        self._send_ack(control_message, ControlMessageType.DEVICE_CONTROL_SCHEDULE_ACK, control_message.sn)
 
         logger.info(f"Device found: {der.get_name()}")
 
@@ -331,21 +333,25 @@ class ControlSubscription(ControlDeviceTaskListener):
         execute_at_ms: int = int(datetime.strptime(control_message.execute_at, DATE_TIME_FORMAT).timestamp() * 1000)
 
         # print the ETA in a human readable format, e.g. "ETA: 1:30:10"
-        eta: datetime = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
+        eta = datetime.fromtimestamp(execute_at_ms / 1000) - datetime.now()
 
         logger.info(f"ETA: {eta}, or {execute_at_ms - time_now_ms} milliseconds")
-        logger.info(f"Scheduling control task for device {der.get_name()} at {control_message.execute_at} (in {execute_at_ms - time_now_ms} ms) with commands: {control_message.commands}")
+        logger.info(f"Scheduling control task for device {der.get_name()} ({der.get_SN()}) at {control_message.execute_at} (in {execute_at_ms - time_now_ms} ms) with commands: {control_message.commands}")
 
         
-        # task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
+        task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
 
-        # task.register_listener(self)
+        task.register_listener(self)
         
-        # self.task_registry.add_task(task)
-        # self.bb.add_task(task)
+        self.task_registry.add_task(task)
+        self.bb.add_task(task)
 
     def handle_ems_control_schedule_cancel(self, data: dict):
         base_message: BaseMessage = BaseMessage(data)
+
+        if base_message.id is None:
+            logger.error("Task ID is missing in cancel request")
+            return
 
         task = self.task_registry.get_task(base_message.id)
 
@@ -364,7 +370,7 @@ class ControlSubscription(ControlDeviceTaskListener):
         der = self.bb.devices.find_sn(read_message.sn)
 
         if not der:
-            self._send_nack(read_message, "Device not found")
+            self._send_nack(read_message, "Device not found", read_message.sn)
             logger.error(f"Device not found: {read_message.sn}")
             return
 
@@ -395,7 +401,7 @@ class ControlSubscription(ControlDeviceTaskListener):
         }
 
         logger.info(f"Sending data response: {response_data}")
-        self.send_message(response_data)
+        self.send_message(response_data, read_message.sn)
 
     def handle_ems_pre_setup(self, data: dict):
         self.handle_ems_control_schedule(data)
