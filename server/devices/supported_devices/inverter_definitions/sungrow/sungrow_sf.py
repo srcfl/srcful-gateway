@@ -178,7 +178,7 @@ sungrow_sf_profile = {
     ProfileKey.NAME: "sungrow_sf",
     ProfileKey.MAKER: "Sungrow",
     ProfileKey.VERSION: "v1",
-    ProfileKey.VERBOSE_ALWAYS: False,
+    ProfileKey.VERBOSE_ALWAYS: True,
     ProfileKey.DISPLAY_NAME: "Sungrow SF",
     ProfileKey.PROTOCOL: ProtocolKey.MODBUS,
     ProfileKey.DESCRIPTION: "Sungrow Scale Factor inverter profile",

@@ -143,7 +143,7 @@ class MQTTService:
             self.connected = True
 
             # Use client ID as root topic
-            self._root_topic = client._client_id.decode('utf-8') if isinstance(client._client_id, bytes) else client._client_id
+            self._root_topic = f"telemetry/{client._client_id.decode('utf-8') if isinstance(client._client_id, bytes) else client._client_id}"
 
             # Note: Topic subscriptions are now handled by specific services (e.g., control_task_subscription)
             # rather than automatically subscribing here
