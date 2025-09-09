@@ -13,7 +13,7 @@ import ssl
 import json
 import logging
 import time
-from typing import Dict, Any, List, Callable
+from typing import Dict, Any, List, Callable, Optional
 from collections import deque
 import threading
 from server.devices.supported_devices.data_models import DERData
@@ -37,7 +37,7 @@ class MQTTService:
         self._publish_errors = 0
         self._running = False
         self._thread = None
-        self._root_topic = None
+        self._client_id = None
         
         # Topic-specific publish tracking
         self._topic_publishes = {}  # topic -> deque of timestamps
@@ -142,8 +142,8 @@ class MQTTService:
             logger.info(f"Connected to MQTT broker at {self.broker_host}:{self.broker_port}")
             self.connected = True
 
-            # Use client ID as root topic
-            self._root_topic = f"telemetry/{client._client_id.decode('utf-8') if isinstance(client._client_id, bytes) else client._client_id}"
+            # Store client ID for topic building
+            self._client_id = client._client_id.decode('utf-8') if isinstance(client._client_id, bytes) else client._client_id
 
             # Note: Topic subscriptions are now handled by specific services (e.g., control_task_subscription)
             # rather than automatically subscribing here
@@ -290,29 +290,51 @@ class MQTTService:
             self._cleanup_client()  # Clean up on error
             return False
 
-    def publish(self, topic: str, payload: Dict[str, Any], qos: int = 0) -> bool:
+    def build_topic(self, prefix: str, subtopic: str = "") -> str:
+        """Build a topic with the format: prefix/client_id/subtopic"""
+        if not self._client_id:
+            raise Exception("Cannot build topic: client ID not available (not connected)")
+        
+        topic = f"{prefix}/{self._client_id}"
+        if subtopic:
+            topic = f"{topic}/{subtopic}"
+        return topic
+
+    def publish_telemetry(self, topic: str, payload: Dict[str, Any], qos: int = 0) -> bool:
+        """Convenience method to publish telemetry data."""
+        return self.publish(topic, payload, qos, prefix="telemetry")
+    
+    def publish_control(self, topic: str, payload: Dict[str, Any], qos: int = 0) -> bool:
+        """Convenience method to publish control data."""
+        return self.publish(topic, payload, qos, prefix="control")
+    
+    def publish_status(self, topic: str, payload: Dict[str, Any], qos: int = 0) -> bool:
+        """Convenience method to publish status data."""
+        return self.publish(topic, payload, qos, prefix="status")
+
+    def publish(self, topic: str, payload: Dict[str, Any], qos: int = 0, prefix: str = "telemetry") -> bool:
         """Publish a message to the MQTT broker."""
         if not self.connected or not self.client:
             logger.error("Cannot publish: not connected to MQTT broker")
             self._publish_errors += 1
             return False
 
-        topic = f"{self._root_topic}/{topic}"
+        full_topic = self.build_topic(prefix, topic)
         
-        # logger.info(f"Publishing to topic '{topic}' with payload: {json.dumps(payload)}")
+        # logger.info(f"Publishing to topic '{full_topic}' with payload: {json.dumps(payload)}")
 
         try:
             message_json = json.dumps(payload)
-            result = self.client.publish(topic, message_json, qos=qos)
+            result = self.client.publish(full_topic, message_json, qos=qos)
             
             if result.rc == mqtt.MQTT_ERR_SUCCESS:
-                logger.debug(f"Published to {topic}: {message_json}")
+                logger.debug(f"Published to {full_topic}: {message_json}")
                 self._publish_count += 1
                 # Record the topic-specific publish
-                self._record_topic_publish(topic)
+                self._record_topic_publish(full_topic)
                 return True
             else:
-                logger.error(f"Failed to publish to {topic}, error code: {result.rc}")
+                logger.error(f"Failed to publish to {full_topic}, error code: {result.rc}")
                 # Error code 4 = MQTT_ERR_NO_CONN (not connected)
                 if result.rc == 4:
                     logger.info("Detected connection lost, triggering reconnect")
@@ -321,30 +343,39 @@ class MQTTService:
                 return False
                 
         except Exception as e:
-            logger.error(f"Exception while publishing to {topic}: {e}")
+            logger.error(f"Exception while publishing to {full_topic}: {e}")
             self._publish_errors += 1
             return False
         
 
-    def subscribe(self, topic: str, qos: int = 0) -> bool:
-        """Subscribe to a topic."""
+    def subscribe(self, topic: str, qos: int = 0, prefix: Optional[str] = None) -> bool:
+        """Subscribe to a topic. If prefix is provided, builds topic as prefix/client_id/topic."""
         if not self.connected or not self.client:
             logger.error("Cannot subscribe: not connected to MQTT broker")
             return False
 
+        if prefix:
+            full_topic = self.build_topic(prefix, topic)
+        else:
+            full_topic = topic
+
         try:
-            result, mid = self.client.subscribe(topic, qos=qos)
+            result, mid = self.client.subscribe(full_topic, qos=qos)
             
             if result == mqtt.MQTT_ERR_SUCCESS:
-                logger.info(f"Successfully subscribed to topic: {topic}")
+                logger.info(f"Successfully subscribed to topic: {full_topic}")
                 return True
             else:
-                logger.error(f"Failed to subscribe to {topic}, error code: {result}")
+                logger.error(f"Failed to subscribe to {full_topic}, error code: {result}")
                 return False
                 
         except Exception as e:
-            logger.error(f"Exception while subscribing to {topic}: {e}")
+            logger.error(f"Exception while subscribing to {full_topic}: {e}")
             return False
+
+    def subscribe_control(self, topic: str = "#", qos: int = 0) -> bool:
+        """Convenience method to subscribe to control topics."""
+        return self.subscribe(topic, qos, prefix="control")
 
     def start(self):
         """Start the MQTT service in a separate thread."""

@@ -17,6 +17,12 @@ from server.control.control_task_registry import TaskExecutionRegistry
 DATE_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%f'
 TRUSTED_PUBLIC_KEY = "245bbc0a266ebfecc24983561f9cb37d5ff9844cb95669bdd8019ad5a00177f361878a047e0d8c4c5cccd7c7529873ebfabd0a76f9cda60c0e4bd7e1b924a8ff"  # Temporary public key for testing
 
+# MQTT Topic Constants
+COMMANDS_TOPIC_TEMPLATE = "control/{client_id}/commands/+"
+COMMANDS_TOPIC_PATTERN_TEMPLATE = "control/{client_id}/commands/"
+RESPONSES_TOPIC_TEMPLATE = "control/{client_id}/commands/responses/{target_sn}"
+RESPONSES_TOPIC_DEFAULT = "control/{client_id}/responses"
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -66,33 +72,30 @@ class ControlSubscription(ControlDeviceTaskListener):
         """Register callback for device command messages and subscribe to topic"""
         logger.info("Registering MQTT callback for device commands")
         
-        # Subscribe to commands with wildcard for device serial numbers
-        commands_topic = f"{self.bb.mqtt_service._root_topic}/commands/+"
-        self.bb.mqtt_service.subscribe(commands_topic)
+        # Subscribe to all commands for this client
+        self.bb.mqtt_service.subscribe_control("commands/+")
         
-        # Register callback to handle messages on this topic pattern
-        # Use the full root topic pattern to be more specific
-        commands_topic_pattern = f"{self.bb.mqtt_service._root_topic}/commands/"
-        self.bb.mqtt_service.add_message_callback(commands_topic_pattern, self._handle_mqtt_message)
+        # Register callback to handle messages on control topics
+        self.bb.mqtt_service.add_message_callback("control/", self._handle_mqtt_message)
 
     def _handle_mqtt_message(self, topic: str, message_data: dict):
         """Handle incoming MQTT control message"""
         try:
             logger.debug(f"Received control command on topic: {topic}")
             
-            # Extract device serial number from topic pattern: {root_topic}/commands/{device_sn}
+            # Extract device serial from topic: control/{client_id}/commands/{device_sn}
             topic_parts = topic.split('/')
-            if len(topic_parts) >= 3 and topic_parts[-2] == "commands":
-                device_sn = topic_parts[-1]
+            if len(topic_parts) >= 4 and topic_parts[2] == "commands":
+                device_sn = topic_parts[3]
                 logger.debug(f"Extracted device SN from topic: {device_sn}")
                 
-                # Add device_sn to message data if not already present
-                if 'sn' not in message_data.get('payload', {}):
-                    if 'payload' not in message_data:
-                        message_data['payload'] = {}
+                # Ensure payload exists and add device_sn if not present
+                if 'payload' not in message_data:
+                    message_data['payload'] = {}
+                if 'sn' not in message_data['payload']:
                     message_data['payload']['sn'] = device_sn
             
-            # Process the message using existing logic
+            # Process the message
             self.on_message(None, json.dumps(message_data))
             
         except Exception as e:
@@ -107,8 +110,7 @@ class ControlSubscription(ControlDeviceTaskListener):
         
         # Remove MQTT callback if service is available
         if self.bb.mqtt_service:
-            commands_topic_pattern = f"{self.bb.mqtt_service._root_topic}/commands/"
-            self.bb.mqtt_service.remove_message_callback(commands_topic_pattern, self._handle_mqtt_message)
+            self.bb.mqtt_service.remove_message_callback("control/", self._handle_mqtt_message)
 
     def join(self):
         """Compatibility method for cleanup"""
@@ -121,17 +123,19 @@ class ControlSubscription(ControlDeviceTaskListener):
             return False
             
         try:
-            # Publish to device-specific responses topic if target_sn is provided
             if target_sn:
+                # Send to specific device: control/{client_id}/responses/{target_sn}
                 response_topic = f"responses/{target_sn}"
             else:
+                # Send general response: control/{client_id}/responses
                 response_topic = "responses"
                 
-            success = self.bb.mqtt_service.publish(response_topic, data)
+            success = self.bb.mqtt_service.publish_control(response_topic, data)
             
             if success:
-                logger.info(f"Sent control response via MQTT to topic: {response_topic}")
-                logger.info(f"Response data: {json.dumps(data, indent=2)}")
+                full_topic = f"control/{self.bb.mqtt_service.device_serial}/{response_topic}"
+                logger.info(f"Sent control response to: {full_topic}")
+                logger.debug(f"Response data: {json.dumps(data, indent=2)}")
             else:
                 logger.error("Failed to publish control response via MQTT")
                 
@@ -339,12 +343,12 @@ class ControlSubscription(ControlDeviceTaskListener):
         logger.info(f"Scheduling control task for device {der.get_name()} ({der.get_SN()}) at {control_message.execute_at} (in {execute_at_ms - time_now_ms} ms) with commands: {control_message.commands}")
 
         
-        task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
+        # task = ControlDeviceTask(execute_at_ms, self.bb, control_message)
 
-        task.register_listener(self)
+        # task.register_listener(self)
         
-        self.task_registry.add_task(task)
-        self.bb.add_task(task)
+        # self.task_registry.add_task(task)
+        # self.bb.add_task(task)
 
     def handle_ems_control_schedule_cancel(self, data: dict):
         base_message: BaseMessage = BaseMessage(data)

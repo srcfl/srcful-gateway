@@ -100,21 +100,21 @@ class DeviceTask(Task):
                     der_data.pv.read_time_ms = end_time - start_time
                     topic = f"{der_data.pv.type}/{device_sn}/{der_data.format}/{der_data.version}"
                     payload = der_data.pv.to_dict(verbose=False)
-                    self.bb.mqtt_service.publish(topic, payload)
+                    self.bb.mqtt_service.publish_telemetry(topic, payload)
 
                 if der_data.battery:
                     der_data.battery.timestamp = start_time
                     der_data.battery.read_time_ms = end_time - start_time
                     topic = f"{der_data.battery.type}/{device_sn}/{der_data.format}/{der_data.version}"
                     payload = der_data.battery.to_dict(verbose=False)
-                    self.bb.mqtt_service.publish(topic, payload)
+                    self.bb.mqtt_service.publish_telemetry(topic, payload)
 
                 if der_data.meter:
                     der_data.meter.timestamp = start_time
                     der_data.meter.read_time_ms = end_time - start_time
                     topic = f"{der_data.meter.type}/{device_sn}/{der_data.format}/{der_data.version}"
                     payload = der_data.meter.to_dict(verbose=False)
-                    self.bb.mqtt_service.publish(topic, payload)
+                    self.bb.mqtt_service.publish_telemetry(topic, payload)
 
                 # Temporary stuff - publish full decoded data
                 # all_decoded = self.device.harvest_to_decoded_dict(harvest)
