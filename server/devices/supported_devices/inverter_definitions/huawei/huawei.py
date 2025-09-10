@@ -73,7 +73,7 @@ class HuaweiProfile(ModbusProfile):
         # Total export energy - flattened
         val = decode(32106)
         if val is not None:
-            pv.total_generation_Wh = val
+            pv.total_generation_Wh = val * 1000
 
         # Build result with only populated sections
         result = DERData()
