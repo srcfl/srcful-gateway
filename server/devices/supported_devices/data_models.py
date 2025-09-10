@@ -71,7 +71,7 @@ class PVData(BaseDeviceData):
     heatsink_C: Optional[float] = None  # Heat Sink Temperature (inverter temperature)
     
     # Total energy data - flattened
-    total_generation_Wh: Optional[float] = None  # Total Energy Generated
+    total_generation_Wh: Optional[int] = None  # Total Energy Generated
 
 
 @dataclass
@@ -89,8 +89,8 @@ class BatteryData(BaseDeviceData):
     heatsink_C: Optional[float] = None  # Battery Temperature
     
     # Total energy data - flattened
-    total_discharge_Wh: Optional[float] = None  # Total Energy Discharged
-    total_charge_Wh: Optional[float] = None  # Total Energy Charged
+    total_discharge_Wh: Optional[int] = None  # Total Energy Discharged
+    total_charge_Wh: Optional[int] = None  # Total Energy Charged
 
 
 @dataclass
@@ -116,8 +116,8 @@ class MeterData(BaseDeviceData):
     L3_W: Optional[float] = None  # L3 Phase Power
     
     # Total energy data - flattened
-    total_export_Wh: Optional[float] = None  # Total Energy Exported
-    total_import_Wh: Optional[float] = None  # Total Energy Imported
+    total_export_Wh: Optional[int] = None  # Total Energy Exported
+    total_import_Wh: Optional[int] = None  # Total Energy Imported
 
 
 @dataclass
